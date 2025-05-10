@@ -1,0 +1,699 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>WALAKA - Settings</title>
+  
+  <!-- External Libraries -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.9.2/html2pdf.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="assets/css/settings.css">
+  <script type="module" src="assets/js/settings.js"></script>
+</head>
+<body>
+  <div class="dashboard-container">
+    <!-- Sidebar -->
+    <nav class="sidebar">
+      <div class="logo">
+        <i class="fas fa-chart-line"></i>
+        <span>WALAKA</span>
+      </div>
+      
+      <div class="nav-menu">
+        <a href="dashboard.html" class="nav-item">
+          <i class="fas fa-home"></i>
+          <span>Dashboard</span>
+        </a>
+        
+        <div class="nav-section">
+          <h3>Invoices & Sales</h3>
+        </div>
+        <a href="invoices.html" class="nav-item">
+          <i class="fas fa-file-invoice-dollar"></i>
+          <span>Invoices</span>
+        </a>
+        <a href="products.html" class="nav-item">
+          <i class="fas fa-shopping-cart"></i>
+          <span>Products</span>
+        </a>
+        <a href="clients/clients.html" class="nav-item">
+          <i class="fas fa-users"></i>
+          <span>Clients</span>
+        </a>
+        <a href="taxes.html" class="nav-item">
+          <i class="fas fa-percentage"></i>
+          <span>Taxes</span>
+        </a>
+        
+        <div class="nav-section">
+          <h3>Finances</h3>
+        </div>
+        <a href="expenses.html" class="nav-item">
+          <i class="fas fa-money-bill-wave"></i>
+          <span>Expenses</span>
+        </a>
+        <a href="reports.html" class="nav-item">
+          <i class="fas fa-chart-pie"></i>
+          <span>Reports</span>
+        </a>
+        <a href="payments.html" class="nav-item">
+          <i class="fas fa-hand-holding-usd"></i>
+          <span>Payments</span>
+        </a>
+        
+        <div class="nav-section">
+          <h3>Inventory</h3>
+        </div>
+        <a href="stock.html" class="nav-item">
+          <i class="fas fa-boxes"></i>
+          <span>Stock</span>
+        </a>
+        <a href="suppliers.html" class="nav-item">
+          <i class="fas fa-truck"></i>
+          <span>Suppliers</span>
+        </a>
+        <a href="movements.html" class="nav-item">
+          <i class="fas fa-exchange-alt"></i>
+          <span>Movements</span>
+        </a>
+        
+        <div class="nav-section">
+          <h3>Settings</h3>
+        </div>
+        <a href="settings.html" class="nav-item active">
+          <i class="fas fa-cog"></i>
+          <span>Settings</span>
+        </a>
+        <a href="profile.html" class="nav-item">
+          <i class="fas fa-user-cog"></i>
+          <span>Account</span>
+        </a>
+        <a href="help.html" class="nav-item">
+          <i class="fas fa-question-circle"></i>
+          <span>Help</span>
+        </a>
+      </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <!-- Top Bar -->
+      <div class="top-bar">
+        <div class="search-bar">
+          <input type="text" placeholder="Pesquisar..." data-translate-placeholder="search_placeholder">
+        </div>
+        <div class="user-menu">
+          <div class="notification-bell">
+            <i class="fas fa-bell"></i>
+            <span class="badge">0</span>
+          </div>
+          <div class="user-profile">
+            <div class="avatar">
+              <i class="fas fa-user"></i>
+            </div>
+            <span id="user-name">Loading...</span>
+            <div class="dropdown">
+              <button class="dropdown-toggle"><i class="fas fa-caret-down"></i></button>
+              <div class="dropdown-menu">
+                <a href="profile.html">Profile Management</a>
+                <a href="settings.html">General Settings</a>
+                <a href="#" onclick="handleSignOut()">Sign Out</a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Settings Section Header -->
+      <div class="settings-header">
+        <h1 data-translate="settings_title">Settings & Configuration</h1>
+        <p data-translate="settings_description">Manage your application preferences and configuration settings</p>
+      </div>
+
+      <!-- Settings Navigation -->
+      <div class="settings-container">
+        <div class="settings-nav">
+          <ul class="settings-tabs">
+            <li><a href="#account-settings" class="active"><i class="fas fa-user-circle"></i> Account Settings</a></li>
+            <li><a href="#business-settings"><i class="fas fa-building"></i> Business Profile</a></li>
+            <li><a href="#appearance-settings"><i class="fas fa-palette"></i> Appearance</a></li>
+            <li><a href="#invoice-settings"><i class="fas fa-file-invoice"></i> Invoice Settings</a></li>
+            <li><a href="#notification-settings"><i class="fas fa-bell"></i> Notifications</a></li>
+            <li><a href="#security-settings"><i class="fas fa-shield-alt"></i> Security</a></li>
+            <li><a href="#integrations-settings"><i class="fas fa-plug"></i> Integrations</a></li>
+          </ul>
+        </div>
+
+        <div class="settings-content">
+          <!-- Account Settings -->
+          <section id="account-settings" class="settings-section active">
+            <div class="section-header">
+              <h2><i class="fas fa-user-circle"></i> Account Settings</h2>
+              <p>Manage your personal account information</p>
+            </div>
+
+            <form id="user-settings-form">
+              <div class="form-group">
+                <div class="form-row">
+                  <div class="form-control">
+                    <label for="user-name-input">Name:</label>
+                    <input type="text" id="user-name-input" name="user-name" placeholder="Enter your name" disabled required>
+                  </div>
+
+                  <div class="form-control">
+                    <label for="user-email-input">Email:</label>
+                    <input type="email" id="user-email-input" name="user-email" placeholder="Enter your email" disabled required>
+                  </div>
+                </div>
+
+                <div class="form-row">
+                  <div class="form-control">
+                    <label for="user-phone">Phone Number:</label>
+                    <input type="tel" id="user-phone" name="user-phone" placeholder="Enter your phone number" disabled>
+                  </div>
+
+                  <div class="form-control">
+                    <label for="user-language">Preferred Language:</label>
+                    <select id="user-language" name="user-language" disabled>
+                      <option value="pt">Portuguese</option>
+                      <option value="en">English</option>
+                      <option value="es">Spanish</option>
+                      <option value="fr">French</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              <div class="form-actions">
+                <button type="button" id="edit-user-settings" class="btn btn-primary">Edit</button>
+                <button type="button" id="save-user-settings" style="display: none;" class="btn btn-success">Save</button>
+                <button type="button" id="cancel-user-settings" style="display: none;" class="btn btn-secondary">Cancel</button>
+              </div>
+            </form>
+          </section>
+
+          <!-- Business Profile Settings -->
+          <section id="business-settings" class="settings-section">
+            <div class="section-header">
+              <h2><i class="fas fa-building"></i> Business Profile</h2>
+              <p>Manage your business information and profile</p>
+            </div>
+
+            <form id="business-settings-form">
+              <div class="form-group">
+                <div class="form-row">
+                  <div class="form-control">
+                    <label for="business-name">Company Name:</label>
+                    <input type="text" id="business-name" name="business-name" placeholder="Enter company name">
+                  </div>
+
+                  <div class="form-control">
+                    <label for="tax-id">Tax ID / NIF:</label>
+                    <input type="text" id="tax-id" name="tax-id" placeholder="Enter your tax identification number">
+                  </div>
+                </div>
+
+                <div class="form-row">
+                  <div class="form-control">
+                    <label for="business-address">Business Address:</label>
+                    <textarea id="business-address" name="business-address" placeholder="Enter your business address" rows="3"></textarea>
+                  </div>
+                </div>
+
+                <div class="form-row">
+                  <div class="form-control">
+                    <label for="business-website">Website:</label>
+                    <input type="url" id="business-website" name="business-website" placeholder="https://www.example.com">
+                  </div>
+
+                  <div class="form-control">
+                    <label for="business-email">Business Email:</label>
+                    <input type="email" id="business-email" name="business-email" placeholder="contact@yourcompany.com">
+                  </div>
+                </div>
+              </div>
+
+              <div class="form-actions">
+                <button type="button" id="save-business-settings" class="btn btn-success">Save Changes</button>
+                <button type="button" id="reset-business-settings" class="btn btn-secondary">Reset</button>
+              </div>
+            </form>
+          </section>
+
+          <!-- Appearance Settings -->
+          <section id="appearance-settings" class="settings-section">
+            <div class="section-header">
+              <h2><i class="fas fa-palette"></i> Appearance</h2>
+              <p>Customize the appearance of your dashboard and documents</p>
+            </div>
+
+            <form id="appearance-settings-form">
+              <div class="form-group">
+                <div class="form-row">
+                  <div class="form-control">
+                    <label for="company-logo">Company Logo:</label>
+                    <div class="logo-upload-container">
+                      <div class="logo-preview">
+                        <div class="logo-placeholder">
+                          <i class="fas fa-image"></i>
+                          <span>No logo uploaded</span>
+                        </div>
+                        <img id="logo-preview-img" src="" alt="" style="display: none;">
+                      </div>
+                      <div class="logo-upload-controls">
+                        <input type="file" id="company-logo" name="company-logo" accept="image/*">
+                        <p class="upload-help">Recommended size: 200x200px. Max size: 2MB</p>
+                        <button type="button" id="remove-logo" class="btn btn-danger-outlined">Remove Logo</button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="form-row">
+                  <div class="form-control">
+                    <label for="theme-selection">Dashboard Theme:</label>
+                    <select id="theme-selection" name="theme-selection">
+                      <option value="light">Light Theme</option>
+                      <option value="dark">Dark Theme</option>
+                      <option value="auto">Auto (System Default)</option>
+                    </select>
+                  </div>
+
+                  <div class="form-control">
+                    <label for="accent-color">Accent Color:</label>
+                    <div class="color-picker-container">
+                      <input type="color" id="accent-color" name="accent-color" value="#007ec7">
+                      <span id="color-value">#007ec7</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="form-row">
+                  <div class="form-control">
+                    <label for="font-size">Interface Font Size:</label>
+                    <select id="font-size" name="font-size">
+                      <option value="small">Small</option>
+                      <option value="medium" selected>Medium</option>
+                      <option value="large">Large</option>
+                    </select>
+                  </div>
+
+                  <div class="form-control">
+                    <label for="sidebar-position">Sidebar Position:</label>
+                    <select id="sidebar-position" name="sidebar-position">
+                      <option value="left" selected>Left</option>
+                      <option value="right">Right</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              <div class="form-actions">
+                <button type="button" id="save-appearance-settings" class="btn btn-success">Save Changes</button>
+                <button type="button" id="reset-appearance-settings" class="btn btn-secondary">Reset to Default</button>
+              </div>
+            </form>
+          </section>
+
+          <!-- Invoice Settings -->
+          <section id="invoice-settings" class="settings-section">
+            <div class="section-header">
+              <h2><i class="fas fa-file-invoice"></i> Invoice Settings</h2>
+              <p>Configure your invoice preferences and default values</p>
+            </div>
+
+            <form id="invoice-settings-form">
+              <div class="form-group">
+                <div class="form-row">
+                  <div class="form-control">
+                    <label for="invoice-prefix">Invoice Number Prefix:</label>
+                    <input type="text" id="invoice-prefix" name="invoice-prefix" placeholder="e.g., INV-">
+                  </div>
+
+                  <div class="form-control">
+                    <label for="invoice-next-number">Next Invoice Number:</label>
+                    <input type="number" id="invoice-next-number" name="invoice-next-number" min="1" value="1">
+                  </div>
+                </div>
+
+                <div class="form-row">
+                  <div class="form-control">
+                    <label for="invoice-template">Default Invoice Template:</label>
+                    <select id="invoice-template" name="invoice-template">
+                      <option value="template1">Standard Template</option>
+                      <option value="template2">Professional Template</option>
+                      <option value="template3">Minimalist Template</option>
+                    </select>
+                  </div>
+
+                  <div class="form-control">
+                    <label for="invoice-color">Invoice Accent Color:</label>
+                    <div class="color-picker-container">
+                      <input type="color" id="invoice-color" name="invoice-color" value="#007ec7">
+                      <span id="invoice-color-value">#007ec7</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="form-row">
+                  <div class="form-control">
+                    <label for="default-currency">Default Currency:</label>
+                    <select id="default-currency" name="default-currency">
+                      <option value="MZN">Metical (MZN)</option>
+                      <option value="EUR">Euro (€)</option>
+                      <option value="USD">US Dollar ($)</option>
+                      <option value="GBP">British Pound (£)</option>
+                      <option value="AOA">Angolan Kwanza (Kz)</option>
+                    </select>
+                  </div>
+
+                  <div class="form-control">
+                    <label for="default-tax-rate">Default Tax Rate (%):</label>
+                    <input type="number" id="default-tax-rate" name="default-tax-rate" min="0" max="100" step="0.01" value="23">
+                  </div>
+                </div>
+
+                <div class="form-row">
+                  <div class="form-control">
+                    <label for="payment-terms">Default Payment Terms:</label>
+                    <select id="payment-terms" name="payment-terms">
+                      <option value="due-receipt">Due on Receipt</option>
+                      <option value="net-15">Net 15 Days</option>
+                      <option value="net-30" selected>Net 30 Days</option>
+                      <option value="net-60">Net 60 Days</option>
+                    </select>
+                  </div>
+
+                  <div class="form-control">
+                    <label for="invoice-notes">Default Invoice Notes:</label>
+                    <textarea id="invoice-notes" name="invoice-notes" placeholder="Enter default notes to appear on all invoices"></textarea>
+                  </div>
+                </div>
+              </div>
+
+              <div class="form-actions">
+                <button type="button" id="save-invoice-settings" class="btn btn-success">Save Changes</button>
+                <button type="button" id="reset-invoice-settings" class="btn btn-secondary">Reset</button>
+              </div>
+            </form>
+          </section>
+
+          <!-- Notification Settings -->
+          <section id="notification-settings" class="settings-section">
+            <div class="section-header">
+              <h2><i class="fas fa-bell"></i> Notifications</h2>
+              <p>Manage your notification preferences</p>
+            </div>
+
+            <form id="notification-settings-form">
+              <div class="form-group">
+                <h3>Email Notifications</h3>
+                <div class="form-row">
+                  <div class="form-control checkbox-control">
+                    <input type="checkbox" id="notify-invoice-created" name="notify-invoice-created" checked>
+                    <label for="notify-invoice-created">Invoice Created</label>
+                  </div>
+
+                  <div class="form-control checkbox-control">
+                    <input type="checkbox" id="notify-payment-received" name="notify-payment-received" checked>
+                    <label for="notify-payment-received">Payment Received</label>
+                  </div>
+                </div>
+
+                <div class="form-row">
+                  <div class="form-control checkbox-control">
+                    <input type="checkbox" id="notify-invoice-due" name="notify-invoice-due" checked>
+                    <label for="notify-invoice-due">Invoice Due Reminder</label>
+                  </div>
+
+                  <div class="form-control checkbox-control">
+                    <input type="checkbox" id="notify-invoice-overdue" name="notify-invoice-overdue" checked>
+                    <label for="notify-invoice-overdue">Invoice Overdue Alert</label>
+                  </div>
+                </div>
+
+                <h3>System Notifications</h3>
+                <div class="form-row">
+                  <div class="form-control checkbox-control">
+                    <input type="checkbox" id="notify-product-low-stock" name="notify-product-low-stock" checked>
+                    <label for="notify-product-low-stock">Product Low Stock</label>
+                  </div>
+
+                  <div class="form-control checkbox-control">
+                    <input type="checkbox" id="notify-system-updates" name="notify-system-updates" checked>
+                    <label for="notify-system-updates">System Updates</label>
+                  </div>
+                </div>
+
+                <div class="form-row">
+                  <div class="form-control checkbox-control">
+                    <input type="checkbox" id="notify-client-activity" name="notify-client-activity">
+                    <label for="notify-client-activity">Client Portal Activity</label>
+                  </div>
+
+                  <div class="form-control checkbox-control">
+                    <input type="checkbox" id="notify-login-attempts" name="notify-login-attempts" checked>
+                    <label for="notify-login-attempts">Unusual Login Attempts</label>
+                  </div>
+                </div>
+              </div>
+
+              <div class="form-actions">
+                <button type="button" id="save-notification-settings" class="btn btn-success">Save Changes</button>
+                <button type="button" id="reset-notification-settings" class="btn btn-secondary">Reset</button>
+              </div>
+            </form>
+          </section>
+
+          <!-- Security Settings -->
+          <section id="security-settings" class="settings-section">
+            <div class="section-header">
+              <h2><i class="fas fa-shield-alt"></i> Security</h2>
+              <p>Manage your account security settings</p>
+            </div>
+
+            <form id="security-settings-form">
+              <div class="form-group">
+                <h3>Password Management</h3>
+                <div class="form-row">
+                  <div class="form-control">
+                    <label for="current-password">Current Password:</label>
+                    <input type="password" id="current-password" name="current-password" placeholder="Enter current password">
+                  </div>
+                </div>
+
+                <div class="form-row">
+                  <div class="form-control">
+                    <label for="new-password">New Password:</label>
+                    <input type="password" id="new-password" name="new-password" placeholder="Enter new password">
+                    <div class="password-strength-meter">
+                      <div class="strength-bar"></div>
+                    </div>
+                    <p class="password-strength-text">Password strength: <span>None</span></p>
+                  </div>
+
+                  <div class="form-control">
+                    <label for="confirm-password">Confirm New Password:</label>
+                    <input type="password" id="confirm-password" name="confirm-password" placeholder="Confirm new password">
+                  </div>
+                </div>
+
+                <h3>Two-Factor Authentication</h3>
+                <div class="form-row">
+                  <div class="form-control toggle-control">
+                    <label class="toggle-switch">
+                      <input type="checkbox" id="enable-2fa" name="enable-2fa">
+                      <span class="toggle-slider"></span>
+                    </label>
+                    <label for="enable-2fa">Enable Two-Factor Authentication</label>
+                  </div>
+                </div>
+
+                <div id="2fa-setup" class="hidden">
+                  <div class="form-row">
+                    <div class="form-control">
+                      <label>Scan this QR code with your authenticator app:</label>
+                      <div class="qr-placeholder">
+                        <i class="fas fa-qrcode"></i>
+                        <p>QR Code will appear here when enabled</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="form-row">
+                    <div class="form-control">
+                      <label for="verification-code">Verification Code:</label>
+                      <input type="text" id="verification-code" name="verification-code" placeholder="Enter 6-digit code">
+                    </div>
+                  </div>
+                </div>
+
+                <h3>Session Management</h3>
+                <div class="form-row">
+                  <div class="form-control">
+                    <label for="session-timeout">Session Timeout (minutes):</label>
+                    <input type="number" id="session-timeout" name="session-timeout" min="5" max="240" value="30">
+                  </div>
+                </div>
+
+                <div class="form-row">
+                  <div class="form-control toggle-control">
+                    <label class="toggle-switch">
+                      <input type="checkbox" id="require-login-confirmation" name="require-login-confirmation">
+                      <span class="toggle-slider"></span>
+                    </label>
+                    <label for="require-login-confirmation">Require confirmation for new device logins</label>
+                  </div>
+                </div>
+              </div>
+
+              <div class="form-actions">
+                <button type="button" id="save-security-settings" class="btn btn-success">Save Changes</button>
+                <button type="button" id="reset-security-settings" class="btn btn-secondary">Reset</button>
+              </div>
+            </form>
+          </section>
+
+          <!-- Integrations Settings -->
+          <section id="integrations-settings" class="settings-section">
+            <div class="section-header">
+              <h2><i class="fas fa-plug"></i> Integrations</h2>
+              <p>Connect external services and APIs</p>
+            </div>
+
+            <div class="integrations-container">
+              <div class="integration-card">
+                <div class="integration-logo">
+                  <i class="fab fa-paypal"></i>
+                </div>
+                <div class="integration-info">
+                  <h3>PayPal</h3>
+                  <p>Accept payments via PayPal</p>
+                  <div class="integration-status not-connected">
+                    <span>Not Connected</span>
+                  </div>
+                </div>
+                <div class="integration-actions">
+                  <button class="btn btn-primary">Connect</button>
+                </div>
+              </div>
+
+              <div class="integration-card">
+                <div class="integration-logo">
+                  <i class="fas fa-university"></i>
+                </div>
+                <div class="integration-info">
+                  <h3>BIM</h3>
+                  <p>Process bank payments</p>
+                  <div class="integration-status not-connected">
+                    <span>Not Connected</span>
+                  </div>
+                </div>
+                <div class="integration-actions">
+                  <button class="btn btn-primary">Connect</button>
+                </div>
+              </div>
+
+              <div class="integration-card">
+                <div class="integration-logo">
+                  <i class="fas fa-mobile-alt"></i>
+                </div>
+                <div class="integration-info">
+                  <h3>M-PESA</h3>
+                  <p>Mobile money transfers</p>
+                  <div class="integration-status connected">
+                    <span>Connected</span>
+                  </div>
+                </div>
+                <div class="integration-actions">
+                  <button class="btn btn-danger-outlined">Disconnect</button>
+                </div>
+              </div>
+
+              <div class="integration-card">
+                <div class="integration-logo">
+                  <i class="fas fa-envelope"></i>
+                </div>
+                <div class="integration-info">
+                  <h3>Email Service</h3>
+                  <p>Configure your email delivery</p>
+                  <div class="integration-status not-connected">
+                    <span>Not Connected</span>
+                  </div>
+                </div>
+                <div class="integration-actions">
+                  <button class="btn btn-primary">Configure</button>
+                </div>
+              </div>
+
+              <div class="integration-card">
+                <div class="integration-logo">
+                  <i class="fas fa-mobile-alt"></i>
+                </div>
+                <div class="integration-info">
+                  <h3>E-MOLA</h3>
+                  <p>Mobile money transfers</p>
+                  <div class="integration-status not-connected">
+                    <span>Not Connected</span>
+                  </div>
+                </div>
+                <div class="integration-actions">
+                  <button class="btn btn-primary">Connect</button>
+                </div>
+              </div>
+
+              <div class="integration-card">
+                <div class="integration-logo">
+                  <i class="fas fa-university"></i>
+                </div>
+                <div class="integration-info">
+                  <h3>BCI</h3>
+                  <p>Bank integration</p>
+                  <div class="integration-status not-connected">
+                    <span>Not Connected</span>
+                  </div>
+                </div>
+                <div class="integration-actions">
+                  <button class="btn btn-primary">Connect</button>
+                </div>
+              </div>
+            </div>
+          </section>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Toast Notification -->
+  <div id="toast-container">
+    <!-- Toast notifications will be dynamically inserted here -->
+  </div>
+
+  <!-- Loading Overlay -->
+  <div id="loading-overlay" class="hidden">
+    <div class="spinner"></div>
+  </div>
+
+  <!-- Confirmation Modal -->
+  <div id="confirmation-modal" class="modal hidden">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 id="modal-title">Confirm Action</h3>
+        <button id="close-modal" class="close-button">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p id="modal-message">Are you sure you want to proceed with this action?</p>
+      </div>
+      <div class="modal-footer">
+        <button id="modal-cancel" class="btn btn-secondary">Cancel</button>
+        <button id="modal-confirm" class="btn btn-primary">Confirm</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="assets/js/settings.js"></script>
+</body>
+</html>

@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body { font-family: 'Inter', sans-serif; line-height: 1.6; }
+        .invoice-container { max-width: 800px; margin: 20px auto; padding: 20px; }
+        .invoice-header { display: flex; justify-content: space-between; margin-bottom: 40px; }
+        .company-info { flex: 1; }
+        .company-registration { margin-bottom: 10px; font-weight: bold; }
+        .fiscal-info { color: #666; font-size: 0.9em; }
+        .payment-details { margin-top: 20px; border-top: 1px solid #ddd; padding-top: 10px; }
+        .qr-code { position: absolute; right: 20px; top: 20px; }
+        .digital-signature { margin-top: 20px; font-size: 0.8em; color: #666; }
+        .invoice-details { text-align: right; }
+        .client-info { margin-bottom: 30px; }
+        .invoice-items { width: 100%; border-collapse: collapse; margin: 20px 0; }
+        .invoice-items th, .invoice-items td { padding: 10px; text-align: left; border-bottom: 1px solid #ddd; }
+        .invoice-totals { text-align: right; margin-top: 30px; }
+        .total-row { margin: 5px 0; }
+        .grand-total { font-weight: bold; font-size: 1.2em; }
+    </style>
+</head>
+<body>
+    <div class="invoice-container">
+        <div class="invoice-header">
+            <div class="company-info">
+                <h1>{{companyName}}</h1>
+                <div class="company-registration">
+                    NUIT: {{companyNUIT}}<br>
+                    Reg. Comercial: {{commercialRegNo}}
+                </div>
+                <p>{{companyAddress}}</p>
+                <p>{{companyCity}}, {{companyPostalCode}}</p>
+                <p>{{companyProvince}}, Moçambique</p>
+            </div>
+            <div class="qr-code">{{qrCode}}</div>
+            <div class="invoice-details">
+                <h2>FACTURA</h2>
+                <p>No.: {{invoiceNumber}}</p>
+                <p>Data: {{issueDate}}</p>
+                <p>Vencimento: {{dueDate}}</p>
+            </div>
+        </div>
+        
+        <div class="client-info">
+            <h3>Cliente:</h3>
+            <p><strong>{{clientName}}</strong></p>
+            <p>NUIT: {{clientTaxId}}</p>
+            <p>{{clientAddress}}</p>
+            <p>ID Cliente: {{customerId}}</p>
+        </div>
+        
+        <table class="invoice-items">
+            <thead>
+                <tr>
+                    <th>Código</th>
+                    <th>Descrição</th>
+                    <th>Qtd</th>
+                    <th>Unid.</th>
+                    <th>Preço Unit.</th>
+                    <th>IVA (16%)</th>
+                    <th>Total</th>
+                </tr>
+            </thead>
+            <tbody>
+                {{itemsRows}}
+            </tbody>
+        </table>
+        
+        <div class="invoice-totals">
+            <div class="total-row">Subtotal: {{currency}} {{subtotal}}</div>
+            <div class="total-row">IVA (16%): {{currency}} {{totalVat}}</div>
+            <div class="total-row grand-total">Total: {{currency}} {{total}}</div>
+        </div>
+
+        <div class="payment-details">
+            <h4>Detalhes de Pagamento</h4>
+            <p>Método: {{paymentMethod}}</p>
+            <p>Condições: {{paymentTerms}}</p>
+        </div>
+
+        <div class="fiscal-info">
+            <p>Processado por Software Certificado No. {{softwareCertNo}}</p>
+            <p>{{softwareName}} v{{softwareVersion}}</p>
+            <p>Documento processado por computador</p>
+        </div>
+
+        <div class="digital-signature">
+            <p>Assinatura Digital: {{signatureHash}}</p>
+            <p>Data/Hora: {{signatureTimestamp}}</p>
+        </div>
+
+        <div class="notes">
+            <h4>Notes:</h4>
+            <p>{{notes}}</p>
+        </div>
+    </div>
+</body>
+</html>
