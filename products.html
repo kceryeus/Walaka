@@ -474,7 +474,7 @@
   </style>
   <script src="assets/js/sidebar.js"></script>
 </head>
-<body>
+<body onload="loadSidebar()">
   <div class="dashboard-container">
     <!-- Sidebar -->
     <div class="sidebar-container">
@@ -857,6 +857,21 @@
     window.addEventListener('load', () => {
       document.body.classList.add('loaded');
     });
+
+    // Add this function to load the sidebar
+    async function loadSidebar() {
+      try {
+        const response = await fetch('/components/sidebar.html');
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const sidebarContent = await response.text();
+        document.querySelector('.sidebar-container').innerHTML = sidebarContent;
+      } catch (error) {
+        console.error('Error loading sidebar:', error);
+        document.querySelector('.sidebar-container').innerHTML = '<div class="sidebar">Error loading sidebar</div>';
+      }
+    }
   </script>
 </body>
 </html>
