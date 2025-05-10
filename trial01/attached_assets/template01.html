@@ -1,0 +1,291 @@
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Invoice Template 01</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #3498db;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+            color: #333;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            width: 21cm; /* A4 width */
+            height: 29.7cm; /* A4 height */
+            padding: 2cm;
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            margin: 0; /* Remove default margins */
+            box-sizing: border-box; /* Include padding in width and height */
+        }
+
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        header .logo {
+            font-size: 24px;
+            font-weight: 700;
+            color: #2c3e50;
+        }
+
+        header .invoice-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--primary-color);
+        }
+
+        .invoice-details {
+            margin-top: 20px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .invoice-details .client-info {
+            width: 40%;
+        }
+
+        .invoice-details .details {
+            width: 40%;
+            text-align: right;
+        }
+
+        .invoice-details h2 {
+            font-size: 18px;
+            color: #2c3e50;
+            margin-bottom: 5px;
+        }
+
+        .invoice-details p {
+            font-size: 14px;
+            color: #7f8c8d;
+            margin-bottom: 5px;
+        }
+
+
+        .items-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 30px;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .items-table thead th {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 12px;
+            text-align: left;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .items-table tbody td {
+            padding: 12px;
+            border-bottom: 1px solid #ecf0f1;
+            font-size: 14px;
+        }
+
+        .items-table tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        .items-table tfoot td {
+            padding: 12px;
+            text-align: right;
+            font-weight: 600;
+            font-size: 16px;
+        }
+         .items-table tfoot tr:last-child td{
+             font-size: 18px;
+         }
+
+        .total-section {
+            text-align: right;
+            margin-top: 30px;
+        }
+
+        .total-section p {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .total-section .total-amount {
+            font-size: 24px;
+            color: #2c3e50;
+        }
+
+        .notes-section {
+            margin-top: 30px;
+        }
+
+        .notes-section h3 {
+            font-size: 18px;
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+
+        .notes-section p {
+            font-size: 10px;
+            color: #7f8c8d;
+            line-height: 1.6;
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            font-size: 12px;
+            color: #95a5a6;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="logo" id="company-logo">
+                <!-- Logo will be inserted here -->
+            </div>
+            <div class="invoice-title">INVOICE</div>
+        </header>
+
+        <div class="invoice-details">
+            <div class="client-info">
+                <h2>Invoice To</h2>
+                <p>Client Name: <span id="display-client-name"></span></p>
+                <p>First Name: <span id="display-first-name"></span></p>
+                <p>Last Name: <span id="display-last-name"></span></p>
+                <p>Email: <span id="display-mail-address"></span></p>
+                <p>Address: <span id="display-address"></span></p>
+                <p>NUIT: <span id="display-nuit"></span></p>
+                <p>Contact: <span id="display-contact"></span></p>
+            </div>
+            <div class="details">
+                <h2>Invoice Details</h2>
+                <p>Invoice No: <span id="display-invoice-number"></span></p>
+                <p>Issue Date: <span id="display-issue-date"></span></p>
+                <p>Due Date: <span id="display-due-date"></span></p>
+                <p>Project: <span id="display-project-name"></span></p>
+                <p>Payment Terms: <span id="display-payment-terms"></span></p>
+            </div>
+        </div>
+
+        <table class="items-table">
+            <thead>
+                <tr>
+                    <th>Product Description</th>
+                    <th>Price</th>
+                    <th>Qty</th>
+                    <th>IVA</th>
+                    <th>Amount</th>
+                </tr>
+            </thead>
+            <tbody id="display-items">
+                <!-- Items will be dynamically inserted here -->
+            </tbody>
+            <tfoot>
+                <tr>
+                    <td colspan="4">Subtotal</td>
+                    <td id="display-subtotal"></td>
+                </tr>
+                <tr>
+                    <td colspan="4">IVA</td>
+                    <td id="display-iva"></td>
+                </tr>
+                <tr>
+                    <td colspan="4">Discount</td>
+                    <td id="display-discount"></td>
+                </tr>
+                <tr>
+                    <td colspan="4">Total</td>
+                    <td id="display-total"></td>
+                </tr>
+            </tfoot>
+        </table>
+
+        <div class="notes-section">
+            <h6>Notes:</h6>
+            <p id="display-notes"></p>
+        </div>
+
+        <footer class="footer">
+           
+        </footer>
+    </div>
+
+    <script>
+        function loadInvoiceData() {
+            // Get template settings
+            const templateSettings = JSON.parse(localStorage.getItem('templateSettings'));
+            if (templateSettings) {
+                // Apply color theme
+                document.documentElement.style.setProperty('--primary-color', templateSettings.color);
+                
+                // Apply logo
+                if (templateSettings.logo) {
+                    const logoDiv = document.getElementById('company-logo');
+                    logoDiv.innerHTML = `<img src="${templateSettings.logo}" alt="Company Logo" style="max-height: 60px;">`;
+                }
+            }
+
+            // Get data from localStorage (saved from invoices.html)
+            const invoiceData = JSON.parse(localStorage.getItem('invoiceData'));
+            if (!invoiceData) return;
+            
+            // Populate client info
+            document.getElementById('display-client-name').textContent = invoiceData.clientName || '';
+            document.getElementById('display-first-name').textContent = invoiceData.firstName || '';
+            document.getElementById('display-last-name').textContent = invoiceData.lastName || '';
+            document.getElementById('display-mail-address').textContent = invoiceData.mailAddress || '';
+            document.getElementById('display-address').textContent = invoiceData.address || '';
+            document.getElementById('display-nuit').textContent = invoiceData.nuit || '';
+            document.getElementById('display-contact').textContent = invoiceData.contact || '';
+
+            // Populate invoice details
+            document.getElementById('display-invoice-number').textContent = invoiceData.invoiceNumber || '';
+            document.getElementById('display-issue-date').textContent = invoiceData.issueDate || '';
+            document.getElementById('display-due-date').textContent = invoiceData.dueDate || '';
+            document.getElementById('display-project-name').textContent = invoiceData.projectName || '';
+            document.getElementById('display-payment-terms').textContent = invoiceData.paymentTerms || '';
+
+            // Populate items
+            const itemsContainer = document.getElementById('display-items');
+            itemsContainer.innerHTML = ''; // Clear existing items
+            
+            invoiceData.items.forEach(item => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${item.description}</td>
+                    <td>${item.price}</td>
+                    <td>${item.quantity}</td>
+                    <td>${item.iva}%</td>
+                    <td>${item.total}</td>
+                `;
+                itemsContainer.appendChild(row);
+            });
+
+            // Populate totals
+            document.getElementById('display-subtotal').textContent = invoiceData.subtotal;
+            document.getElementById('display-iva').textContent = invoiceData.totalTax;
+            document.getElementById('display-discount').textContent = invoiceData.discount;
+            document.getElementById('display-total').textContent = invoiceData.total;
+            document.getElementById('display-notes').textContent = invoiceData.notes;
+        }
+
+        document.addEventListener('DOMContentLoaded', loadInvoiceData);
+    </script>
+</body>
+</html>

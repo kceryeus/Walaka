@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WALAKA - Invoice Management</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="/attached_assets/global.css">
+    <link rel="stylesheet" href="/attached_assets/styleguide.css">
+    <link rel="stylesheet" href="/attached_assets/styles.css">
+    <link rel="stylesheet" href="/trial.css">
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="logo">
+                <i class="fas fa-file-invoice"></i>
+                <span>WALAKA</span>
+            </div>
+            <nav class="nav-menu">
+                <div class="nav-section">
+                    <a href="index.html" class="nav-item active">
+                        <i class="fas fa-tachometer-alt"></i>
+                        <span>Dashboard</span>
+                    </a>
+                    <a href="invoices.html" class="nav-item">
+                        <i class="fas fa-file-invoice-dollar"></i>
+                        <span>Invoices</span>
+                    </a>
+                    <a href="#" class="nav-item">
+                        <i class="fas fa-user-friends"></i>
+                        <span>Clients</span>
+                    </a>
+                    <a href="#" class="nav-item">
+                        <i class="fas fa-chart-line"></i>
+                        <span>Reports</span>
+                    </a>
+                </div>
+                <div class="nav-section">
+                    <h3>Account</h3>
+                    <a href="#" class="nav-item">
+                        <i class="fas fa-cog"></i>
+                        <span>Settings</span>
+                    </a>
+                    <a href="#" class="nav-item">
+                        <i class="fas fa-question-circle"></i>
+                        <span>Help</span>
+                    </a>
+                </div>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Top Bar -->
+            <div class="top-bar">
+                <div class="search-bar">
+                    <input type="text" placeholder="Search...">
+                </div>
+                <div class="user-menu">
+                    <div class="notification-bell">
+                        <i class="fas fa-bell"></i>
+                        <span class="badge">3</span>
+                    </div>
+                    <div class="user-profile dropdown">
+                        <div class="avatar">
+                            <i class="fas fa-user"></i>
+                        </div>
+                        <span>Trial User</span>
+                        <button class="dropdown-toggle">
+                            <i class="fas fa-chevron-down"></i>
+                        </button>
+                        <div class="dropdown-menu">
+                            <a href="#"><i class="fas fa-user-circle"></i> Profile</a>
+                            <a href="#"><i class="fas fa-cog"></i> Settings</a>
+                            <a href="#"><i class="fas fa-sign-out-alt"></i> Logout</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Trial Status Banner -->
+            <div class="trial-banner" id="trial-banner">
+                <div class="trial-info">
+                    <div class="trial-header">
+                        <h3>Your Free Trial</h3>
+                        <span class="trial-badge">Trial</span>
+                    </div>
+                    <div class="trial-details">
+                        <div class="trial-metric">
+                            <div class="trial-metric-value" id="days-remaining">14</div>
+                            <div class="trial-metric-label">Days Remaining</div>
+                        </div>
+                        <div class="trial-progress">
+                            <div class="progress-bar">
+                                <div class="progress-fill" id="trial-progress"></div>
+                            </div>
+                        </div>
+                        <div class="trial-metric">
+                            <div class="trial-metric-value" id="invoices-remaining">3</div>
+                            <div class="trial-metric-label">Invoices Remaining</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="trial-actions">
+                    <button class="trial-btn primary-btn" id="upgrade-btn">
+                        <i class="fas fa-crown"></i>
+                        Upgrade Now
+                    </button>
+                </div>
+            </div>
+
+            <!-- Dashboard Content -->
+            <div class="page-header">
+                <div>
+                    <h2>Dashboard</h2>
+                    <div class="subtitle">Welcome to WALAKA Invoice Management</div>
+                </div>
+            </div>
+
+            <!-- Metrics -->
+            <div class="metrics-grid">
+                <div class="metric-card" id="totalInvoicesCard">
+                    <div class="metric-header">
+                        <i class="fas fa-file-invoice"></i>
+                        <span>Total Invoices</span>
+                    </div>
+                    <div class="metric-value">0</div>
+                    <div class="metric-footer">
+                        <span class="metric-label">All Time</span>
+                    </div>
+                </div>
+                <div class="metric-card" id="paidInvoicesCard">
+                    <div class="metric-header">
+                        <i class="fas fa-check-circle"></i>
+                        <span>Paid Invoices</span>
+                    </div>
+                    <div class="metric-value">0</div>
+                    <div class="metric-footer">
+                        <span class="metric-label">0% of Total</span>
+                    </div>
+                </div>
+                <div class="metric-card" id="pendingInvoicesCard">
+                    <div class="metric-header">
+                        <i class="fas fa-clock"></i>
+                        <span>Pending Invoices</span>
+                    </div>
+                    <div class="metric-value">0</div>
+                    <div class="metric-footer">
+                        <span class="metric-label">0% of Total</span>
+                    </div>
+                </div>
+                <div class="metric-card" id="overdueInvoicesCard">
+                    <div class="metric-header">
+                        <i class="fas fa-exclamation-circle"></i>
+                        <span>Overdue Invoices</span>
+                    </div>
+                    <div class="metric-value">0</div>
+                    <div class="metric-footer">
+                        <span class="metric-label">0% of Total</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Charts -->
+            <div class="chart-grid">
+                <div class="chart-card">
+                    <h3>
+                        Monthly Revenue
+                        <div class="chart-actions">
+                            <button class="chart-period-btn active">Month</button>
+                            <button class="chart-period-btn">Quarter</button>
+                            <button class="chart-period-btn">Year</button>
+                        </div>
+                    </h3>
+                    <div class="chart-container">
+                        <div class="empty-state">
+                            <i class="fas fa-chart-line"></i>
+                            <p>Create invoices to see your revenue statistics</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="chart-card">
+                    <h3>
+                        Invoice Status
+                        <div class="chart-actions">
+                            <button class="chart-period-btn active">Month</button>
+                            <button class="chart-period-btn">Quarter</button>
+                            <button class="chart-period-btn">Year</button>
+                        </div>
+                    </h3>
+                    <div class="chart-container">
+                        <div class="empty-state">
+                            <i class="fas fa-chart-pie"></i>
+                            <p>Create invoices to see your invoice status breakdown</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Invoices -->
+            <div class="invoice-table-container">
+                <div class="table-header">
+                    <h3>Recent Invoices</h3>
+                </div>
+                <div class="table-responsive">
+                    <table class="data-table" id="invoicesTable">
+                        <thead>
+                            <tr>
+                                <th>Invoice #</th>
+                                <th>Client</th>
+                                <th>Issue Date</th>
+                                <th>Due Date</th>
+                                <th>Amount</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                    <div id="noResultsMessage" class="empty-state">
+                        <i class="fas fa-file-invoice"></i>
+                        <p>No invoices yet. Create your first invoice to get started!</p>
+                        <a href="invoices.html" class="btn primary-btn">
+                            <i class="fas fa-plus"></i>
+                            Create Invoice
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Trial Expired Modal -->
+            <div class="modal" id="trialExpiredModal">
+                <div class="modal-overlay"></div>
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h2>Trial Period Ended</h2>
+                        <button class="close-modal">&times;</button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="trial-expired-content">
+                            <div class="expired-icon">
+                                <i class="fas fa-hourglass-end"></i>
+                            </div>
+                            <h3>Your 14-day free trial has ended</h3>
+                            <p>Thank you for trying WALAKA Invoice Management. To continue creating invoices and accessing all features, please upgrade to a paid plan.</p>
+                            <div class="expired-features">
+                                <div class="feature-item">
+                                    <i class="fas fa-check-circle"></i>
+                                    <span>Unlimited invoices</span>
+                                </div>
+                                <div class="feature-item">
+                                    <i class="fas fa-check-circle"></i>
+                                    <span>Client management</span>
+                                </div>
+                                <div class="feature-item">
+                                    <i class="fas fa-check-circle"></i>
+                                    <span>Financial reports</span>
+                                </div>
+                                <div class="feature-item">
+                                    <i class="fas fa-check-circle"></i>
+                                    <span>Invoice templates</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn secondary-btn" id="contactSupportBtn">
+                            <i class="fas fa-headset"></i>
+                            Contact Support
+                        </button>
+                        <button class="btn primary-btn" id="upgradeAccountBtn">
+                            <i class="fas fa-crown"></i>
+                            Upgrade Now
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Invoice Limit Modal -->
+            <div class="modal" id="invoiceLimitModal">
+                <div class="modal-overlay"></div>
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h2>Invoice Limit Reached</h2>
+                        <button class="close-modal">&times;</button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="trial-expired-content">
+                            <div class="expired-icon">
+                                <i class="fas fa-file-invoice"></i>
+                            </div>
+                            <h3>You've reached the trial invoice limit</h3>
+                            <p>Your free trial allows for creating up to 3 invoices. To create more invoices and access all features, please upgrade to a paid plan.</p>
+                            <div class="expired-features">
+                                <div class="feature-item">
+                                    <i class="fas fa-check-circle"></i>
+                                    <span>Unlimited invoices</span>
+                                </div>
+                                <div class="feature-item">
+                                    <i class="fas fa-check-circle"></i>
+                                    <span>Client management</span>
+                                </div>
+                                <div class="feature-item">
+                                    <i class="fas fa-check-circle"></i>
+                                    <span>Financial reports</span>
+                                </div>
+                                <div class="feature-item">
+                                    <i class="fas fa-check-circle"></i>
+                                    <span>Invoice templates</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn secondary-btn close-modal">
+                            Continue with Trial
+                        </button>
+                        <button class="btn primary-btn" id="upgradeLimitBtn">
+                            <i class="fas fa-crown"></i>
+                            Upgrade Now
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/attached_assets/main.js"></script>
+    <script src="/trial.js"></script>
+</body>
+</html>

@@ -1,0 +1,10 @@
+/* Import the existing styles.css content */
+@import url('./styles.css');
+
+/* Add any client-specific styles from clients/clients.html */
+.client-management {
+  display: flex;
+  gap: 2rem;
+}
+
+/* ...copy all styles from the <style> tag in clients/clients.html... */

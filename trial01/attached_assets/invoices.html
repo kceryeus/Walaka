@@ -1,0 +1,706 @@
+<!DOCTYPE html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WALAKA - Invoice Management</title>
+    
+    <script src="https://cdn.supabase.com/supabase-js-v2.min.js"></script>
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Google Fonts - Inter -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap">
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/invoice.css">
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- Sidebar Menu -->
+        <nav class="sidebar">
+            <div class="logo">
+                <i class="fas fa-chart-line"></i>
+                <span>WALAKA</span>
+            </div>
+            
+            <div class="nav-menu">
+                <a href="dashboard.html" class="nav-item">
+                    <i class="fas fa-home"></i>
+                    <span>Dashboard</span>
+                </a>
+                
+                <div class="nav-section">
+                    <h3>Invoicing</h3>
+                </div>
+                <a href="invoices.html" class="nav-item active">
+                    <i class="fas fa-file-invoice-dollar"></i>
+                    <span>Invoices</span>
+                </a>
+
+                <a href="clients.html" class="nav-item">
+                    <i class="fas fa-users"></i>
+                    <span>Clients</span>
+                </a>
+
+                <a href="products.html" class="nav-item">
+                    <i class="fas fa-shopping-cart"></i>
+                    <span>Products</span>
+                </a>
+            
+                <!--<a href="#" class="nav-item">
+                    <i class="fas fa-percentage"></i>
+                    <span>Taxes</span>
+                </a>-->
+                
+                
+                
+                <div class="nav-section">
+                    <h3>Commercial</h3>
+                </div>
+                <a href="#" class="nav-item">
+                    <i class="fas fa-boxes"></i>
+                    <span>Stock</span>
+                </a>
+                <a href="#" class="nav-item">
+                    <i class="fas fa-truck"></i>
+                    <span>Suppliers</span>
+                </a>
+                <a href="#" class="nav-item">
+                    <i class="fas fa-exchange-alt"></i>
+                    <span>Movements</span>
+                </a>
+                <a href="#" class="nav-item">
+                    <i class="fas fa-money-bill-wave"></i>
+                    <span>Expenses</span>
+                </a>
+                <div class="nav-section">
+                    <h3>Accounting </h3>
+                 <a href="#" class="nav-item">
+                      <i class="fas fa-book"></i>
+                      <span>Entries</span> 
+                    </a>
+                    <a href="#" class="nav-item">
+                      <i class="fas fa-list-alt"></i>
+                     <span> Chart of Accounts</span>
+                    </a>
+                    <a href="#" class="nav-item">
+                      <i class="fas fa-percent"></i>
+                      <span>Taxes</span> 
+                    </a>
+                  </div>
+
+                <div class="nav-section">
+                    <h3>Finances</h3>
+                </div>
+               
+                <a href="#" class="nav-item">
+                    <i class="fas fa-chart-pie"></i>
+                    <span>Reports</span>
+                </a>
+                <a href="#" class="nav-item">
+                    <i class="fas fa-chart-line"></i>
+                    Key Metrics
+                  </a>
+
+                <div class="nav-section">
+                    <h3>Settings</h3>
+                </div>
+                <a href="settings.html" class="nav-item">
+                    <i class="fas fa-cog"></i>
+                    <span>Settings</span>
+                </a>
+                <a href="profile.html" class="nav-item">
+                    <i class="fas fa-user-cog"></i>
+                    <span>Account</span>
+                </a>
+                <a href="#" class="nav-item">
+                    <i class="fas fa-question-circle"></i>
+                    <span>Help</span>
+                </a>
+            </div>
+        </nav>
+        
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Top Bar -->
+            <div class="top-bar">
+                <button class="menu-toggle">
+                    <i class="fas fa-bars"></i>
+                </button>
+                
+                <div class="search-bar">
+                    <input type="text" placeholder="Search invoices...">
+                </div>
+                
+                <div class="user-menu">
+                    <div class="notification-bell">
+                        <i class="fas fa-bell"></i>
+                        <span class="badge">3</span>
+                    </div>
+                    
+                    <div class="user-profile">
+                        <div class="avatar">
+                            <i class="fas fa-user"></i>
+                        </div>
+                        <span>John Doe</span>
+                        <div class="dropdown-menu">
+                            <a href="#">
+                                <i class="fas fa-user-circle"></i> My Profile
+                            </a>
+                            <a href="#">
+                                <i class="fas fa-cog"></i> Settings
+                            </a>
+                            <a href="#">
+                                <i class="fas fa-sign-out-alt"></i> Logout
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Invoice Dashboard Content -->
+            <div class="page-header">
+                <div>
+                    <h2>Invoice Management</h2>
+                    <p class="subtitle">Create, manage, and track all your invoices</p>
+                </div>
+                <div class="action-buttons">
+                    <button class="btn secondary-btn" id="importInvoiceBtn">
+                        <i class="fas fa-file-import"></i> Import
+                    </button>
+                    <a href="create-invoice.html" class="btn primary-btn" id="createInvoiceBtn">
+                        <i class="fas fa-plus"></i> Create Invoice
+                    </a>
+                </div>
+            </div>
+            
+            <!-- Invoice Metrics -->
+            <div class="metrics-grid">
+                <div class="metric-card" id="totalInvoicesCard">
+                    <div class="metric-header">
+                        <i class="fas fa-file-invoice"></i>
+                        <span>Total Invoices</span>
+                    </div>
+                    <div class="metric-value">358</div>
+                    <div class="metric-footer">
+                        <span class="metric-label">All Time</span>
+                    </div>
+                </div>
+                
+                <div class="metric-card" id="paidInvoicesCard">
+                    <div class="metric-header">
+                        <i class="fas fa-check-circle"></i>
+                        <span>Paid Invoices</span>
+                    </div>
+                    <div class="metric-value">281</div>
+                    <div class="metric-footer">
+                        <span class="metric-label">78.5% of Total</span>
+                    </div>
+                </div>
+                
+                <div class="metric-card" id="pendingInvoicesCard">
+                    <div class="metric-header">
+                        <i class="fas fa-clock"></i>
+                        <span>Pending Payments</span>
+                    </div>
+                    <div class="metric-value">52</div>
+                    <div class="metric-footer">
+                        <span class="metric-label">14.5% of Total</span>
+                    </div>
+                </div>
+                
+                <div class="metric-card" id="overdueInvoicesCard">
+                    <div class="metric-header">
+                        <i class="fas fa-exclamation-circle"></i>
+                        <span>Overdue Invoices</span>
+                    </div>
+                    <div class="metric-value">25</div>
+                    <div class="metric-footer">
+                        <span class="metric-label">7% of Total</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Invoice Charts -->
+            <div class="chart-grid">
+                <div class="chart-card">
+                    <h3>
+                        Invoice Distribution
+                        <div class="chart-actions">
+                            <button id="weeklyBtn" class="chart-period-btn active">Weekly</button>
+                            <button id="monthlyBtn" class="chart-period-btn">Monthly</button>
+                            <button id="quarterlyBtn" class="chart-period-btn">Quarterly</button>
+                        </div>
+                    </h3>
+                    <div class="chart-container">
+                        <canvas id="invoiceDistributionChart"></canvas>
+                    </div>
+                </div>
+                
+                <div class="chart-card">
+                    <h3>
+                        Revenue by Status
+                        <div class="chart-actions">
+                            <button id="revenueMonthlyBtn" class="chart-period-btn active">Monthly</button>
+                            <button id="revenueYearlyBtn" class="chart-period-btn">Yearly</button>
+                        </div>
+                    </h3>
+                    <div class="chart-container">
+                        <canvas id="revenueByStatusChart"></canvas>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Invoice Table Filter Section -->
+            <div class="invoice-table-container">
+                <div class="table-header">
+                    <h3>Recent Invoices</h3>
+                    <div class="table-filters">
+                        <div class="filter-group">
+                            <label for="statusFilter">Status:</label>
+                            <select id="statusFilter" class="filter-select">
+                                <option value="all">All Statuses</option>
+                                <option value="paid">Paid</option>
+                                <option value="pending">Pending</option>
+                                <option value="overdue">Overdue</option>
+                                <option value="draft">Unfinished</option>
+                            </select>
+                        </div>
+                        <div class="filter-group">
+                            <label for="dateFilter">Date Range:</label>
+                            <select id="dateFilter" class="filter-select">
+                                <option value="all">All Time</option>
+                                <option value="today">Today</option>
+                                <option value="week">This Week</option>
+                                <option value="month" selected>This Month</option>
+                                <option value="quarter">This Quarter</option>
+                                <option value="year">This Year</option>
+                            </select>
+                        </div>
+                        <div class="filter-group">
+                            <label for="clientFilter">Client:</label>
+                            <select id="clientFilter" class="filter-select">
+                                <option value="all">All Clients</option>
+                                <option value="globex">Globex Industries</option>
+                                <option value="stark">Stark Industries</option>
+                                <option value="wayne">Wayne Enterprises</option>
+                                <option value="acme">Acme Corp</option>
+                            </select>
+                        </div>
+                        <div class="search-filter">
+                            <label for="searchInvoices">Search:</label>
+                            <input type="text" id="searchInvoices" placeholder="Invoice number, client name...">
+                            <button id="clearFilters" class="clear-filters-btn">
+                                <i class="fas fa-times"></i> Clear
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Invoices Table -->
+                <div class="table-responsive">
+                    <table id="invoicesTable" class="data-table">
+                        <thead>
+                            <tr>
+                                <th>
+                                    Invoice # 
+                                    <span class="sort-icon" data-sort="invoice">
+                                        <i class="fas fa-sort"></i>
+                                    </span>
+                                </th>
+                                <th>
+                                    Client 
+                                    <span class="sort-icon" data-sort="client">
+                                        <i class="fas fa-sort"></i>
+                                    </span>
+                                </th>
+                                <th>
+                                    Date 
+                                    <span class="sort-icon" data-sort="date">
+                                        <i class="fas fa-sort"></i>
+                                    </span>
+                                </th>
+                                <th>
+                                    Due Date 
+                                    <span class="sort-icon" data-sort="dueDate">
+                                        <i class="fas fa-sort"></i>
+                                    </span>
+                                </th>
+                                <th>
+                                    Amount 
+                                    <span class="sort-icon" data-sort="amount">
+                                        <i class="fas fa-sort"></i>
+                                    </span>
+                                </th>
+                                <th>
+                                    Status 
+                                    <span class="sort-icon" data-sort="status">
+                                        <i class="fas fa-sort"></i>
+                                    </span>
+                                </th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                           
+                        </tbody>
+                    </table>
+                </div>
+                
+                <!-- Pagination -->
+                <div class="pagination">
+                    <span class="page-info">Showing 1-6 of 358 invoices</span>
+                    <div class="page-controls">
+                        <button class="pagination-btn" disabled>
+                            <i class="fas fa-chevron-left"></i>
+                        </button>
+                        <button class="pagination-btn active">1</button>
+                        <button class="pagination-btn">2</button>
+                        <button class="pagination-btn">3</button>
+                        <span class="pagination-ellipsis">...</span>
+                        <button class="pagination-btn">60</button>
+                        <button class="pagination-btn">
+                            <i class="fas fa-chevron-right"></i>
+                        </button>
+                    </div>
+                    <div class="go-to-page">
+                        <label for="goToPage">Ir para:</label>
+                        <input type="number" id="goToPage" min="1" value="1">
+                        <button class="go-btn" id="goToPageBtn">Ir</button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- No Results Message (hidden by default) -->
+            <div id="noResultsMessage" class="no-results" style="display: none;">
+                <i class="fas fa-search fa-3x"></i>
+                <h3>No invoices found</h3>
+                <p>Try adjusting your search or filter criteria</p>
+                <a href="#" id="resetFiltersLink">Reset all filters</a>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Create Invoice Modal -->
+    <div id="invoiceModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Create New Invoice</h2>
+                <button class="close-modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="invoiceForm">
+                    <div class="form-grid">
+                        <div class="form-section">
+                            <h3>Client Information</h3>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="clientName">Client Name/Company</label>
+                                    <select id="clientName" required>
+                                        <option value="" disabled selected>Select a client</option>
+                                        <option value="Globex Industries">Globex Industries</option>
+                                        <option value="Stark Industries">Stark Industries</option>
+                                        <option value="Wayne Enterprises">Wayne Enterprises</option>
+                                        <option value="Acme Corp">Acme Corp</option>
+                                        <option value="Pied Piper">Pied Piper</option>
+                                        <option value="Dunder Mifflin">Dunder Mifflin</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="clientEmail">Email</label>
+                                    <input type="email" id="clientEmail" placeholder="client@example.com">
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="clientAddress">Address</label>
+                                    <textarea id="clientAddress" rows="3" placeholder="Client's full address"></textarea>
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="clientTaxId">Tax ID (NUIT)</label>
+                                    <input type="text" id="clientTaxId" placeholder="e.g. 123456789">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="form-section">
+                            <h3>Invoice Details</h3>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="invoiceNumber">Invoice Number</label>
+                                    <input type="text" id="invoiceNumber" value="INV-2025-0007" readonly>
+                                </div>
+                                <div class="form-group">
+                                    <label for="issueDate">Issue Date</label>
+                                    <input type="date" id="issueDate" value="2025-03-25" required>
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="dueDate">Due Date</label>
+                                    <input type="date" id="dueDate" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="currency">Currency</label>
+                                    <select id="currency" required>
+                                        <option value="USD" selected>USD - US Dollar</option>
+                                        <option value="EUR">EUR - Euro</option>
+                                        <option value="GBP">GBP - British Pound</option>
+                                        <option value="MZN">MZN - Mozambican Metical</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="paymentTerms">Payment Terms</label>
+                                    <select id="paymentTerms" required>
+                                        <option value="net30" selected>Net 30 - Due in 30 days</option>
+                                        <option value="net15">Net 15 - Due in 15 days</option>
+                                        <option value="net60">Net 60 - Due in 60 days</option>
+                                        <option value="custom">Custom</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-section">
+                        <h3>Issuer Information</h3>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="issuerName">Issuer Name</label>
+                                <input type="text" id="issuerName" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="issuerNuit">Issuer NUIT</label>
+                                <input type="text" id="issuerNuit">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="issuerAddress">Issuer Address</label>
+                                <textarea id="issuerAddress" rows="3"></textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <h3>Additional Invoice Information</h3>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="description">Description</label>
+                                <textarea id="description" rows="3"></textarea>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                             <div class="form-group">
+                                <label for="totalWithoutTaxes">Total Without Taxes</label>
+                                <input type="number" id="totalWithoutTaxes" min="0" step="0.01">
+                            </div>
+                            <div class="form-group">
+                                <label for="vatRate">VAT Rate</label>
+                                <input type="number" id="vatRate" min="0" step="0.01">
+                            </div>
+                           
+                        </div>
+                        <div class="form-row">
+                             <div class="form-group">
+                                <label for="vatAmount">VAT Amount</label>
+                                <input type="number" id="vatAmount" min="0" step="0.01">
+                            </div>
+                             <div class="form-group">
+                                <label for="totalAmountPayable">Total Amount Payable</label>
+                                <input type="number" id="totalAmountPayable" min="0" step="0.01">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="paymentConditions">Payment Conditions</label>
+                                <textarea id="paymentConditions" rows="3"></textarea>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="legalInfo">Legal Info</label>
+                                <textarea id="legalInfo" rows="3"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-section">
+                        <h3>Items</h3>
+                        <div class="items-table-container">
+                            <table id="itemsTable" class="items-table">
+                                <thead>
+                                    <tr>
+                                        <th width="40%">Description</th>
+                                        <th width="15%">Quantity</th>
+                                        <th width="15%">Unit Price</th>
+                                        <th width="10%">VAT (16%)</th>
+                                        <th width="15%">Total</th>
+                                        <th width="5%"></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr class="item-row">
+                                        <td>
+                                            <input type="text" class="item-description" placeholder="Enter item description">
+                                        </td>
+                                        <td>
+                                            <input type="number" class="item-quantity" value="1" min="1" step="1">
+                                        </td>
+                                        <td>
+                                            <input type="number" class="item-price" value="0.00" min="0" step="0.01">
+                                        </td>
+                                        <td>
+                                            <span class="item-vat">0.00</span>
+                                        </td>
+                                        <td>
+                                            <span class="item-total">0.00</span>
+                                        </td>
+                                        <td>
+                                            <button type="button" class="remove-item-btn">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <button type="button" id="addItemBtn" class="btn secondary-btn">
+                            <i class="fas fa-plus"></i> Add Item
+                        </button>
+                        
+                        <div class="invoice-totals">
+                            <div class="totals-row">
+                                <span>Subtotal:</span>
+                                <span id="subtotal">0.00</span>
+                            </div>
+                            <div class="totals-row">
+                                <span>VAT (16%):</span>
+                                <span id="totalVat">0.00</span>
+                            </div>
+                            <div class="totals-row">
+                                <span>Total:</span>
+                                <span id="invoiceTotal">0.00</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-section">
+                        <h3>Notes & Terms</h3>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="notes">Additional Notes</label>
+                                <textarea id="notes" rows="3" placeholder="Add any additional notes or terms..."></textarea>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="modal-footer">
+                        <button type="button" class="btn secondary-btn" id="chooseTemplate">
+                            <i class="fas fa-save"></i> Unfinished
+                        </button>
+                        <button type="button" class="btn secondary-btn" id="previewInvoiceBtn">
+                            <i class="fas fa-eye"></i> Preview
+                        </button>
+                        <button type="submit" class="btn primary-btn">
+                            <i class="fas fa-check"></i> Create Invoice
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <!-- View Invoice Modal -->
+    <div id="viewInvoiceModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Invoice Details</h2>
+                <button class="close-modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="invoice-view-header">
+                    <div class="invoice-view-info">
+                        <h3 id="viewInvoiceNumber">INV-2025-0001</h3>
+                        <span id="viewInvoiceStatus" class="status paid">Paid</span>
+                    </div>
+                    <div class="invoice-view-actions">
+                        
+                        </div>
+                        <button class="btn icon-btn" id="downloadPdfBtn" title="Download PDF">
+                            <i class="fas fa-download"></i>
+                        </button>
+                        <button class="btn icon-btn" id="printInvoiceBtn" title="Print">
+                            <i class="fas fa-print"></i>
+                        </button>
+                        <button class="btn icon-btn" id="emailInvoiceBtn" title="Email">
+                            <i class="fas fa-envelope"></i>
+                        </button>
+                        <button class="btn icon-btn" id="editViewedInvoiceBtn" title="Edit">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="invoice-preview-container">
+                    <iframe id="invoicePreviewFrame" src="about:blank"></iframe>
+                </div>
+                
+                <div class="invoice-view-footer">
+                    <div class="payment-status">
+                        <h4>Payment Status</h4>
+                        <div class="status-timeline">
+                            <div class="timeline-item active">
+                                <div class="timeline-marker"></div>
+                                <div class="timeline-content">
+                                    <span class="timeline-date">Mar 15, 2025</span>
+                                    <span class="timeline-title">Invoice Created</span>
+                                </div>
+                            </div>
+                            <div class="timeline-item active">
+                                <div class="timeline-marker"></div>
+                                <div class="timeline-content">
+                                    <span class="timeline-date">Mar 16, 2025</span>
+                                    <span class="timeline-title">Sent to Client</span>
+                                </div>
+                            </div>
+                            <div class="timeline-item active">
+                                <div class="timeline-marker"></div>
+                                <div class="timeline-content">
+                                    <span class="timeline-date">Mar 20, 2025</span>
+                                    <span class="timeline-title">Payment Received</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn secondary-btn" id="markPaidBtn">
+                    <i class="fas fa-check-circle"></i> Mark as Paid
+                </button>
+                <button class="btn primary-btn" id="closeInvoiceBtn">
+                    <i class="fas fa-times"></i> Close
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Dark Mode Overlay (used when modal is open) -->
+    <div class="modal-overlay"></div>
+
+    <!-- JavaScript Dependencies -->
+    <script src="js/dashboard.js"></script>
+    <script src="js/invoice.js"></script>
+</body>
+</html>
