@@ -50,7 +50,7 @@
 }
 
 .primary-btn {
-    background-color: var(--primary-color);
+    background-color: #007ec7;
     color: white;
 }
 
@@ -180,11 +180,11 @@
 
 .action-btn:hover {
     background-color: #f0f0f0;
-    color: var(--primary-color);
+    color: #007ec7;
 }
 
 .view-btn:hover {
-    color: var(--primary-color);
+    color: #007ec7;
 }
 
 .edit-btn:hover {
@@ -233,9 +233,9 @@
 }
 
 .pagination-btn.active {
-    background-color: var(--primary-color);
+    background-color: #007ec7;
     color: white;
-    border-color: var(--primary-color);
+    border-color: #007ec7;
 }
 
 .pagination-btn:disabled {
@@ -268,7 +268,7 @@
 }
 
 .chart-period-btn.active {
-    background: var(--primary-color);
+    background: #007ec7;
     color: white;
 }
 
@@ -411,7 +411,7 @@
 .form-group input:focus,
 .form-group select:focus,
 .form-group textarea:focus {
-    border-color: var(--primary-color);
+    border-color: #007ec7;
     outline: none;
     box-shadow: 0 0 0 2px rgb(255, 255, 255);
 }
@@ -600,8 +600,8 @@
 }
 
 .timeline-item.active .timeline-marker {
-    background-color: var(--primary-color);
-    border-color: var(--primary-color);
+    background-color: #007ec7;
+    border-color: #007ec7;
 }
 
 .timeline-content {

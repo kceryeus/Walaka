@@ -1,13 +1,27 @@
 :root {
-    --primary-color: #007ec7;
-    --secondary-color: #4f46e5;
-    --accent-color: #818cf8;
-    --background-color: #f9f9f9;
-    --sidebar-width: 250px;
-    --topbar-height: 60px;
-    --card-radius: 8px;
-    --transition-speed: 0.3s;
-    --box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  --primary-color: #007ec7; /* Corporate blue */
+  --primary-dark: #005fa3;
+  --primary-light: #e6f4fb;
+  --secondary-color: #4f46e5;
+  --secondary-light: #818cf8;
+  --accent-color: #3b82f6;
+  --text-primary: #1e293b;
+  --text-secondary: #64748b;
+  --text-light: #94a3b8;
+  --success-color: #10b981;
+  --warning-color: #f59e0b;
+  --danger-color: #ef4444;
+  --danger-light: #fee2e2;
+  --background-color: #f8fafc;
+  --card-background: #ffffff;
+  --border-color: #e2e8f0;
+  --sidebar-width: 250px;
+  --sidebar-collapsed-width: 80px;
+  --topbar-height: 60px;
+  --card-radius: 8px;
+  --input-radius: 8px;
+  --transition-speed: 0.3s;
+  --box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 * {
@@ -175,41 +189,13 @@ body {
     font-size: 0.75rem;
 }
 
+/* --- Top Bar Dropdown Fix --- */
 .top-bar .user-profile {
+    position: relative;
     display: flex;
     align-items: center;
     gap: 0.5rem;
     cursor: pointer;
-}
-
-.top-bar .avatar {
-    width: 36px;
-    height: 36px;
-    border-radius: 50%;
-    background: #e0e0e0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    overflow: hidden;
-}
-
-.top-bar .user-profile span {
-    font-size: 0.9rem;
-    font-weight: 500;
-    color: #333;
-}
-
-.top-bar .dropdown {
-    position: relative;
-    display: inline-block;
-}
-
-.top-bar .dropdown-toggle {
-    background: none;
-    border: none;
-    cursor: pointer;
-    color: #555;
-    padding: 0 4px;
 }
 
 .top-bar .dropdown-menu {
@@ -221,9 +207,13 @@ body {
     overflow: hidden;
     z-index: 1000;
     right: 0;
-    top: 100%;
-    margin-top: 0.5rem;
+    top: 110%;
     min-width: 180px;
+    animation: fadeIn 0.2s;
+}
+
+.top-bar .user-profile.open .dropdown-menu {
+    display: block;
 }
 
 .top-bar .dropdown-menu a {
@@ -232,14 +222,11 @@ body {
     text-decoration: none;
     display: block;
     font-size: 0.9rem;
+    transition: background 0.2s;
 }
 
 .top-bar .dropdown-menu a:hover {
     background-color: #f0f0f0;
-}
-
-.top-bar .user-profile:hover .dropdown-menu {
-    display: block;
 }
 
 /* Cards and Metrics */

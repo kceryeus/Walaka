@@ -283,7 +283,7 @@
                 <h2 class="section-title">From</h2>
                 <div class="detail-row">
                     <span class="detail-label">Address:</span>
-                    <span class="detail-value" id="company-address">Company Address</span>
+                    <span class="detail-value" id="company-address">{{companyAddress}}</span>
                 </div>
                 <div class="detail-row">
                     <span class="detail-label">NUIT:</span>
@@ -302,42 +302,42 @@
                 <h2 class="section-title">Bill To</h2>
                 <div class="detail-row">
                     <span class="detail-label">Client:</span>
-                    <span class="detail-value" id="client-name">Client Name</span>
+                    <span class="detail-value" id="client-name">{{clientName}}</span>
                 </div>
                 <div class="detail-row">
                     <span class="detail-label">Address:</span>
-                    <span class="detail-value" id="client-address">Client Address</span>
+                    <span class="detail-value" id="client-address">{{clientAddress}}</span>
                 </div>
                 <div class="detail-row">
                     <span class="detail-label">NUIT:</span>
-                    <span class="detail-value" id="client-nuit">987654321</span>
+                    <span class="detail-value" id="client-nuit">{{clientTaxId}}</span>
                 </div>
                 <div class="detail-row">
                     <span class="detail-label">Email:</span>
-                    <span class="detail-value" id="client-email">client@example.com</span>
+                    <span class="detail-value" id="client-email">{{clientEmail}}</span>
                 </div>
                 <div class="detail-row">
                     <span class="detail-label">Contact:</span>
-                    <span class="detail-value" id="client-contact">+258 XX XXX XXXX</span>
+                    <span class="detail-value" id="client-contact">{{clientContact}}</span>
                 </div>
             </div>
             <div class="invoice-details">
                 <h2 class="section-title">Details</h2>
                 <div class="detail-row">
                     <span class="detail-label">Issue Date:</span>
-                    <span class="detail-value" id="issue-date">01/01/2023</span>
+                    <span class="detail-value" id="issue-date">{{issueDate}}</span>
                 </div>
                 <div class="detail-row">
                     <span class="detail-label">Due Date:</span>
-                    <span class="detail-value" id="due-date">31/01/2023</span>
+                    <span class="detail-value" id="due-date">{{dueDate}}</span>
                 </div>
                 <div class="detail-row">
                     <span class="detail-label">Project:</span>
-                    <span class="detail-value" id="project-name">Project Name</span>
+                    <span class="detail-value" id="project-name">{{projectName}}</span>
                 </div>
                 <div class="detail-row">
                     <span class="detail-label">Payment Terms:</span>
-                    <span class="detail-value" id="payment-terms">Net 30</span>
+                    <span class="detail-value" id="payment-terms">{{paymentTerms}}</span>
                 </div>
             </div>
         </div>
@@ -352,36 +352,37 @@
                     <th class="amount-column">Total</th>
                 </tr>
             </thead>
-            <tbody id="display-items" data-field="invoice.items">
+            <tbody id="invoice-items" data-field="invoice.items">
                 <!-- Items will be inserted here dynamically -->
+                                
             </tbody>
         </table>
         
         <div class="invoice-summary">
             <div class="summary-row">
                 <span>Subtotal:</span>
-                <span id="subtotal">MZN 0.00</span>
+                <span id="subtotal">{{subtotal}}</span>
             </div>
             <div class="summary-row">
                 <span>VAT:</span>
-                <span id="total-vat">MZN 0.00</span>
+                <span id="totalVat">{{totalVat}}</span>
             </div>
             <div class="summary-row">
                 <span>Discount:</span>
-                <span id="discount">MZN 0.00</span>
+                <span id="discount">{{discount}}</span>
             </div>
             <div class="summary-row total">
                 <span>Total:</span>
-                <span id="total">MZN 0.00</span>
+                <span id="total">{{total}}</span>
             </div>
         </div>
         
         <div class="invoice-footer">
             <div class="notes">
                 <h2 class="section-title">Notes</h2>
-                <p id="notes">Thank you for your business.</p>
+                <p id="invoice-notes">{{notes}}</p>
             </div>
-            <div class="thank-you">
+            <div class="footer">
                 Thank you for your business!
             </div>
             <div class="verification">
@@ -391,5 +392,96 @@
             </div>
         </div>
     </div>
+
+    <script>
+        function loadInvoiceData() {
+            // Get template settings
+            const templateSettings = JSON.parse(localStorage.getItem('templateSettings'));
+            if (templateSettings) {
+                document.documentElement.style.setProperty('--main-color', templateSettings.color);
+                if (templateSettings.logo) {
+                    const logoDiv = document.getElementById('company-logo');
+                    logoDiv.innerHTML = `<img src="${templateSettings.logo}" alt="Logo da Empresa" class="logo">`;
+                }
+            }
+
+            // Get data from localStorage
+            const invoiceData = JSON.parse(localStorage.getItem('invoiceData'));
+            if (!invoiceData) return;
+
+            // Company info
+            document.getElementById('company-name').textContent = invoiceData.company_name || '';
+            document.getElementById('company-address').textContent = invoiceData.company_address || '';
+            document.getElementById('company-email').textContent = invoiceData.company_email || '';
+            document.getElementById('company-phone').textContent = invoiceData.company_phone || '';
+
+            // Client info
+            document.getElementById('client-name').textContent = invoiceData.clientName || '';
+            document.getElementById('client-address').textContent = invoiceData.clientAddress || '';
+            document.getElementById('client-nuit').textContent = invoiceData.clientTaxId || '';
+            document.getElementById('client-email').textContent = invoiceData.clientEmail || '';
+            document.getElementById('client-contact').textContent = invoiceData.contact || '';
+
+            // Invoice meta/details
+            document.getElementById('invoice-number').textContent = `Nº ${invoiceData.invoiceNumber || ''}`;
+            document.getElementById('issue-date').textContent = formatDate(invoiceData.issueDate) || '';
+            document.getElementById('due-date').textContent = formatDate(invoiceData.dueDate) || '';
+            document.getElementById('project-name').textContent = invoiceData.projectName || '';
+            document.getElementById('payment-terms').textContent = invoiceData.paymentTerms || '';
+            document.getElementById('currency').textContent = invoiceData.currency || '';
+            document.getElementById('invoice-status').textContent = invoiceData.status || '';
+
+            // Payment info
+            document.getElementById('currency').textContent = invoiceData.currency || '';
+            document.getElementById('payment-terms-2').textContent = invoiceData.paymentTerms || '';
+
+            // Items
+            const itemsContainer = document.getElementById('invoice-items');
+            itemsContainer.innerHTML = '';
+            (invoiceData.items || []).forEach(item => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${item.description}</td>
+                    <td>${item.quantity}</td>
+                    <td>${formatCurrency(item.price, invoiceData.currency)}</td>
+                    <td>${item.vat}%</td>
+                    <td class="amount-column">${formatCurrency(item.total, invoiceData.currency)}</td>
+                `;
+                itemsContainer.appendChild(row);
+            });
+
+            // Totals
+            document.getElementById('subtotal').textContent = formatCurrency(invoiceData.totals?.subtotal, invoiceData.currency);
+            document.getElementById('vat-amount').textContent = formatCurrency(invoiceData.totals?.vat, invoiceData.currency);
+            document.getElementById('discount').textContent = formatCurrency(invoiceData.discount, invoiceData.currency);
+            document.getElementById('total-amount').textContent = formatCurrency(invoiceData.totals?.total, invoiceData.currency);
+
+            // Notes
+            document.getElementById('invoice-notes').textContent = invoiceData.notes || '';
+        }
+
+        function formatDate(dateString) {
+            if (!dateString) return '';
+            const date = new Date(dateString);
+            return date.toLocaleDateString('pt-BR', {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric'
+            });
+        }
+
+        function formatCurrency(amount, currency = 'MZN') {
+            if (typeof amount !== 'number') {
+                amount = parseFloat(amount) || 0;
+            }
+            return new Intl.NumberFormat('pt-BR', {
+                style: 'currency',
+                currency: currency
+            }).format(amount);
+        }
+
+        document.addEventListener('DOMContentLoaded', loadInvoiceData);
+    </script>
+    
 </body>
 </html>

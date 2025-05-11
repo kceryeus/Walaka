@@ -425,6 +425,35 @@ function resetClientForm() {
   }
 }
 
+       //Display user name function
+        // This function will fetch the username from the Supabase database and display it
+        // in the user-displayname span element
+        document.addEventListener('DOMContentLoaded', async () => {
+            if (typeof supabase === 'undefined') return;
+
+            const { data: { session } } = await supabase.auth.getSession();
+            if (!session || !session.user) return;
+
+            let displayName = session.user.email;
+            try {
+                const { data: userRecord, error } = await supabase
+                    .from('users')
+                    .select('username')
+                    .eq('id', session.user.id)
+                    .maybeSingle();
+
+                if (userRecord && userRecord.username) {
+                    displayName = userRecord.username;
+                }
+            } catch (e) {
+                // fallback to email
+            }
+
+            const userSpan = document.getElementById('user-displayname');
+            if (userSpan) userSpan.textContent = displayName;
+               });
+
+
 // Export utilities for use in other modules
 window.appUtils = {
   showToast,

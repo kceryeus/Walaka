@@ -1557,8 +1557,8 @@ document.getElementById('invoiceForm').addEventListener('submit', function(event
     event.preventDefault();
 
     // Collect data from the form
-    const clientName = document.getElementById('clientName').value;
-    const clientEmail = document.getElementById('clientEmail').value;
+    const clientName = document.getElementById('client-name').value;
+    const clientEmail = document.getElementById('client-email').value;
     const clientAddress = document.getElementById('clientAddress').value;
     const clientTaxId = document.getElementById('clientTaxId').value;
     const invoiceNumber = document.getElementById('invoiceNumber').value;
@@ -1600,15 +1600,16 @@ function getInvoiceData() {
     const itemRows = document.querySelectorAll('.item-row');
 
     // Fetch client name from the input field (handles both new and existing clients)
-    const clientInput = document.getElementById('client-input');
-    const clientName = clientInput ? clientInput.value : '';
+    const clientInput = document.getElementById('client-list');
+    
+    console.log('Client name for invoice:', document.getElementById('client-list').value);
 
     return {
         invoiceNumber: document.getElementById('invoiceNumber').value,
         issueDate: document.getElementById('issueDate').value,
         dueDate: document.getElementById('dueDate').value,
         currency: document.getElementById('currency').value,
-        clientName: clientName, // Use the value from the input field
+        clientName: clientInput.value, // Use the value from the input field
         clientAddress: document.getElementById('clientAddress').value,
         clientTaxId: document.getElementById('clientTaxId').value,
         items: Array.from(itemRows).map(row => ({
@@ -1673,7 +1674,7 @@ document.addEventListener('input', async function(e) {
         const { data: clients, error } = await supabase
             .from('clients')
             .select('*')
-            .ilike('name', `%${searchTerm}%`)
+            .ilike('company_name', `%${searchTerm}%`)
             .limit(5);
 
         if (error) throw error;
@@ -1691,20 +1692,40 @@ document.addEventListener('input', async function(e) {
 });
 
 function showClientSuggestions(clients) {
-    let suggestionsBox = document.querySelector('.client-suggestions');
+    const clientInput = document.getElementById('client-list');
+    if (!clientInput) return;
+
+    let suggestionsBox = clientInput.parentNode.querySelector('.client-suggestions');
     if (!suggestionsBox) {
         suggestionsBox = document.createElement('div');
         suggestionsBox.className = 'client-suggestions';
-        document.getElementById('client-list').parentNode.appendChild(suggestionsBox);
+        clientInput.parentNode.appendChild(suggestionsBox);
     }
 
-    suggestionsBox.innerHTML = clients.map(client => `
-        <div class="suggestion-item" data-client='${JSON.stringify(client)}'>
-            ${client.name} (${client.nuit || 'No NUIT'})
+    suggestionsBox.innerHTML = clients.map((client, idx) => `
+        <div class="suggestion-item" data-client='${JSON.stringify(client)}' tabindex="0" data-index="${idx}">
+            ${client.company_name || ''} ${client.customer_tax_id ? `(${client.customer_tax_id})` : ''}
         </div>
     `).join('');
 
     suggestionsBox.style.display = 'block';
+
+    // Remove any previous event listeners by replacing the node
+    const newBox = suggestionsBox.cloneNode(true);
+    suggestionsBox.parentNode.replaceChild(newBox, suggestionsBox);
+
+    // Add click handlers for suggestions
+    newBox.querySelectorAll('.suggestion-item').forEach(item => {
+        item.addEventListener('click', function(e) {
+            const client = JSON.parse(this.dataset.client);
+            fillClientFields(client);
+            hideClientSuggestions();
+        });
+    });
+
+    // Highlight the first suggestion by default
+    const firstItem = newBox.querySelector('.suggestion-item');
+    if (firstItem) firstItem.classList.add('active');
 }
 
 function hideClientSuggestions() {
@@ -1795,36 +1816,6 @@ function setupClientAutocomplete() {
         } catch (err) {
             console.error('Error fetching clients:', err);
         }
-    });
-}
-
-function showClientSuggestions(clients) {
-    const clientInput = document.getElementById('client-list');
-    if (!clientInput) return;
-    
-    let suggestionsBox = document.querySelector('.client-suggestions');
-    
-    if (!suggestionsBox) {
-        suggestionsBox = document.createElement('div');
-        suggestionsBox.className = 'client-suggestions';
-        clientInput.parentNode.appendChild(suggestionsBox);
-    }
-
-    suggestionsBox.innerHTML = clients.map(client => `
-        <div class="suggestion-item" data-client='${JSON.stringify(client)}'>
-            ${client.company_name || client.name} ${client.customer_tax_id ? `(${client.customer_tax_id})` : ''}
-        </div>
-    `).join('');
-
-    suggestionsBox.style.display = 'block';
-
-    // Add click handlers for suggestions
-    suggestionsBox.querySelectorAll('.suggestion-item').forEach(item => {
-        item.addEventListener('click', function() {
-            const client = JSON.parse(this.dataset.client);
-            fillClientFields(client);
-            hideClientSuggestions();
-        });
     });
 }
 
@@ -2956,28 +2947,40 @@ document.addEventListener('input', async function(e) {
 function showClientSuggestions(clients) {
     const clientInput = document.getElementById('client-list');
     if (!clientInput) return;
-    
-    let suggestionsBox = document.querySelector('.client-suggestions');
-    
+
+    // Attach suggestions box as a sibling inside the same parent as the input
+    let suggestionsBox = clientInput.parentNode.querySelector('.client-suggestions');
     if (!suggestionsBox) {
         suggestionsBox = document.createElement('div');
         suggestionsBox.className = 'client-suggestions';
-        const parent = clientInput.parentNode;
-        if (parent) {
-            parent.appendChild(suggestionsBox);
-        }
+        clientInput.parentNode.appendChild(suggestionsBox);
     }
 
-    suggestionsBox.innerHTML = clients.map(client => `
-        <div class="suggestion-item" data-client='${JSON.stringify(client)}'>
+    suggestionsBox.innerHTML = clients.map((client, idx) => `
+        <div class="suggestion-item" data-client='${JSON.stringify(client)}' tabindex="0" data-index="${idx}">
             ${client.company_name || ''} ${client.customer_tax_id ? `(${client.customer_tax_id})` : ''}
         </div>
     `).join('');
 
     suggestionsBox.style.display = 'block';
-}
 
-// ...existing code...
+    // Remove any previous event listeners by replacing the node
+    const newBox = suggestionsBox.cloneNode(true);
+    suggestionsBox.parentNode.replaceChild(newBox, suggestionsBox);
+
+    // Add click handlers for suggestions (use click, not mousedown)
+    newBox.querySelectorAll('.suggestion-item').forEach(item => {
+        item.addEventListener('click', function(e) {
+            const client = JSON.parse(this.dataset.client);
+            fillClientFields(client);
+            hideClientSuggestions();
+        });
+    });
+
+    // Highlight the first suggestion by default
+    const firstItem = newBox.querySelector('.suggestion-item');
+    if (firstItem) firstItem.classList.add('active');
+}
 
 async function fillClientFields(client) {
     const fields = {
@@ -3230,3 +3233,145 @@ function setupActionButtons() {
 
 // ...existing code...
 
+    //Display user name function
+        // This function will fetch the username from the Supabase database and display it
+        // in the user-displayname span element
+        document.addEventListener('DOMContentLoaded', async () => {
+            if (typeof supabase === 'undefined') return;
+
+            const { data: { session } } = await supabase.auth.getSession();
+            if (!session || !session.user) return;
+
+            let displayName = session.user.email;
+            try {
+                const { data: userRecord, error } = await supabase
+                    .from('users')
+                    .select('username')
+                    .eq('id', session.user.id)
+                    .maybeSingle();
+
+                if (userRecord && userRecord.username) {
+                    displayName = userRecord.username;
+                }
+            } catch (e) {
+                // fallback to email
+            }
+
+            const userSpan = document.getElementById('user-displayname');
+            if (userSpan) userSpan.textContent = displayName;
+
+            // Update subtitle with displayName
+            const subtitle = document.getElementById('dashboard-subtitle');
+            if (subtitle) {
+                ['en', 'pt'].forEach(lang => {
+                    if (subtitle.dataset[lang]) {
+                        subtitle.dataset[lang] = subtitle.dataset[lang].replace(/John/g, displayName);
+                    }
+                });
+                subtitle.textContent = subtitle.textContent.replace(/John/g, displayName);
+            }
+        });
+
+        // Dropdown open/close logic for user menu
+        const userProfile = document.getElementById('userProfile');
+        const userDropdown = document.getElementById('userDropdown');
+
+        let dropdownTimeout;
+
+        function openDropdown() {
+            clearTimeout(dropdownTimeout);
+            userProfile.classList.add('open');
+        }
+        function closeDropdown() {
+            dropdownTimeout = setTimeout(() => {
+                userProfile.classList.remove('open');
+            }, 150);
+        }
+
+        userProfile.addEventListener('mouseenter', openDropdown);
+        userProfile.addEventListener('mouseleave', closeDropdown);
+        userDropdown.addEventListener('mouseenter', openDropdown);
+        userDropdown.addEventListener('mouseleave', closeDropdown);
+
+        // Optional: close on click outside
+        document.addEventListener('click', function(e) {
+            if (!userProfile.contains(e.target)) {
+                userProfile.classList.remove('open');
+            }
+        });
+
+        // Add this after your existing scripts
+        const exchangeRates = {
+            MZN: 1,
+            USD: 0.016,  // 1 MZN = 0.016 USD
+            EUR: 0.015,  // 1 MZN = 0.015 EUR
+            ZAR: 0.30    // 1 MZN = 0.30 ZAR
+        };
+
+// Add this once in your JS (after DOMContentLoaded)
+document.getElementById('client-list').addEventListener('keydown', function(e) {
+    const clientInput = this;
+    const suggestionsBox = clientInput.parentNode.querySelector('.client-suggestions');
+    if (!suggestionsBox || suggestionsBox.style.display === 'none') return;
+
+    const items = Array.from(suggestionsBox.querySelectorAll('.suggestion-item'));
+    let activeIndex = items.findIndex(item => item.classList.contains('active'));
+
+    if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        if (activeIndex >= 0) items[activeIndex].classList.remove('active');
+        activeIndex = (activeIndex + 1) % items.length;
+        items[activeIndex].classList.add('active');
+        items[activeIndex].focus();
+    } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        if (activeIndex >= 0) items[activeIndex].classList.remove('active');
+        activeIndex = (activeIndex - 1 + items.length) % items.length;
+        items[activeIndex].classList.add('active');
+        items[activeIndex].focus();
+    } else if (e.key === 'Enter') {
+        if (activeIndex >= 0) {
+            e.preventDefault();
+            // Use click for compatibility with your handler
+            items[activeIndex].click();
+        }
+    }
+});
+
+// Optionally, highlight the first suggestion by default
+function showClientSuggestions(clients) {
+    const clientInput = document.getElementById('client-list');
+    if (!clientInput) return;
+
+    let suggestionsBox = clientInput.parentNode.querySelector('.client-suggestions');
+    if (!suggestionsBox) {
+        suggestionsBox = document.createElement('div');
+        suggestionsBox.className = 'client-suggestions';
+        clientInput.parentNode.appendChild(suggestionsBox);
+    }
+
+    suggestionsBox.innerHTML = clients.map((client, idx) => `
+        <div class="suggestion-item" data-client='${JSON.stringify(client)}' tabindex="0" data-index="${idx}">
+            ${client.company_name || ''} ${client.customer_tax_id ? `(${client.customer_tax_id})` : ''}
+        </div>
+    `).join('');
+
+    suggestionsBox.style.display = 'block';
+
+    // Remove any previous event listeners by replacing the node
+    const newBox = suggestionsBox.cloneNode(true);
+    suggestionsBox.parentNode.replaceChild(newBox, suggestionsBox);
+
+    // Add click handlers for suggestions
+    newBox.querySelectorAll('.suggestion-item').forEach(item => {
+        item.addEventListener('click', function(e) {
+            const client = JSON.parse(this.dataset.client);
+            fillClientFields(client);
+            hideClientSuggestions();
+        });
+    });
+
+    // Highlight the first suggestion by default
+    const firstItem = newBox.querySelector('.suggestion-item');
+    if (firstItem) firstItem.classList.add('active');
+}

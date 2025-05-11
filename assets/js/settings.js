@@ -8,18 +8,18 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // Initialize variables
   let userSettings = {
-    name: 'John Doe',
-    email: 'john.doe@example.com',
-    phone: '+258 123 456 789',
+    name: '',
+    email: '',
+    phone: '',
     language: 'pt-MZ'
   };
 
   let businessSettings = {
-    name: 'ACME Corporation',
-    taxId: '123456789',
-    address: 'Av. da Liberdade 100\n1250-146 Lisboa\nPortugal',
-    website: 'https://acmecorp.com',
-    email: 'contact@acmecorp.com'
+    name: '',
+    taxId: '',
+    address: '',
+    website: '',
+    email: ''
   };
 
   let appearanceSettings = settingsManager.getAppearanceSettings();
@@ -56,6 +56,73 @@ document.addEventListener('DOMContentLoaded', async () => {
     requireLoginConfirmation: false
   };
 
+  async function fetchUserSettings() {
+    if (typeof supabase === 'undefined') return;
+
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session || !session.user) return;
+
+    const userId = session.user.id;
+
+    try {
+      const { data: userRecord, error } = await supabase
+        .from('users')
+        .select('*')
+        .eq('id', userId)
+        .single();
+
+      if (error) {
+        console.error('Error fetching user settings:', error);
+        return;
+      }
+
+      if (userRecord) {
+        userSettings = {
+          name: userRecord.username || '',
+          email: userRecord.email || '',
+          phone: userRecord.phone || '',
+          language: userRecord.language || 'pt-MZ'
+        };
+      }
+    } catch (e) {
+      console.error('Error fetching user settings:', e);
+    }
+  }
+
+  async function fetchBusinessSettings() {
+    if (typeof supabase === 'undefined') return;
+
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session || !session.user) return;
+
+    const userId = session.user.id;
+
+    try {
+      const { data: businessRecord, error } = await supabase
+        .from('business_profiles')
+        .select('*')
+        .eq('user_id', userId)
+        .single();
+
+      if (error) {
+        console.error('Error fetching business settings:', error);
+        return;
+      }
+
+      if (businessRecord) {
+        businessSettings = {
+          name: businessRecord.name || '',
+          taxId: businessRecord.tax_id || '',
+          address: businessRecord.address || '',
+          website: businessRecord.website || '',
+          email: businessRecord.email || ''
+        };
+      }
+    } catch (e) {
+      console.error('Error fetching business settings:', e);
+    }
+  }
+
   // DOM Elements
   const tabLinks = document.querySelectorAll('.settings-tabs a');
   const settingsSections = document.querySelectorAll('.settings-section');
@@ -69,7 +136,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   const closeModal = document.getElementById('close-modal');
 
   // User Profile Elements
-  const userNameDisplay = document.getElementById('user-name');
+  const userNameDisplay = document.getElementById('user-displayname');
   const userNameInput = document.getElementById('user-name-input');
   const userEmailInput = document.getElementById('user-email-input');
   const userPhoneInput = document.getElementById('user-phone');
@@ -849,3 +916,70 @@ document.addEventListener('DOMContentLoaded', async () => {
     );
   };
 });
+
+        //Display user name function
+        // This function will fetch the username from the Supabase database and display it
+        // in the user-displayname span element
+        document.addEventListener('DOMContentLoaded', async () => {
+            if (typeof supabase === 'undefined') return;
+
+            const { data: { session } } = await supabase.auth.getSession();
+            if (!session || !session.user) return;
+
+            let displayName = session.user.email;
+            try {
+                const { data: userRecord, error } = await supabase
+                    .from('users')
+                    .select('username')
+                    .eq('id', session.user.id)
+                    .maybeSingle();
+
+                if (userRecord && userRecord.username) {
+                    displayName = userRecord.username;
+                }
+            } catch (e) {
+                // fallback to email
+            }
+
+            const userSpan = document.getElementById('user-displayname');
+            if (userSpan) userSpan.textContent = displayName;
+
+            // Update subtitle with displayName
+            const subtitle = document.getElementById('dashboard-subtitle');
+            if (subtitle) {
+                ['en', 'pt'].forEach(lang => {
+                    if (subtitle.dataset[lang]) {
+                        subtitle.dataset[lang] = subtitle.dataset[lang].replace(/John/g, displayName);
+                    }
+                });
+                subtitle.textContent = subtitle.textContent.replace(/John/g, displayName);
+            }
+        });
+
+        // Dropdown open/close logic for user menu
+        const userProfile = document.getElementById('userProfile');
+        const userDropdown = document.getElementById('userDropdown');
+
+        let dropdownTimeout;
+
+        function openDropdown() {
+            clearTimeout(dropdownTimeout);
+            userProfile.classList.add('open');
+        }
+        function closeDropdown() {
+            dropdownTimeout = setTimeout(() => {
+                userProfile.classList.remove('open');
+            }, 150);
+        }
+
+        userProfile.addEventListener('mouseenter', openDropdown);
+        userProfile.addEventListener('mouseleave', closeDropdown);
+        userDropdown.addEventListener('mouseenter', openDropdown);
+        userDropdown.addEventListener('mouseleave', closeDropdown);
+
+        // Optional: close on click outside
+        document.addEventListener('click', function(e) {
+            if (!userProfile.contains(e.target)) {
+                userProfile.classList.remove('open');
+            }
+        });
