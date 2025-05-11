@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Invoice #{{ invoice_number }}</title>
+    <title>Invoice #{{ invoiceNumber }}</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -260,9 +260,9 @@
             <div class="client-info">
                 <h2>Bill To</h2>
                 <p>Client Name: <span id="client-name">{{clientName}}</span></p>
-                <p>Address: <span id="detail-label">{{clientAddress}}</span></p>
-                <p>NUIT: <span id="detail-label">{{clientTaxId}}</span></p>
-                <p>Email: <span id="detail-label">{{clientEmail}}</span></p>
+                <p>Address: <span id="client-address">{{clientAddress}}</span></p>
+                <p>NUIT: <span id="client-nuit">{{clientTaxId}}</span></p>
+                <p>Email: <span id="client-email">{{clientEmail}}</span></p>
             </div>
             <div class="details">
                 <h2>Invoice Details</h2>
@@ -284,7 +284,7 @@
             </thead>
             <tbody id="invoice-items">
                 <!-- Invoice items will be populated dynamically -->
-                {{itemsRows}}
+
             </tbody>
             <tfoot>
                 <tr>
@@ -293,17 +293,17 @@
                 </tr>
                 <tr>
                     <td colspan="4">VAT</td>
-                    <td id="vat-amount">MZN {{totalVat}}</td>
+                    <td id="totalVat">MZN {{totalVat}}</td>
                 </tr>
                 <tr>
                     <td colspan="4">Total</td>
-                    <td id="total-amount">Total: MZN {{total}}</td>
+                    <td id="total">Total: MZN {{total}}</td>
                 </tr>
             </tfoot>
         </table>
         <div class="notes-section">
-            <h3>Payment Instructions</h3>
-            <p id="invoice-notes">{{notes}}</p>
+            <h3>Notes</h3>
+            <p id="notes">{{notes}}</p>
         </div>
         <div class="footer">
             <p>Contact us for any questions.</p>
@@ -368,7 +368,7 @@
             document.getElementById('client-address').textContent = invoiceData.clientAddress || '';
             document.getElementById('client-nuit').textContent = invoiceData.clientTaxId || '';
             document.getElementById('client-email').textContent = invoiceData.clientEmail || '';
-            document.getElementById('client-contact').textContent = invoiceData.contact || '';
+            document.getElementById('client-contact').textContent = invoiceData.client_contact || '';
 
             // Invoice meta/details
             document.getElementById('invoice-number').textContent = `Nº ${invoiceData.invoiceNumber || ''}`;

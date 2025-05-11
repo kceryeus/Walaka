@@ -248,69 +248,69 @@
                 </a>
                 
                 <div class="nav-section">
-                    <h3>Invoicing</h3>
+                    <h3>Facturação</h3>
                 </div>
                 <a href="invoices.html" class="nav-item active">
                     <i class="fas fa-file-invoice-dollar"></i>
-                    <span>Invoices</span>
+                    <span>Facturas</span>
                 </a>
 
                 <a href="clients/clients.html" class="nav-item">
                     <i class="fas fa-users"></i>
-                    <span>Clients</span>
+                    <span>Clientes</span>
                 </a>
 
                 <a href="products.html" class="nav-item">
                     <i class="fas fa-shopping-cart"></i>
-                    <span>Products</span>
+                    <span>Produtos</span>
                 </a>
                 
                 <div class="nav-section">
-                    <h3>Commercial</h3>
+                    <h3>Comercial</h3>
                 </div>
                 <a href="#" class="nav-item">
                     <i class="fas fa-boxes"></i>
-                    <span>Stock</span>
+                    <span>Inventário</span>
                 </a>
                 <a href="#" class="nav-item">
                     <i class="fas fa-truck"></i>
-                    <span>Suppliers</span>
+                    <span>Fornecedores</span>
                 </a>
                 <a href="#" class="nav-item">
                     <i class="fas fa-exchange-alt"></i>
-                    <span>Movements</span>
+                    <span>Movimentos</span>
                 </a>
                 <a href="#" class="nav-item">
                     <i class="fas fa-money-bill-wave"></i>
-                    <span>Expenses</span>
+                    <span>Despesas</span>
                 </a>
                 <div class="nav-section">
-                    <h3>Accounting </h3>
+                    <h3>Contabilidade</h3>
                  <a href="#" class="nav-item">
                       <i class="fas fa-book"></i>
-                      <span>Entries</span> 
+                      <span>Lançamentos</span> 
                     </a>
                     <a href="#" class="nav-item">
                       <i class="fas fa-list-alt"></i>
-                     <span> Chart of Accounts</span>
+                     <span>Plano de Contas</span>
                     </a>
                     <a href="#" class="nav-item">
                       <i class="fas fa-percent"></i>
-                      <span>Taxes</span> 
+                      <span>Impostos</span> 
                     </a>
                   </div>
 
                 <div class="nav-section">
-                    <h3>Finances</h3>
+                    <h3>Finanças</h3>
                 </div>
                
                 <a href="#" class="nav-item">
                     <i class="fas fa-chart-pie"></i>
-                    <span>Reports</span>
+                    <span>Relatórios</span>
                 </a>
                 <a href="#" class="nav-item">
                     <i class="fas fa-chart-line"></i>
-                    Key Metrics
+                    Indicadores-chave
                   </a>
 
                 <div class="nav-section">
@@ -322,11 +322,11 @@
                 </a>
                 <a href="profile.html" class="nav-item">
                     <i class="fas fa-user-cog"></i>
-                    <span>Account</span>
+                    <span>Gestão de Utilizadores</span>
                 </a>
                 <a href="#" class="nav-item">
                     <i class="fas fa-question-circle"></i>
-                    <span>Help</span>
+                    <span>Ajuda</span>
                 </a>
             </div>
         </nav>
@@ -349,7 +349,7 @@
                         <div class="avatar">
                             <i class="fas fa-user"></i>
                         </div>
-                        <span id="user-displayname">John Doe</span>
+                        <span id="user-displayname">Loading...</span>
                         <div class="dropdown-menu" id="userDropdown">
                             <a href="#">
                                 <i class="fas fa-user-circle"></i> My Profile
@@ -807,6 +807,13 @@
                         <p>Simple and elegant style </p>
                         <button class="btn primary-btn select-template">Select</button>
                     </div>
+                    <div class="template-card" data-template="tester">
+                        <img src="templates/previews/minimal-preview.png" alt="Tester Template"
+                             onerror="this.src='https://via.placeholder.com/300x400/e3e3e3/666666?text=Minimal+Template'">
+                        <h3>Tester Template</h3>
+                        <p>Simple and elegant test </p>
+                        <button class="btn primary-btn select-template">Select</button>
+                    </div>
                 </div>
             </div>
             <div class="modal-footer">
@@ -955,7 +962,6 @@
         );
 
         window.supabase = supabase;
-
 
         // Clients functionality
         let clients = [];

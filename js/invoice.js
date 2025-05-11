@@ -3233,7 +3233,7 @@ function setupActionButtons() {
 
 // ...existing code...
 
-    //Display user name function
+        //Display user name function
         // This function will fetch the username from the Supabase database and display it
         // in the user-displayname span element
         document.addEventListener('DOMContentLoaded', async () => {
@@ -3260,16 +3260,6 @@ function setupActionButtons() {
             const userSpan = document.getElementById('user-displayname');
             if (userSpan) userSpan.textContent = displayName;
 
-            // Update subtitle with displayName
-            const subtitle = document.getElementById('dashboard-subtitle');
-            if (subtitle) {
-                ['en', 'pt'].forEach(lang => {
-                    if (subtitle.dataset[lang]) {
-                        subtitle.dataset[lang] = subtitle.dataset[lang].replace(/John/g, displayName);
-                    }
-                });
-                subtitle.textContent = subtitle.textContent.replace(/John/g, displayName);
-            }
         });
 
         // Dropdown open/close logic for user menu

@@ -21,19 +21,7 @@
             padding: 0;
         }
         
-        /* Enhanced A4 Page Setup */
-        @page {
-            size: A4;
-            margin: 0;
-        }
-        
-        html, body {
-            width: 210mm;
-            height: 297mm;
-            margin: 0;
-            padding: 0;
-        }
-        
+
         .invoice-container {
             width: 210mm;
             min-height: 297mm;
@@ -43,17 +31,19 @@
         }
         
         @media print {
-            html, body, .invoice-container {
+ /*           html, body, .invoice-container {
                 width: 210mm;
                 height: 297mm;
-            }
+            }*/
             
             .invoice-container {
-                margin: 0;
-                padding: 20mm;
-                box-shadow: none;
-                border: none;
-            }
+        width: 190mm !important;
+        height: 20mm !important;
+        margin: 0 auto !important;
+        padding: 10mm !important;
+        box-shadow: none !important;
+        border: none !important;
+    }
         }
         
         body {
@@ -64,11 +54,11 @@
         }
         
         .invoice-container {
-            max-width: 800px;
+            max-width: auto;
             margin: 0 auto;
             background-color: var(--background);
             box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-            padding: 50px;
+            padding: 10px;
         }
         
         .invoice-header {
@@ -380,7 +370,7 @@
         <div class="invoice-footer">
             <div class="notes">
                 <h2 class="section-title">Notes</h2>
-                <p id="invoice-notes">{{notes}}</p>
+                <p id="notes">{{notes}}</p>
             </div>
             <div class="footer">
                 Thank you for your business!

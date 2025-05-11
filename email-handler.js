@@ -135,7 +135,7 @@ class EmailHandler {
     async logEmailActivity(emailData) {
         try {
             await window.supabase.from('email_logs').insert([{
-                invoice_number: emailData.invoiceNumber,
+                invoiceNumber: emailData.invoiceNumber,
                 recipient: emailData.to,
                 subject: emailData.subject,
                 sent_at: new Date().toISOString(),

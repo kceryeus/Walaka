@@ -569,7 +569,7 @@
                 invoices.forEach(invoice => {
                     const invoiceElement = document.createElement('div');
                     invoiceElement.innerHTML = `
-                        <h2>Invoice #${invoice.invoice_number}</h2>
+                        <h2>Invoice #${invoice.invoiceNumber}</h2>
                         <p>Issue Date: ${invoice.issue_date}</p>
                         <p>Issuer: ${invoice.issuer_name} (${invoice.issuer_nuit}), ${invoice.issuer_address}</p>
                         <p>Client: ${invoice.client_name} (${invoice.client_nuit}), ${invoice.client_address}</p>

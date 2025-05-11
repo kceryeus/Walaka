@@ -16,10 +16,10 @@ class InvoiceNumberService {
             // Get the latest invoice number for this client in the current year
             const { data: lastInvoice, error } = await this.supabase
                 .from('invoices')
-                .select('invoice_number')
+                .select('invoiceNumber')
                 .eq('client_id', clientId)
-                .ilike('invoice_number', `CLI-${clientId}-${currentYear}-%`)
-                .order('invoice_number', { ascending: false })
+                .ilike('invoiceNumber', `CLI-${clientId}-${currentYear}-%`)
+                .order('invoiceNumber', { ascending: false })
                 .limit(1)
                 .single();
 
@@ -31,7 +31,7 @@ class InvoiceNumberService {
 
             if (lastInvoice) {
                 // Extract sequence number from last invoice
-                const matches = lastInvoice.invoice_number.match(/\d+$/);
+                const matches = lastInvoice.invoiceNumber.match(/\d+$/);
                 if (matches) {
                     nextSequence = parseInt(matches[0]) + 1;
                 }
@@ -43,8 +43,8 @@ class InvoiceNumberService {
             // Verify uniqueness
             const { data: existingInvoice, error: checkError } = await this.supabase
                 .from('invoices')
-                .select('invoice_number')
-                .eq('invoice_number', formattedNumber)
+                .select('invoiceNumber')
+                .eq('invoiceNumber', formattedNumber)
                 .single();
 
             if (checkError && checkError.code !== 'PGRST116') throw checkError;

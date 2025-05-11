@@ -194,7 +194,7 @@ async function insertInvoiceToSupabase(invoice) {
         client_name: invoice.clientName,
         client_nuit: invoice.clientTaxId,
         client_address: invoice.clientAddress,
-        invoice_number: invoice.invoiceNumber,
+        invoiceNumber: invoice.invoiceNumber,
         issue_date: invoice.issueDate,
         description: invoice.description,
         total_without_taxes: invoice.totalWithoutTaxes,
@@ -245,7 +245,7 @@ function displayInvoices(invoices) {
 
   invoices.forEach(invoice => {
     const row = document.createElement('tr');
-    row.setAttribute('data-invoice', invoice.invoice_number); // Use os nomes de coluna reais
+    row.setAttribute('data-invoice', invoice.invoiceNumber); // Use os nomes de coluna reais
     row.setAttribute('data-client', invoice.client_name);
     row.setAttribute('data-date', invoice.issue_date);
     row.setAttribute('data-duedate', invoice.due_date);
@@ -253,14 +253,14 @@ function displayInvoices(invoices) {
     row.setAttribute('data-status', invoice.status);
 
     row.innerHTML = `
-      <td>${invoice.invoice_number}</td>
+      <td>${invoice.invoiceNumber}</td>
       <td>${invoice.client_name}</td>
       <td>${new Date(invoice.issue_date).toLocaleDateString()}</td>
       <td>${new Date(invoice.due_date).toLocaleDateString()}</td>
       <td>$${invoice.total_amount_payable ? invoice.total_amount_payable.toFixed(2) : '0.00'}</td>
       <td><span class="status ${invoice.status}">${invoice.status}</span></td>
       <td class="actions">
-        <button class="action-btn view-btn" data-invoice="${invoice.invoice_number}" title="View">
+        <button class="action-btn view-btn" data-invoice="${invoice.invoiceNumber}" title="View">
           <i class="fas fa-eye"></i>
         </button>
         <button class="action-btn edit-btn" title="Edit">
@@ -321,7 +321,7 @@ function displayInvoices(invoices) {
 
   invoicesToDisplay.forEach(invoice => {
     const row = document.createElement('tr');
-    row.setAttribute('data-invoice', invoice.invoice_number); // Use os nomes de coluna reais
+    row.setAttribute('data-invoice', invoice.invoiceNumber); // Use os nomes de coluna reais
     row.setAttribute('data-client', invoice.client_name);
     row.setAttribute('data-date', invoice.issue_date);
     row.setAttribute('data-duedate', invoice.due_date);
@@ -329,14 +329,14 @@ function displayInvoices(invoices) {
     row.setAttribute('data-status', invoice.status);
 
     row.innerHTML = `
-      <td>${invoice.invoice_number}</td>
+      <td>${invoice.invoiceNumber}</td>
       <td>${invoice.client_name}</td>
       <td>${new Date(invoice.issue_date).toLocaleDateString()}</td>
       <td>${new Date(invoice.due_date).toLocaleDateString()}</td>
       <td>$${invoice.total_amount_payable ? invoice.total_amount_payable.toFixed(2) : '0.00'}</td>
       <td><span class="status ${invoice.status}">${invoice.status}</span></td>
       <td class="actions">
-        <button class="action-btn view-btn" data-invoice="${invoice.invoice_number}" title="View">
+        <button class="action-btn view-btn" data-invoice="${invoice.invoiceNumber}" title="View">
           <i class="fas fa-eye"></i>
         </button>
         <button class="action-btn edit-btn" title="Edit">
