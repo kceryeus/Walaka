@@ -87,11 +87,11 @@
                 </a>
 
                 <div class="nav-section">
-                    <h3>Commercio</h3>
+                    <h3>Comercial</h3>
                 </div>
                 <a href="#" class="nav-item">
                     <i class="fas fa-boxes"></i>
-                    <span>Estoque</span>
+                    <span>inventário</span>
                 </a>
                 <a href="#" class="nav-item">
                     <i class="fas fa-truck"></i>
@@ -103,31 +103,31 @@
                 </a>
                 <a href="#" class="nav-item">
                     <i class="fas fa-money-bill-wave"></i>
-                    <span>Expenses</span>
+                    <span>Despesas</span>
                 </a>
                 <div class="nav-section">
-                    <h3>Accounting </h3>
+                    <h3>Contabilidade</h3>
                  <a href="#" class="nav-item">
                       <i class="fas fa-book"></i>
-                      <span>Entries</span> 
+                      <span>Lançamentos</span> 
                     </a>
                     <a href="#" class="nav-item">
                       <i class="fas fa-list-alt"></i>
-                     <span> Chart of Accounts</span>
+                     <span>Plano de contas</span>
                     </a>
                     <a href="#" class="nav-item">
                       <i class="fas fa-percent"></i>
-                      <span>Taxes</span> 
+                      <span>Impostos</span> 
                     </a>
                   </div>
 
                 <div class="nav-section">
-                    <h3>Finances</h3>
+                    <h3>Finanças</h3>
                 </div>
                
                 <a href="#" class="nav-item">
                     <i class="fas fa-chart-pie"></i>
-                    <span>Reports</span>
+                    <span>Relatórios</span>
                 </a>
                 <a href="#" class="nav-item">
                     <i class="fas fa-chart-line"></i>
@@ -143,11 +143,11 @@
                 </a>
                 <a href="profile.html" class="nav-item">
                     <i class="fas fa-user-cog"></i>
-                    <span>Account</span>
+                    <span>Conta</span>
                 </a>
                 <a href="#" class="nav-item">
                     <i class="fas fa-question-circle"></i>
-                    <span>Help</span>
+                    <span>Ajuda</span>
                 </a>
             </div>
         </nav>
@@ -160,30 +160,18 @@
                     <i class="fas fa-bars"></i>
                 </button>
                 
-                <div class="search-bar">
-                    <input type="text" placeholder="Search..." data-lang="searchPlaceholder" data-en="Search..." data-pt="Pesquisar...">
-                </div>
-                
-                <div class="user-menu">
-                    <div class="language-toggle">
-                        <button id="lang-en" onclick="toggleLanguage('en'); setActiveLanguage('en')">
-                            <img src="assets/uk-flag.svg" alt="English" style="width: 20px; height: 15px;">
-                        </button>
-                        <button id="lang-pt" onclick="toggleLanguage('pt'); setActiveLanguage('pt')">
-                            <img src="assets/mz-flag.svg" alt="Português" style="width: 20px; height: 15px;">
-                        </button>
-                    </div>
+                <div class="user-menu" style="margin-left:auto;">
                     <div class="notification-bell">
                         <i class="fas fa-bell"></i>
                         <span class="badge">3</span>
                     </div>
                     
-                    <div class="user-profile">
+                    <div class="user-profile" id="userProfile">
                         <div class="avatar">
                             <i class="fas fa-user"></i>
                         </div>
                         <span id="user-displayname">John Doe</span>
-                        <div class="dropdown-menu">
+                        <div class="dropdown-menu" id="userDropdown">
                             <a href="#">
                                 <i class="fas fa-user-circle"></i> My Profile
                             </a>
@@ -198,9 +186,14 @@
                 </div>
             </div>
             
-            <!-- Dashboard Content -->
+             <!-- Dashboard Content -->
             <h2 data-lang="title" data-en="Dashboard Overview" data-pt="Visão Geral do Painel">Dashboard Overview</h2>
-            <p class="subtitle" data-lang="subtitle" data-en="Welcome back, John! Here's what's happening with your business today." data-pt="Bem-vindo de volta, John! Aqui está o que está acontecendo com o seu negócio hoje.">Welcome back, John! Here's what's happening with your business today.</p>
+            <p class="subtitle" id="dashboard-subtitle"
+               data-lang="subtitle"
+               data-en="Welcome back, John! Here's what's happening with your business today."
+               data-pt="Bem-vindo de volta, John! Aqui está o que está acontecendo com o seu negócio hoje.">
+               Welcome back, John! Here's what's happening with your business today.
+            </p>            
             
             <!-- Quick Actions Section -->
             <h3 data-lang="quickActions" data-en="Quick Actions" data-pt="Ações Rápidas">Quick Actions</h3>
@@ -889,10 +882,10 @@
             // Update metrics every 5 minutes
             setInterval(updateClientMetrics, 300000);
         });
-    </script>
 
-    <!-- Display user name script -->
-    <script>
+
+/* Display user name script 
+
         document.addEventListener('DOMContentLoaded', async () => {
             if (typeof supabase === 'undefined') return;
 
@@ -919,16 +912,7 @@
             const userSpan = document.getElementById('user-displayname');
             if (userSpan) userSpan.textContent = displayName;
         });
-    </script>
-
-    <script>
-        // Add this after your existing scripts
-        const exchangeRates = {
-            MZN: 1,
-            USD: 0.016,  // 1 MZN = 0.016 USD
-            EUR: 0.015,  // 1 MZN = 0.015 EUR
-            ZAR: 0.30    // 1 MZN = 0.30 ZAR
-        };
+*/
 
         function changeCurrency(newCurrency) {
             try {
@@ -982,6 +966,84 @@
             }
         });
 
-        // Update the updateRevenueChart function to store base amounts
-        async function updateRevenueChart() {
+    // Update the updateRevenueChart function to store base amounts
+    //    async function updateRevenueChart() {
+    //        try {
+
+        //Display user name function
+        // This function will fetch the username from the Supabase database and display it
+        // in the user-displayname span element
+        document.addEventListener('DOMContentLoaded', async () => {
+            if (typeof supabase === 'undefined') return;
+
+            const { data: { session } } = await supabase.auth.getSession();
+            if (!session || !session.user) return;
+
+            let displayName = session.user.email;
             try {
+                const { data: userRecord, error } = await supabase
+                    .from('users')
+                    .select('username')
+                    .eq('id', session.user.id)
+                    .maybeSingle();
+
+                if (userRecord && userRecord.username) {
+                    displayName = userRecord.username;
+                }
+            } catch (e) {
+                // fallback to email
+            }
+
+            const userSpan = document.getElementById('user-displayname');
+            if (userSpan) userSpan.textContent = displayName;
+
+            // Update subtitle with displayName
+            const subtitle = document.getElementById('dashboard-subtitle');
+            if (subtitle) {
+                ['en', 'pt'].forEach(lang => {
+                    if (subtitle.dataset[lang]) {
+                        subtitle.dataset[lang] = subtitle.dataset[lang].replace(/John/g, displayName);
+                    }
+                });
+                subtitle.textContent = subtitle.textContent.replace(/John/g, displayName);
+            }
+        });
+
+        // Dropdown open/close logic for user menu
+        const userProfile = document.getElementById('userProfile');
+        const userDropdown = document.getElementById('userDropdown');
+
+        let dropdownTimeout;
+
+        function openDropdown() {
+            clearTimeout(dropdownTimeout);
+            userProfile.classList.add('open');
+        }
+        function closeDropdown() {
+            dropdownTimeout = setTimeout(() => {
+                userProfile.classList.remove('open');
+            }, 150);
+        }
+
+        userProfile.addEventListener('mouseenter', openDropdown);
+        userProfile.addEventListener('mouseleave', closeDropdown);
+        userDropdown.addEventListener('mouseenter', openDropdown);
+        userDropdown.addEventListener('mouseleave', closeDropdown);
+
+        // Optional: close on click outside
+        document.addEventListener('click', function(e) {
+            if (!userProfile.contains(e.target)) {
+                userProfile.classList.remove('open');
+            }
+        });
+
+        // Add this after your existing scripts
+        const exchangeRates = {
+            MZN: 1,
+            USD: 0.016,  // 1 MZN = 0.016 USD
+            EUR: 0.015,  // 1 MZN = 0.015 EUR
+            ZAR: 0.30    // 1 MZN = 0.30 ZAR
+        };
+    </script>
+</body>
+</html>

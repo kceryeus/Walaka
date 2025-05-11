@@ -1,8 +1,9 @@
 // Map template names to file paths 
 const TEMPLATE_PATHS = {
     'classic': 'template01.html',
-    'modern': 'template02.html', 
-    'minimal': 'template03.html'
+    'modern': 'template02.html',
+    'minimal': 'template03.html', 
+    'tester': 'template04.html'
 };
 
 /**
@@ -151,36 +152,36 @@ async function populateTemplate(templateContent, invoiceData) {
     const total = parseFloat(invoiceData.total) || 0;
 
     // Company Information 
-    setDataField(doc, 'display-company-name', invoiceData.company?.name);
-    setDataField(doc, 'display-company-address', invoiceData.company?.address);
-    setDataField(doc, 'display-company-email', invoiceData.company?.email);
-    setDataField(doc, 'display-company-phone', invoiceData.company?.phone);
-    setDataField(doc, 'display-company-nuit', invoiceData.company?.nuit);
+    setDataField(doc, 'company-name', invoiceData.company_name);
+    setDataField(doc, 'company-address', invoiceData.company_address);
+    setDataField(doc, 'company-email', invoiceData.company_email);
+    setDataField(doc, 'company-phone', invoiceData.company_phone);
+    setDataField(doc, 'company-nuit', invoiceData.company_nuit);
 
     // Invoice Details
-    setDataField(doc, 'display-invoice-number', invoiceData.invoiceNumber);
-    setDataField(doc, 'display-issue-date', invoiceData.issueDate);
-    setDataField(doc, 'display-due-date', invoiceData.dueDate);
-    setDataField(doc, 'display-project-name', invoiceData.projectName);
+    setDataField(doc, 'invoice-number', invoiceData.invoiceNumber);
+    setDataField(doc, 'issue-date', invoiceData.issueDate);
+    setDataField(doc, 'due-date', invoiceData.dueDate);
+    setDataField(doc, 'project-name', invoiceData.projectName);
 
     // Client Information
-    setDataField(doc, 'display-client-name', invoiceData.client?.name);
-    setDataField(doc, 'display-client-address', invoiceData.client?.address);
-    setDataField(doc, 'display-client-nuit', invoiceData.client?.nuit);
-    setDataField(doc, 'display-client-email', invoiceData.client?.email);
-    setDataField(doc, 'display-client-contact', invoiceData.client?.contact);
+    setDataField(doc, 'client-name', invoiceData.clientName);
+    setDataField(doc, 'client-address', invoiceData.clientAddress);
+    setDataField(doc, 'client-nuit', invoiceData.clientTaxId);
+    setDataField(doc, 'client-email', invoiceData.clientEmail);
+    setDataField(doc, 'client-contact', invoiceData.client_contact);
 
     // Totals with proper number formatting
-    setDataField(doc, 'display-subtotal', `${invoiceData.currency} ${subtotal.toFixed(2)}`);
-    setDataField(doc, 'display-totalVat', `${invoiceData.currency} ${totalVat.toFixed(2)}`);
-    setDataField(doc, 'display-discount', `${invoiceData.currency} ${discount.toFixed(2)}`);
-    setDataField(doc, 'display-total', `${invoiceData.currency} ${total.toFixed(2)}`);
+    setDataField(doc, 'subtotal', `${invoiceData.currency} ${subtotal.toFixed(2)}`);
+    setDataField(doc, 'totalVat', `${invoiceData.currency} ${totalVat.toFixed(2)}`);
+    setDataField(doc, 'discount', `${invoiceData.currency} ${discount.toFixed(2)}`);
+    setDataField(doc, 'total', `${invoiceData.currency} ${total.toFixed(2)}`);
 
     // Notes
-    setDataField(doc, 'display-notes', invoiceData.notes);
+    setDataField(doc, 'notes', invoiceData.notes);
 
     // Populate Items
-    const itemsContainer = doc.getElementById('display-items');
+    const itemsContainer = doc.getElementById('invoice-items');
     if (itemsContainer && invoiceData.items) {
         itemsContainer.innerHTML = invoiceData.items.map(item => `
             <tr>

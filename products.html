@@ -7,295 +7,412 @@
   <link rel="stylesheet" href="./styles.css"> <!-- Ensure correct relative path -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.9.2/html2pdf.bundle.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <!-- Google Fonts - Inter -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap">
   <style>
-    :root {
-      --primary-color: #007ec7; /* Corporate blue */
-      --secondary-color: #4f46e5;
-      --accent-color: #818cf8;
-      --background-color: #f8fafc;
-      --sidebar-width: 280px;
-      --topbar-height: 60px;
-      --card-radius: 16px;
-      --transition-speed: 0.3s;
-    }
+:root {
+  --primary-color: #007ec7; /* Corporate blue */
+  --primary-dark: #005fa3;
+  --primary-light: #e6f4fb;
+  --secondary-color: #4f46e5;
+  --secondary-light: #818cf8;
+  --accent-color: #3b82f6;
+  --text-primary: #1e293b;
+  --text-secondary: #64748b;
+  --text-light: #94a3b8;
+  --success-color: #10b981;
+  --warning-color: #f59e0b;
+  --danger-color: #ef4444;
+  --danger-light: #fee2e2;
+  --background-color: #f8fafc;
+  --card-background: #ffffff;
+  --border-color: #e2e8f0;
+  --sidebar-width: 250px;
+  --sidebar-collapsed-width: 80px;
+  --topbar-height: 60px;
+  --card-radius: 16px;
+  --input-radius: 8px;
+  --transition-speed: 0.3s;
+  --box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
 
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
+/* ===== RESET & BASE STYLES ===== */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
 
-    body {
-      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-      background-color: var(--background-color);
-      color: #1e293b;
-      min-height: 100vh;
-      overflow-x: hidden;
-      opacity: 0;
-      transition: opacity 0.5s ease-in-out;
-    }
+html {
+  font-size: 16px;
+  scroll-behavior: smooth;
+}
 
-    body.loaded {
-      opacity: 1;
-    }
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+  background-color: var(--background-color);
+  color: #333;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
 
-    .dashboard-container {
-      display: grid;
-      grid-template-columns: var(--sidebar-width) 1fr;
-      min-height: 100vh;
-    }
+a {
+  text-decoration: none;
+  color: inherit;
+}
 
-    /* Sidebar */
-    .sidebar {
-      background: linear-gradient(195deg, #007ec7, #02204e);
-      color: white;
-      padding: 1.5rem 1rem;
-      position: fixed;
-      top: 0;
-      left: 0;
-      height: 100vh;
-      width: var(--sidebar-width);
-      overflow-y: auto;
-      transition: transform var(--transition-speed) ease;
-      z-index: 1000;
-    }
+button {
+  cursor: pointer;
+  font-family: inherit;
+}
 
-    .sidebar-container {
-      width: var(--sidebar-width);
-      flex-shrink: 0;
-    }
+ul {
+  list-style: none;
+}
 
-    /* Scrollbar styling for sidebar */
-    .sidebar::-webkit-scrollbar {
-      width: 6px;
-    }
+/* ===== LAYOUT ===== */
+.dashboard-container {
+  display: flex;
+  min-height: 100vh;
+}
 
-    .sidebar::-webkit-scrollbar-track {
-      background: rgba(255, 255, 255, 0.1);
-    }
+.dashboard-container.sidebar-collapsed {
+  grid-template-columns: var(--sidebar-collapsed-width) -1fr;
+}
 
-    .sidebar::-webkit-scrollbar-thumb {
-      background: rgba(255, 255, 255, 0.2);
-      border-radius: 3px;
-    }
+.main-container {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  margin-left: var(--sidebar-width);
+  transition: margin-left var(--transition-speed) ease;
+  width: calc(100% - var(--sidebar-width));
+}
 
-    .sidebar::-webkit-scrollbar-thumb:hover {
-      background: rgba(255, 255, 255, 0.3);
-    }
+.sidebar-collapsed .main-container {
+  margin-left: var(--sidebar-collapsed-width);
+}
 
-    .logo {
-      font-size: 1.5rem;
-      font-weight: 600;
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
-      padding: 0.5rem 1rem;
-      border-radius: var(--card-radius);
-      transition: all var(--transition-speed) ease;
-    }
+.content-wrapper {
+  flex: 1;
+  padding: 2rem;
+  margin-top: var(--topbar-height);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  max-width: 1800px;
+  margin-left: auto;
+  margin-right: auto;
+  width: 100%;
+}
 
-    .logo:hover {
-      background: rgba(255, 255, 255, 0.05);
-    }
+@media (max-width: 992px) {
+  .content-wrapper {
+    padding: 1.5rem;
+  }
+}
 
-    .nav-menu {
-      display: flex;
-      flex-direction: column;
-      gap: 0.5rem;
-    }
+@media (max-width: 768px) {
+  .main-container {
+    margin-left: 0;
+    width: 100%;
+  }
+  
+  .content-wrapper {
+    padding: 1rem;
+  }
+  
+  .container {
+    padding: 0 0.5rem;
+  }
+}
 
-    .nav-section {
-      margin-top: 1.5rem;
-      margin-bottom: 0.5rem;
-    }
+.content-wrapper {
+  flex: 1;
+  padding: 2rem;
+  margin-top: var(--topbar-height);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
 
-    .nav-section h3 {
-      color: rgba(255, 255, 255, 0.5);
-      font-size: 0.75rem;
-      text-transform: uppercase;
-      letter-spacing: 0.1em;
-      padding: 0 1rem;
-      margin-bottom: 0.5rem;
-    }
+/* ===== SIDEBAR ===== */
+/* Sidebar */
+.sidebar {
+  background: linear-gradient(195deg, #007ec7, #02204e);
+  color: white;
+  padding: 1rem 0;
+  width: var(--sidebar-width);
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 100vh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  transition: transform var(--transition-speed) ease;
+  z-index: 100;
+  box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+}
 
-    .nav-item {
-      display: flex;
-      align-items: center;
-      gap: 1rem;
-      padding: 0.75rem 1rem;
-      border-radius: var(--card-radius);
-      color: rgba(255, 255, 255, 0.7);
-      text-decoration: none;
-      transition: all var(--transition-speed) ease;
-      margin-bottom: 0.25rem;
-    }
+.sidebar .logo {
+  font-size: 1.2rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  color: white;
+}
 
-    .nav-item:hover,
-    .nav-item.active {
-      background: rgba(255, 255, 255, 0.1);
-      color: white;
-    }
+.sidebar .logo i {
+  font-size: 1.5rem;
+}
 
-    .nav-item i {
-      width: 20px;
-      text-align: center;
-      font-size: 1rem;
-    }
+.nav-menu {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  padding: 0 0.75rem;
+}
 
-    /* Main Content */
-    .main-content {
-      padding: 2rem;
-      margin-top: var(--topbar-height);
-    }
+.nav-section {
+  margin-top: 1.5rem;
+  padding-left: 0.75rem;
+}
 
-    .top-bar {
-      position: fixed;
-      top: 0;
-      right: 0;
-      left: var(--sidebar-width);
-      height: var(--topbar-height);
-      background: white;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 0 2rem;
-      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-      z-index: 100;
-    }
+.nav-section h3 {
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05rem;
+  margin-bottom: 0.5rem;
+  padding-left: 0.5rem;
+}
 
-    .search-bar {
-      flex: 1;
-      max-width: 500px;
-      position: relative;
-    }
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  color: #b8c2cc;
+  text-decoration: none;
+  transition: all var(--transition-speed) ease;
+  border-radius: var(--card-radius);
+  font-size: 0.9rem;
+}
 
-    .search-bar input {
-      width: 100%;
-      padding: 0.75rem 1rem;
-      border: 1px solid #e2e8f0;
-      border-radius: var(--card-radius);
-      font-size: 0.9rem;
-    }
+.nav-item:hover,
+.nav-item.active {
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+}
 
-    .user-menu {
-      display: flex;
-      align-items: center;
-      gap: 1.5rem;
-    }
+.nav-item i {
+  width: 20px;
+  text-align: center;
+  font-size: 1rem;
+}
 
-    .notification-bell {
-      position: relative;
-      cursor: pointer;
-    }
+/* Main Content */
+.main-content {
+  flex: 1;
+  margin-left: var(--sidebar-width);
+  padding: 1.5rem;
+  margin-top: var(--topbar-height);
+  background-color: var(--background-color);
+}
 
-    .badge {
-      position: absolute;
-      top: -5px;
-      right: -5px;
-      background: var(--primary-color);
-      color: white;
-      padding: 2px 6px;
-      border-radius: 10px;
-      font-size: 0.75rem;
-    }
+/* Top Bar */
+.top-bar {
+    position: fixed;
+    top: 0;
+    left: var(--sidebar-width);
+    right: 0;
+    height: var(--topbar-height);
+    background: white;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 1.5rem;
+    box-shadow: var(--box-shadow);
+    z-index: 99;
+}
 
-    .user-profile {
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
-      cursor: pointer;
-    }
+.top-bar .search-bar {
+    flex: 1;
+    max-width: 400px;
+    margin-right: 1rem;
+}
 
-    .avatar {
-      width: 36px;
-      height: 36px;
-      border-radius: 50%;
-      background: #e2e8f0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
+.top-bar .search-bar input {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid #e0e0e0;
+    border-radius: var(--card-radius);
+    font-size: 0.9rem;
+    background-color: #f5f5f5;
+}
 
-    .dropdown {
-      position: relative;
-      display: inline-block;
-    }
+.top-bar .user-menu {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
 
-    .dropdown-toggle {
-      background: none;
-      border: none;
-      cursor: pointer;
-      color: #64748b;
-      padding: 0 8px;
-    }
+.top-bar .notification-bell {
+    position: relative;
+    cursor: pointer;
+}
 
-    .dropdown-menu {
-      display: none;
-      position: absolute;
-      background-color: white;
-      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-      border-radius: var(--card-radius);
-      overflow: hidden;
-      z-index: 1000;
-      left: 50%;
-      transform: translateX(-50%);
-      top: 100%;
-      margin-top: 10px;
-    }
+.top-bar .notification-bell i {
+    font-size: 1.2rem;
+    color: #555;
+}
 
-    .dropdown-menu a {
-      color: #1e293b;
-      padding: 12px 16px;
-      text-decoration: none;
-      display: block;
-    }
+.top-bar .badge {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    background: var(--primary-color);
+    color: white;
+    padding: 2px 6px;
+    border-radius: 10px;
+    font-size: 0.75rem;
+}
 
-    .dropdown-menu a:hover {
-      background-color: #f1f5f9;
-    }
+/* --- Top Bar Dropdown Fix --- */
+.top-bar .user-profile {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+}
 
-    .user-profile:hover .dropdown-menu {
-      display: block;
-    }
+.top-bar .dropdown-menu {
+    display: none;
+    position: absolute;
+    background-color: white;
+    box-shadow: var(--box-shadow);
+    border-radius: var(--card-radius);
+    overflow: hidden;
+    z-index: 1000;
+    right: 0;
+    top: 110%;
+    min-width: 180px;
+    animation: fadeIn 0.2s;
+}
 
-    @media (max-width: 768px) {
-      .dashboard-container {
-        grid-template-columns: 1fr;
-      }
+.top-bar .user-profile.open .dropdown-menu {
+    display: block;
+}
 
-      .sidebar {
-        transform: translateX(-100%);
-      }
+.top-bar .dropdown-menu a {
+    color: #333;
+    padding: 0.75rem 1.5rem;
+    text-decoration: none;
+    display: block;
+    font-size: 0.9rem;
+    transition: background 0.2s;
+}
 
-      .sidebar.active {
-        transform: translateX(0);
-      }
+.top-bar .dropdown-menu a:hover {
+    background-color: #f0f0f0;
+}
 
-      .top-bar {
-        left: 0;
-      }
 
-      .main-content {
-        margin-top: calc(var(--topbar-height) + 1rem);
-        padding: 1rem;
-      }
-    }
+/* ===== PAGE HEADER ===== */
+.page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 2rem;
+  width: 100%;
+  max-width: 1400px;
+}
 
-    .sign-out-btn {
-      background: none;
-      border: none;
-      color: #64748b;
-      cursor: pointer;
-      padding: 8px;
-      border-radius: 50%;
-      transition: all 0.2s ease;
-    }
+.page-header h1 {
+  font-size: 1.75rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
 
-    .sign-out-btn:hover {
-      background: #f1f5f9;
-      color: var(--primary-color);
-    }
+/* ===== BUTTONS ===== */
+.primary-btn {
+  background-color: var(--primary-color);
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: var(--input-radius);
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: all 0.2s ease;
+}
+
+.primary-btn:hover {
+  background-color: var(--primary-dark);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.secondary-btn {
+  background-color: white;
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+  padding: 0.75rem 1.5rem;
+  border-radius: var(--input-radius);
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: all 0.2s ease;
+}
+
+.secondary-btn:hover {
+  background-color: var(--primary-light);
+  border-color: var(--primary-color);
+  color: var(--primary-color);
+}
+
+.danger-btn {
+  background-color: var(--danger-color);
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: var(--input-radius);
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: all 0.2s ease;
+}
+
+.danger-btn:hover {
+  background-color: #dc2626;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.link-btn {
+  background: none;
+  border: none;
+  color: var(--primary-color);
+  padding: 0.5rem;
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: all 0.2s ease;
+}
+
+.link-btn:hover {
+  color: var(--primary-dark);
+  text-decoration: underline;
+}
 
     /* Additional styles for product management */
     .product-management {
@@ -472,42 +589,144 @@
       border-bottom: 1px solid #e2e8f0; /* Add a separator below the header */
     }
   </style>
-  <script src="assets/js/sidebar.js"></script>
-</head>
-<body>
-  <div class="dashboard-container">
-    <!-- Sidebar -->
-    <div class="sidebar-container">
-      <!-- Sidebar will be loaded here -->
-    </div>
 
-    <!-- Main Content -->
-    <div class="main-content">
-      <!-- Top Bar -->
-      <div class="top-bar">
-        <div class="search-bar">
-          <input type="text" placeholder="Pesquisar...">
-        </div>
-        <div class="user-menu">
-          <div class="notification-bell">
-            <i class="fas fa-bell"></i>
-            <span class="badge">0</span>
-          </div>
-          <div class="user-profile">
-            <div class="avatar">
-              <i class="fas fa-user"></i>
-            </div>
-            <span id="user-name">Loading...</span>
-            <div class="dropdown">
-              <button class="dropdown-toggle"><i class="fas fa-caret-down"></i></button>
-              <div class="dropdown-menu">
-                <a href="profile.html">Profile Management</a>
-                <a href="settings.html">General Settings</a>
-              </div>
-            </div>
-          </div>
-        </div>
+</head>
+<body onload="loadSidebar()">
+  <div class="dashboard-container">
+    <!-- Sidebar Menu -->
+    <nav class="sidebar">
+      <div class="logo">
+        <i class="fas fa-chart-line"></i>
+        <span>WALAKA</span>
       </div>
+      <div class="nav-menu">
+        <a href="../dashboard.html" class="nav-item">
+          <i class="fas fa-home"></i>
+          <span>Dashboard</span>
+        </a>
+        <div class="nav-section">
+          <h3>Facturação</h3>
+        </div>
+        <a href="../invoices.html" class="nav-item">
+          <i class="fas fa-file-invoice-dollar"></i>
+          <span>Facturas</span>
+        </a>
+        <a href="../clients/clients.html" class="nav-item">
+          <i class="fas fa-users"></i>
+          <span>Clientes</span>
+        </a>
+        <a href="../products.html" class="nav-item active">
+          <i class="fas fa-shopping-cart"></i>
+          <span>Produtos</span>
+        </a>
+        <div class="nav-section">
+          <h3>Comercial</h3>
+        </div>
+        <a href="#" class="nav-item">
+          <i class="fas fa-boxes"></i>
+          <span>Inventário</span>
+        </a>
+        <a href="#" class="nav-item">
+          <i class="fas fa-truck"></i>
+          <span>Fornecedores</span>
+        </a>
+        <a href="#" class="nav-item">
+          <i class="fas fa-exchange-alt"></i>
+          <span>Movimentos</span>
+        </a>
+        <a href="#" class="nav-item">
+          <i class="fas fa-money-bill-wave"></i>
+          <span>Despesas</span>
+        </a>
+        <div class="nav-section">
+          <h3>Contabilidade</h3>
+        </div>
+        <a href="#" class="nav-item">
+          <i class="fas fa-book"></i>
+          <span>Lançamentos</span>
+        </a>
+        <a href="#" class="nav-item">
+          <i class="fas fa-list-alt"></i>
+          <span>Plano de contas</span>
+        </a>
+        <a href="#" class="nav-item">
+          <i class="fas fa-percent"></i>
+          <span>Impostos</span>
+        </a>
+        <div class="nav-section">
+          <h3>Finanças</h3>
+        </div>
+        <a href="#" class="nav-item">
+          <i class="fas fa-chart-pie"></i>
+          <span>Relatórios</span>
+        </a>
+        <a href="#" class="nav-item">
+          <i class="fas fa-chart-line"></i>
+          <span>Indicadores-chave</span>
+        </a>
+        <div class="nav-section">
+          <h3>Settings</h3>
+        </div>
+        <a href="../settings.html" class="nav-item">
+          <i class="fas fa-cog"></i>
+          <span>Settings</span>
+        </a>
+        <a href="../profile.html" class="nav-item">
+          <i class="fas fa-user-cog"></i>
+          <span>Gestão de Utilizadores</span>
+        </a>
+        <a href="#" class="nav-item">
+          <i class="fas fa-question-circle"></i>
+          <span>Ajuda</span>
+        </a>
+      </div>
+    </nav>
+    <!-- Main Content Area -->
+    <main class="main-container">
+      <header class="top-bar">
+        <div class="hamburger-menu" id="hamburger-menu">
+          <i class="fas fa-bars"></i>
+        </div>
+             <!-- Top Bar -->
+            <div class="top-bar">
+                <button class="menu-toggle">
+                    <i class="fas fa-bars"></i>
+                </button>
+                
+            <!-- Top Bar -->
+        <div class="main-content">
+            <!-- Top Bar -->
+            <div class="top-bar">
+                <button class="menu-toggle">
+                    <i class="fas fa-bars"></i>
+                </button>
+                
+                <div class="user-menu" style="margin-left:auto;">
+                    <div class="notification-bell">
+                        <i class="fas fa-bell"></i>
+                        <span class="badge">3</span>
+                    </div>
+                    
+                    <div class="user-profile" id="userProfile">
+                        <div class="avatar">
+                            <i class="fas fa-user"></i>
+                        </div>
+                        <span id="user-displayname">Loading...</span>
+                        <div class="dropdown-menu" id="userDropdown">
+                            <a href="#">
+                                <i class="fas fa-user-circle"></i> My Profile
+                            </a>
+                            <a href="../settings.html">
+                                <i class="fas fa-cog"></i> Settings
+                            </a>
+                            <a href="#">
+                                <i class="fas fa-sign-out-alt"></i> Logout
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+     </header>
 
       <!-- User Defined Products Section -->
       <section id="user-defined-products">
@@ -835,28 +1054,64 @@
         }
       });
     }
-  </script>
-  <script>
-    document.getElementById('vat').addEventListener('change', function() {
-      if (this.value === 'other') {
-        document.getElementById('other-vat-container').style.display = 'block';
-      } else {
-        document.getElementById('other-vat-container').style.display = 'none';
-      }
-    });
 
-    const menuToggle = document.createElement('div');
-    menuToggle.className = 'menu-toggle';
-    menuToggle.innerHTML = '<i class="fas fa-bars"></i>';
-    document.querySelector('.top-bar').prepend(menuToggle);
+        //Display user name function
+        // This function will fetch the username from the Supabase database and display it
+        // in the user-displayname span element
+        document.addEventListener('DOMContentLoaded', async () => {
+            if (typeof supabase === 'undefined') return;
 
-    menuToggle.addEventListener('click', () => {
-      document.querySelector('.sidebar').classList.toggle('active');
-    });
+            const { data: { session } } = await supabase.auth.getSession();
+            if (!session || !session.user) return;
 
-    window.addEventListener('load', () => {
-      document.body.classList.add('loaded');
-    });
+            let displayName = session.user.email;
+            try {
+                const { data: userRecord, error } = await supabase
+                    .from('users')
+                    .select('username')
+                    .eq('id', session.user.id)
+                    .maybeSingle();
+
+                if (userRecord && userRecord.username) {
+                    displayName = userRecord.username;
+                }
+            } catch (e) {
+                // fallback to email
+            }
+
+            const userSpan = document.getElementById('user-displayname');
+            if (userSpan) userSpan.textContent = displayName;
+
+        });
+
+        // Dropdown open/close logic for user menu
+        const userProfile = document.getElementById('userProfile');
+        const userDropdown = document.getElementById('userDropdown');
+
+        let dropdownTimeout;
+
+        function openDropdown() {
+            clearTimeout(dropdownTimeout);
+            userProfile.classList.add('open');
+        }
+        function closeDropdown() {
+            dropdownTimeout = setTimeout(() => {
+                userProfile.classList.remove('open');
+            }, 150);
+        }
+
+        userProfile.addEventListener('mouseenter', openDropdown);
+        userProfile.addEventListener('mouseleave', closeDropdown);
+        userDropdown.addEventListener('mouseenter', openDropdown);
+        userDropdown.addEventListener('mouseleave', closeDropdown);
+
+        // Optional: close on click outside
+        document.addEventListener('click', function(e) {
+            if (!userProfile.contains(e.target)) {
+                userProfile.classList.remove('open');
+            }
+        });
+
   </script>
 </body>
 </html>

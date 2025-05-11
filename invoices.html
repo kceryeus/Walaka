@@ -21,7 +21,7 @@
 <!--    <link rel="stylesheet" href="css/invoice-print.css"> -->
     <link rel="stylesheet" href="css/invoice-layout.css">
 
-    <!-- Product Suggestions Styles -->
+    <!-- Product Suggestions Styles 
     <style>
         .suggestion-box {
             position: fixed; /* Change to fixed positioning */
@@ -55,6 +55,7 @@
             position: relative;
         }
     </style>
+
     <style>
         /* Client suggestions styles */
         .client-suggestions {
@@ -86,6 +87,7 @@
             border-radius: 4px;
         }
     </style>
+    -->
     <style>
         /* Product suggestions styles */
         .product-suggestions {
@@ -226,6 +228,23 @@
         .save-product-btn:hover {
             background: var(--primary-color-dark);
         }
+
+/*        .btn.icon-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: #4CAF50;
+            color: #fff;
+            border: none;
+            padding: 7px 16px;
+            border-radius: 4px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .btn.icon-btn:hover {
+            background: #388e3c;
+        }*/
     </style>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 </head>
@@ -246,69 +265,69 @@
                 </a>
                 
                 <div class="nav-section">
-                    <h3>Invoicing</h3>
+                    <h3>Facturação</h3>
                 </div>
                 <a href="invoices.html" class="nav-item active">
                     <i class="fas fa-file-invoice-dollar"></i>
-                    <span>Invoices</span>
+                    <span>Facturas</span>
                 </a>
 
                 <a href="clients/clients.html" class="nav-item">
                     <i class="fas fa-users"></i>
-                    <span>Clients</span>
+                    <span>Clientes</span>
                 </a>
 
                 <a href="products.html" class="nav-item">
                     <i class="fas fa-shopping-cart"></i>
-                    <span>Products</span>
+                    <span>Produtos</span>
                 </a>
                 
                 <div class="nav-section">
-                    <h3>Commercial</h3>
+                    <h3>Comercial</h3>
                 </div>
                 <a href="#" class="nav-item">
                     <i class="fas fa-boxes"></i>
-                    <span>Stock</span>
+                    <span>Inventário</span>
                 </a>
                 <a href="#" class="nav-item">
                     <i class="fas fa-truck"></i>
-                    <span>Suppliers</span>
+                    <span>Fornecedores</span>
                 </a>
                 <a href="#" class="nav-item">
                     <i class="fas fa-exchange-alt"></i>
-                    <span>Movements</span>
+                    <span>Movimentos</span>
                 </a>
                 <a href="#" class="nav-item">
                     <i class="fas fa-money-bill-wave"></i>
-                    <span>Expenses</span>
+                    <span>Despesas</span>
                 </a>
                 <div class="nav-section">
-                    <h3>Accounting </h3>
+                    <h3>Contabilidade</h3>
                  <a href="#" class="nav-item">
                       <i class="fas fa-book"></i>
-                      <span>Entries</span> 
+                      <span>Lançamentos</span> 
                     </a>
                     <a href="#" class="nav-item">
                       <i class="fas fa-list-alt"></i>
-                     <span> Chart of Accounts</span>
+                     <span>Plano de Contas</span>
                     </a>
                     <a href="#" class="nav-item">
                       <i class="fas fa-percent"></i>
-                      <span>Taxes</span> 
+                      <span>Impostos</span> 
                     </a>
                   </div>
 
                 <div class="nav-section">
-                    <h3>Finances</h3>
+                    <h3>Finanças</h3>
                 </div>
                
                 <a href="#" class="nav-item">
                     <i class="fas fa-chart-pie"></i>
-                    <span>Reports</span>
+                    <span>Relatórios</span>
                 </a>
                 <a href="#" class="nav-item">
                     <i class="fas fa-chart-line"></i>
-                    Key Metrics
+                    Indicadores-chave
                   </a>
 
                 <div class="nav-section">
@@ -320,11 +339,11 @@
                 </a>
                 <a href="profile.html" class="nav-item">
                     <i class="fas fa-user-cog"></i>
-                    <span>Account</span>
+                    <span>Gestão de Utilizadores</span>
                 </a>
                 <a href="#" class="nav-item">
                     <i class="fas fa-question-circle"></i>
-                    <span>Help</span>
+                    <span>Ajuda</span>
                 </a>
             </div>
         </nav>
@@ -337,26 +356,22 @@
                     <i class="fas fa-bars"></i>
                 </button>
                 
-                <div class="search-bar">
-                    <input type="text" placeholder="Search invoices...">
-                </div>
-                
-                <div class="user-menu">
+                <div class="user-menu" style="margin-left:auto;">
                     <div class="notification-bell">
                         <i class="fas fa-bell"></i>
                         <span class="badge">3</span>
                     </div>
                     
-                    <div class="user-profile">
+                    <div class="user-profile" id="userProfile">
                         <div class="avatar">
                             <i class="fas fa-user"></i>
                         </div>
-                        <span>John Doe</span>
-                        <div class="dropdown-menu">
+                        <span id="user-displayname">Loading...</span>
+                        <div class="dropdown-menu" id="userDropdown">
                             <a href="#">
                                 <i class="fas fa-user-circle"></i> My Profile
                             </a>
-                            <a href="#">
+                            <a href="settings.html">
                                 <i class="fas fa-cog"></i> Settings
                             </a>
                             <a href="#">
@@ -496,6 +511,19 @@
                                 <option value="acme">Acme Corp</option>
                             </select>
                         </div>
+                        <div class="filter-group">
+                            <label for="csvExportPeriod">Export:</label>
+                            <select id="csvExportPeriod" class="filter-select">
+                                <option value="month">This Month</option>
+                                <option value="quarter">This Quarter</option>
+                                <option value="semester">This Semester</option>
+                                <option value="year">This Year</option>
+                                <option value="all">All Time</option>
+                            </select>
+                            <button id="exportCsvBtn" class="btn icon-btn" title="Export CSV">
+                                <i class="fas fa-file-csv"></i> Export CSV
+                            </button>
+                        </div>
                         <div class="search-filter">
                             <label for="searchInvoices">Search:</label>
                             <input type="text" id="searchInvoices" placeholder="Invoice number, client name...">
@@ -597,7 +625,7 @@
             <div class="modal-body">
                 <form id="invoiceForm">
                     <div class="form-grid">
-                        <div class="form-section">
+                    <!--    <div class="form-section">
                             <h3>Client Information</h3>
                             <div class="form-row">
                                 <div class="form-group">
@@ -606,9 +634,9 @@
                                 </div>
                             </div>
                             <div id="expand-client-form" style="display: none;">
-                                <!-- New client form fields go here -->
+                                 New client form fields go here 
                             </div>
-                        </div>
+                        </div>-->
                         <div class="form-section">
                             <h3>Client Information</h3>
                             <div class="form-row">
@@ -662,7 +690,7 @@
                                 </div>
                                 <div class="form-group">
                                     <label for="issueDate">Issue Date</label>
-                                    <input type="date" id="issueDate" value="2025-03-25" required>
+                                    <input type="date" id="issueDate" required>
                                 </div>
                             </div>
                             <div class="form-row">
@@ -807,6 +835,13 @@
                              onerror="this.src='https://via.placeholder.com/300x400/e3e3e3/666666?text=Minimal+Template'">
                         <h3>Minimal Template</h3>
                         <p>Simple and elegant style </p>
+                        <button class="btn primary-btn select-template">Select</button>
+                    </div>
+                    <div class="template-card" data-template="tester">
+                        <img src="templates/previews/minimal-preview.png" alt="Tester Template"
+                             onerror="this.src='https://via.placeholder.com/300x400/e3e3e3/666666?text=Minimal+Template'">
+                        <h3>Tester Template</h3>
+                        <p>Simple and elegant test </p>
                         <button class="btn primary-btn select-template">Select</button>
                     </div>
                 </div>
@@ -957,6 +992,89 @@
         );
 
         window.supabase = supabase;
+
+        // Clients functionality
+        let clients = [];
+
+        async function fetchClients() {
+            const { data, error } = await supabase.from('clients').select('*');
+            if (error) return;
+            clients = data;
+            updateClientDatalist();
+        }
+
+        function updateClientDatalist() {
+            const datalist = document.getElementById('client-options');
+            datalist.innerHTML = '';
+            clients.forEach(client => {
+                const option = document.createElement('option');
+                option.value = client.name;
+                datalist.appendChild(option);
+            });
+        }
+
+        document.getElementById('client-list').addEventListener('input', function() {
+            const value = this.value.trim();
+            const exists = clients.some(c => c.name === value);
+            document.getElementById('add-client-btn').style.display = (!exists && value) ? 'inline-block' : 'none';
+        });
+
+        document.getElementById('add-client-btn').addEventListener('click', function() {
+            document.getElementById('new-client-form').style.display = 'block';
+            document.getElementById('new-client-name').value = document.getElementById('client-list').value;
+        });
+
+        document.getElementById('save-new-client').addEventListener('click', async function() {
+            const name = document.getElementById('new-client-name').value;
+            const nuit = document.getElementById('new-client-nuit').value;
+            const email = document.getElementById('new-client-email').value;
+            const address = document.getElementById('new-client-address').value;
+            const { data, error } = await supabase.from('clients').insert([{ name, nuit, email, address }]).select();
+            if (!error) {
+                clients.push(data[0]);
+                updateClientDatalist();
+                document.getElementById('client-list').value = name;
+                document.getElementById('new-client-form').style.display = 'none';
+                document.getElementById('add-client-btn').style.display = 'none';
+                alert('Client added!');
+            } else {
+                alert('Error adding client');
+            }
+        });
+
+        // On page load
+        fetchClients();
+
+        // Products functionality
+        let cachedProducts = []; // Move this to global scope
+
+        async function fetchProducts() {
+            console.log("Fetching products...");
+            const { data, error } = await supabase.from('products').select('*');
+
+            if (error) {
+                console.error('Error fetching products:', error);
+                return;
+            }
+
+            cachedProducts = data; // Store in our global cache
+            console.log("Products loaded:", cachedProducts.length);
+            // Log all product descriptions
+            cachedProducts.forEach(product => {
+                console.log("Product:", product.name, "Description:", product.description);
+            });
+        }
+
+        // Initialize everything
+        async function initialize() {
+            await fetchClients();
+            await fetchProducts(); // This now populates cachedProducts
+            setupProductSuggestions();
+        }
+
+        // Start the application
+        initialize().catch(console.error);
+
     </script>
 </body>
 </html>

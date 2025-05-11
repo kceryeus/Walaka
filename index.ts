@@ -28,9 +28,9 @@ serve(async (req) => {
       from: Deno.env.get('SMTP_FROM')!,
       to: to,
       subject: subject,
-      content: `Your invoice ${invoice.invoice_number} is attached.`,
+      content: `Your invoice ${invoice.invoiceNumber} is attached.`,
       attachments: [{
-        filename: `invoice-${invoice.invoice_number}.pdf`,
+        filename: `invoice-${invoice.invoiceNumber}.pdf`,
         content: pdfBase64,
         encoding: 'base64',
       }],
