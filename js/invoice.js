@@ -36,6 +36,38 @@ document.addEventListener('DOMContentLoaded', function() {
     } else {
         console.warn('Invoice module already initialized, skipping initialization');
     }
+
+    const issueDate = document.getElementById('issueDate');
+    const dueDate = document.getElementById('dueDate');
+    const today = new Date().toISOString().split('T')[0];
+
+    if (issueDate) {
+        issueDate.min = today;
+        if (!issueDate.value || new Date(issueDate.value) < new Date(today)) {
+            issueDate.value = today;
+        }
+        issueDate.addEventListener('change', function() {
+            if (issueDate.value < today) issueDate.value = today;
+            // Optionally update dueDate if it's before issueDate
+            if (dueDate && dueDate.value < issueDate.value) {
+                dueDate.value = issueDate.value;
+            }
+            dueDate.min = issueDate.value;
+        });
+    }
+
+    if (dueDate) {
+        dueDate.min = today;
+        if (!dueDate.value || new Date(dueDate.value) < new Date(today)) {
+            dueDate.value = today;
+        }
+        dueDate.addEventListener('change', function() {
+            if (dueDate.value < today) dueDate.value = today;
+            if (issueDate && dueDate.value < issueDate.value) {
+                dueDate.value = issueDate.value;
+            }
+        });
+    }
 });
 
 function initializeInvoiceModule() {
@@ -3364,4 +3396,88 @@ function showClientSuggestions(clients) {
     // Highlight the first suggestion by default
     const firstItem = newBox.querySelector('.suggestion-item');
     if (firstItem) firstItem.classList.add('active');
+}
+
+document.getElementById('exportCsvBtn').addEventListener('click', async function() {
+    const period = document.getElementById('csvExportPeriod').value;
+    const { from, to } = getPeriodRange(period);
+
+    // Build Supabase query
+    let query = window.supabase.from('invoices').select('invoiceNumber, issue_date, client_id, status, subtotal, vat_amount, total_amount, currency');
+    if (period !== 'all') {
+        query = query.gte('issue_date', from).lte('issue_date', to);
+    }
+    const { data, error } = await query;
+
+    if (error) {
+        alert('Error fetching invoices for export');
+        return;
+    }
+    if (!data.length) {
+        alert('No invoices found for selected period.');
+        return;
+    }
+
+    // Convert to CSV
+    const csv = convertToCSV(data);
+    // Download
+    downloadCSV(csv, `invoices_${period}_${new Date().toISOString().slice(0,10)}.csv`);
+});
+
+// Helper: Get date range for period
+function getPeriodRange(period) {
+    const now = new Date();
+    let from, to;
+    to = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1); // tomorrow (exclusive)
+    switch (period) {
+        case 'month':
+            from = new Date(now.getFullYear(), now.getMonth(), 1);
+            break;
+        case 'quarter': {
+            const quarter = Math.floor(now.getMonth() / 3);
+            from = new Date(now.getFullYear(), quarter * 3, 1);
+            break;
+        }
+        case 'semester': {
+            const semester = now.getMonth() < 6 ? 0 : 1;
+            from = new Date(now.getFullYear(), semester * 6, 1);
+            break;
+        }
+        case 'year':
+            from = new Date(now.getFullYear(), 0, 1);
+            break;
+        default:
+            from = new Date(1970, 0, 1);
+            to = new Date(now.getFullYear() + 1, 0, 1);
+    }
+    return {
+        from: from.toISOString().slice(0, 10),
+        to: to.toISOString().slice(0, 10)
+    };
+}
+
+// Helper: Convert array of objects to CSV
+function convertToCSV(arr) {
+    if (!arr.length) return '';
+    const keys = Object.keys(arr[0]);
+    const csvRows = [
+        keys.join(','), // header
+        ...arr.map(row => keys.map(k => `"${(row[k] ?? '').toString().replace(/"/g, '""')}"`).join(','))
+    ];
+    return csvRows.join('\r\n');
+}
+
+// Helper: Download CSV file
+function downloadCSV(csv, filename) {
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(() => {
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    }, 0);
 }

@@ -228,6 +228,23 @@
         .save-product-btn:hover {
             background: var(--primary-color-dark);
         }
+
+/*        .btn.icon-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: #4CAF50;
+            color: #fff;
+            border: none;
+            padding: 7px 16px;
+            border-radius: 4px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .btn.icon-btn:hover {
+            background: #388e3c;
+        }*/
     </style>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 </head>
@@ -494,6 +511,19 @@
                                 <option value="acme">Acme Corp</option>
                             </select>
                         </div>
+                        <div class="filter-group">
+                            <label for="csvExportPeriod">Export:</label>
+                            <select id="csvExportPeriod" class="filter-select">
+                                <option value="month">This Month</option>
+                                <option value="quarter">This Quarter</option>
+                                <option value="semester">This Semester</option>
+                                <option value="year">This Year</option>
+                                <option value="all">All Time</option>
+                            </select>
+                            <button id="exportCsvBtn" class="btn icon-btn" title="Export CSV">
+                                <i class="fas fa-file-csv"></i> Export CSV
+                            </button>
+                        </div>
                         <div class="search-filter">
                             <label for="searchInvoices">Search:</label>
                             <input type="text" id="searchInvoices" placeholder="Invoice number, client name...">
@@ -660,7 +690,7 @@
                                 </div>
                                 <div class="form-group">
                                     <label for="issueDate">Issue Date</label>
-                                    <input type="date" id="issueDate" value="2025-03-25" required>
+                                    <input type="date" id="issueDate" required>
                                 </div>
                             </div>
                             <div class="form-row">
