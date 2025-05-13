@@ -141,9 +141,9 @@
                     <i class="fas fa-cog"></i>
                     <span>Settings</span>
                 </a>
-                <a href="profile.html" class="nav-item">
+                <a href="UserManagementSystem/users.html" class="nav-item">
                     <i class="fas fa-user-cog"></i>
-                    <span>Conta</span>
+                    <span>Contas</span>
                 </a>
                 <a href="#" class="nav-item">
                     <i class="fas fa-question-circle"></i>
@@ -170,7 +170,7 @@
                         <div class="avatar">
                             <i class="fas fa-user"></i>
                         </div>
-                        <span id="user-displayname">John Doe</span>
+                        <span id="user-displayname">Loading...</span>
                         <div class="dropdown-menu" id="userDropdown">
                             <a href="#">
                                 <i class="fas fa-user-circle"></i> My Profile
@@ -190,9 +190,9 @@
             <h2 data-lang="title" data-en="Dashboard Overview" data-pt="Visão Geral do Painel">Dashboard Overview</h2>
             <p class="subtitle" id="dashboard-subtitle"
                data-lang="subtitle"
-               data-en="Welcome back, John! Here's what's happening with your business today."
-               data-pt="Bem-vindo de volta, John! Aqui está o que está acontecendo com o seu negócio hoje.">
-               Welcome back, John! Here's what's happening with your business today.
+               data-en="Welcome back, User! Here's what's happening with your business today."
+               data-pt="Bem-vindo de volta, User! Aqui está o que está acontecendo com o seu negócio hoje.">
+               Welcome back, User! Here's what's happening with your business today.
             </p>            
             
             <!-- Quick Actions Section -->
@@ -1003,10 +1003,10 @@
             if (subtitle) {
                 ['en', 'pt'].forEach(lang => {
                     if (subtitle.dataset[lang]) {
-                        subtitle.dataset[lang] = subtitle.dataset[lang].replace(/John/g, displayName);
+                        subtitle.dataset[lang] = subtitle.dataset[lang].replace(/User/g, displayName);
                     }
                 });
-                subtitle.textContent = subtitle.textContent.replace(/John/g, displayName);
+                subtitle.textContent = subtitle.textContent.replace(/User/g, displayName);
             }
         });
 

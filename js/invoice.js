@@ -68,6 +68,20 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
+/*
+    const invoiceForm = document.getElementById('invoiceForm');
+    if (invoiceForm && !invoiceForm.hasSubmitHandler) {
+        invoiceForm.addEventListener('submit', async function(event) {
+            event.preventDefault();
+            try {
+                await saveInvoice();
+            } catch (error) {
+                console.error('Error submitting form:', error);
+                showNotification('Error: ' + error.message);
+            }
+        });
+        invoiceForm.hasSubmitHandler = true; // Custom flag to prevent double binding
+    }*/
 });
 
 function initializeInvoiceModule() {
@@ -129,6 +143,7 @@ function setupEventListeners() {
     viewButtons.forEach(button => {
         button.addEventListener('click', function() {
             const invoiceNumber = this.getAttribute('data-invoice');
+            console.log('Invoice Number:', invoiceNumber); // Debugging line
             openViewInvoiceModal(invoiceNumber);
         });
     });
@@ -599,10 +614,11 @@ function resetInvoiceForm() {
             const currentDate = new Date();
             const year = currentDate.getFullYear();
             // In a real app, we would get the next sequence number from the server
-            const nextNumber = Math.floor(Math.random() * 1000) + 1;
+            const nextNumber = Math.floor(Math.random() * 9000) + 1000;
             invoiceNumberField.value = `INV-${year}-${nextNumber.toString().padStart(4, '0')}`;
         }
     }
+    
 }
 
 function collectInvoiceData() {
@@ -622,7 +638,7 @@ function collectInvoiceData() {
         // Get client data safely
         let clientData = {};
         try {
-            clientData = JSON.parse(clientList.getAttribute('data-client') || '{}');
+            clientData = JSON.parse(clientList.getAttribute('client-list') || '{}');
         } catch (e) {
             console.warn('Could not parse client data:', e);
         }
@@ -634,7 +650,7 @@ function collectInvoiceData() {
             currency: currency.value || 'MZN',
             client: {
                 id: clientData.customer_id || '',
-                name: clientList.value || '',
+                customer_name: clientList.value || '',
                 email: document.getElementById('clientEmail')?.value || '',
                 address: document.getElementById('clientAddress')?.value || '',
                 taxId: document.getElementById('clientTaxId')?.value || ''
@@ -649,7 +665,7 @@ function collectInvoiceData() {
         };
 
         // Validate required fields have values
-        if (!invoiceData.invoiceNumber || !invoiceData.client.name) {
+        if (!invoiceData.invoiceNumber || !invoiceData.client.customer_name) {
             throw new Error('Invoice number and client name are required');
         }
 
@@ -693,7 +709,7 @@ async function saveInvoice() {
         // Collect and validate form data
         const invoiceData = collectInvoiceData();
         
-        if (!invoiceData.invoiceNumber || !invoiceData.client.name) {
+        if (!invoiceData.invoiceNumber || !invoiceData.client.customer_name) {
             throw new Error('Missing required fields');
         }
 
@@ -739,7 +755,7 @@ async function saveInvoice() {
         const { data: invoice, error: insertError } = await window.supabase
             .from('invoices')
             .insert([{
-                invoice_number: invoiceData.invoiceNumber,
+                invoiceNumber: invoiceData.invoiceNumber,
                 issue_date: issueDate.toISOString(),
                 due_date: dueDate.toISOString(),
                 client_id: invoiceData.client.id || null,
@@ -751,14 +767,17 @@ async function saveInvoice() {
                 payment_terms: invoiceData.paymentTerms,
                 notes: invoiceData.notes,
                 pdf_url: publicUrl,
-                customer_name: invoiceData.client.name,
+                customer_name: invoiceData.client.customer_name,
                 user_id: session.user.id // Add user_id for RLS
             }])
-            .select();
+            .select()
+            .single();
 
-        if (insertError) {
-            console.error('Database insert error:', insertError);
-            throw new Error('Failed to save invoice data');
+        console.log('Invoice insert result:', invoice, insertError);
+
+        if (insertError) throw insertError;
+        if (!invoice || !invoice.invoiceNumber) {
+            throw new Error('Invoice insert did not return invoiceNumber');
         }
 
         // Show success message
@@ -900,7 +919,7 @@ async function fetchInvoiceDetails(invoiceNumber) {
         const { data: invoice, error } = await window.supabase
             .from('invoices')
             .select('*, clients(*)')
-            .eq('invoice_number', invoiceNumber)
+            .eq('invoiceNumber', invoiceNumber)
             .single();
 
         if (error) throw error;
@@ -914,7 +933,7 @@ async function fetchInvoiceDetails(invoiceNumber) {
         }
 
         // Update invoice number display
-        document.getElementById('viewInvoiceNumber').textContent = invoice.invoice_number;
+        document.getElementById('viewInvoiceNumber').textContent = invoice.invoiceNumber;
 
         // Fetch and populate timeline
         const timeline = await fetchInvoiceTimeline(invoiceNumber);
@@ -951,7 +970,7 @@ async function fetchInvoiceTimeline(invoiceNumber) {
         const { data: timeline, error } = await window.supabase
             .from('invoice_timeline')
             .select('*')
-            .eq('invoice_number', invoiceNumber)
+            .eq('invoiceNumber', invoiceNumber)
             .order('created_at', { ascending: true });
 
         if (error) throw error;
@@ -990,7 +1009,7 @@ async function markInvoiceAsPaid(invoiceNumber) {
         const { error: updateError } = await window.supabase
             .from('invoices')
             .update({ status: 'paid', paid_date: new Date().toISOString() })
-            .eq('invoice_number', invoiceNumber);
+            .eq('invoiceNumber', invoiceNumber);
 
         if (updateError) throw updateError;
 
@@ -998,7 +1017,7 @@ async function markInvoiceAsPaid(invoiceNumber) {
         const { error: timelineError } = await window.supabase
             .from('invoice_timeline')
             .insert([{
-                invoice_number: invoiceNumber,
+                invoiceNumber: invoiceNumber,
                 title: 'Payment Received',
                 active: true,
                 date: new Date().toISOString()
@@ -1271,8 +1290,8 @@ function setupTableFilters() {
 
             const { data: clients, error } = await window.supabase
                 .from('clients')
-                .select('customer_id, company_name')
-                .order('company_name', { ascending: true });
+                .select('customer_id, customer_name')
+                .order('customer_name', { ascending: true });
 
             if (error) throw error;
 
@@ -1284,7 +1303,7 @@ function setupTableFilters() {
                 clients.forEach(client => {
                     const option = document.createElement('option');
                     option.value = client.customer_id;
-                    option.textContent = client.company_name;
+                    option.textContent = client.customer_name;
                     clientFilter.appendChild(option);
                 });
             }
@@ -1637,7 +1656,7 @@ function getInvoiceData() {
     console.log('Client name for invoice:', document.getElementById('client-list').value);
 
     return {
-        invoiceNumber: document.getElementById('invoiceNumber').value,
+    //    invoiceNumber: document.getElementById('invoiceNumber').value,
         issueDate: document.getElementById('issueDate').value,
         dueDate: document.getElementById('dueDate').value,
         currency: document.getElementById('currency').value,
@@ -1706,7 +1725,7 @@ document.addEventListener('input', async function(e) {
         const { data: clients, error } = await supabase
             .from('clients')
             .select('*')
-            .ilike('company_name', `%${searchTerm}%`)
+            .ilike('customer_name', `%${searchTerm}%`)
             .limit(5);
 
         if (error) throw error;
@@ -1736,7 +1755,7 @@ function showClientSuggestions(clients) {
 
     suggestionsBox.innerHTML = clients.map((client, idx) => `
         <div class="suggestion-item" data-client='${JSON.stringify(client)}' tabindex="0" data-index="${idx}">
-            ${client.company_name || ''} ${client.customer_tax_id ? `(${client.customer_tax_id})` : ''}
+            ${client.customer_name || ''} ${client.customer_tax_id ? `(${client.customer_tax_id})` : ''}
         </div>
     `).join('');
 
@@ -1778,7 +1797,7 @@ function fillInvoiceFields(client) {
 document.addEventListener('click', function(e) {
     if (e.target.closest('.suggestion-item')) {
         const client = JSON.parse(e.target.closest('.suggestion-item').dataset.client);
-        document.getElementById('client-list').value = client.name;
+        document.getElementById('client-list').value = client.customer_name;
         fillInvoiceFields(client);
         hideClientSuggestions();
     } else if (!e.target.closest('.client-suggestions') && !e.target.closest('#client-list')) {
@@ -1797,7 +1816,7 @@ async function saveNewClient(clientData) {
 
         if (error) throw error;
 
-        document.getElementById('client-list').value = data.name;
+        document.getElementById('client-list').value = data.customer_name;
         fillInvoiceFields(data);
         document.getElementById('expand-client-form').style.display = 'none';
         
@@ -1829,7 +1848,7 @@ function setupClientAutocomplete() {
             const { data: clients, error } = await window.supabase
                 .from('clients')
                 .select('*')
-                .ilike('company_name', `%${searchTerm}%`)
+                .ilike('customer_name', `%${searchTerm}%`)
                 .limit(5);
 
             if (error) throw error;
@@ -1860,7 +1879,7 @@ function hideClientSuggestions() {
 
 function fillClientFields(client) {
     const fields = {
-        'client-list': client.company_name || client.name,
+        'client-list': client.customer_name || client.customer_name,
         'clientEmail': client.email,
         'clientAddress': client.billing_address,
         'clientTaxId': client.customer_tax_id || client.nuit
@@ -1877,14 +1896,14 @@ function fillClientFields(client) {
 async function saveNewClient(clientData) {
     try {
         // Validate required data
-        if (!clientData?.name) {
+        if (!clientData?.customer_name) {
             throw new Error('Client name is required');
         }
 
         const { data, error } = await window.supabase
             .from('clients')
             .insert([{
-                company_name: clientData.name,
+                customer_name: clientData.customer_name,
                 customer_tax_id: clientData.nuit,
                 email: clientData.email,
                 billing_address: clientData.billing_address,
@@ -1914,7 +1933,7 @@ async function saveNewClient(clientData) {
 
 async function fillClientFields(client) {
     const fields = {
-        'client-list': client.company_name || client.name,
+        'client-list': client.customer_name || client.customer_name,
         'clientEmail': client.email,
         'clientAddress': client.billing_address,
         'clientTaxId': client.customer_tax_id || client.nuit
@@ -1926,7 +1945,7 @@ async function fillClientFields(client) {
             element.value = fields[id];
         }
     });
-
+/*
     // Generate new invoice number when client is selected
     try {
         const invoiceNumber = await invoiceNumberService.getNextInvoiceNumber(client.customer_id);
@@ -1934,7 +1953,7 @@ async function fillClientFields(client) {
     } catch (error) {
         console.error('Error generating invoice number:', error);
         showNotification('Error generating invoice number');
-    }
+    }*/
 }
 
 // ...existing code...
@@ -2161,7 +2180,7 @@ async function fetchAndDisplayInvoices(page = 1, limit = 10, filters = {}) {
 
         if (filters.search) {
             queryBuilder = queryBuilder.or(
-                `invoice_number.ilike.%${filters.search}%,client_name.ilike.%${filters.search}%`
+                `invoiceNumber.ilike.%${filters.search}%,client_name.ilike.%${filters.search}%`
             );
         }
 
@@ -2194,14 +2213,14 @@ async function fetchAndDisplayInvoices(page = 1, limit = 10, filters = {}) {
         invoices.forEach(invoice => {
             const row = `
                 <tr>
-                    <td>${invoice.invoice_number || ''}</td>
+                    <td>${invoice.invoiceNumber || ''}</td>
                     <td>${invoice.customer_name || ''}</td>
                     <td>${formatDate(invoice.issue_date)}</td>
                     <td>${formatDate(invoice.due_date)}</td>
                     <td>${formatCurrency(invoice.total_amount)}</td>
                     <td><span class="status ${invoice.status?.toLowerCase()}">${invoice.status || 'Pending'}</span></td>
                     <td class="actions">
-                        <button class="action-btn view-btn" data-invoice="${invoice.invoice_number}" title="View">
+                        <button class="action-btn view-btn" data-invoice="${invoice.invoiceNumber}" title="View">
                             <i class="fas fa-eye"></i>
                         </button>
                         <button class="action-btn send-btn" title="Send">
@@ -2506,14 +2525,14 @@ async function fetchAndDisplayInvoices() {
         invoices.forEach(invoice => {
             const row = `
                 <tr data-invoice-id="${invoice.id}">
-                    <td>${invoice.invoice_number || ''}</td>
+                    <td>${invoice.invoiceNumber || ''}</td>
                     <td>${invoice.customer_name || ''}</td>
                     <td>${formatDate(invoice.issue_date)}</td>
                     <td>${formatDate(invoice.due_date)}</td>
                     <td>${formatCurrency(invoice.total_amount)}</td>
                     <td><span class="status ${invoice.status?.toLowerCase() || 'pending'}">${invoice.status || 'Pending'}</span></td>
                     <td class="actions">
-                        <button class="action-btn view-btn" data-invoice="${invoice.invoice_number}" title="View">
+                        <button class="action-btn view-btn" data-invoice="${invoice.invoiceNumber}" title="View">
                             <i class="fas fa-eye"></i>
                         </button>
                         <button class="action-btn send-btn" title="Send">
@@ -2656,7 +2675,7 @@ function setupClientFormHandlers(clientList) {
         const { data: existingClient, error } = await window.supabase
             .from('clients')
             .select('customer_id')
-            .eq('company_name', value)
+            .eq('customer_name', value)
             .maybeSingle();
 
         if (addClientBtn) {
@@ -2682,7 +2701,7 @@ function setupClientFormHandlers(clientList) {
         saveNewClientBtn.addEventListener('click', async function() {
             try {
                 const newClient = {
-                    company_name: document.getElementById('new-client-name')?.value,
+                    customer_name: document.getElementById('new-client-name')?.value,
                     customer_tax_id: document.getElementById('new-client-nuit')?.value,
                     email: document.getElementById('new-client-email')?.value,
                     billing_address: document.getElementById('new-client-address')?.value,
@@ -2698,7 +2717,7 @@ function setupClientFormHandlers(clientList) {
                 if (error) throw error;
 
                 // Update form with new client
-                clientList.value = data.company_name;
+                clientList.value = data.customer_name;
                 if (newClientForm) newClientForm.style.display = 'none';
                 if (addClientBtn) addClientBtn.style.display = 'none';
 
@@ -2726,7 +2745,7 @@ function setupActionButtons() {
                 const { data: invoice, error } = await window.supabase
                     .from('invoices')
                     .select('pdf_url')
-                    .eq('invoice_number', invoiceNumber)
+                    .eq('invoiceNumber', invoiceNumber)
                     .single();
                 
                 if (error) throw error;
@@ -2821,7 +2840,7 @@ function setupActionButtons() {
                         const { error } = await window.supabase
                             .from('invoices')
                             .update({ status: newStatus })
-                            .eq('invoice_number', invoiceNumber);
+                            .eq('invoiceNumber', invoiceNumber);
                         
                         if (error) throw error;
                         
@@ -2864,34 +2883,34 @@ const invoiceNumberService = {
     async getNextInvoiceNumber(clientId) {
         try {
             const { data, error } = await window.supabase
-                .from('invoices')
-                .select('invoice_number')
-                .order('created_at', { ascending: false })
-                .limit(1);
+            .from('invoices')
+            .select('invoiceNumber')
+            .order('created_at', { ascending: false })
+            .limit(1);
 
             if (error) throw error;
 
             const currentDate = new Date();
             const year = currentDate.getFullYear();
-            const lastNumber = data?.[0]?.invoice_number?.split('-')?.[2] || '0000';
+            const lastNumber = data?.[0]?.invoiceNumber?.split('-')?.[2] || '0000';
             const nextNumber = (parseInt(lastNumber) + 1).toString().padStart(4, '0');
             
             return `INV-${year}-${nextNumber}`;
         } catch (error) {
             console.error('Error generating invoice number:', error);
-            const randomNumber = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
-            return `INV-${new Date().getFullYear()}-${randomNumber}`;
+            const nextNumber = (1).toString().padStart(4, '0');
+            return `INV-${new Date().getFullYear()}-${nextNumber}`;
         }
     }
 };
 
-// Update client search to use company_name instead of name
+// Update client search to use customer_name instead of name
 async function fetchClients(searchTerm) {
     try {
         const { data: clients, error } = await window.supabase
             .from('clients')
             .select('*')
-            .ilike('company_name', `%${searchTerm}%`)
+            .ilike('customer_name', `%${searchTerm}%`)
             .limit(5);
 
         if (error) throw error;
@@ -2932,7 +2951,7 @@ async function fetchClients(searchTerm) {
         const { data: clients, error } = await window.supabase
             .from('clients')
             .select('*')
-            .ilike('company_name', `%${searchTerm}%`)
+            .ilike('customer_name', `%${searchTerm}%`)
             .limit(5);
 
         if (error) throw error;
@@ -2990,7 +3009,7 @@ function showClientSuggestions(clients) {
 
     suggestionsBox.innerHTML = clients.map((client, idx) => `
         <div class="suggestion-item" data-client='${JSON.stringify(client)}' tabindex="0" data-index="${idx}">
-            ${client.company_name || ''} ${client.customer_tax_id ? `(${client.customer_tax_id})` : ''}
+            ${client.customer_name || ''} ${client.customer_tax_id ? `(${client.customer_tax_id})` : ''}
         </div>
     `).join('');
 
@@ -3016,7 +3035,7 @@ function showClientSuggestions(clients) {
 
 async function fillClientFields(client) {
     const fields = {
-        'client-list': client.company_name,
+        'client-list': client.customer_name,
         'clientEmail': client.email,
         'clientAddress': `${client.street_name || ''} ${client.address_detail || ''}, ${client.city || ''}, ${client.province || ''} ${client.postal_code || ''}`,
         'clientTaxId': client.customer_tax_id,
@@ -3035,14 +3054,14 @@ async function fillClientFields(client) {
 async function saveNewClient(clientData) {
     try {
         // Validate required data
-        if (!clientData?.company_name) {
-            throw new Error('Company name is required');
+        if (!clientData?.customer_name) {
+            throw new Error('Customer name is required');
         }
 
         const { data, error } = await window.supabase
             .from('clients')
             .insert([{
-                company_name: clientData.company_name,
+                customer_name: clientData.customer_name,
                 customer_tax_id: clientData.customer_tax_id,
                 email: clientData.email,
                 street_name: clientData.street_name,
@@ -3073,13 +3092,13 @@ async function saveNewClient(clientData) {
         throw err;
     }
 }
-
+/*
 async function saveInvoice(invoiceData) {
     try {
         // Show loading state
         showNotification('Saving invoice...');
 
-        if (!invoiceData.invoice_number || !invoiceData.customer_name) {
+        if (!invoiceData.invoiceNumber || !invoiceData.customer_name) {
             throw new Error('Missing required fields');
         }
 
@@ -3091,22 +3110,29 @@ async function saveInvoice(invoiceData) {
         const { data: invoice, error: insertError } = await window.supabase
             .from('invoices')
             .insert([{
-                invoice_number: invoiceData.invoice_number,
+                invoiceNumber: invoiceData.invoiceNumber,
                 issue_date: issueDate.toISOString(),
                 due_date: dueDate.toISOString(),
                 client_id: invoiceData.client_id,
                 status: 'pending',
                 subtotal: invoiceData.subtotal,
-                vat_amount: invoiceData.vat_amount,
+                vat_amount: invoiceData.totalVat,
                 total_amount: invoiceData.total_amount,
                 currency: invoiceData.currency,
                 payment_terms: invoiceData.payment_terms,
                 notes: invoiceData.notes,
+                pdf_url: 'Test',
                 customer_name: invoiceData.customer_name
             }])
-            .select();
+            .select()
+            .single();
+
+        console.log('Invoice insert result:', invoice, insertError);
 
         if (insertError) throw insertError;
+        if (!invoice || !invoice.invoiceNumber) {
+            throw new Error('Invoice insert did not return invoiceNumber');
+        }
 
         showNotification('Invoice saved successfully!');
         closeAllModals();
@@ -3120,6 +3146,7 @@ async function saveInvoice(invoiceData) {
         throw error;
     }
 }
+*/
 
 // ...existing code...
 
@@ -3132,7 +3159,7 @@ function setupActionButtons() {
                 const { data: invoice, error } = await window.supabase
                     .from('invoices')
                     .select('pdf_url')
-                    .eq('invoice_number', invoiceNumber)
+                    .eq('invoiceNumber', invoiceNumber)
                     .single();
                 
                 if (error) throw error;
@@ -3227,7 +3254,7 @@ function setupActionButtons() {
                         const { error } = await window.supabase
                             .from('invoices')
                             .update({ status: newStatus })
-                            .eq('invoice_number', invoiceNumber);
+                            .eq('invoiceNumber', invoiceNumber);
                         
                         if (error) throw error;
                         
@@ -3374,7 +3401,7 @@ function showClientSuggestions(clients) {
 
     suggestionsBox.innerHTML = clients.map((client, idx) => `
         <div class="suggestion-item" data-client='${JSON.stringify(client)}' tabindex="0" data-index="${idx}">
-            ${client.company_name || ''} ${client.customer_tax_id ? `(${client.customer_tax_id})` : ''}
+            ${client.customer_name || ''} ${client.customer_tax_id ? `(${client.customer_tax_id})` : ''}
         </div>
     `).join('');
 
@@ -3481,3 +3508,44 @@ function downloadCSV(csv, filename) {
         URL.revokeObjectURL(url);
     }, 0);
 }
+// Log last invoice number with improved visibility
+async function logLastInvoiceNumber() {
+    try {
+        console.log('Fetching last invoice number...'); // Added initial log
+
+        const { data, error } = await window.supabase
+            .from('invoices')
+            .select('invoiceNumber')
+            .order('created_at', { ascending: false })
+            .limit(1);
+
+        if (error) {
+            console.error('Error fetching last invoice number:', error);
+            return;
+        }
+
+        const lastInvoiceNumber = data && data.length > 0 ? data[0].invoiceNumber : null;
+        
+        // More visible console logs with styling
+        console.log('%c Last Invoice Number Details ', 'background: #333; color: #bada55');
+        console.log('Raw data from Supabase:', data);
+        console.log('Last Invoice Number:', lastInvoiceNumber);
+
+        // Force log to be visible even if console is filtered
+        console.warn('Last Invoice Check Complete:', {
+            lastInvoiceNumber,
+            timestamp: new Date().toISOString(),
+            success: true
+        });
+
+    } catch (err) {
+        console.error('Unexpected error in logLastInvoiceNumber:', err);
+        // Ensure error is highly visible
+        console.warn('Failed to fetch last invoice number:', err.message);
+    }
+}
+
+// Call the function when module initializes
+document.addEventListener('DOMContentLoaded', () => {
+    logLastInvoiceNumber();
+});
