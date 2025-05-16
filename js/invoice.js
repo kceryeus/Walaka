@@ -1633,7 +1633,7 @@ document.getElementById('invoiceForm').addEventListener('submit', function(event
 async function generateInvoiceHTML(invoiceData) {
     try {
         const selectedTemplate = localStorage.getItem('selectedInvoiceTemplate') || 'classic';
-        const templatePath = `/templates/${TEMPLATE_PATHS[selectedTemplate]}`;
+        const templatePath = `templates/${TEMPLATE_PATHS[selectedTemplate]}`;
         
         const response = await fetch(templatePath);
         if (!response.ok) throw new Error('Template not found');
