@@ -15,7 +15,7 @@ function loadTemplate(templateName) {
     const templateFile = TEMPLATE_PATHS[templateName] || 'template01.html'; // Default to classic
     
     // Load from templates directory
-    return fetch(`/templates/${templateFile}`)
+    return fetch(`templates/${templateFile}`)
         .then(response => {
             if (!response.ok) throw new Error('Template not found');
             return response.text();
