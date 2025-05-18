@@ -1,0 +1,6 @@
+// Invoice Management Module JavaScript
+
+// --- Module State & Global Initializations ---
+let invoiceModuleInitialized = false;
+let invoiceDistributionChartInstance = null;
+let revenueByStatusChartInstance = null;

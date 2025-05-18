@@ -3,9 +3,15 @@ class InvoiceNumberGenerator {
         this.supabase = window.supabase;
         this.prefix = 'INV';
         this.year = new Date().getFullYear();
+        this.lock = false; // Prevent concurrent calls
     }
 
     async getNextNumber() {
+        if (this.lock) {
+            throw new Error('Invoice number generation is already in progress');
+        }
+        this.lock = true;
+
         try {
             // Get the latest invoice number for the current year
             const { data, error } = await this.supabase
@@ -19,35 +25,47 @@ class InvoiceNumberGenerator {
 
             let sequence = 1;
             if (data && data.length > 0) {
-                // Extract the sequence number from the last invoice
                 const lastNumber = data[0].invoiceNumber;
-                const matches = lastNumber.match(/\d+$/);
+                const matches = lastNumber.match(/-(\d+)$/);
                 if (matches) {
-                    sequence = parseInt(matches[0]) + 1;
+                    sequence = parseInt(matches[1], 10) + 1;
                 }
             }
 
-            // Format: INV-YYYY-XXXXX (where XXXXX is padded with zeros)
-            const newInvoiceNumber = `${this.prefix}-${this.year}-${String(sequence).padStart(5, '0')}`;
+            let newInvoiceNumber;
+            let isUnique = false;
 
-            // Verify uniqueness
-            const { data: existingInvoice } = await this.supabase
-                .from('invoices')
-                .select('invoiceNumber')
-                .eq('invoiceNumber', newInvoiceNumber)
-                .single();
+            // Loop to ensure uniqueness (no recursion)
+            while (!isUnique) {
+                newInvoiceNumber = `${this.prefix}-${this.year}-${String(sequence).padStart(5, '0')}`;
 
-            if (existingInvoice) {
-                // If duplicate found, recursively try next number
-                return this.getNextNumber();
+                const { data: existingInvoice, error: checkError } = await this.supabase
+                    .from('invoices')
+                    .select('invoiceNumber')
+                    .eq('invoiceNumber', newInvoiceNumber)
+                    .single();
+
+                if (checkError && checkError.code !== 'PGRST116') throw checkError;
+
+                if (!existingInvoice) {
+                    isUnique = true;
+                } else {
+                    sequence++;
+                }
             }
 
             return newInvoiceNumber;
         } catch (error) {
             console.error('Error generating invoice number:', error);
             throw error;
+        } finally {
+            this.lock = false; // Always release the lock
         }
     }
 }
 
-export default InvoiceNumberGenerator;
+// Attach to window for global use
+if (typeof window !== 'undefined') {
+    window.InvoiceNumberGenerator = InvoiceNumberGenerator;
+}
+
