@@ -194,6 +194,25 @@ function setupActionButtons() {
     });
 }
 
+function updateInvoiceRow(row, invoice) {
+    // Get status configuration
+    const statusConfig = window.InvoiceStatusManager.getStatusConfig(invoice.status);
+    
+    // Update status cell with icon and color
+    const statusCell = row.querySelector('td:nth-child(6)');
+    if (statusCell) {
+        statusCell.innerHTML = `
+            <span class="status ${statusConfig.color}">
+                <i class="fas ${statusConfig.icon}"></i>
+                ${statusConfig.label}
+            </span>
+        `;
+    }
+    
+    // Update other cells as needed
+    // ... rest of the existing row update code ...
+}
+
 // Attach to window for global access
 if (typeof window !== 'undefined') {
     window.setupTableFilters = setupTableFilters;

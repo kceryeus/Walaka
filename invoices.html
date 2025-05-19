@@ -719,14 +719,11 @@
                         </div>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn secondary-btn" id="chooseTemplate">
-                            <i class="fas fa-save"></i> Choose Template
-                        </button>
                         <button type="button" class="btn secondary-btn" id="previewInvoiceBtn">
                             <i class="fas fa-eye"></i> Preview
                         </button>
                         <button type="submit" class="btn primary-btn">
-                            <i class="fas fa-check"></i> Create Invoice
+                            <i class="fas fa-check"></i> Publish Invoice
                         </button>
                     </div>
                 </form>
@@ -734,53 +731,6 @@
         </div>
     </div>
 
-    <!-- Template Selection Modal -->
-    <div id="templateModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2>Choose Invoice Template</h2>
-                <button class="close-modal">&times;</button>
-            </div>
-            <div class="modal-body">
-                <div class="template-grid">
-                    <div class="template-card" data-template="classic">
-                        <img src="templates/previews/classic-preview.png" alt="Classic Template" 
-                             onerror="this.src='https://via.placeholder.com/300x400/e3e3e3/666666?text=Classic+Template'">
-                        <h3>Classic Template</h3>
-                        <p>Traditional professional layout </p>
-                        <button class="btn primary-btn select-template">Select</button>
-                    </div>
-                    <div class="template-card" data-template="modern">
-                        <img src="templates/previews/modern-preview.png" alt="Modern Template"
-                             onerror="this.src='https://via.placeholder.com/300x400/e3e3e3/666666?text=Modern+Template'">
-                        <h3>Modern Template</h3>
-                        <p>Clean contemporary design </p>
-                        <button class="btn primary-btn select-template">Select</button>
-                    </div>
-                    <div class="template-card" data-template="minimal">
-                        <img src="templates/previews/minimal-preview.png" alt="Minimal Template"
-                             onerror="this.src='https://via.placeholder.com/300x400/e3e3e3/666666?text=Minimal+Template'">
-                        <h3>Minimal Template</h3>
-                        <p>Simple and elegant style </p>
-                        <button class="btn primary-btn select-template">Select</button>
-                    </div>
-                    <div class="template-card" data-template="tester">
-                        <img src="templates/previews/minimal-preview.png" alt="Tester Template"
-                             onerror="this.src='https://via.placeholder.com/300x400/e3e3e3/666666?text=Minimal+Template'">
-                        <h3>Tester Template</h3>
-                        <p>Simple and elegant test </p>
-                        <button class="btn primary-btn select-template">Select</button>
-                    </div>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button class="btn secondary-btn close-template-modal">Cancel</button>
-            </div>
-        </div>
-    </div>
-
-    
-    
     <!-- View Invoice Modal -->
     <div id="viewInvoiceModal" class="modal">
         <div class="modal-content">
@@ -909,13 +859,17 @@
     <script src="js/invoice.js"></script>
     <script src="js/invoicescripts/invoiceItems.js"></script>
     <script src="js/invoicescripts/charts.js"></script>
-    <script src="js/invoicescripts/eventListeners.js"></script>
     <script src="js/invoicescripts/clients.js"></script>
     <script src="js/invoicescripts/metrics.js"></script>
     <script src="js/invoicescripts/notifications.js"></script>
     <script src="js/invoicescripts/pdf.js"></script>
     <script src="js/invoicescripts/tableFilters.js"></script>
     <script src="js/invoicescripts/export.js"></script>
+    <script src="js/invoicescripts/modalManager.js"></script>
+    <script src="js/invoicescripts/invoiceForm.js"></script>
+    <script src="js/invoicescripts/invoiceStatus.js"></script>
+    <script src="js/invoicescripts/invoicePreview.js"></script>
+    <script src="js/invoicescripts/eventListeners.js"></script>
     <script src="js/displayname.js"></script>
 
     <!-- Initialize Supabase -->

@@ -97,15 +97,12 @@ function setupEventListeners() {
     const previewInvoiceBtn = document.getElementById('previewInvoiceBtn');
     if (previewInvoiceBtn) {
         previewInvoiceBtn.addEventListener('click', async function() {
-            const invoiceData = getInvoiceData();
-            const invoiceHTML = await generateInvoiceHTML(invoiceData);
-            const previewContainer = document.getElementById('invoicePreviewContent');
-            previewContainer.innerHTML = `
-                <div class="invoice-a4">
-                    ${invoiceHTML}
-                </div>
-            `;
-            document.getElementById('viewInvoiceModal').style.display = 'block';
+            try {
+                await previewInvoice();
+            } catch (error) {
+                console.error('Error generating preview:', error);
+                showNotification('Error generating preview: ' + error.message);
+            }
         });
     }
 

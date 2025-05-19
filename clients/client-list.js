@@ -235,6 +235,34 @@ function showErrorMessage(message) {
 }
 
 /**
+ * Get client by ID from Supabase
+ * @param {string} clientId - ID of client to retrieve
+ * @returns {Promise<Object|null>} - Client data or null if not found
+ */
+async function getClientById(clientId) {
+  try {
+    if (!window.supabase) {
+      throw new Error('Supabase client not initialized');
+    }
+
+    const { data, error } = await window.supabase
+      .from('clients')
+      .select('*')
+      .eq('customer_id', clientId)
+      .single();
+
+    if (error) throw error;
+    return data;
+  } catch (error) {
+    console.error('Error fetching client:', error);
+    return null;
+  }
+}
+
+// Make getClientById globally available
+window.getClientById = getClientById;
+
+/**
  * Render client list
  * @param {Array} clients - Array of clients to render
  */
@@ -266,7 +294,7 @@ function renderClientList(clients) {
           <span class="status-badge ${client.status || 'active'}">${client.status || 'Active'}</span>
           <span class="client-type-badge ${client.client_type}">${client.client_type === 'business' ? 'Business' : 'Individual'}</span>
         </div>
-        <h4>${client.company_name || 'N/A'}</h4>
+        <h4>${client.customer_name || 'N/A'}</h4>
         <p><strong>NIF/NUIT:</strong> ${client.customer_tax_id || 'N/A'}</p>
         <p><strong>Contact:</strong> ${client.contact || 'N/A'}</p>
         <p><strong>Email:</strong> ${client.email || 'N/A'}</p>
