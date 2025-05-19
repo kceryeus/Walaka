@@ -384,6 +384,7 @@ async function resetInvoiceForm() {
         document.getElementById('totalVat').textContent = '0.00';
         document.getElementById('invoiceTotal').textContent = '0.00';
         initializeDateFields();
+        
         // Generate a new unique invoice number only once
         const invoiceNumberField = document.getElementById('invoiceNumber');
         if (invoiceNumberField && !invoiceNumberField.dataset.generated) {
@@ -511,7 +512,7 @@ async function saveInvoice() {
         }
 
         // Upload PDF to Supabase Storage with proper permissions
-        const pdfFileName = `${invoiceData.invoiceNumber.replace(/\s+/g, '_')}.pdf`;
+        const pdfFileName = `${invoiceData.invoiceNumber.replace(/\s+/g, '_')}_${session.user.id}.pdf`;
         const { data: uploadData, error: uploadError } = await window.supabase.storage
             .from('invoice_pdfs')
             .upload(pdfFileName, pdfBlob, {
