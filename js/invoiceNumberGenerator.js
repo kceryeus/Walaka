@@ -53,48 +53,33 @@ class InvoiceNumberGenerator {
                 }
             }
 
-            let newInvoiceNumber;
-            let isUniqueForUser = false;
-            let attemptCount = 0; // To prevent infinite loops in unforeseen circumstances
+            // Generate the new invoice number
+            const newInvoiceNumber = `${this.prefix}-${this.year}-${String(sequence).padStart(5, '0')}`;
 
-            // Loop to ensure uniqueness for the current user
-            while (!isUniqueForUser && attemptCount < 10) { // Added attemptCount for safety
-                newInvoiceNumber = `${this.prefix}-${this.year}-${String(sequence).padStart(5, '0')}`;
+            // Verify this number is unique for the current user
+            const { data: existingInvoice, error: checkError } = await this.supabase
+                .from('invoices')
+                .select('invoiceNumber')
+                .eq('user_id', userId) // Only check for the current user
+                .eq('invoiceNumber', newInvoiceNumber)
+                .maybeSingle();
 
-                // Check if this invoice number already exists for THIS user
-                const { data: existingInvoice, error: checkError } = await this.supabase
-                    .from('invoices')
-                    .select('invoiceNumber')
-                    .eq('user_id', userId) // Check only for the current user
-                    .eq('invoiceNumber', newInvoiceNumber)
-                    .maybeSingle(); // Use maybeSingle to handle 0 or 1 row
-
-                // Handle potential errors during the check, except for PGRST116 (0 rows)
-                if (checkError && checkError.code !== 'PGRST116') {
-                    console.error('Error checking invoice uniqueness:', checkError);
-                    throw checkError;
-                }
-
-                if (!existingInvoice) { // If existingInvoice is null (no match found for this user)
-                    isUniqueForUser = true;
-                } else {
-                    // Invoice number exists for this user, increment sequence and try again
-                    console.warn(`Invoice number ${newInvoiceNumber} already exists for user ${userId}. Incrementing sequence.`);
-                    sequence++;
-                    attemptCount++;
-                }
+            if (checkError && checkError.code !== 'PGRST116') {
+                console.error('Error checking invoice uniqueness:', checkError);
+                throw checkError;
             }
 
-            if (!isUniqueForUser) {
-                // This should ideally not be reached if logic is correct and DB is consistent
-                throw new Error(`Failed to generate a unique invoice number for user ${userId} after ${attemptCount} attempts.`);
+            if (existingInvoice) {
+                // If the number exists for this user, increment and try again
+                console.warn(`Invoice number ${newInvoiceNumber} already exists for user ${userId}. Incrementing sequence.`);
+                sequence++;
+                return this.getNextNumber(); // Recursively try with next sequence
             }
 
             return newInvoiceNumber;
 
         } catch (error) {
             console.error('Error generating invoice number:', error.message || error);
-            // Re-throw the error so the calling function can handle it
             throw error;
         } finally {
             this.lock = false; // Always release the lock

@@ -1,0 +1,86 @@
+           <!-- Estrutura html da barra de menu de topo (acrescentar, reduzir, alterar conforme necessário)  
+		
+		<div class="top-bar-menu">
+                    <a href="invoices.html" class="top-bar-menu-item">
+                        <i class="fas fa-file-invoice-dollar"></i>
+                        <span>Invoices</span>
+                    </a>
+                    <a href="credit_notes.html" class="top-bar-menu-item">
+                        <i class="fas fa-file-invoice"></i>
+                        <span>Credit Notes</span>
+                    </a>
+                    <a href="debit_notes.html" class="top-bar-menu-item">
+                        <i class="fas fa-file-invoice"></i>
+                        <span>Debit Notes</span>
+                    </a>
+                    <a href="receipts.html" class="top-bar-menu-item">
+                        <i class="fas fa-receipt"></i>
+                        <span>Receipts</span>
+                    </a>
+                </div>
+		-->
+
+/* Script tipo Single Page Application para trocar de menu/janela sem sair do menu principal
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Get current page path
+    const currentPath = window.location.pathname;
+    
+    // Get all menu items
+    const menuItems = document.querySelectorAll('.top-bar-menu-item');
+    
+    // Set active menu item based on current page
+    menuItems.forEach(item => {
+        const href = item.getAttribute('href');
+        if (currentPath.includes(href)) {
+            item.classList.add('active');
+        }
+    });
+}); 
+
+*/
+
+
+/* Estilos para o menu de topo
+
+.top-bar-menu {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-right: 2rem;
+}
+
+.top-bar-menu-item {
+    position: relative;
+    padding: 0.5rem 1rem;
+    color: var(--text-color);
+    text-decoration: none;
+    font-size: 0.9rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.top-bar-menu-item:hover {
+    color: var(--primary-color);
+}
+
+.top-bar-menu-item i {
+    font-size: 1rem;
+}
+
+.top-bar-menu-item.active {
+    color: var(--primary-color);
+    font-weight: 500;
+}
+
+@media (max-width: 768px) {
+    .top-bar-menu {
+        display: none;
+    }
+} 
+
+*/
+
+Nota, para o script e css, apenas faça o link, para o html, encaixe dentro da estrutura (div do top bar, antes do user menu)
