@@ -23,10 +23,10 @@
 
         .recipiente-factura {
             width: 21cm;
-            min-height: 29.7cm;
+            min-height: 29.7cm; /* Ensure at least A4 height */
             background-color: #FFFFFF;
-            margin: 30px auto;
-            padding: 2.5cm;
+            margin: 30px auto; /* Center on screen */
+            padding: 2.5cm; /* Padding for screen */
             box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
             box-sizing: border-box;
         }
@@ -91,14 +91,17 @@
             width: 100%;
             border-collapse: collapse;
             margin-bottom: 30px;
+            table-layout: fixed; /* Ensure column widths are respected */
         }
 
         .tabela-itens th,
         .tabela-itens td {
             border: 1px solid var(--cor-borda);
-            padding: 10px 12px;
+            padding: 10px 12px; /* Keep existing padding */
             text-align: left;
             font-size: 14px;
+            word-wrap: break-word; /* Prevent long words from overflowing */
+            overflow-wrap: break-word; /* Alternative for wrapping */
         }
 
         .tabela-itens th {
@@ -114,6 +117,13 @@
         .tabela-itens .alinhar-direita {
             text-align: right;
         }
+
+        /* Set explicit column widths */
+         .tabela-itens th:nth-child(1) { width: 50%; } /* Descrição */
+         .tabela-itens th:nth-child(2) { width: 10%; } /* Quant. */
+         .tabela-itens th:nth-child(3) { width: 15%; } /* Preço Unit. */
+         .tabela-itens th:nth-child(4) { width: 10%; } /* IVA (%) */
+         .tabela-itens th:nth-child(5) { width: 15%; } /* Total */
 
         .seccao-totais {
             display: flex;
@@ -197,12 +207,55 @@
         @media print {
             body {
                 background-color: #FFFFFF;
+                width: 210mm;
+                height: 297mm;
+                margin: 0;
+                padding: 0;
+                overflow: hidden; /* Prevent scrollbars in print */
             }
             .recipiente-factura {
-                margin: 0;
-                box-shadow: none;
-                padding: 1cm;
+                margin: 0 !important; /* Remove margin in print */
+                box-shadow: none !important;
+                padding: 1.5cm !important; /* Use consistent padding for print margins */
+                width: 210mm !important; /* Full A4 width in print */
+                min-height: 297mm !important; /* Ensure at least A4 height in print */
+                box-sizing: border-box !important;
             }
+             /* Ensure table and its content fit within the print area */
+            .tabela-itens {
+                width: 100% !important;
+                box-sizing: border-box !important;
+                table-layout: fixed !important; /* Enforce fixed layout */
+                border-collapse: collapse !important;
+            }
+            .tabela-itens th,
+            .tabela-itens td {
+                 padding: 10px !important; /* Consistent padding */
+                 box-sizing: border-box !important;
+                 word-wrap: break-word !important; /* Ensure wrapping */
+                 overflow-wrap: break-word !important; /* Alternative wrapping */
+                 max-width: 0 !important; /* Allow shrinking */
+                 white-space: normal !important; /* Allow wrapping */
+            }
+              /* Fine-tune column widths for print if needed */
+            .tabela-itens th:nth-child(1) { width: 50% !important; } /* Descrição */
+            .tabela-itens th:nth-child(2) { width: 10% !important; } /* Quant. */
+            .tabela-itens th:nth-child(3) { width: 15% !important; } /* Preço Unit. */
+            .tabela-itens th:nth-child(4) { width: 10% !important; } /* IVA (%) */
+            .tabela-itens th:nth-child(5) { width: 15% !important; } /* Total */
+
+             /* Adjust footer positioning if needed */
+             .rodape-factura {
+                 position: absolute !important;
+                 bottom: 1.5cm !important; /* Position from bottom margin */
+                 left: 1.5cm !important;
+                 right: 1.5cm !important;
+                 width: auto !important;
+                 text-align: center !important;
+             }
+             .seccao-notas {
+                 margin-bottom: 40mm !important; /* Add space above footer */
+             }
         }
     </style>
 </head>

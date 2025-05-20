@@ -508,7 +508,7 @@
                 
                 <!-- Pagination -->
                 <div class="pagination">
-                    <span class="page-info">Showing 1-6 of 358 invoices</span>
+                    <span class="page-info"></span>
                     <div class="page-controls">
                         <button class="pagination-btn" disabled>
                             <i class="fas fa-chevron-left"></i>
@@ -858,14 +858,6 @@
     <!-- JavaScript Dependencies -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="scripts/templateManager.js"></script>
-    <script src="js/invoicescripts/pdf.js"></script>
-    <script src="js/email-handler.js"></script>
-    <script src="js/invoice.js"></script>
-    <script src="js/invoicescripts/eventListeners.js"></script>
-    <script src="js/invoicescripts/invoiceItems.js"></script>
-    <script src="js/invoicescripts/charts.js"></script>
-    <script src="js/invoicescripts/clients.js"></script>
-    <script src="js/invoicescripts/metrics.js"></script>
     <script src="js/invoicescripts/notifications.js"></script>
     <script src="js/invoicescripts/tableFilters.js"></script>
     <script src="js/invoicescripts/export.js"></script>
@@ -873,6 +865,15 @@
     <script src="js/invoicescripts/invoiceForm.js"></script>
     <script src="js/invoicescripts/invoiceStatus.js"></script>
     <script src="js/invoicescripts/invoicePreview.js"></script>
+    <script src="js/invoicescripts/invoiceItems.js"></script>
+    <script src="js/invoicescripts/metrics.js"></script>
+    <script src="js/invoicescripts/charts.js"></script>
+    <script src="js/invoicescripts/eventListeners.js"></script>
+    <script src="js/invoicescripts/invoiceTable.js"></script>
+    <script src="js/invoicescripts/invoiceActions.js"></script>
+    <script src="js/invoicescripts/pdf.js"></script>
+    <script src="js/email-handler.js"></script>
+    <script src="js/invoice.js"></script>
     <script src="js/displayname.js"></script>
 
     <!-- Initialize Supabase -->
@@ -902,14 +903,14 @@
             datalist.innerHTML = '';
             clients.forEach(client => {
                 const option = document.createElement('option');
-                option.value = client.customer_name; // <-- change this if needed
+                option.value = client.customer_name;
                 datalist.appendChild(option);
             });
         }
 
         document.getElementById('client-list').addEventListener('input', function() {
             const value = this.value.trim();
-            const exists = clients.some(c => c.customer_name === value); // <-- change this if needed
+            const exists = clients.some(c => c.customer_name === value);
             document.getElementById('add-client-btn').style.display = (!exists && value) ? 'inline-block' : 'none';
         });
 
@@ -936,11 +937,8 @@
             }
         });
 
-        // On page load
-        fetchClients();
-
         // Products functionality
-        let cachedProducts = []; // Move this to global scope
+        let cachedProducts = [];
 
         async function fetchProducts() {
             console.log("Fetching products...");
@@ -951,34 +949,86 @@
                 return;
             }
 
-            cachedProducts = data; // Store in our global cache
+            cachedProducts = data;
             console.log("Products loaded:", cachedProducts.length);
-            // Log all product descriptions
             cachedProducts.forEach(product => {
                 console.log("Product:", product.name, "Description:", product.description);
             });
         }
 
         // Initialize everything
-        async function initialize() {
-            await fetchClients();
-            await fetchProducts(); // This now populates cachedProducts
-            // Call the setupEventListeners method on the window.invoiceItems instance
-            if (window.invoiceItems && typeof window.invoiceItems.setupEventListeners === 'function') {
-                window.invoiceItems.setupEventListeners();
-            } else {
-                console.error('InvoiceItems or setupEventListeners not available on window.invoiceItems');
+        document.addEventListener('DOMContentLoaded', async function() {
+            try {
+                // Initialize Supabase client
+                if (!window.supabase) {
+                    throw new Error('Supabase client not initialized');
+                }
+
+                // Initialize modals first
+                if (typeof window.openModal !== 'function') {
+                    throw new Error('Modal functions not found');
+                }
+
+                // Initialize charts
+                if (typeof window.setupCharts === 'function') {
+                    window.setupCharts();
+                    window.setupChartPeriodControls();
+                    console.log('Charts initialized successfully');
+                } else {
+                    console.error('Chart setup functions not found');
+                }
+
+                // Initialize metrics
+                if (typeof window.updateMetricsDisplay === 'function') {
+                    await window.updateMetricsDisplay();
+                    window.setupMetricsSubscription();
+                    console.log('Metrics initialized successfully');
+                } else {
+                    console.error('Metrics functions not found');
+                }
+
+                // Update charts with data
+                if (typeof window.updateCharts === 'function') {
+                    await window.updateCharts();
+                    window.setupChartSubscription();
+                    console.log('Charts updated successfully');
+                } else {
+                    console.error('Chart update functions not found');
+                }
+
+                // Initialize invoice table
+                if (typeof window.fetchAndDisplayInvoices === 'function') {
+                    await window.fetchAndDisplayInvoices(1, 10, {});
+                    console.log('Invoice table initialized successfully');
+                } else {
+                    console.error('Invoice table functions not found');
+                }
+
+                // Initialize invoice actions
+                if (window.invoiceActions) {
+                    window.invoiceActions.setupEventListeners();
+                    console.log('Invoice actions initialized successfully');
+                } else {
+                    console.error('Invoice actions not found');
+                }
+
+                // Initialize invoice items
+                if (window.invoiceItems) {
+                    window.invoiceItems.setupEventListeners();
+                    console.log('Invoice items initialized successfully');
+                } else {
+                    console.error('Invoice items not found');
+                }
+
+                // Fetch initial data
+                await fetchClients();
+                await fetchProducts();
+
+            } catch (error) {
+                console.error('Error during initialization:', error);
+                showNotification('Error initializing application: ' + error.message);
             }
-        }
-
-        // Start the application
-        // Ensure the DOM is fully loaded before initializing
-        window.addEventListener('DOMContentLoaded', () => {
-            initialize().catch(console.error);
         });
-
-
-        
     </script>
 </body>
 </html>

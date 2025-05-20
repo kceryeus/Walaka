@@ -40,7 +40,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   let invoiceSettings = {
     prefix: 'FAT-',
     nextNumber: 1001,
-    template: 'template1',
+    template: 'classic',
     color: '#007ec7',
     currency: 'MZN',
     taxRate: 17,
@@ -292,14 +292,15 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Load invoice settings
     invoicePrefixInput.value = invoiceSettings.prefix;
     invoiceNextNumberInput.value = invoiceSettings.nextNumber;
-    
+
     // Get the selected template from localStorage or use default
-    const selectedTemplate = window.invoiceTemplateManager.getSelectedTemplate();
+    // Prioritize value from invoiceSettings if it exists
+    const selectedTemplate = invoiceSettings.template || window.invoiceTemplateManager.getSelectedTemplate();
     invoiceTemplateInput.value = selectedTemplate;
-    
+
     // Preview the selected template
     window.invoiceTemplateManager.previewTemplate(selectedTemplate);
-    
+
     invoiceColorInput.value = invoiceSettings.color;
     invoiceColorValue.textContent = invoiceSettings.color;
     defaultCurrencyInput.value = invoiceSettings.currency;
@@ -1094,14 +1095,25 @@ document.addEventListener('DOMContentLoaded', async () => {
         payment_terms: document.getElementById('payment-terms').value,
         invoice_notes: document.getElementById('invoice-notes').value
       };
-      
+
+      // Assuming you have a user ID to associate settings with
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session || !session.user) {
+          showToast('error', 'Authentication Error', 'User not logged in.');
+          return;
+      }
+      settings.user_id = session.user.id;
+
       const { error } = await supabase
         .from('settings')
-        .upsert(settings);
-      
+        .upsert([settings], { onConflict: 'user_id' }); // Use onConflict to update existing user settings
+
       if (error) throw error;
-      
-      showToast('Settings saved successfully', 'success');
+
+      // Update local invoiceSettings object after successful save
+      invoiceSettings = settings;
+
+      showToast('success', 'Success', 'Invoice settings updated successfully.');
     } catch (error) {
       console.error('Error saving settings:', error);
       showToast('Error saving settings', 'error');

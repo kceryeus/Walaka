@@ -19,12 +19,13 @@
         }
 
         .container {
-            width: 21cm; /* A4 width */
-            height: 29.7cm; /* A4 height */
+            /* width: 21cm; */ /* Removed fixed width */
+            max-width: 21cm; /* Use max-width for flexibility */
+            min-height: 29.7cm; /* A4 height */
             background-color: #fff;
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-            margin: 20px auto;
-            padding: 2cm;
+            margin: 20px auto; /* Center the container */
+            padding: 1.5cm; /* Keep padding for screen display */
             box-sizing: border-box;
             display: flex;
             flex-direction: column;
@@ -96,21 +97,28 @@
             margin-top: 20px;
             border-radius: 8px;
             overflow: hidden;
+            box-sizing: border-box; /* Ensure padding and borders are included in the element's total width */
+            table-layout: fixed; /* Ensure column widths are respected */
         }
 
         .items-table thead th {
             background-color: var(--main-color);
             color: white;
-            padding: 10px;
+            /* padding: 10px; */ /* Remove specific padding here */
+            padding: 8px; /* Use a slightly smaller padding */
             text-align: left;
             font-size: 14px;
             font-weight: 600;
+            box-sizing: border-box;
         }
 
         .items-table tbody td {
-            padding: 10px;
+            /* padding: 10px; */ /* Remove specific padding here */
+            padding: 8px; /* Use a slightly smaller padding */
             border-bottom: 1px solid #ecf0f1;
             font-size: 14px;
+            box-sizing: border-box;
+            word-wrap: break-word; /* Prevent long words from overflowing */
         }
 
         .items-table tbody tr:nth-child(odd) {
@@ -180,15 +188,31 @@
         }
 
         @media print {
-            .a4-preview {
-                margin: 0;
-                box-shadow: none;
-                padding: 0;
+            @page {
+                size: A4;
+                margin: 0; /* Remove page margin */
             }
+            
+            body {
+                margin: 0;
+                padding: 0;
+                width: 210mm !important; /* Ensure body takes full A4 width in print */
+                height: 297mm !important; /* Ensure body takes full A4 height in print */
+            }
+            
+            .container {
+                width: 210mm !important; /* Set container width to A4 width */
+                height: 297mm !important; /* Set container height to A4 height */
+                margin: 0 !important; /* Remove margin in print */
+                padding: 0 !important; /* Remove padding in print, html2pdf margin will handle this */
+                box-shadow: none !important;
+                box-sizing: border-box !important;
+            }
+            
             .modal-header,
             .modal-footer,
             .invoice-view-actions {
-                display: none;
+                display: none !important;
             }
         }
 
@@ -275,11 +299,11 @@
         <table class="items-table">
             <thead>
                 <tr>
-                    <th>Description</th>
-                    <th>Quantity</th>
-                    <th>Unit Price</th>
-                    <th>VAT (%)</th>
-                    <th>Total</th>
+                    <th width="45%">Description</th>
+                    <th width="12%">Quantity</th>
+                    <th width="14%">Unit Price</th>
+                    <th width="12%">VAT (%)</th>
+                    <th width="17%">Total</th>
                 </tr>
             </thead>
             <tbody id="invoice-items">

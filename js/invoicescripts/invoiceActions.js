@@ -3,6 +3,62 @@ class InvoiceActions {
     constructor() {
         this.supabase = window.supabase;
         this.statusManager = window.InvoiceStatusManager;
+        this.setupEventListeners();
+    }
+
+    setupEventListeners() {
+        // Mark as Paid button
+        const markPaidBtn = document.getElementById('markPaidBtn');
+        if (markPaidBtn) {
+            markPaidBtn.addEventListener('click', async () => {
+                const invoiceNumber = document.getElementById('viewInvoiceNumber').textContent;
+                await this.markAsPaid(invoiceNumber);
+            });
+        }
+
+        // Email Invoice button
+        const emailInvoiceBtn = document.getElementById('emailInvoiceBtn');
+        if (emailInvoiceBtn) {
+            emailInvoiceBtn.addEventListener('click', async () => {
+                const invoiceNumber = document.getElementById('viewInvoiceNumber').textContent;
+                await this.sendInvoice(invoiceNumber);
+            });
+        }
+
+        // Print Invoice button
+        const printInvoiceBtn = document.getElementById('printInvoiceBtn');
+        if (printInvoiceBtn) {
+            printInvoiceBtn.addEventListener('click', () => {
+                const previewContent = document.getElementById('invoicePreviewContent');
+                if (previewContent) {
+                    const printWindow = window.open('', '_blank');
+                    printWindow.document.write(previewContent.innerHTML);
+                    printWindow.document.close();
+                    printWindow.print();
+                }
+            });
+        }
+
+        // Download PDF button
+        const downloadPdfBtn = document.getElementById('downloadPdfBtn');
+        if (downloadPdfBtn) {
+            downloadPdfBtn.addEventListener('click', async () => {
+                const invoiceNumber = document.getElementById('viewInvoiceNumber').textContent;
+                await this.downloadPdf(invoiceNumber);
+            });
+        }
+
+        // Close Invoice button
+        const closeInvoiceBtn = document.getElementById('closeInvoiceBtn');
+        if (closeInvoiceBtn) {
+            closeInvoiceBtn.addEventListener('click', () => {
+                const modal = document.getElementById('viewInvoiceModal');
+                if (modal) {
+                    modal.style.display = 'none';
+                    document.querySelector('.modal-overlay').style.display = 'none';
+                }
+            });
+        }
     }
 
     async markAsPaid(invoiceNumber) {
@@ -50,7 +106,7 @@ class InvoiceActions {
             window.showNotification('Invoice marked as paid');
 
             // Refresh invoice list and metrics
-            await window.refreshInvoiceList();
+            await this.refreshInvoiceList();
 
             return true;
         } catch (error) {
@@ -100,7 +156,7 @@ class InvoiceActions {
             window.showNotification('Invoice sent successfully');
 
             // Refresh invoice list and metrics
-            await window.refreshInvoiceList();
+            await this.refreshInvoiceList();
 
             return true;
         } catch (error) {
@@ -140,7 +196,7 @@ class InvoiceActions {
             window.showNotification('Invoice deleted successfully');
 
             // Refresh invoice list and metrics
-            await window.refreshInvoiceList();
+            await this.refreshInvoiceList();
 
             return true;
         } catch (error) {
@@ -200,7 +256,7 @@ class InvoiceActions {
             window.showNotification('Invoice duplicated successfully');
 
             // Refresh invoice list
-            await window.refreshInvoiceList();
+            await this.refreshInvoiceList();
 
             return newInvoiceNumber;
         } catch (error) {
@@ -257,6 +313,60 @@ class InvoiceActions {
             hour: '2-digit',
             minute: '2-digit'
         });
+    }
+
+    async downloadPdf(invoiceNumber) {
+        try {
+            // Fetch invoice data
+            const { data: invoice, error } = await this.supabase
+                .from('invoices')
+                .select('*')
+                .eq('invoiceNumber', invoiceNumber)
+                .single();
+
+            if (error) throw error;
+
+            // Generate PDF using html2pdf
+            const element = document.getElementById('invoicePreviewContent');
+            const opt = {
+                margin: 1,
+                filename: `Invoice-${invoiceNumber}.pdf`,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2 },
+                jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
+            };
+
+            html2pdf().set(opt).from(element).save();
+
+            // Show notification
+            window.showNotification('PDF downloaded successfully');
+        } catch (error) {
+            console.error('Error downloading PDF:', error);
+            window.showNotification('Error downloading PDF');
+        }
+    }
+
+    async refreshInvoiceList() {
+        try {
+            // Refresh metrics
+            if (typeof window.updateMetricsDisplay === 'function') {
+                await window.updateMetricsDisplay();
+            }
+
+            // Refresh charts
+            if (typeof window.updateCharts === 'function') {
+                await window.updateCharts();
+            }
+
+            // Refresh invoice table
+            if (typeof window.fetchAndDisplayInvoices === 'function') {
+                await window.fetchAndDisplayInvoices();
+            }
+
+            console.log('Invoice list refreshed successfully');
+        } catch (error) {
+            console.error('Error refreshing invoice list:', error);
+        }
     }
 }
 

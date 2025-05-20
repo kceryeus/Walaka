@@ -24,26 +24,31 @@
 
         .invoice-container {
             width: 210mm;
-            min-height: 297mm;
-            padding: 20mm;
-            margin: 0;
+            min-height: 297mm; /* Ensure at least A4 height */
+            padding: 20mm; /* Padding for screen */
+            margin: 0 auto; /* Center on screen */
             box-sizing: border-box;
+            max-width: auto; /* Allow to take full width up to 210mm */
         }
         
         @media print {
- /*           html, body, .invoice-container {
+             html, body {
                 width: 210mm;
                 height: 297mm;
-            }*/
-            
+                margin: 0;
+                padding: 0;
+                overflow: hidden; /* Prevent scrollbars in print */
+            }
+
             .invoice-container {
-        width: 190mm !important;
-        height: 20mm !important;
-        margin: 0 auto !important;
-        padding: 10mm !important;
-        box-shadow: none !important;
-        border: none !important;
-    }
+                width: 210mm !important;
+                min-height: 297mm !important; /* Ensure at least A4 height in print */
+                margin: 0 !important; /* Remove margin in print */
+                padding: 15mm !important; /* Use consistent padding for print margins */
+                box-shadow: none !important;
+                border: none !important;
+                box-sizing: border-box !important;
+            }
         }
         
         body {
@@ -54,11 +59,11 @@
         }
         
         .invoice-container {
-            max-width: auto;
-            margin: 0 auto;
+            max-width: auto; /* Redundant, but keep for clarity */
+            margin: 0 auto; /* Center on screen */
             background-color: var(--background);
             box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-            padding: 10px;
+            /* padding: 10px; */ /* Remove screen-specific padding here */
         }
         
         .invoice-header {
@@ -165,23 +170,27 @@
             width: 100%;
             border-collapse: collapse;
             margin-bottom: 40px;
+            table-layout: fixed; /* Ensure column widths are respected */
         }
         
         .items-table th {
             background-color: var(--light-bg);
             text-align: left;
-            padding: 12px;
+            padding: 10px; /* Adjusted padding */
             font-size: 14px;
             font-weight: 600;
             color: var(--text-color);
             text-transform: uppercase;
             letter-spacing: 0.3px;
+            border-bottom: 1px solid var(--border-color); /* Add border for clarity */
         }
         
         .items-table td {
-            padding: 12px;
+            padding: 10px; /* Adjusted padding */
             font-size: 14px;
             border-bottom: 1px solid var(--border-color);
+            word-wrap: break-word; /* Prevent long words from overflowing */
+            overflow-wrap: break-word; /* Alternative for wrapping */
         }
         
         .items-table tr:last-child td {
@@ -191,6 +200,13 @@
         .amount-column {
             text-align: right;
         }
+        
+        /* Set explicit column widths */
+        .items-table th:nth-child(1) { width: 50%; } /* Description */
+        .items-table th:nth-child(2) { width: 10%; } /* Quantity */
+        .items-table th:nth-child(3) { width: 15%; } /* Unit Price */
+        .items-table th:nth-child(4) { width: 10%; } /* VAT (%) */
+        .items-table th:nth-child(5) { width: 15%; } /* Total */
         
         .invoice-summary {
             margin-left: auto;

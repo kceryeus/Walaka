@@ -1,9 +1,9 @@
 // Map template names to file paths 
 const TEMPLATE_PATHS = {
-    'classic': 'template01.html',
-    'modern': 'template02.html',
-    'minimal': 'template03.html', 
-    'tester': 'template04.html'
+    'template01': 'template01.html',
+    'template02': 'template02.html',
+    'template03': 'template03.html',
+    'template04': 'template04.html'
 };
 
 // Template preview data
