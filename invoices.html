@@ -22,7 +22,7 @@
     <link rel="stylesheet" href="css/invoice-layout.css">
 
     <style>
-        /* Product suggestions styles */
+    /*     Product suggestions styles 
         .product-suggestions {
             position: absolute;
             top: 100%;
@@ -92,6 +92,9 @@
         .new-product-form button:hover {
             background: var(--primary-color-dark);
         }
+        
+        */
+
     </style>
     <style>
         .item-row td {
@@ -855,21 +858,21 @@
     <!-- JavaScript Dependencies -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="scripts/templateManager.js"></script>
+    <script src="js/invoicescripts/pdf.js"></script>
     <script src="js/email-handler.js"></script>
     <script src="js/invoice.js"></script>
+    <script src="js/invoicescripts/eventListeners.js"></script>
     <script src="js/invoicescripts/invoiceItems.js"></script>
     <script src="js/invoicescripts/charts.js"></script>
     <script src="js/invoicescripts/clients.js"></script>
     <script src="js/invoicescripts/metrics.js"></script>
     <script src="js/invoicescripts/notifications.js"></script>
-    <script src="js/invoicescripts/pdf.js"></script>
     <script src="js/invoicescripts/tableFilters.js"></script>
     <script src="js/invoicescripts/export.js"></script>
     <script src="js/invoicescripts/modalManager.js"></script>
     <script src="js/invoicescripts/invoiceForm.js"></script>
     <script src="js/invoicescripts/invoiceStatus.js"></script>
     <script src="js/invoicescripts/invoicePreview.js"></script>
-    <script src="js/invoicescripts/eventListeners.js"></script>
     <script src="js/displayname.js"></script>
 
     <!-- Initialize Supabase -->
@@ -960,11 +963,19 @@
         async function initialize() {
             await fetchClients();
             await fetchProducts(); // This now populates cachedProducts
-            setupProductSuggestions();
+            // Call the setupEventListeners method on the window.invoiceItems instance
+            if (window.invoiceItems && typeof window.invoiceItems.setupEventListeners === 'function') {
+                window.invoiceItems.setupEventListeners();
+            } else {
+                console.error('InvoiceItems or setupEventListeners not available on window.invoiceItems');
+            }
         }
 
         // Start the application
-        initialize().catch(console.error);
+        // Ensure the DOM is fully loaded before initializing
+        window.addEventListener('DOMContentLoaded', () => {
+            initialize().catch(console.error);
+        });
 
 
         

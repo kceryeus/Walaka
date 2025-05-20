@@ -14,7 +14,7 @@ class InvoiceNumberService {
             const currentYear = new Date().getFullYear();
 
             // Get the latest invoice number for this client in the current year
-            const { data: lastInvoice, error } = await this.supabase
+            const { data: lastInvoice, error } = await window.supabase
                 .from('invoices')
                 .select('invoiceNumber')
                 .eq('client_id', clientId)
@@ -41,7 +41,7 @@ class InvoiceNumberService {
             const formattedNumber = `CLI-${clientId}-${currentYear}-${String(nextSequence).padStart(4, '0')}`;
             
             // Verify uniqueness
-            const { data: existingInvoice, error: checkError } = await this.supabase
+            const { data: existingInvoice, error: checkError } = await window.supabase
                 .from('invoices')
                 .select('invoiceNumber')
                 .eq('invoiceNumber', formattedNumber)

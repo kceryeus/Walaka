@@ -172,3 +172,12 @@ function updateRevenueByStatusChart(period, data = null) {
         console.error('Error updating revenue chart:', error);
     }
 }
+
+// Attach chart functions to window for global access
+if (typeof window !== 'undefined') {
+    window.setupCharts = setupCharts;
+    window.setupChartPeriodControls = setupChartPeriodControls;
+    window.updateChartPeriodButtons = updateChartPeriodButtons;
+    window.updateInvoiceDistributionChart = updateInvoiceDistributionChart;
+    window.updateRevenueByStatusChart = updateRevenueByStatusChart;
+}

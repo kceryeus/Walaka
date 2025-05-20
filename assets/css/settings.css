@@ -1073,3 +1073,79 @@ input:checked + .toggle-slider:before {
     width: 100%;
   }
 }
+
+.template-preview {
+    margin-top: 1rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 1rem;
+}
+
+.template-preview h4 {
+    margin: 0 0 1rem 0;
+    color: #666;
+}
+
+.preview-container {
+    background: #f5f5f5;
+    padding: 1rem;
+    border-radius: 4px;
+    min-height: 200px;
+    max-height: 400px;
+    overflow-y: auto;
+    position: relative;
+}
+
+.preview-container iframe {
+    width: 100%;
+    height: 100%;
+    border: none;
+    background: white;
+}
+
+/* Template selection styles */
+#invoice-template {
+    margin-bottom: 1rem;
+}
+
+.template-options {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.template-option {
+    border: 2px solid #ddd;
+    border-radius: 4px;
+    padding: 1rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.template-option:hover {
+    border-color: var(--primary-color);
+}
+
+.template-option.selected {
+    border-color: var(--primary-color);
+    background-color: rgba(var(--primary-color-rgb), 0.05);
+}
+
+.template-option img {
+    width: 100%;
+    height: auto;
+    border-radius: 2px;
+    margin-bottom: 0.5rem;
+}
+
+.template-option h5 {
+    margin: 0;
+    color: #333;
+}
+
+.template-option p {
+    margin: 0.5rem 0 0;
+    font-size: 0.9rem;
+    color: #666;
+}

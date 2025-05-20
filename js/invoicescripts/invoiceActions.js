@@ -8,7 +8,7 @@ class InvoiceActions {
     async markAsPaid(invoiceNumber) {
         try {
             // Update invoice status
-            const { error: updateError } = await this.supabase
+            const { error: updateError } = await window.supabase
                 .from('invoices')
                 .update({ 
                     status: 'paid', 
@@ -19,7 +19,7 @@ class InvoiceActions {
             if (updateError) throw updateError;
 
             // Add timeline event
-            const { error: timelineError } = await this.supabase
+            const { error: timelineError } = await window.supabase
                 .from('invoice_timeline')
                 .insert([{
                     invoiceNumber: invoiceNumber,
@@ -63,7 +63,7 @@ class InvoiceActions {
     async sendInvoice(invoiceNumber) {
         try {
             // Update invoice status
-            const { error: updateError } = await this.supabase
+            const { error: updateError } = await window.supabase
                 .from('invoices')
                 .update({ 
                     status: 'sent',
@@ -74,7 +74,7 @@ class InvoiceActions {
             if (updateError) throw updateError;
 
             // Add timeline event
-            const { error: timelineError } = await this.supabase
+            const { error: timelineError } = await window.supabase
                 .from('invoice_timeline')
                 .insert([{
                     invoiceNumber: invoiceNumber,
@@ -118,7 +118,7 @@ class InvoiceActions {
             }
 
             // Delete invoice
-            const { error: deleteError } = await this.supabase
+            const { error: deleteError } = await window.supabase
                 .from('invoices')
                 .delete()
                 .eq('invoiceNumber', invoiceNumber);
@@ -126,7 +126,7 @@ class InvoiceActions {
             if (deleteError) throw deleteError;
 
             // Delete timeline events
-            const { error: timelineError } = await this.supabase
+            const { error: timelineError } = await window.supabase
                 .from('invoice_timeline')
                 .delete()
                 .eq('invoiceNumber', invoiceNumber);
@@ -153,7 +153,7 @@ class InvoiceActions {
     async duplicateInvoice(invoiceNumber) {
         try {
             // Fetch original invoice
-            const { data: originalInvoice, error: fetchError } = await this.supabase
+            const { data: originalInvoice, error: fetchError } = await window.supabase
                 .from('invoices')
                 .select('*')
                 .eq('invoiceNumber', invoiceNumber)
@@ -178,14 +178,14 @@ class InvoiceActions {
             delete newInvoice.id;
 
             // Insert new invoice
-            const { error: insertError } = await this.supabase
+            const { error: insertError } = await window.supabase
                 .from('invoices')
                 .insert([newInvoice]);
 
             if (insertError) throw insertError;
 
             // Add timeline event
-            const { error: timelineError } = await this.supabase
+            const { error: timelineError } = await window.supabase
                 .from('invoice_timeline')
                 .insert([{
                     invoiceNumber: newInvoiceNumber,
@@ -212,7 +212,7 @@ class InvoiceActions {
 
     async fetchTimeline(invoiceNumber) {
         try {
-            const { data: timeline, error } = await this.supabase
+            const { data: timeline, error } = await window.supabase
                 .from('invoice_timeline')
                 .select('*')
                 .eq('invoiceNumber', invoiceNumber)

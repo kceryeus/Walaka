@@ -499,7 +499,7 @@ async function saveInvoice() {
         }
 
         // Generate PDF
-        const pdfBlob = await generatePDF(invoiceData);
+        const pdfBlob = await window.generatePDF(invoiceData);
         
         if (!pdfBlob) {
             throw new Error('Failed to generate PDF');

@@ -1,12 +1,6 @@
 // pdf.js
 // PDF and Invoice HTML generation utilities for the invoice module
 
-const TEMPLATE_PATHS = {
-    classic: 'classic.html',
-    modern: 'modern.html',
-    minimal: 'minimal.html'
-};
-
 async function populateTemplate(template, data) {
     // Replace placeholders with actual data
     let html = template;
@@ -64,8 +58,8 @@ function formatCurrency(amount) {
 }
 
 async function generatePDF(invoiceData) {
-    // Generate invoice HTML
-    const invoiceHTML = await generateInvoiceHTML(invoiceData);
+    // Generate invoice HTML using the function from templateManager
+    const invoiceHTML = await window.invoiceTemplateManager.generateInvoiceHTML(invoiceData);
     
     // Create a temporary container
     const container = document.createElement('div');
@@ -94,23 +88,17 @@ async function generatePDF(invoiceData) {
 }
 
 async function generateInvoiceHTML(invoiceData) {
-    try {
-        const selectedTemplate = localStorage.getItem('selectedInvoiceTemplate') || 'classic';
-        const templatePath = `templates/${TEMPLATE_PATHS[selectedTemplate]}`;
-        
-        const response = await fetch(templatePath);
-        if (!response.ok) throw new Error('Template not found');
-        
-        const templateContent = await response.text();
-        return await populateTemplate(templateContent, invoiceData);
-    } catch (error) {
-        console.error('Error generating invoice HTML:', error);
-        throw error;
-    }
+    // Get selected template
+    const selectedTemplate = localStorage.getItem('selectedInvoiceTemplate') || 'classic';
+    // Use loadTemplate from templateManager
+    const templateContent = await window.invoiceTemplateManager.loadTemplate(selectedTemplate);
+
+    // Populate template with data using populateTemplate from templateManager
+    return await window.invoiceTemplateManager.populateTemplate(templateContent, invoiceData);
 }
 
 // Attach to window for global access
 if (typeof window !== 'undefined') {
-    window.generatePDF = generatePDF;
-    window.generateInvoiceHTML = generateInvoiceHTML;
+    // window.generatePDF = generatePDF; // Keep this if generatePDF is only in this file
+    // window.generateInvoiceHTML = generateInvoiceHTML; // Remove if now in templateManager
 }

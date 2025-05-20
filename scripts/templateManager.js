@@ -6,6 +6,38 @@ const TEMPLATE_PATHS = {
     'tester': 'template04.html'
 };
 
+// Template preview data
+const TEMPLATE_PREVIEW_DATA = {
+    company_name: 'Your Company Name',
+    company_address: '123 Business Street\nCity, Country',
+    company_email: 'contact@yourcompany.com',
+    company_phone: '+123 456 7890',
+    company_nuit: '123456789',
+    invoice_number: 'INV-2024-001',
+    issue_date: '2024-03-20',
+    due_date: '2024-04-20',
+    client_name: 'Sample Client',
+    client_address: '456 Client Avenue\nClient City, Country',
+    client_nuit: '987654321',
+    client_email: 'client@example.com',
+    client_contact: '+123 456 7891',
+    currency: 'MZN',
+    subtotal: '1000.00',
+    totalVat: '160.00',
+    discount: '0.00',
+    total: '1160.00',
+    notes: 'Thank you for your business!',
+    items: [
+        {
+            description: 'Sample Product 1',
+            quantity: '2',
+            price: '500.00',
+            vat: '16',
+            total: '1160.00'
+        }
+    ]
+};
+
 /**
  * Load a template by name
  * @param {string} templateName - The name of the template to load
@@ -259,10 +291,62 @@ async function previewInvoice(invoiceData) {
     }
 }
 
+/**
+ * Preview a template
+ * @param {string} templateName - The name of the template to preview
+ * @returns {Promise<void>}
+ */
+async function previewTemplate(templateName) {
+    try {
+        const templateContent = await loadTemplate(templateName);
+        const previewContainer = document.getElementById('template-preview-container');
+        
+        if (!previewContainer) return;
+        
+        // Create iframe for preview
+        const iframe = document.createElement('iframe');
+        previewContainer.innerHTML = '';
+        previewContainer.appendChild(iframe);
+        
+        // Write template content to iframe
+        const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+        iframeDoc.open();
+        iframeDoc.write(templateContent);
+        iframeDoc.close();
+        
+        // Populate template with preview data
+        await populateTemplate(iframeDoc, templateContent, TEMPLATE_PREVIEW_DATA);
+        
+        // Adjust iframe height to content
+        iframe.style.height = iframeDoc.body.scrollHeight + 'px';
+    } catch (error) {
+        console.error('Error previewing template:', error);
+    }
+}
+
+/**
+ * Save template selection
+ * @param {string} templateName - The name of the selected template
+ */
+function saveTemplateSelection(templateName) {
+    localStorage.setItem('selectedInvoiceTemplate', templateName);
+}
+
+/**
+ * Get selected template
+ * @returns {string} The name of the selected template
+ */
+function getSelectedTemplate() {
+    return localStorage.getItem('selectedInvoiceTemplate') || 'classic';
+}
+
 // Export functions for external use
 window.invoiceTemplateManager = {
     loadTemplate,
     generateInvoiceHTML,
     populateTemplate,
-    previewInvoice
+    previewInvoice,
+    previewTemplate,
+    saveTemplateSelection,
+    getSelectedTemplate
 };

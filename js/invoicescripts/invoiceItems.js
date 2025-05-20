@@ -4,7 +4,6 @@
 // Invoice Items Module
 class InvoiceItems {
     constructor() {
-        this.supabase = window.supabase;
         this.setupEventListeners();
     }
 
@@ -35,7 +34,7 @@ class InvoiceItems {
 
     async handleProductSearch(searchTerm, row) {
         try {
-            const { data: products, error } = await this.supabase
+            const { data: products, error } = await window.supabase
                 .from('products')
                 .select('*')
                 .ilike('description', `%${searchTerm}%`)
@@ -239,7 +238,7 @@ class InvoiceItems {
                 throw new Error('Please fill in all required fields');
             }
 
-            const { data: product, error } = await this.supabase
+            const { data: product, error } = await window.supabase
                 .from('products')
                 .insert([{
                     description,
