@@ -1,26 +1,26 @@
 // Metrics Module
 const MetricsModule = {
     async updateMetricsDisplay() {
-        try {
-            // Fetch all invoices
-            const { data: invoices, error: invoiceError } = await window.supabase
-                .from('invoices')
-                .select('*');
+    try {
+        // Fetch all invoices
+        const { data: invoices, error: invoiceError } = await window.supabase
+            .from('invoices')
+            .select('*');
 
-            if (invoiceError) throw invoiceError;
+        if (invoiceError) throw invoiceError;
 
-            // Calculate metrics
-            const totalInvoices = invoices.length;
-            const totalPaid = invoices.filter(inv => inv.status === 'paid').length;
-            const totalPending = invoices.filter(inv => inv.status === 'pending').length;
-            const totalOverdue = invoices.filter(inv => inv.status === 'overdue').length;
+        // Calculate metrics
+        const totalInvoices = invoices.length;
+        const totalPaid = invoices.filter(inv => inv.status === 'paid').length;
+        const totalPending = invoices.filter(inv => inv.status === 'pending').length;
+        const totalOverdue = invoices.filter(inv => inv.status === 'overdue').length;
 
-            // Calculate percentages
+        // Calculate percentages
             const paidPercentage = totalInvoices > 0 ? ((totalPaid / totalInvoices) * 100).toFixed(1) : '0.0';
             const pendingPercentage = totalInvoices > 0 ? ((totalPending / totalInvoices) * 100).toFixed(1) : '0.0';
             const overduePercentage = totalInvoices > 0 ? ((totalOverdue / totalInvoices) * 100).toFixed(1) : '0.0';
 
-            // Update metrics cards
+        // Update metrics cards
             const setMetric = (selector, value) => {
                 const el = document.querySelector(selector);
                 if (el) el.textContent = value;
@@ -35,9 +35,9 @@ const MetricsModule = {
             setMetric('#overdueInvoicesCard .metric-footer .metric-label', `${overduePercentage}% of Total`);
 
             console.log('Metrics updated successfully');
-        } catch (error) {
-            console.error('Error updating metrics:', error);
-            // Set default values in case of error
+    } catch (error) {
+        console.error('Error updating metrics:', error);
+        // Set default values in case of error
             const setMetric = (selector, value) => {
                 const el = document.querySelector(selector);
                 if (el) el.textContent = value;
@@ -50,36 +50,36 @@ const MetricsModule = {
     },
 
     setupMetricsSubscription() {
-        const subscription = window.supabase
-            .channel('public:invoices')
-            .on('postgres_changes', 
-                {
-                    event: '*',
-                    schema: 'public',
-                    table: 'invoices'
-                }, 
-                () => {
+    const subscription = window.supabase
+        .channel('public:invoices')
+        .on('postgres_changes', 
+            {
+                event: '*',
+                schema: 'public',
+                table: 'invoices'
+            }, 
+            () => {
                     this.updateMetricsDisplay();
-                }
-            )
-            .subscribe();
+            }
+        )
+        .subscribe();
 
-        return () => {
-            subscription.unsubscribe();
-        };
+    return () => {
+        subscription.unsubscribe();
+    };
     },
 
     async updateCharts() {
-        try {
-            // Fetch all invoices
-            const { data: invoices, error: invoiceError } = await window.supabase
-                .from('invoices')
-                .select('*');
+    try {
+        // Fetch all invoices
+        const { data: invoices, error: invoiceError } = await window.supabase
+            .from('invoices')
+            .select('*');
 
-            if (invoiceError) throw invoiceError;
+        if (invoiceError) throw invoiceError;
 
-            // Update both charts with the invoice data
-            if (Array.isArray(invoices)) {
+        // Update both charts with the invoice data
+        if (Array.isArray(invoices)) {
                 // Calculate weekly distribution
                 const weeklyData = this.calculateWeeklyDistribution(invoices);
                 if (typeof window.updateInvoiceDistributionChart === 'function') {
@@ -91,73 +91,73 @@ const MetricsModule = {
                 if (typeof window.updateRevenueByStatusChart === 'function') {
                     window.updateRevenueByStatusChart('monthly', revenueData);
                 }
-            }
+        }
 
-        } catch (error) {
-            console.error('Error updating charts:', error);
+    } catch (error) {
+        console.error('Error updating charts:', error);
             this.resetCharts();
         }
     },
 
     calculateWeeklyDistribution(invoices) {
-        const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-        const dailyCounts = Array(7).fill(0);
-        
-        invoices.forEach(invoice => {
-            const date = new Date(invoice.issue_date);
-            const dayIndex = date.getDay();
-            dailyCounts[dayIndex]++;
-        });
+    const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    const dailyCounts = Array(7).fill(0);
+    
+    invoices.forEach(invoice => {
+        const date = new Date(invoice.issue_date);
+        const dayIndex = date.getDay();
+        dailyCounts[dayIndex]++;
+    });
 
-        // Rotate array to start from Monday
-        const values = [...dailyCounts.slice(1), dailyCounts[0]];
-        const labels = [...days.slice(1), days[0]];
+    // Rotate array to start from Monday
+    const values = [...dailyCounts.slice(1), dailyCounts[0]];
+    const labels = [...days.slice(1), days[0]];
 
-        return { labels, values };
+    return { labels, values };
     },
 
     calculateRevenueByStatus(invoices) {
-        return invoices.reduce((acc, invoice) => {
-            const status = invoice.status || 'pending';
-            const amount = parseFloat(invoice.total_amount) || 0;
-            acc[status] = (acc[status] || 0) + amount;
-            return acc;
-        }, {});
+    return invoices.reduce((acc, invoice) => {
+        const status = invoice.status || 'pending';
+        const amount = parseFloat(invoice.total_amount) || 0;
+        acc[status] = (acc[status] || 0) + amount;
+        return acc;
+    }, {});
     },
 
     resetCharts() {
-        // Reset Invoice Distribution Chart
-        if (window.invoiceDistributionChart) {
-            window.invoiceDistributionChart.data.datasets[0].data = Array(7).fill(0);
-            window.invoiceDistributionChart.update();
-        }
+    // Reset Invoice Distribution Chart
+    if (window.invoiceDistributionChart) {
+        window.invoiceDistributionChart.data.datasets[0].data = Array(7).fill(0);
+        window.invoiceDistributionChart.update();
+    }
 
-        // Reset Revenue by Status Chart
-        if (window.revenueByStatusChart) {
-            window.revenueByStatusChart.data.datasets[0].data = Array(4).fill(0);
-            window.revenueByStatusChart.update();
-        }
+    // Reset Revenue by Status Chart
+    if (window.revenueByStatusChart) {
+        window.revenueByStatusChart.data.datasets[0].data = Array(4).fill(0);
+        window.revenueByStatusChart.update();
+    }
     },
 
     setupChartSubscription() {
-        const subscription = window.supabase
-            .channel('public:invoices')
-            .on('postgres_changes', 
-                {
-                    event: '*',
-                    schema: 'public',
-                    table: 'invoices'
-                }, 
-                () => {
+    const subscription = window.supabase
+        .channel('public:invoices')
+        .on('postgres_changes', 
+            {
+                event: '*',
+                schema: 'public',
+                table: 'invoices'
+            }, 
+            () => {
                     this.updateCharts();
-                }
-            )
-            .subscribe();
+            }
+        )
+        .subscribe();
 
-        return () => {
-            subscription.unsubscribe();
-        };
-    }
+    return () => {
+        subscription.unsubscribe();
+    };
+}
 };
 
 // Export functions to global scope

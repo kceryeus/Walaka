@@ -12,10 +12,10 @@ const InvoiceTableModule = {
                 pageInfo.textContent = 'Loading...';
             }
 
-            // Initialize query builder
+            // Initialize query builder with proper headers
             let queryBuilder = window.supabase
                 .from('invoices')
-                .select('*', { count: 'exact' });
+                .select('*', { count: 'exact', head: false });
 
             // Apply filters
             if (filters.status && filters.status !== 'all') {
@@ -65,10 +65,13 @@ const InvoiceTableModule = {
                 .range(from, to)
                 .order('created_at', { ascending: false });
 
-            // Execute query
+            // Execute query with proper error handling
             const { data: invoices, error, count } = await queryBuilder;
 
-            if (error) throw error;
+            if (error) {
+                console.error('Supabase query error:', error);
+                throw new Error(`Failed to fetch invoices: ${error.message}`);
+            }
 
             // Clear existing rows
             if (tbody) {

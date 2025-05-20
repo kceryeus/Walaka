@@ -1,0 +1,37 @@
+.top-bar-menu {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-right: 2rem;
+}
+
+.top-bar-menu-item {
+    position: relative;
+    padding: 0.5rem 1rem;
+    color: var(--text-color);
+    text-decoration: none;
+    font-size: 0.9rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.top-bar-menu-item:hover {
+    color: var(--primary-color);
+}
+
+.top-bar-menu-item i {
+    font-size: 1rem;
+}
+
+.top-bar-menu-item.active {
+    color: var(--primary-color);
+    font-weight: 500;
+}
+
+@media (max-width: 768px) {
+    .top-bar-menu {
+        display: none;
+    }
+} 

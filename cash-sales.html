@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WALAKA - Cash Sales Management</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+    
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Google Fonts - Inter -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap">
+
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/invoice.css">
+    <link rel="stylesheet" href="css/invoice-layout.css">
+
+    <style>
+        /* Cash Sales specific styles */
+        .cash-sale-status {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.9em;
+            font-weight: 500;
+        }
+        
+        .status-completed {
+            background-color: #e6f4ea;
+            color: #1e7e34;
+        }
+        
+        .status-pending {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+        
+        .cash-sale-metrics {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        
+        .metric-card {
+            background: white;
+            border-radius: 8px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+
+<body>
+    <div class="dashboard-container">
+        <!-- Sidebar Menu -->
+        <nav class="sidebar">
+            <div class="logo">
+                <i class="fas fa-chart-line"></i>
+                <span>WALAKA</span>
+            </div>
+            
+            <div class="nav-menu">
+                <a href="dashboard.html" class="nav-item">
+                    <i class="fas fa-home"></i>
+                    <span>Dashboard</span>
+                </a>
+                
+                <div class="nav-section">
+                    <h3>Facturação</h3>
+                </div>
+                <a href="invoices.html" class="nav-item">
+                    <i class="fas fa-file-invoice-dollar"></i>
+                    <span>Facturas</span>
+                </a>
+                <a href="cash-sales.html" class="nav-item active">
+                    <i class="fas fa-money-bill-wave"></i>
+                    <span>Venda Dinheiro</span>
+                </a>
+
+                <a href="clients/clients.html" class="nav-item">
+                    <i class="fas fa-users"></i>
+                    <span>Clientes</span>
+                </a>
+
+                <a href="products.html" class="nav-item">
+                    <i class="fas fa-shopping-cart"></i>
+                    <span>Produtos</span>
+                </a>
+                
+                <div class="nav-section">
+                    <h3>Comercial</h3>
+                </div>
+                <a href="#" class="nav-item">
+                    <i class="fas fa-boxes"></i>
+                    <span>Inventário</span>
+                </a>
+                <a href="#" class="nav-item">
+                    <i class="fas fa-truck"></i>
+                    <span>Fornecedores</span>
+                </a>
+                <a href="#" class="nav-item">
+                    <i class="fas fa-exchange-alt"></i>
+                    <span>Movimentos</span>
+                </a>
+                <a href="#" class="nav-item">
+                    <i class="fas fa-money-bill-wave"></i>
+                    <span>Despesas</span>
+                </a>
+            </div>
+        </nav>
+        
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Top Bar -->
+            <div class="top-bar">
+                <button class="menu-toggle">
+                    <i class="fas fa-bars"></i>
+                </button>
+                
+                <div class="user-menu" style="margin-left:auto;">
+                    <div class="notification-bell">
+                        <i class="fas fa-bell"></i>
+                        <span class="badge">3</span>
+                    </div>
+                    
+                    <div class="user-profile" id="userProfile">
+                        <div class="avatar">
+                            <i class="fas fa-user"></i>
+                        </div>
+                        <span id="user-displayname">Loading...</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Cash Sales Dashboard Content -->
+            <div class="page-header">
+                <div>
+                    <h2>Venda Dinheiro</h2>
+                    <p class="subtitle">Gerencie suas vendas em dinheiro</p>
+                </div>
+                <div class="action-buttons">
+                    <button class="btn secondary-btn" id="exportCashSalesBtn">
+                        <i class="fas fa-file-export"></i> Exportar
+                    </button>
+                    <button class="btn primary-btn" id="createCashSaleBtn">
+                        <i class="fas fa-plus"></i> Nova Venda
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Cash Sales Metrics -->
+            <div class="cash-sale-metrics">
+                <div class="metric-card" id="totalSalesCard">
+                    <div class="metric-header">
+                        <i class="fas fa-cash-register"></i>
+                        <span>Total de Vendas</span>
+                    </div>
+                    <div class="metric-value">0</div>
+                    <div class="metric-footer">
+                        <span class="metric-label">Hoje</span>
+                    </div>
+                </div>
+                
+                <div class="metric-card" id="totalAmountCard">
+                    <div class="metric-header">
+                        <i class="fas fa-money-bill-wave"></i>
+                        <span>Valor Total</span>
+                    </div>
+                    <div class="metric-value">MZN 0.00</div>
+                    <div class="metric-footer">
+                        <span class="metric-label">Hoje</span>
+                    </div>
+                </div>
+                
+                <div class="metric-card" id="averageTicketCard">
+                    <div class="metric-header">
+                        <i class="fas fa-receipt"></i>
+                        <span>Ticket Médio</span>
+                    </div>
+                    <div class="metric-value">MZN 0.00</div>
+                    <div class="metric-footer">
+                        <span class="metric-label">Hoje</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Cash Sales Table -->
+            <div class="invoice-table-container">
+                <div class="table-header">
+                    <h3>Vendas Recentes</h3>
+                    <div class="table-filters">
+                        <div class="filter-group">
+                            <label for="dateFilter">Período:</label>
+                            <select id="dateFilter" class="filter-select">
+                                <option value="today">Hoje</option>
+                                <option value="week">Esta Semana</option>
+                                <option value="month">Este Mês</option>
+                                <option value="custom">Personalizado</option>
+                            </select>
+                        </div>
+                        <div class="search-filter">
+                            <label for="searchSales">Buscar:</label>
+                            <input type="text" id="searchSales" placeholder="Número da venda, cliente...">
+                            <button id="clearFilters" class="clear-filters-btn">
+                                <i class="fas fa-times"></i> Limpar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Cash Sales Table -->
+                <div class="table-responsive">
+                    <table id="cashSalesTable" class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Nº Venda</th>
+                                <th>Data/Hora</th>
+                                <th>Cliente</th>
+                                <th>Itens</th>
+                                <th>Valor Total</th>
+                                <th>Status</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td colspan="7" class="text-center">Carregando vendas...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                
+                <!-- Pagination -->
+                <div class="pagination">
+                    <span class="page-info">Mostrando 1-10 de 0 vendas</span>
+                    <div class="page-controls">
+                        <button class="pagination-btn" disabled>
+                            <i class="fas fa-chevron-left"></i>
+                        </button>
+                        <button class="pagination-btn active">1</button>
+                        <button class="pagination-btn">
+                            <i class="fas fa-chevron-right"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Create Cash Sale Modal -->
+    <div id="cashSaleModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Nova Venda</h2>
+                <button class="close-modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="cashSaleForm">
+                    <div class="form-grid">
+                        <div class="form-section">
+                            <h3>Informações do Cliente</h3>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="client-list">Cliente</label>
+                                    <input type="text" id="client-list" placeholder="Nome do cliente..." autocomplete="off">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="form-section">
+                            <h3>Itens da Venda</h3>
+                            <div class="items-table-container">
+                                <table id="itemsTable" class="items-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Produto</th>
+                                            <th>Quantidade</th>
+                                            <th>Preço Unit.</th>
+                                            <th>IVA (16%)</th>
+                                            <th>Total</th>
+                                            <th></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr class="item-row">
+                                            <td>
+                                                <input type="text" class="item-description" placeholder="Digite o produto">
+                                            </td>
+                                            <td>
+                                                <input type="number" class="item-quantity" value="1" min="1">
+                                            </td>
+                                            <td>
+                                                <input type="number" class="item-price" value="0.00" min="0" step="0.01">
+                                            </td>
+                                            <td>
+                                                <span class="item-vat">0.00</span>
+                                            </td>
+                                            <td>
+                                                <span class="item-total">0.00</span>
+                                            </td>
+                                            <td>
+                                                <button type="button" class="remove-item-btn">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <button type="button" id="addItemBtn" class="btn secondary-btn">
+                                <i class="fas fa-plus"></i> Adicionar Item
+                            </button>
+                            
+                            <div class="invoice-totals">
+                                <div class="totals-row">
+                                    <span>Subtotal:</span>
+                                    <span id="subtotal">0.00</span>
+                                </div>
+                                <div class="totals-row">
+                                    <span>IVA (16%):</span>
+                                    <span id="totalVat">0.00</span>
+                                </div>
+                                <div class="totals-row">
+                                    <span>Total:</span>
+                                    <span id="saleTotal">0.00</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="modal-footer">
+                        <button type="button" class="btn secondary-btn" id="previewSaleBtn">
+                            <i class="fas fa-eye"></i> Visualizar
+                        </button>
+                        <button type="submit" class="btn primary-btn">
+                            <i class="fas fa-check"></i> Finalizar Venda
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- View Cash Sale Modal -->
+    <div id="viewCashSaleModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Detalhes da Venda</h2>
+                <button class="close-modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="sale-view-header">
+                    <div class="sale-view-info">
+                        <h3 id="viewSaleNumber">VD-2024-0001</h3>
+                        <span id="viewSaleStatus" class="cash-sale-status status-completed">Concluída</span>
+                    </div>
+                    <div class="sale-view-actions">
+                        <button class="btn icon-btn" id="printSaleBtn" title="Imprimir">
+                            <i class="fas fa-print"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <div id="salePreviewContent">
+                    <!-- Sale content will be inserted here -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn primary-btn" id="closeSaleBtn">
+                    <i class="fas fa-times"></i> Fechar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Dark Mode Overlay -->
+    <div class="modal-overlay"></div>
+
+    <!-- JavaScript Dependencies -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="js/cash-sales.js"></script>
+    
+    <!-- Initialize Supabase -->
+    <script type="module">
+        import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.0.0/+esm';
+        
+        const supabase = createClient(
+            'https://qvmtozjvjflygbkjecyj.supabase.co',
+            'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF2bXRvemp2amZseWdia2plY3lqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDYxMjc2MjMsImV4cCI6MjA2MTcwMzYyM30.DJMC1eM5_EouM1oc07JaoXsMX_bSLn2AVCozAcdfHmo'
+        );
+
+        window.supabase = supabase;
+    </script>
+</body>
+</html> 

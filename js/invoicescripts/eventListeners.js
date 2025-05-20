@@ -36,8 +36,8 @@ function setupEventListeners() {
 
     // Add item button
     const addItemBtn = document.getElementById('addItemBtn');
-    if (addItemBtn) {
-        addItemBtn.addEventListener('click', addInvoiceItem);
+    if (addItemBtn && window.invoiceItems) {
+        addItemBtn.addEventListener('click', () => window.invoiceItems.addInvoiceItem());
     }
 
     // View Invoice buttons
@@ -48,9 +48,6 @@ function setupEventListeners() {
             openViewInvoiceModal(invoiceNumber);
         });
     });
-
-    // Setup invoice item calculations
-    setupItemCalculations();
 
     // Payment terms dropdown
     const paymentTermsSelect = document.getElementById('paymentTerms');

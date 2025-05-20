@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WALAKA - Receipt Management</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+    
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Google Fonts - Inter -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap">
+
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/receipt.css">
+    <link rel="stylesheet" href="css/receipt-layout.css">
+</head>
+
+<body>
+    <div class="dashboard-container">
+        <nav class="sidebar">
+            <div class="logo">
+                <i class="fas fa-chart-line"></i>
+                <span>WALAKA</span>
+            </div>
+
+            <div class="nav-menu">
+                <a href="dashboard.html" class="nav-item">
+                    <i class="fas fa-home"></i>
+                    <span>Dashboard</span>
+                </a>
+
+                <div class="nav-section">
+                    <h3>Facturação</h3>
+                </div>
+                <a href="invoices.html" class="nav-item">
+                    <i class="fas fa-file-invoice-dollar"></i>
+                    <span>Facturas</span>
+                </a>
+
+                <a href="clients/clients.html" class="nav-item">
+                    <i class="fas fa-users"></i>
+                    <span>Clientes</span>
+                </a>
+
+                <a href="products.html" class="nav-item">
+                    <i class="fas fa-shopping-cart"></i>
+                    <span>Produtos</span>
+                </a>
+
+                <a href="receipts.html" class="nav-item active">
+                    <i class="fas fa-receipt"></i>
+                    <span>Recibos</span>
+                </a>
+
+                <div class="nav-section">
+                    <h3>Comercial</h3>
+                </div>
+                <a href="#" class="nav-item">
+                    <i class="fas fa-boxes"></i>
+                    <span>Inventário</span>
+                </a>
+                <a href="#" class="nav-item">
+                    <i class="fas fa-truck"></i>
+                    <span>Fornecedores</span>
+                </a>
+                <a href="#" class="nav-item">
+                    <i class="fas fa-exchange-alt"></i>
+                    <span>Movimentos</span>
+                </a>
+                <a href="#" class="nav-item">
+                    <i class="fas fa-money-bill-wave"></i>
+                    <span>Despesas</span>
+                </a>
+                <div class="nav-section">
+                    <h3>Contabilidade</h3>
+                    <a href="#" class="nav-item">
+                        <i class="fas fa-book"></i>
+                        <span>Lançamentos</span>
+                    </a>
+                    <a href="#" class="nav-item">
+                        <i class="fas fa-list-alt"></i>
+                        <span>Plano de Contas</span>
+                    </a>
+                    <a href="#" class="nav-item">
+                        <i class="fas fa-percent"></i>
+                        <span>Impostos</span>
+                    </a>
+                </div>
+
+                <div class="nav-section">
+                    <h3>Finanças</h3>
+                </div>
+
+                <a href="#" class="nav-item">
+                    <i class="fas fa-chart-pie"></i>
+                    <span>Relatórios</span>
+                </a>
+                <a href="#" class="nav-item">
+                    <i class="fas fa-chart-line"></i>
+                    Indicadores-chave
+                </a>
+
+                <div class="nav-section">
+                    <h3>Settings</h3>
+                </div>
+                <a href="settings.html" class="nav-item">
+                    <i class="fas fa-cog"></i>
+                    <span>Settings</span>
+                </a>
+                <a href="/UserManagementSystem/users.html" class="nav-item">
+                    <i class="fas fa-user-cog"></i>
+                    <span>Gestão de Utilizadores</span>
+                </a>
+                <a href="#" class="nav-item">
+                    <i class="fas fa-question-circle"></i>
+                    <span>Ajuda</span>
+                </a>
+            </div>
+        </nav>
+
+        <div class="main-content">
+            <div class="top-bar">
+                <button class="menu-toggle">
+                    <i class="fas fa-bars"></i>
+                </button>
+                
+                <div class="top-bar-menu">
+                    <a href="invoices.html" class="top-bar-menu-item">
+                        <i class="fas fa-file-invoice-dollar"></i>
+                        <span>Invoices</span>
+                    </a>
+                    <a href="credit_notes.html" class="top-bar-menu-item">
+                        <i class="fas fa-file-invoice"></i>
+                        <span>Credit Notes</span>
+                    </a>
+                    <a href="debit_notes.html" class="top-bar-menu-item">
+                        <i class="fas fa-file-invoice"></i>
+                        <span>Debit Notes</span>
+                    </a>
+                    <a href="receipts.html" class="top-bar-menu-item active">
+                        <i class="fas fa-receipt"></i>
+                        <span>Receipts</span>
+                    </a>
+                </div>
+                
+                <div class="user-menu" style="margin-left:auto;">
+                    <div class="notification-bell">
+                        <i class="fas fa-bell"></i>
+                        <span class="badge">3</span>
+                    </div>
+
+                    <div class="user-profile" id="userProfile">
+                        <div class="avatar">
+                            <i class="fas fa-user"></i>
+                        </div>
+                        <span id="user-displayname">Loading...</span>
+                        <div class="dropdown-menu" id="userDropdown">
+                            <a href="#">
+                                <i class="fas fa-user-circle"></i> My Profile
+                            </a>
+                            <a href="settings.html">
+                                <i class="fas fa-cog"></i> Settings
+                            </a>
+                            <a href="#">
+                                <i class="fas fa-sign-out-alt"></i> Logout
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="page-header">
+                <div>
+                    <h2>Receipt Management</h2>
+                    <p class="subtitle">Create, manage, and track all your receipts</p>
+                </div>
+                <div class="action-buttons">
+                    <button class="btn secondary-btn" id="importReceiptBtn">
+                        <i class="fas fa-file-import"></i> Import
+                    </button>
+                    <button class="btn primary-btn" id="createReceiptBtn">
+                        <i class="fas fa-plus"></i> Create Receipt
+                    </button>
+                </div>
+            </div>
+
+            <div class="invoice-table-container">
+                <div class="table-header">
+                    <h3>Receipts</h3>
+                    </div>
+                <div class="table-responsive">
+                    <table id="receiptsTable" class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Receipt #</th>
+                                <th>Client</th>
+                                <th>Payment Date</th>
+                                <th>Amount</th>
+                                <th>Payment Method</th>
+                                <th>Invoice # (Related)</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            </tbody>
+                    </table>
+                </div>
+                </div>
+
+            <div id="createReceiptModal" class="modal">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h2>Create Receipt</h2>
+                        <button class="close-modal">&times;</button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="receiptForm">
+                            <div class="form-grid">
+                                <div class="form-section">
+                                    <h3>Receipt Information</h3>
+                                    <div class="form-row">
+                                        <div class="form-group">
+                                            <label for="receiptNumber">Receipt Number</label>
+                                            <input type="text" id="receiptNumber" required>
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="paymentDate">Payment Date</label>
+                                            <input type="date" id="paymentDate" required>
+                                        </div>
+                                    </div>
+                                    <div class="form-row">
+                                        <div class="form-group">
+                                            <label for="client">Client</label>
+                                            <input type="text" id="client" required>
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="amount">Amount Received</label>
+                                            <input type="number" id="amount" required step="0.01">
+                                        </div>
+                                    </div>
+                                    <div class="form-row">
+                                        <div class="form-group">
+                                            <label for="paymentMethod">Payment Method</label>
+                                            <select id="paymentMethod" required>
+                                                <option value="cash">Cash</option>
+                                                <option value="bank_transfer">Bank Transfer</option>
+                                                <option value="credit_card">Credit Card</option>
+                                                </select>
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="relatedInvoice">Related Invoice #</label>
+                                            <input type="text" id="relatedInvoice">
+                                        </div>
+                                    </div>
+                                    </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn secondary-btn close-modal">Cancel</button>
+                                <button type="submit" class="btn primary-btn">Create</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <div id="viewReceiptModal" class="modal">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h2>Receipt Details</h2>
+                        <button class="close-modal">&times;</button>
+                    </div>
+                    <div class="modal-body">
+                        <div id="receiptDetails">
+                            </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn primary-btn close-modal">Close</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-overlay"></div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="js/topbar-menu.js"></script>
+    <script src="js/receiptscripts/receipt.js"></script>
+    <script src="js/displayname.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Verifica se deve abrir o modal de novo recibo
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('openNewReceipt') === '1') {
+                const receiptData = JSON.parse(localStorage.getItem('newReceiptData') || '{}');
+                if (Object.keys(receiptData).length > 0) {
+                    // Preenche o formulário
+                    document.getElementById('receiptNumber').value = receiptData.receipt_number || '';
+                    document.getElementById('client').value = receiptData.client_id || '';
+                    document.getElementById('paymentDate').value = receiptData.payment_date || '';
+                    document.getElementById('amount').value = receiptData.amount || '';
+                    document.getElementById('paymentMethod').value = receiptData.payment_method || '';
+                    document.getElementById('relatedInvoice').value = receiptData.related_invoice || '';
+                    document.getElementById('notes').value = receiptData.notes || '';
+                    // Abre o modal
+                    document.getElementById('createReceiptModal').style.display = 'block';
+                    document.querySelector('.modal-overlay').style.display = 'block';
+                }
+                // Limpa o localStorage
+                localStorage.removeItem('newReceiptData');
+            }
+
+            // Adiciona o event listener para abrir o modal
+            const createBtn = document.getElementById('createReceiptBtn');
+            if (createBtn) {
+                createBtn.addEventListener('click', function() {
+                    document.getElementById('createReceiptModal').style.display = 'block';
+                    document.querySelector('.modal-overlay').style.display = 'block';
+                });
+            }
+        });
+
+        async function markInvoiceAsPaid(invoiceNumber) {
+            try {
+                console.log('Mark as Paid chamado', invoiceNumber);
+
+                // Atualiza status da fatura
+                const { error: updateError } = await window.supabase
+                    .from('invoices')
+                    .update({ status: 'paid', paid_date: new Date().toISOString() })
+                    .eq('invoiceNumber', invoiceNumber);
+
+                if (updateError) throw updateError;
+
+                // Busca os dados da fatura
+                const { data: invoice, error: fetchError } = await window.supabase
+                    .from('invoices')
+                    .select('*')
+                    .eq('invoiceNumber', invoiceNumber)
+                    .single();
+
+                console.log('Dados da fatura:', invoice);
+
+                if (fetchError) throw fetchError;
+
+                // Cria o recibo
+                const receiptData = {
+                    receipt_number: `REC-${new Date().getFullYear()}-${Math.floor(Math.random()*10000)}`,
+                    client_id: invoice.client_id,
+                    payment_date: new Date().toISOString().slice(0,10),
+                    amount: invoice.total_amount,
+                    payment_method: 'cash',
+                    related_invoice: invoice.invoiceNumber,
+                    notes: 'Gerado automaticamente ao marcar como pago'
+                };
+
+                console.log('Dados do recibo:', receiptData);
+
+                const { error: receiptError } = await window.supabase
+                    .from('receipts')
+                    .insert([receiptData]);
+
+                if (receiptError) throw receiptError;
+
+                showNotification('Fatura marcada como paga e recibo criado com sucesso!');
+                await updateMetricsDisplay();
+                await fetchAndDisplayInvoices();
+
+            } catch (error) {
+                console.error('Erro ao marcar como pago/criar recibo:', error);
+                showNotification('Erro ao marcar como pago ou criar recibo');
+            }
+        }
+    </script>
+</body>
+
+</html>

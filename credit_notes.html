@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WALAKA - Credit Notes Management</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+    
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Google Fonts - Inter -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap">
+
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/credit-note.css">
+    <link rel="stylesheet" href="css/credit-note-layout.css">
+</head>
+
+<body>
+    <div class="dashboard-container">
+        <!-- Sidebar Menu -->
+        <nav class="sidebar">
+            <div class="logo">
+                <i class="fas fa-chart-line"></i>
+                <span>WALAKA</span>
+            </div>
+            
+            <div class="nav-menu">
+                <a href="dashboard.html" class="nav-item">
+                    <i class="fas fa-home"></i>
+                    <span>Dashboard</span>
+                </a>
+                
+                <div class="nav-section">
+                    <h3>Facturação</h3>
+                </div>
+                <a href="invoices.html" class="nav-item">
+                    <i class="fas fa-file-invoice-dollar"></i>
+                    <span>Facturas</span>
+                </a>
+                <a href="credit_notes.html" class="nav-item active">
+                    <i class="fas fa-file-invoice-dollar"></i>
+                    <span>Notas de Crédito</span>
+                </a>
+                <a href="clients/clients.html" class="nav-item">
+                    <i class="fas fa-users"></i>
+                    <span>Clientes</span>
+                </a>
+
+                <a href="products.html" class="nav-item">
+                    <i class="fas fa-shopping-cart"></i>
+                    <span>Produtos</span>
+                </a>
+                
+                <div class="nav-section">
+                    <h3>Comercial</h3>
+                </div>
+                <a href="#" class="nav-item">
+                    <i class="fas fa-boxes"></i>
+                    <span>Inventário</span>
+                </a>
+                <a href="#" class="nav-item">
+                    <i class="fas fa-truck"></i>
+                    <span>Fornecedores</span>
+                </a>
+                <a href="#" class="nav-item">
+                    <i class="fas fa-exchange-alt"></i>
+                    <span>Movimentos</span>
+                </a>
+                <a href="#" class="nav-item">
+                    <i class="fas fa-money-bill-wave"></i>
+                    <span>Despesas</span>
+                </a>
+                <div class="nav-section">
+                    <h3>Contabilidade</h3>
+                 <a href="#" class="nav-item">
+                      <i class="fas fa-book"></i>
+                      <span>Lançamentos</span> 
+                    </a>
+                    <a href="#" class="nav-item">
+                      <i class="fas fa-list-alt"></i>
+                     <span>Plano de Contas</span>
+                    </a>
+                    <a href="#" class="nav-item">
+                      <i class="fas fa-percent"></i>
+                      <span>Impostos</span> 
+                    </a>
+                  </div>
+
+                <div class="nav-section">
+                    <h3>Finanças</h3>
+                </div>
+               
+                <a href="#" class="nav-item">
+                    <i class="fas fa-chart-pie"></i>
+                    <span>Relatórios</span>
+                </a>
+                <a href="#" class="nav-item">
+                    <i class="fas fa-chart-line"></i>
+                    Indicadores-chave
+                  </a>
+
+                <div class="nav-section">
+                    <h3>Settings</h3>
+                </div>
+                <a href="settings.html" class="nav-item">
+                    <i class="fas fa-cog"></i>
+                    <span>Settings</span>
+                </a>
+                <a href="/UserManagementSystem/users.html" class="nav-item">
+                    <i class="fas fa-user-cog"></i>
+                    <span>Gestão de Utilizadores</span>
+                </a>
+                <a href="#" class="nav-item">
+                    <i class="fas fa-question-circle"></i>
+                    <span>Ajuda</span>
+                </a>
+            </div>
+        </nav>
+        
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Top Bar -->
+            <div class="top-bar">
+                <button class="menu-toggle">
+                    <i class="fas fa-bars"></i>
+                </button>
+                
+                <div class="top-bar-menu">
+                    <a href="invoices.html" class="top-bar-menu-item">
+                        <i class="fas fa-file-invoice-dollar"></i>
+                        <span>Invoices</span>
+                    </a>
+                    <a href="credit_notes.html" class="top-bar-menu-item active">
+                        <i class="fas fa-file-invoice"></i>
+                        <span>Credit Notes</span>
+                    </a>
+                    <a href="debit_notes.html" class="top-bar-menu-item">
+                        <i class="fas fa-file-invoice"></i>
+                        <span>Debit Notes</span>
+                    </a>
+                    <a href="receipts.html" class="top-bar-menu-item">
+                        <i class="fas fa-receipt"></i>
+                        <span>Receipts</span>
+                    </a>
+                </div>
+                
+                <div class="user-menu" style="margin-left:auto;">
+                    <div class="notification-bell">
+                        <i class="fas fa-bell"></i>
+                        <span class="badge">3</span>
+                    </div>
+                    
+                    <div class="user-profile" id="userProfile">
+                        <div class="avatar">
+                            <i class="fas fa-user"></i>
+                        </div>
+                        <span id="user-displayname">Loading...</span>
+                        <div class="dropdown-menu" id="userDropdown">
+                            <a href="#">
+                                <i class="fas fa-user-circle"></i> My Profile
+                            </a>
+                            <a href="settings.html">
+                                <i class="fas fa-cog"></i> Settings
+                            </a>
+                            <a href="#">
+                                <i class="fas fa-sign-out-alt"></i> Logout
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Credit Notes Dashboard Content -->
+            <div class="page-header">
+                <div>
+                    <h2>Credit Notes Management</h2>
+                    <p class="subtitle">Create, manage, and track all your credit notes</p>
+                </div>
+                <div class="action-buttons">
+                    <button class="btn secondary-btn" id="importCreditNoteBtn">
+                        <i class="fas fa-file-import"></i> Import
+                    </button>
+                    <button class="btn primary-btn" id="createCreditNoteBtn">
+                        <i class="fas fa-plus"></i> Create Credit Note
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Credit Notes content will go here -->
+            
+        </div>
+    </div>
+
+    <!-- JavaScript Dependencies -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="js/topbar-menu.js"></script>
+    <script src="js/creditnotescripts/credit-note.js"></script>
+    <script src="js/displayname.js"></script>
+</body>
+</html>

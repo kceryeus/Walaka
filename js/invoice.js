@@ -62,28 +62,29 @@ function closeAllModals() {
 
 function setupItemCalculations() {
     // Add event listeners for quantity and price changes
-    document.addEventListener('input', function(e) {
-        if (e.target.classList.contains('item-description')) {
-            const searchTerm = e.target.value.toLowerCase().trim();
-            const row = e.target.closest('.item-row');
+    // Removed global listeners as they are handled by InvoiceItems class
+    // document.addEventListener('input', function(e) {
+    //     if (e.target.classList.contains('item-description')) {
+    //         const searchTerm = e.target.value.toLowerCase().trim();
+    //         const row = e.target.closest('.item-row');
             
-            if (searchTerm.length < 2) {
-                hideProductSuggestions(row);
-                hideNewProductForm(row);
-                return;
-            }
+    //         if (searchTerm.length < 2) {
+    //             hideProductSuggestions(row);
+    //             hideNewProductForm(row);
+    //             return;
+    //         }
 
-            handleProductSearch(searchTerm, row);
-        }
+    //         handleProductSearch(searchTerm, row);
+    //     }
 
-        if (e.target.classList.contains('item-quantity') || e.target.classList.contains('item-price')) {
-            const row = e.target.closest('.item-row');
-            if (row) {
-                calculateRowTotal(row);
-                updateInvoiceTotals();
-            }
-        }
-    });
+    //     if (e.target.classList.contains('item-quantity') || e.target.classList.contains('item-price')) {
+    //         const row = e.target.closest('.item-row');
+    //         if (row) {
+    //             calculateRowTotal(row);
+    //             updateInvoiceTotals();
+    //         }
+    //     }
+    // });
 }
 
 function handleProductSearch(searchTerm, row) {
@@ -92,7 +93,7 @@ function handleProductSearch(searchTerm, row) {
             const { data: products, error } = await window.supabase
                 .from('products')
                 .select('*')
-                .ilike('description', `%${searchTerm}%`)
+                .or(`name.ilike.%${searchTerm}%,description.ilike.%${searchTerm}%`)
                 .limit(5);
 
             if (error) throw error;
@@ -112,24 +113,25 @@ function handleProductSearch(searchTerm, row) {
 
 function showProductSuggestions(row, products) {
     const input = row.querySelector('.item-description');
-    const rect = input.getBoundingClientRect();
+    if (!input) return;
     
     let suggestionsBox = row.querySelector('.product-suggestions');
     if (!suggestionsBox) {
         suggestionsBox = document.createElement('div');
         suggestionsBox.className = 'product-suggestions';
-        row.querySelector('td:first-child').appendChild(suggestionsBox);
+        input.parentNode.appendChild(suggestionsBox);
     }
 
     suggestionsBox.innerHTML = products.map(product => `
         <div class="suggestion-item" data-product='${JSON.stringify(product)}'>
-            <div>${product.description}</div>
+            <div class="suggestion-content">
+                <strong>${product.name || ''}</strong>
+                <small>${product.description || ''}</small>
+            </div>
             <div class="suggestion-price">${formatCurrency(product.price)}</div>
         </div>
     `).join('');
 
-    // Position suggestions box
-    suggestionsBox.style.top = (rect.height) + 'px';
     suggestionsBox.style.display = 'block';
 
     // Add click handlers
@@ -150,7 +152,7 @@ function fillProductDetails(row, product) {
     const quantityInput = row.querySelector('.item-quantity');
     
     // Fill in the product details
-    if (descriptionInput) descriptionInput.value = product.description || '';
+    if (descriptionInput) descriptionInput.value = product.name || product.description || '';
     if (priceInput) priceInput.value = product.price || 0;
     if (quantityInput) quantityInput.value = 1; // Default quantity
     
@@ -213,7 +215,9 @@ function hideNewProductForm(row) {
 function formatCurrency(amount) {
     return new Intl.NumberFormat('pt-MZ', {
         style: 'currency',
-        currency: 'MZN'
+        currency: 'MZN',
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
     }).format(amount);
 }
 
@@ -224,8 +228,8 @@ function calculateRowTotal(row) {
     const subtotal = quantity * price;
     const vat = subtotal * 0.16; // 16% VAT
     
-    row.querySelector('.item-vat').textContent = vat.toFixed(2);
-    row.querySelector('.item-total').textContent = (subtotal + vat).toFixed(2);
+    row.querySelector('.item-vat').textContent = formatCurrency(vat);
+    row.querySelector('.item-total').textContent = formatCurrency(subtotal + vat);
 }
 
 function updateInvoiceTotals() {
@@ -246,9 +250,9 @@ function updateInvoiceTotals() {
     
     const grandTotal = subtotal + totalVat;
     
-    document.getElementById('subtotal').textContent = subtotal.toFixed(2);
-    document.getElementById('totalVat').textContent = totalVat.toFixed(2);
-    document.getElementById('invoiceTotal').textContent = grandTotal.toFixed(2);
+    document.getElementById('subtotal').textContent = formatCurrency(subtotal);
+    document.getElementById('totalVat').textContent = formatCurrency(totalVat);
+    document.getElementById('invoiceTotal').textContent = formatCurrency(grandTotal);
 }
 
 function addInvoiceItem() {
@@ -280,8 +284,16 @@ function addInvoiceItem() {
     
     itemsTableBody.insertAdjacentHTML('beforeend', newRowHTML);
     
-    // Initialize the new row
+    // Initialize the new row and set up event listeners
     const newRow = itemsTableBody.lastElementChild;
+    if (window.invoiceItems && typeof window.invoiceItems.setupRowEventListeners === 'function') {
+        window.invoiceItems.setupRowEventListeners(newRow);
+    } else {
+        console.error('InvoiceItems module or setupRowEventListeners not available.');
+        // Fallback: Manually add listeners if the module is not available
+        setupRowEventListeners(newRow); // Assuming a local fallback function exists
+    }
+    
     calculateRowTotal(newRow);
     updateInvoiceTotals();
 }
@@ -385,14 +397,13 @@ async function resetInvoiceForm() {
         document.getElementById('invoiceTotal').textContent = '0.00';
         initializeDateFields();
         
-        // Generate a new unique invoice number only once
+        // Generate a new unique invoice number
         const invoiceNumberField = document.getElementById('invoiceNumber');
-        if (invoiceNumberField && !invoiceNumberField.dataset.generated) {
+        if (invoiceNumberField) {
             try {
                 const generator = new window.InvoiceNumberGenerator();
                 const newInvoiceNumber = await generator.getNextNumber();
                 invoiceNumberField.value = newInvoiceNumber;
-                invoiceNumberField.dataset.generated = true; // Mark as generated
             } catch (err) {
                 console.error('Error generating invoice number:', err);
                 invoiceNumberField.value = '';
@@ -406,47 +417,60 @@ function collectInvoiceData() {
     try {
         // Get required form elements with null checks
         const clientList = document.getElementById('client-list');
-        const invoiceNumber = document.getElementById('invoiceNumber');
-        const issueDate = document.getElementById('issueDate');
-        const dueDate = document.getElementById('dueDate');
-        const currency = document.getElementById('currency');
+        const invoiceNumberInput = document.getElementById('invoiceNumber');
+        const issueDateInput = document.getElementById('issueDate');
+        const dueDateInput = document.getElementById('dueDate');
+        const currencySelect = document.getElementById('currency');
+        const paymentTermsSelect = document.getElementById('paymentTerms');
+        const notesTextarea = document.getElementById('notes');
+        const subtotalSpan = document.getElementById('subtotal');
+        const totalVatSpan = document.getElementById('totalVat');
+        const invoiceTotalSpan = document.getElementById('invoiceTotal');
 
         // Validate all required fields exist
-        if (!clientList || !invoiceNumber || !issueDate || !dueDate || !currency) {
-            throw new Error('Required form fields are missing');
+        if (!clientList || !invoiceNumberInput || !issueDateInput || !dueDateInput || !currencySelect || !paymentTermsSelect || !notesTextarea || !subtotalSpan || !totalVatSpan || !invoiceTotalSpan) {
+            throw new Error('One or more required form fields are missing');
         }
 
         // Get client data safely
-        let clientData = {};
-        try {
-            clientData = JSON.parse(clientList.getAttribute('client-list') || '{}');
-        } catch (e) {
-            console.warn('Could not parse client data:', e);
-        }
+        const clientName = clientList.value || '';
+        const clientEmail = document.getElementById('clientEmail')?.value || '';
+        const clientAddress = document.getElementById('clientAddress')?.value || '';
+        const clientTaxId = document.getElementById('clientTaxId')?.value || '';
+        // Assuming clientContact might be a separate field or part of client data
+        const clientContact = ''; // Replace with actual field if it exists
+
+        // Assuming companyData is available in the global scope or passed to this function
+        // Ensure companyData structure matches what's needed
+        const companyData = window.companyData || {}; // Replace with actual way companyData is accessed
 
         const invoiceData = {
-            invoiceNumber: invoiceNumber.value,
-            issueDate: issueDate.value,
-            dueDate: dueDate.value,
-            currency: currency.value || 'MZN',
+            invoiceNumber: invoiceNumberInput.value,
+            issueDate: issueDateInput.value,
+            dueDate: dueDateInput.value,
+            currency: currencySelect.value || 'MZN',
+            // Use standardized client data keys
             client: {
-                id: clientData.customer_id || '',
-                customer_name: clientList.value || '',
-                email: document.getElementById('clientEmail')?.value || '',
-                address: document.getElementById('clientAddress')?.value || '',
-                taxId: document.getElementById('clientTaxId')?.value || ''
+                name: clientName,
+                email: clientEmail,
+                address: clientAddress,
+                taxId: clientTaxId,
+                contact: clientContact // Included as per your snippet
             },
-            paymentTerms: document.getElementById('paymentTerms')?.value || 'net30',
-            notes: document.getElementById('notes')?.value || '',
-            status: 'pending',
+            // Include company data
+            company: companyData, // Included as per your snippet
+            paymentTerms: paymentTermsSelect.value || 'net30',
+            notes: notesTextarea.value || '',
+            status: 'pending', // Default status for new invoices
             items: [],
-            subtotal: parseFloat(document.getElementById('subtotal')?.textContent || '0'),
-            totalVat: parseFloat(document.getElementById('totalVat')?.textContent || '0'),
-            total: parseFloat(document.getElementById('invoiceTotal')?.textContent || '0')
+            // Ensure these are numbers, not text content
+            subtotal: parseFloat(subtotalSpan.textContent) || 0,
+            totalVat: parseFloat(totalVatSpan.textContent) || 0,
+            total: parseFloat(invoiceTotalSpan.textContent) || 0
         };
 
         // Validate required fields have values
-        if (!invoiceData.invoiceNumber || !invoiceData.client.customer_name) {
+        if (!invoiceData.invoiceNumber || !invoiceData.client.name) {
             throw new Error('Invoice number and client name are required');
         }
 
@@ -456,10 +480,11 @@ function collectInvoiceData() {
             const description = row.querySelector('.item-description')?.value;
             const quantity = parseFloat(row.querySelector('.item-quantity')?.value) || 0;
             const price = parseFloat(row.querySelector('.item-price')?.value) || 0;
-            const vat = parseFloat(row.querySelector('.item-vat')?.textContent) || 0;
-            const total = parseFloat(row.querySelector('.item-total')?.textContent) || 0;
+            // Get VAT and Total directly from calculated spans
+            const vat = parseFloat(row.querySelector('.item-vat')?.textContent) || 0; // Assuming item-vat is a span with text content
+            const total = parseFloat(row.querySelector('.item-total')?.textContent) || 0; // Assuming item-total is a span with text content
 
-            if (description && quantity > 0) {
+            if (description && quantity > 0 && price >= 0) { // Ensure price is not negative and description/quantity are present
                 invoiceData.items.push({
                     description,
                     quantity,
@@ -494,7 +519,7 @@ async function saveInvoice() {
         // Collect and validate form data
         const invoiceData = collectInvoiceData();
         
-        if (!invoiceData.invoiceNumber || !invoiceData.client.customer_name) {
+        if (!invoiceData.invoiceNumber || !invoiceData.client.name) {
             throw new Error('Missing required fields');
         }
 
@@ -552,7 +577,7 @@ async function saveInvoice() {
                 payment_terms: invoiceData.paymentTerms,
                 notes: invoiceData.notes,
                 pdf_url: publicUrl,
-                customer_name: invoiceData.client.customer_name,
+                customer_name: invoiceData.client.name,
                 user_id: session.user.id // Add user_id for RLS
             }])
             .select()
@@ -617,45 +642,46 @@ async function refreshInvoiceList() {
 
 // Remove generatePDF and generateInvoiceHTML from this file, now provided by js/invoicescripts/pdf.js
 
-function previewInvoice() {
-    // Get invoice modal and set it to keep in background
-    const invoiceModal = document.getElementById('invoiceModal');
-    if (invoiceModal) {
-        invoiceModal.style.display = 'none'; // Hide but don't fully close
-    }
+// Removed previewInvoice function - moved to js/invoicescripts/invoicePreview.js
+// function previewInvoice() {
+//     // Get invoice modal and set it to keep in background
+//     const invoiceModal = document.getElementById('invoiceModal');
+//     if (invoiceModal) {
+//         invoiceModal.style.display = 'none'; // Hide but don't fully close
+//     }
 
-    const invoiceData = getInvoiceData();
+//     const invoiceData = getInvoiceData();
     
-    // Update view modal for preview mode
-    const timelineSection = document.querySelector('.invoice-view-footer');
-    const modalFooter = document.querySelector('#viewInvoiceModal .modal-footer');
-    if (timelineSection) timelineSection.style.display = 'none';
-    if (modalFooter) modalFooter.style.display = 'none';
+//     // Update view modal for preview mode
+//     const timelineSection = document.querySelector('.invoice-view-footer');
+//     const modalFooter = document.querySelector('#viewInvoiceModal .modal-footer');
+//     if (timelineSection) timelineSection.style.display = 'none';
+//     if (modalFooter) modalFooter.style.display = 'none';
     
-    // Update modal title and close button behavior
-    const modalTitle = document.querySelector('#viewInvoiceModal .modal-header h2');
-    const closeBtn = document.querySelector('#viewInvoiceModal .close-modal');
-    if (modalTitle) modalTitle.textContent = 'Invoice Preview';
-    if (closeBtn) {
-        // Remove existing listeners
-        closeBtn.replaceWith(closeBtn.cloneNode(true));
-        // Add new close behavior
-        document.querySelector('#viewInvoiceModal .close-modal').addEventListener('click', function() {
-            document.getElementById('viewInvoiceModal').style.display = 'none';
-            document.getElementById('invoiceModal').style.display = 'block';
-        });
-    }
+//     // Update modal title and close button behavior
+//     const modalTitle = document.querySelector('#viewInvoiceModal .modal-header h2');
+//     const closeBtn = document.querySelector('#viewInvoiceModal .close-modal');
+//     if (modalTitle) modalTitle.textContent = 'Invoice Preview';
+//     if (closeBtn) {
+//         // Remove existing listeners
+//         closeBtn.replaceWith(closeBtn.cloneNode(true));
+//         // Add new close behavior
+//         document.querySelector('#viewInvoiceModal .close-modal').addEventListener('click', function() {
+//             document.getElementById('viewInvoiceModal').style.display = 'none';
+//             document.getElementById('invoiceModal').style.display = 'block';
+//         });
+//     }
     
-    // Generate and display preview
-    generateInvoiceHTML(invoiceData).then(invoiceHTML => {
-        const frame = document.getElementById('invoicePreviewFrame');
-        frame.contentWindow.document.open();
-        frame.contentWindow.document.write(invoiceHTML);
-        frame.contentWindow.document.close();
+//     // Generate and display preview
+//     generateInvoiceHTML(invoiceData).then(invoiceHTML => {
+//         const frame = document.getElementById('invoicePreviewFrame');
+//         frame.contentWindow.document.open();
+//         frame.contentWindow.document.write(invoiceHTML);
+//         frame.contentWindow.document.close();
         
-        document.getElementById('viewInvoiceModal').style.display = 'block';
-    });
-}
+//         document.getElementById('viewInvoiceModal').style.display = 'block';
+//     });
+// }
 
 function openViewInvoiceModal(invoiceNumber) {
     // Show timeline and buttons for view mode
@@ -820,4 +846,30 @@ window.openModal = openModal;
 // Expose setupProductSuggestions if defined
 if (typeof setupProductSuggestions === 'function') {
     window.setupProductSuggestions = setupProductSuggestions;
+}
+
+function getInvoiceData() {
+    const form = document.getElementById('invoiceForm');
+    if (!form) throw new Error('Invoice form not found');
+
+    const items = window.invoiceItems ? window.invoiceItems.getInvoiceItems() : [];
+    
+    return {
+        invoiceNumber: document.getElementById('invoiceNumber').value,
+        issueDate: document.getElementById('issueDate').value,
+        dueDate: document.getElementById('dueDate').value,
+        client: {
+            name: document.getElementById('client-list').value,
+            email: document.getElementById('clientEmail').value,
+            taxId: document.getElementById('clientTaxId').value,
+            address: document.getElementById('clientAddress').value
+        },
+        items: items,
+        subtotal: parseFloat(document.getElementById('subtotal').textContent) || 0,
+        taxAmount: parseFloat(document.getElementById('totalVat').textContent) || 0,
+        total: parseFloat(document.getElementById('invoiceTotal').textContent) || 0,
+        notes: document.getElementById('notes').value,
+        currency: document.getElementById('currency').value,
+        paymentTerms: document.getElementById('paymentTerms').value
+    };
 }

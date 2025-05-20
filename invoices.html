@@ -275,6 +275,25 @@
                     <i class="fas fa-bars"></i>
                 </button>
                 
+                <div class="top-bar-menu">
+                    <a href="invoices.html" class="top-bar-menu-item active">
+                        <i class="fas fa-file-invoice-dollar"></i>
+                        <span>Invoices</span>
+                    </a>
+                    <a href="credit_notes.html" class="top-bar-menu-item">
+                        <i class="fas fa-file-invoice"></i>
+                        <span>Credit Notes</span>
+                    </a>
+                    <a href="debit_notes.html" class="top-bar-menu-item">
+                        <i class="fas fa-file-invoice"></i>
+                        <span>Debit Notes</span>
+                    </a>
+                    <a href="receipts.html" class="top-bar-menu-item">
+                        <i class="fas fa-receipt"></i>
+                        <span>Receipts</span>
+                    </a>
+                </div>
+                
                 <div class="user-menu" style="margin-left:auto;">
                     <div class="notification-bell">
                         <i class="fas fa-bell"></i>
@@ -565,48 +584,26 @@
                                     <div class="client-input-wrapper">
                                         <input type="text" id="client-list" placeholder="Type client name..." autocomplete="off" list="client-options">
                                         <datalist id="client-options"></datalist>
-                                    </div>
-                                    
-                                    <div id="expand-client-form" style="display: none;">
-                                        <h4>New Client Details</h4>
-                                        <div class="form-row">
-                                            <div class="form-group">
-                                                <label for="new-client-nuit">NUIT</label>
-                                                <input type="text" id="new-client-nuit">
-                                            </div>
-                                            <div class="form-group">
-                                                <label for="new-client-email">Email</label>
-                                                <input type="email" id="new-client-email">
-                                            </div>
-                                        </div>
-                                        <!-- ...rest of the form... -->
+                                        <button type="button" id="add-client-btn" class="btn secondary-btn" style="display:none;">
+                                            <i class="fas fa-plus"></i> New Client
+                                        </button>
                                     </div>
                                 </div>
+                            </div>
+                            <div class="form-row">
                                 <div class="form-group">
                                     <label for="clientEmail">Email</label>
-                                    <input type="email" id="clientEmail" placeholder="client@example.com">
+                                    <input type="email" id="clientEmail" placeholder="client@example.com" readonly>
                                 </div>
-                            </div>
-                            <div style="margin-top: 8px;">
-                                <button type="button" id="add-client-btn" style="display:none;">Add New Client</button>
-                            </div>
-                            <div id="new-client-form" style="display:none; margin-top:10px;">
-                                <input type="text" id="new-client-name" placeholder="Client Name"><br>
-                                <input type="text" id="new-client-nuit" placeholder="NUIT"><br>
-                                <input type="email" id="new-client-email" placeholder="Email"><br>
-                                <input type="text" id="new-client-address" placeholder="Address"><br>
-                                <button type="button" id="save-new-client">Save Client</button>
+                                <div class="form-group">
+                                    <label for="clientTaxId">Tax ID (NUIT)</label>
+                                    <input type="text" id="clientTaxId" placeholder="e.g. 123456789" readonly>
+                                </div>
                             </div>
                             <div class="form-row">
                                 <div class="form-group">
                                     <label for="clientAddress">Address</label>
-                                    <textarea id="clientAddress" rows="3" placeholder="Client's full address"></textarea>
-                                </div>
-                            </div>
-                            <div class="form-row">
-                                <div class="form-group">
-                                    <label for="clientTaxId">Tax ID (NUIT)</label>
-                                    <input type="text" id="clientTaxId" placeholder="e.g. 123456789">
+                                    <textarea id="clientAddress" rows="3" placeholder="Client's full address" readonly></textarea>
                                 </div>
                             </div>
                         </div>
@@ -669,7 +666,10 @@
                                 <tbody>
                                     <tr class="item-row">
                                         <td>
-                                            <input type="text" class="item-description" placeholder="Enter item description">
+                                            <div class="item-description-wrapper">
+                                                <input type="text" class="item-description" placeholder="Enter item description">
+                                                <div class="product-suggestions" style="display: none;"></div>
+                                            </div>
                                         </td>
                                         <td>
                                             <input type="number" class="item-quantity" value="1" min="1" step="1">
@@ -858,6 +858,7 @@
     <!-- JavaScript Dependencies -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="scripts/templateManager.js"></script>
+    <script src="js/topbar-menu.js"></script>
     <script src="js/invoicescripts/notifications.js"></script>
     <script src="js/invoicescripts/tableFilters.js"></script>
     <script src="js/invoicescripts/export.js"></script>
@@ -892,68 +893,154 @@
         let clients = [];
 
         async function fetchClients() {
-            const { data, error } = await supabase.from('clients').select('*');
-            if (error) return;
-            clients = data;
-            updateClientDatalist();
+            try {
+                const { data, error } = await supabase.from('clients').select('*');
+                if (error) throw error;
+                
+                clients = data;
+                updateClientDatalist();
+                console.log('Clients loaded successfully:', clients.length);
+            } catch (error) {
+                console.error('Error fetching clients:', error);
+                showNotification('Error loading clients: ' + error.message);
+            }
         }
 
         function updateClientDatalist() {
             const datalist = document.getElementById('client-options');
+            if (!datalist) return;
+            
             datalist.innerHTML = '';
             clients.forEach(client => {
                 const option = document.createElement('option');
                 option.value = client.customer_name;
+                option.dataset.clientId = client.id;
                 datalist.appendChild(option);
             });
         }
 
-        document.getElementById('client-list').addEventListener('input', function() {
-            const value = this.value.trim();
-            const exists = clients.some(c => c.customer_name === value);
-            document.getElementById('add-client-btn').style.display = (!exists && value) ? 'inline-block' : 'none';
-        });
+        function setupClientHandlers() {
+            const clientInput = document.getElementById('client-list');
+            const addClientBtn = document.getElementById('add-client-btn');
+            const newClientModal = document.getElementById('newClientModal');
+            const saveNewClientBtn = document.getElementById('save-new-client');
+            const closeModalBtns = document.querySelectorAll('#newClientModal .close-modal');
 
-        document.getElementById('add-client-btn').addEventListener('click', function() {
-            document.getElementById('new-client-form').style.display = 'block';
-            document.getElementById('new-client-name').value = document.getElementById('client-list').value;
-        });
+            if (clientInput) {
+                clientInput.addEventListener('input', function() {
+                    const value = this.value.trim();
+                    const exists = clients.some(c => c.customer_name === value);
+                    if (addClientBtn) {
+                        addClientBtn.style.display = (!exists && value) ? 'inline-block' : 'none';
+                    }
+                });
 
-        document.getElementById('save-new-client').addEventListener('click', async function() {
-            const name = document.getElementById('new-client-name').value;
-            const nuit = document.getElementById('new-client-nuit').value;
-            const email = document.getElementById('new-client-email').value;
-            const address = document.getElementById('new-client-address').value;
-            const { data, error } = await supabase.from('clients').insert([{ name, nuit, email, address }]).select();
-            if (!error) {
-                clients.push(data[0]);
-                updateClientDatalist();
-                document.getElementById('client-list').value = name;
-                document.getElementById('new-client-form').style.display = 'none';
-                document.getElementById('add-client-btn').style.display = 'none';
-                alert('Client added!');
-            } else {
-                alert('Error adding client');
+                clientInput.addEventListener('change', function() {
+                    const selectedClient = clients.find(c => c.customer_name === this.value);
+                    if (selectedClient) {
+                        populateClientFields(selectedClient);
+                    }
+                });
             }
-        });
+
+            if (addClientBtn) {
+                addClientBtn.addEventListener('click', function() {
+                    if (newClientModal) {
+                        const clientNameInput = document.getElementById('new-client-name');
+                        if (clientNameInput) {
+                            clientNameInput.value = document.getElementById('client-list').value;
+                        }
+                        openModal('newClientModal');
+                    }
+                });
+            }
+
+            closeModalBtns.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    closeModal('newClientModal');
+                });
+            });
+
+            if (saveNewClientBtn) {
+                saveNewClientBtn.addEventListener('click', async function() {
+                    try {
+                        const name = document.getElementById('new-client-name').value;
+                        const nuit = document.getElementById('new-client-nuit').value;
+                        const email = document.getElementById('new-client-email').value;
+                        const address = document.getElementById('new-client-address').value;
+
+                        if (!name) {
+                            throw new Error('Client name is required');
+                        }
+
+                        const { data, error } = await supabase
+                            .from('clients')
+                            .insert([{ 
+                                customer_name: name,
+                                nuit: nuit,
+                                email: email,
+                                address: address
+                            }])
+                            .select();
+
+                        if (error) throw error;
+
+                        clients.push(data[0]);
+                        updateClientDatalist();
+                        
+                        if (clientInput) clientInput.value = name;
+                        populateClientFields(data[0]);
+                        closeModal('newClientModal');
+                        
+                        showNotification('Client added successfully');
+                    } catch (error) {
+                        console.error('Error adding client:', error);
+                        showNotification('Error adding client: ' + error.message);
+                    }
+                });
+            }
+        }
+
+        function populateClientFields(client) {
+            if (!client) return;
+            
+            const emailInput = document.getElementById('clientEmail');
+            const taxIdInput = document.getElementById('clientTaxId');
+            const addressInput = document.getElementById('clientAddress');
+
+            if (emailInput) emailInput.value = client.email || '';
+            if (taxIdInput) taxIdInput.value = client.customer_tax_id || '';
+            
+            // Build full address from components
+            const addressParts = [
+                client.building_number,
+                client.street_name,
+                client.address_detail,
+                client.city,
+                client.province,
+                client.postal_code,
+                client.country
+            ].filter(Boolean);
+            
+            if (addressInput) addressInput.value = addressParts.join(', ');
+        }
 
         // Products functionality
         let cachedProducts = [];
 
         async function fetchProducts() {
-            console.log("Fetching products...");
-            const { data, error } = await supabase.from('products').select('*');
+            try {
+                console.log("Fetching products...");
+                const { data, error } = await supabase.from('products').select('*');
 
-            if (error) {
+                if (error) throw error;
+
+                cachedProducts = data;
+                console.log("Products loaded:", cachedProducts.length);
+            } catch (error) {
                 console.error('Error fetching products:', error);
-                return;
+                showNotification('Error loading products: ' + error.message);
             }
-
-            cachedProducts = data;
-            console.log("Products loaded:", cachedProducts.length);
-            cachedProducts.forEach(product => {
-                console.log("Product:", product.name, "Description:", product.description);
-            });
         }
 
         // Initialize everything
@@ -1013,12 +1100,23 @@
                 }
 
                 // Initialize invoice items
-                if (window.invoiceItems) {
-                    window.invoiceItems.setupEventListeners();
-                    console.log('Invoice items initialized successfully');
-                } else {
-                    console.error('Invoice items not found');
-                }
+                if (window.InvoiceItems && typeof window.InvoiceItems.prototype.setupEventListeners === 'function') {
+                     // Instantiate and setup if not already done (though ideally done by script include)
+                    if (!window.invoiceItems) {
+                         window.invoiceItems = new window.InvoiceItems();
+                         window.invoiceItems.setupEventListeners();
+                         console.log('Invoice items initialized and setup successfully');
+                     } else {
+                         // If already instantiated (e.g., by script include), just ensure setup runs
+                         window.invoiceItems.setupEventListeners();
+                         console.log('Invoice items setupEventListeners called');
+                     }
+                 } else {
+                     console.error('InvoiceItems class or setupEventListeners method not available on window.');
+                 }
+
+                // Setup client handlers
+                setupClientHandlers();
 
                 // Fetch initial data
                 await fetchClients();
