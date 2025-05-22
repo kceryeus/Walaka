@@ -350,6 +350,93 @@ const InvoiceTableModule = {
             minimumFractionDigits: 2,
             maximumFractionDigits: 2
         });
+    },
+
+    initializeEventListeners() {
+        // Date range filter
+        const dateRangeFilter = document.getElementById('dateRangeFilter');
+        if (dateRangeFilter) {
+            dateRangeFilter.addEventListener('change', (e) => {
+                this.currentFilters.dateRange = e.target.value;
+                if (e.target.value !== 'custom') {
+                    this.currentFilters.customDateRange = null;
+                }
+                this.applyFilters();
+            });
+        }
+    },
+
+    filterByDateRange(startDate, endDate) {
+        this.currentFilters.customDateRange = {
+            start: new Date(startDate),
+            end: new Date(endDate)
+        };
+        this.applyFilters();
+    },
+
+    applyFilters() {
+        this.filteredInvoices = this.invoices.filter(invoice => {
+            // Status filter
+            if (this.currentFilters.status && invoice.status !== this.currentFilters.status) {
+                return false;
+            }
+
+            // Client filter
+            if (this.currentFilters.clientId && invoice.customer_id !== this.currentFilters.clientId) {
+                return false;
+            }
+
+            // Date range filter
+            const invoiceDate = new Date(invoice.issue_date);
+            if (this.currentFilters.customDateRange) {
+                if (invoiceDate < this.currentFilters.customDateRange.start || 
+                    invoiceDate > this.currentFilters.customDateRange.end) {
+                    return false;
+                }
+            } else {
+                const today = new Date();
+                const startDate = new Date();
+                
+                switch (this.currentFilters.dateRange) {
+                    case 'month':
+                        startDate.setMonth(startDate.getMonth() - 1);
+                        break;
+                    case 'quarter':
+                        startDate.setMonth(startDate.getMonth() - 3);
+                        break;
+                    case 'semester':
+                        startDate.setMonth(startDate.getMonth() - 6);
+                        break;
+                    case 'year':
+                        startDate.setFullYear(startDate.getFullYear() - 1);
+                        break;
+                    case 'all':
+                        return true;
+                }
+
+                if (invoiceDate < startDate || invoiceDate > today) {
+                    return false;
+                }
+            }
+
+            // Search term filter
+            if (this.currentFilters.searchTerm) {
+                const searchTerm = this.currentFilters.searchTerm.toLowerCase();
+                return (
+                    invoice.invoice_number.toLowerCase().includes(searchTerm) ||
+                    invoice.customer_name.toLowerCase().includes(searchTerm) ||
+                    invoice.status.toLowerCase().includes(searchTerm)
+                );
+            }
+
+            return true;
+        });
+
+        this.renderTable();
+    },
+
+    renderTable() {
+        // Implementation of renderTable method
     }
 };
 

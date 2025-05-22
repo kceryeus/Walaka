@@ -36,6 +36,7 @@ body {
     color: #333;
     min-height: 100vh;
     overflow-x: hidden;
+    padding-top: var(--topbar-height);
 }
 
 .dashboard-container {
@@ -127,8 +128,14 @@ body {
     flex: 1;
     margin-left: var(--sidebar-width);
     padding: 1.5rem;
-    margin-top: var(--topbar-height);
     background-color: var(--background-color);
+    transition: margin-left var(--transition-speed) ease;
+    z-index: 1;
+}
+
+/* Adjust main content when sidebar is collapsed */
+body.sidebar-collapsed .main-content {
+    margin-left: var(--sidebar-collapsed-width);
 }
 
 /* Top Bar */
