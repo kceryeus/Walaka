@@ -456,10 +456,6 @@
                             <label for="clientFilter">Client:</label>
                             <select id="clientFilter" class="filter-select">
                                 <option value="all">All Clients</option>
-                                <option value="globex">Globex Industries</option>
-                                <option value="stark">Stark Industries</option>
-                                <option value="wayne">Wayne Enterprises</option>
-                                <option value="acme">Acme Corp</option>
                             </select>
                         </div>
 
@@ -1051,9 +1047,28 @@
                     throw new Error('Supabase client not initialized');
                 }
 
-                // Initialize modals first
-                if (typeof window.openModal !== 'function') {
-                    throw new Error('Modal functions not found');
+                // Initialize table filters first
+                if (typeof window.setupTableFilters === 'function') {
+                    window.setupTableFilters();
+                    console.log('Table filters initialized successfully');
+                } else {
+                    console.error('Table filters setup function not found');
+                }
+
+                // Initialize invoice table
+                if (typeof window.fetchAndDisplayInvoices === 'function') {
+                    await window.fetchAndDisplayInvoices(1, 10, {});
+                    console.log('Invoice table initialized successfully');
+                } else {
+                    console.error('Invoice table functions not found');
+                }
+
+                // Initialize invoice items
+                if (window.InvoiceItems) {
+                    window.invoiceItems = new window.InvoiceItems();
+                    console.log('Invoice items initialized successfully');
+                } else {
+                    console.error('InvoiceItems class not found');
                 }
 
                 // Initialize charts
@@ -1083,14 +1098,6 @@
                     console.error('Chart update functions not found');
                 }
 
-                // Initialize invoice table
-                if (typeof window.fetchAndDisplayInvoices === 'function') {
-                    await window.fetchAndDisplayInvoices(1, 10, {});
-                    console.log('Invoice table initialized successfully');
-                } else {
-                    console.error('Invoice table functions not found');
-                }
-
                 // Initialize invoice actions
                 if (window.invoiceActions) {
                     window.invoiceActions.setupEventListeners();
@@ -1098,22 +1105,6 @@
                 } else {
                     console.error('Invoice actions not found');
                 }
-
-                // Initialize invoice items
-                if (window.InvoiceItems && typeof window.InvoiceItems.prototype.setupEventListeners === 'function') {
-                     // Instantiate and setup if not already done (though ideally done by script include)
-                    if (!window.invoiceItems) {
-                         window.invoiceItems = new window.InvoiceItems();
-                         window.invoiceItems.setupEventListeners();
-                         console.log('Invoice items initialized and setup successfully');
-                     } else {
-                         // If already instantiated (e.g., by script include), just ensure setup runs
-                         window.invoiceItems.setupEventListeners();
-                         console.log('Invoice items setupEventListeners called');
-                     }
-                 } else {
-                     console.error('InvoiceItems class or setupEventListeners method not available on window.');
-                 }
 
                 // Setup client handlers
                 setupClientHandlers();

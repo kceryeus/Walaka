@@ -261,6 +261,9 @@ class InvoiceItems {
     }
 }
 
-// Initialize and attach to window
-const invoiceItems = new InvoiceItems();
-window.invoiceItems = invoiceItems;
+// Export to window object
+if (typeof window !== 'undefined') {
+    window.InvoiceItems = InvoiceItems;
+    // Initialize the class
+    window.invoiceItems = new InvoiceItems();
+}

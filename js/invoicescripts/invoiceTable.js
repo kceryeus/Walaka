@@ -23,10 +23,10 @@ const InvoiceTableModule = {
             }
 
             if (filters.clientId && filters.clientId !== 'all') {
-                queryBuilder = queryBuilder.eq('client_id', filters.clientId);
+                queryBuilder = queryBuilder.eq('customer_id', filters.clientId);
             }
 
-            if (filters.dateRange) {
+            if (filters.dateRange && filters.dateRange !== 'all') {
                 const now = new Date();
                 const startDate = new Date();
 
@@ -48,12 +48,16 @@ const InvoiceTableModule = {
                         startDate.setMonth(startDate.getMonth() - 3);
                         queryBuilder = queryBuilder.gte('created_at', startDate.toISOString());
                         break;
+                    case 'year':
+                        startDate.setFullYear(startDate.getFullYear() - 1);
+                        queryBuilder = queryBuilder.gte('created_at', startDate.toISOString());
+                        break;
                 }
             }
 
             if (filters.search) {
                 queryBuilder = queryBuilder.or(
-                    `invoiceNumber.ilike.%${filters.search}%,client_name.ilike.%${filters.search}%`
+                    `invoice_number.ilike.%${filters.search}%,customer_name.ilike.%${filters.search}%`
                 );
             }
 
@@ -92,14 +96,14 @@ const InvoiceTableModule = {
             invoices.forEach(invoice => {
                 const row = `
                     <tr>
-                        <td>${invoice.invoiceNumber || ''}</td>
+                        <td>${invoice.invoice_number || ''}</td>
                         <td>${invoice.customer_name || ''}</td>
                         <td>${this.formatDate(invoice.issue_date)}</td>
                         <td>${this.formatDate(invoice.due_date)}</td>
                         <td>${this.formatCurrency(invoice.total_amount)}</td>
                         <td><span class="status ${invoice.status?.toLowerCase()}">${invoice.status || 'Pending'}</span></td>
                         <td class="actions">
-                            <button class="action-btn view-btn" data-invoice="${invoice.invoiceNumber}" title="View">
+                            <button class="action-btn view-btn" data-invoice="${invoice.invoice_number}" title="View">
                                 <i class="fas fa-eye"></i>
                             </button>
                             <button class="action-btn send-btn" title="Send">

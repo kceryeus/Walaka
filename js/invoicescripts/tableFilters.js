@@ -12,33 +12,79 @@ function setupTableFilters() {
 
     // Get table elements
     const table = document.getElementById('invoicesTable');
-    if (!table) return;
+    if (!table) {
+        console.error('Invoice table not found');
+        return;
+    }
 
     // Populate client filter with data from Supabase
     async function populateClientFilter() {
         try {
-            if (!window.supabase) throw new Error('Supabase client not initialized');
+            if (!window.supabase) {
+                console.error('Supabase client not initialized');
+                return;
+            }
+
             const { data: clients, error } = await window.supabase
                 .from('clients')
                 .select('customer_id, customer_name')
                 .order('customer_name', { ascending: true });
-            if (error) throw error;
-            if (clientFilter) {
-                clientFilter.innerHTML = '<option value="all">All Clients</option>';
-                clients.forEach(client => {
-                    const option = document.createElement('option');
-                    option.value = client.customer_id;
-                    option.textContent = client.customer_name;
-                    clientFilter.appendChild(option);
-                });
+
+            if (error) {
+                console.error('Error fetching clients:', error);
+                showNotification('Error loading clients: ' + error.message);
+                return;
             }
+
+            if (!clientFilter) {
+                console.error('Client filter element not found');
+                return;
+            }
+
+            // Clear existing options except "All Clients"
+            clientFilter.innerHTML = '<option value="all">All Clients</option>';
+
+            if (!clients || clients.length === 0) {
+                console.log('No clients found');
+                return;
+            }
+
+            // Add client options
+            clients.forEach(client => {
+                const option = document.createElement('option');
+                option.value = client.customer_id;
+                option.textContent = client.customer_name;
+                clientFilter.appendChild(option);
+            });
+
+            console.log('Client filter populated with', clients.length, 'clients');
         } catch (err) {
             console.error('Error populating client filter:', err);
+            showNotification('Error loading clients: ' + err.message);
         }
     }
 
-    // Initialize client filter
-    populateClientFilter();
+    // Initialize client filter and set up subscription for updates
+    async function initializeClientFilter() {
+        await populateClientFilter();
+
+        // Subscribe to client changes
+        if (window.supabase) {
+            const clientSubscription = window.supabase
+                .channel('clients_changes')
+                .on('postgres_changes', 
+                    { event: '*', schema: 'public', table: 'clients' },
+                    async () => {
+                        console.log('Clients table changed, updating filter...');
+                        await populateClientFilter();
+                    }
+                )
+                .subscribe();
+
+            // Store subscription for cleanup
+            window.clientSubscription = clientSubscription;
+        }
+    }
 
     // Function to get current filter values
     function getFilterValues() {
@@ -52,17 +98,49 @@ function setupTableFilters() {
 
     // Function to apply filters
     async function applyFilters() {
-        const filters = getFilterValues();
-        // Always reset to page 1 when filters change
-        await fetchAndDisplayInvoices(1, 10, filters);
+        try {
+            const filters = getFilterValues();
+            console.log('Applying filters:', filters);
+            
+            // Always reset to page 1 when filters change
+            if (typeof window.fetchAndDisplayInvoices === 'function') {
+                await window.fetchAndDisplayInvoices(1, 10, filters);
+            } else {
+                console.error('fetchAndDisplayInvoices function not found');
+            }
+        } catch (error) {
+            console.error('Error applying filters:', error);
+            showNotification('Error applying filters: ' + error.message);
+        }
     }
 
     // Add event listeners for filters
-    if (statusFilter) statusFilter.addEventListener('change', applyFilters);
-    if (dateFilter) dateFilter.addEventListener('change', applyFilters);
-    if (clientFilter) clientFilter.addEventListener('change', applyFilters);
+    if (statusFilter) {
+        statusFilter.addEventListener('change', () => {
+            console.log('Status filter changed:', statusFilter.value);
+            applyFilters();
+        });
+    }
+
+    if (dateFilter) {
+        dateFilter.addEventListener('change', () => {
+            console.log('Date filter changed:', dateFilter.value);
+            applyFilters();
+        });
+    }
+
+    if (clientFilter) {
+        clientFilter.addEventListener('change', () => {
+            console.log('Client filter changed:', clientFilter.value);
+            applyFilters();
+        });
+    }
+
     if (searchInput) {
-        searchInput.addEventListener('input', debounce(applyFilters, 300));
+        searchInput.addEventListener('input', debounce(() => {
+            console.log('Search input changed:', searchInput.value);
+            applyFilters();
+        }, 300));
     }
 
     // Function to reset filters
@@ -75,7 +153,10 @@ function setupTableFilters() {
     }
 
     // Add event listeners for reset buttons
-    if (clearFiltersBtn) clearFiltersBtn.addEventListener('click', resetFilters);
+    if (clearFiltersBtn) {
+        clearFiltersBtn.addEventListener('click', resetFilters);
+    }
+    
     if (resetFiltersLink) {
         resetFiltersLink.addEventListener('click', function(e) {
             e.preventDefault();
@@ -83,8 +164,24 @@ function setupTableFilters() {
         });
     }
 
+    // Initialize filters
+    initializeClientFilter();
+    
     // Setup table sorting
     setupTableSorting(table);
+}
+
+// Debounce function to limit how often a function can be called
+function debounce(func, wait) {
+    let timeout;
+    return function executedFunction(...args) {
+        const later = () => {
+            clearTimeout(timeout);
+            func(...args);
+        };
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+    };
 }
 
 function setupTableSorting(table) {
