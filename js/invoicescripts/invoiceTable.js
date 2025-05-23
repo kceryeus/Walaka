@@ -1,76 +1,60 @@
 // Invoice Table Module
 const InvoiceTableModule = {
+    currentSortColumn: null,
+    currentSortDirection: 'asc', // 'asc' or 'desc'
+
     async fetchAndDisplayInvoices(page = 1, limit = 10, filters = {}) {
         try {
-            // Show loading state
             const tbody = document.querySelector('#invoicesTable tbody');
             const pageInfo = document.querySelector('.page-info');
-            if (tbody) {
-                tbody.innerHTML = '<tr><td colspan="7" class="text-center">Loading invoices...</td></tr>';
-            }
-            if (pageInfo) {
-                pageInfo.textContent = 'Loading...';
+            
+            if (!tbody) {
+                console.error('Invoice table body not found');
+                return;
             }
 
-            // Initialize query builder with proper headers
-            let queryBuilder = window.supabase
+            // Build query
+            let query = window.supabase
                 .from('invoices')
-                .select('*', { count: 'exact', head: false });
+                .select('*, clients(customer_name)', { count: 'exact' });
 
             // Apply filters
             if (filters.status && filters.status !== 'all') {
-                queryBuilder = queryBuilder.eq('status', filters.status);
+                query = query.eq('status', filters.status);
             }
-
-            if (filters.clientId && filters.clientId !== 'all') {
-                queryBuilder = queryBuilder.eq('client_id', filters.clientId);
+            if (filters.client && filters.client !== 'all') {
+                query = query.eq('client_id', filters.client);
             }
-
-            if (filters.dateRange && filters.dateRange !== 'all') {
-                const now = new Date();
-                const startDate = new Date();
-
-                switch (filters.dateRange) {
-                    case 'today':
-                        startDate.setHours(0, 0, 0, 0);
-                        queryBuilder = queryBuilder.gte('created_at', startDate.toISOString())
-                            .lte('created_at', now.toISOString());
-                        break;
-                    case 'week':
-                        startDate.setDate(startDate.getDate() - 7);
-                        queryBuilder = queryBuilder.gte('created_at', startDate.toISOString());
-                        break;
-                    case 'month':
-                        startDate.setMonth(startDate.getMonth() - 1);
-                        queryBuilder = queryBuilder.gte('created_at', startDate.toISOString());
-                        break;
-                    case 'quarter':
-                        startDate.setMonth(startDate.getMonth() - 3);
-                        queryBuilder = queryBuilder.gte('created_at', startDate.toISOString());
-                        break;
-                    case 'year':
-                        startDate.setFullYear(startDate.getFullYear() - 1);
-                        queryBuilder = queryBuilder.gte('created_at', startDate.toISOString());
-                        break;
+            if (filters.search) {
+                const searchTerm = filters.search;
+                query = query.or(`invoiceNumber.ilike.%${searchTerm}%`);
+            }
+            if (filters.dateRange) {
+                const { startDate, endDate } = this.parseDateRange(filters.dateRange);
+                if (startDate && endDate) {
+                    query = query.gte('issue_date', startDate).lte('issue_date', endDate);
                 }
             }
 
-            if (filters.search) {
-                queryBuilder = queryBuilder.or(
-                    `invoiceNumber.ilike.%${filters.search}%,customer_name.ilike.%${filters.search}%`
-                );
+            // Add sorting
+            if (this.currentSortColumn) {
+                // Determine the database column name based on the sort data attribute
+                let dbColumn = this.currentSortColumn;
+                if (dbColumn === 'client') dbColumn = 'customer_name'; // Assuming 'customer_name' in clients table
+                if (dbColumn === 'date') dbColumn = 'issue_date';
+                if (dbColumn === 'dueDate') dbColumn = 'due_date';
+                if (dbColumn === 'amount') dbColumn = 'total_amount';
+                if (dbColumn === 'status') dbColumn = 'status';
+
+                query = query.order(dbColumn, { ascending: this.currentSortDirection === 'asc' });
             }
 
             // Add pagination
-            const from = (page - 1) * limit;
-            const to = from + limit - 1;
+            const start = (page - 1) * limit;
+            query = query.range(start, start + limit - 1);
 
-            queryBuilder = queryBuilder
-                .range(from, to)
-                .order('created_at', { ascending: false });
-
-            // Execute query with proper error handling
-            const { data: invoices, error, count } = await queryBuilder;
+            // Execute query
+            const { data: invoices, error, count } = await query;
 
             if (error) {
                 console.error('Supabase query error:', error);
@@ -94,6 +78,7 @@ const InvoiceTableModule = {
 
             // Add invoice rows
             invoices.forEach(invoice => {
+                const statusConfig = window.STATUS_CONFIG[invoice.status] || window.STATUS_CONFIG[window.INVOICE_STATUS.DRAFT];
                 const row = `
                     <tr>
                         <td>${invoice.invoiceNumber || ''}</td>
@@ -101,13 +86,15 @@ const InvoiceTableModule = {
                         <td>${this.formatDate(invoice.issue_date)}</td>
                         <td>${this.formatDate(invoice.due_date)}</td>
                         <td>${this.formatCurrency(invoice.total_amount)}</td>
-                        <td><span class="status ${invoice.status?.toLowerCase()}">${invoice.status || 'Pending'}</span></td>
+                        <td>
+                            <span class="status ${statusConfig.color}">
+                                <i class="fas ${statusConfig.icon}"></i>
+                                ${statusConfig.label}
+                            </span>
+                        </td>
                         <td class="actions">
                             <button class="action-btn view-btn" data-invoice="${invoice.invoiceNumber}" title="View">
                                 <i class="fas fa-eye"></i>
-                            </button>
-                            <button class="action-btn send-btn" title="Send">
-                                <i class="fas fa-paper-plane"></i>
                             </button>
                             <button class="action-btn more-btn" title="More">
                                 <i class="fas fa-ellipsis-v"></i>
@@ -118,36 +105,87 @@ const InvoiceTableModule = {
                 tbody.insertAdjacentHTML('beforeend', row);
             });
 
-            // Update pagination if count is available
-            if (count !== null) {
-                const totalPages = Math.ceil(count / limit);
-                const start = ((page - 1) * limit) + 1;
-                const end = Math.min(page * limit, count);
-                
-                // Update page info
-                if (pageInfo) {
-                    pageInfo.textContent = `Showing ${start}-${end} of ${count} invoices`;
-                }
-                
-                // Update pagination controls
-                this.updatePaginationDisplay(page, totalPages, count);
-            }
-
-            // Setup action buttons for new rows
+            // Setup action buttons
             this.setupActionButtons();
 
-        } catch (error) {
-            console.error('Error fetching invoices:', error);
-            const tbody = document.querySelector('#invoicesTable tbody');
-            const pageInfo = document.querySelector('.page-info');
-            if (tbody) {
-                tbody.innerHTML = '<tr><td colspan="7" class="text-center text-error">Error loading invoices</td></tr>';
-            }
+            // Update pagination info and render buttons
             if (pageInfo) {
-                pageInfo.textContent = 'Error loading invoices';
+                const totalPages = Math.ceil(count / limit);
+                pageInfo.textContent = `Showing ${start + 1}-${Math.min(start + limit, count)} of ${count} invoices`;
+                this.renderPaginationButtons(page, limit, count, filters);
             }
-            throw error;
+
+        } catch (error) {
+            console.error('Error in fetchAndDisplayInvoices:', error);
+            showNotification(error.message || 'Failed to fetch invoices', 'error');
         }
+    },
+
+    // New method to render pagination buttons
+    renderPaginationButtons(currentPage, limit, totalCount, filters) {
+        const pageControls = document.querySelector('.pagination .page-controls');
+        if (!pageControls) return;
+
+        pageControls.innerHTML = ''; // Clear existing buttons
+
+        const totalPages = Math.ceil(totalCount / limit);
+
+        // Add Previous button
+        const prevBtn = document.createElement('button');
+        prevBtn.className = 'pagination-btn';
+        prevBtn.innerHTML = '<i class="fas fa-chevron-left"></i>';
+        prevBtn.disabled = currentPage === 1;
+        prevBtn.addEventListener('click', () => this.fetchAndDisplayInvoices(currentPage - 1, limit, filters));
+        pageControls.appendChild(prevBtn);
+
+        // Add page buttons (simplified: show first few, last, and current vicinity)
+        const maxButtons = 5; // Max number of page buttons to show
+        const startPage = Math.max(1, currentPage - Math.floor(maxButtons / 2));
+        const endPage = Math.min(totalPages, startPage + maxButtons - 1);
+
+        if (startPage > 1) {
+            this.addPaginationButton(1, currentPage, limit, filters, pageControls);
+            if (startPage > 2) {
+                const ellipsis = document.createElement('span');
+                ellipsis.className = 'pagination-ellipsis';
+                ellipsis.textContent = '...';
+                pageControls.appendChild(ellipsis);
+            }
+        }
+
+        for (let i = startPage; i <= endPage; i++) {
+            this.addPaginationButton(i, currentPage, limit, filters, pageControls);
+        }
+
+        if (endPage < totalPages) {
+            if (endPage < totalPages - 1) {
+                const ellipsis = document.createElement('span');
+                ellipsis.className = 'pagination-ellipsis';
+                ellipsis.textContent = '...';
+                pageControls.appendChild(ellipsis);
+            }
+            this.addPaginationButton(totalPages, currentPage, limit, filters, pageControls);
+        }
+
+        // Add Next button
+        const nextBtn = document.createElement('button');
+        nextBtn.className = 'pagination-btn';
+        nextBtn.innerHTML = '<i class="fas fa-chevron-right"></i>';
+        nextBtn.disabled = currentPage === totalPages;
+        nextBtn.addEventListener('click', () => this.fetchAndDisplayInvoices(currentPage + 1, limit, filters));
+        pageControls.appendChild(nextBtn);
+    },
+
+    // Helper to add individual page buttons
+    addPaginationButton(pageNumber, currentPage, limit, filters, container) {
+        const button = document.createElement('button');
+        button.className = 'pagination-btn';
+        if (pageNumber === currentPage) {
+            button.classList.add('active');
+        }
+        button.textContent = pageNumber;
+        button.addEventListener('click', () => this.fetchAndDisplayInvoices(pageNumber, limit, filters));
+        container.appendChild(button);
     },
 
     setupActionButtons() {
@@ -161,284 +199,190 @@ const InvoiceTableModule = {
             });
         });
 
-        // Send button
-        document.querySelectorAll('.send-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
-                const invoiceNumber = btn.closest('tr').querySelector('.view-btn').getAttribute('data-invoice');
-                if (window.invoiceActions) {
-                    window.invoiceActions.sendInvoice(invoiceNumber);
-                }
-            });
-        });
-
         // More button
+        console.log('Setting up More button listeners');
         document.querySelectorAll('.more-btn').forEach(btn => {
+            console.log('Found a More button, adding listener');
             btn.addEventListener('click', (e) => {
-                const row = btn.closest('tr');
-                const invoiceNumber = row.querySelector('.view-btn').getAttribute('data-invoice');
+                console.log('More button clicked', e.target);
+                const invoiceNumber = btn.closest('tr').querySelector('.view-btn').getAttribute('data-invoice');
                 this.showMoreOptions(e, invoiceNumber);
             });
         });
     },
 
     showMoreOptions(event, invoiceNumber) {
+        console.log('showMoreOptions called for invoice', invoiceNumber);
         // Create dropdown menu
         const dropdown = document.createElement('div');
         dropdown.className = 'dropdown-menu';
         dropdown.innerHTML = `
-            <button class="dropdown-item" data-action="edit">
-                <i class="fas fa-edit"></i> Edit
+            <button class="dropdown-item" data-action="mark-paid">
+                <i class="fas fa-check-circle"></i> Mark as Paid
             </button>
-            <button class="dropdown-item" data-action="duplicate">
-                <i class="fas fa-copy"></i> Duplicate
+            <button class="dropdown-item" data-action="download">
+                <i class="fas fa-download"></i> Download PDF
             </button>
-            <button class="dropdown-item" data-action="delete">
-                <i class="fas fa-trash"></i> Delete
+            <button class="dropdown-item" data-action="email">
+                <i class="fas fa-envelope"></i> Send Email
+            </button>
+            <button class="dropdown-item" data-action="create-credit-note">
+                <i class="fas fa-file-invoice"></i> Create Credit Note
             </button>
         `;
 
         // Position dropdown
         const rect = event.target.getBoundingClientRect();
+        console.log('Button rect:', rect);
+        console.log('Window scroll:', { x: window.scrollX, y: window.scrollY });
         dropdown.style.position = 'fixed';
-        dropdown.style.top = `${rect.bottom + window.scrollY}px`;
+        dropdown.style.top = `${rect.bottom}px`;
         dropdown.style.left = `${rect.left + window.scrollX}px`;
+        console.log('Dropdown position set to:', { top: dropdown.style.top, left: dropdown.style.left });
 
         // Add click handlers
-        dropdown.querySelector('[data-action="edit"]').addEventListener('click', () => {
-            // TODO: Implement edit functionality
-            dropdown.remove();
-        });
+        dropdown.querySelectorAll('.dropdown-item').forEach(item => {
+            item.addEventListener('click', async () => {
+                const action = item.getAttribute('data-action');
+                dropdown.remove(); // Close dropdown immediately on click
 
-        dropdown.querySelector('[data-action="duplicate"]').addEventListener('click', async () => {
-            if (window.invoiceActions) {
-                await window.invoiceActions.duplicateInvoice(invoiceNumber);
-            }
-            dropdown.remove();
-        });
-
-        dropdown.querySelector('[data-action="delete"]').addEventListener('click', async () => {
-            if (window.invoiceActions) {
-                await window.invoiceActions.deleteInvoice(invoiceNumber);
-            }
-            dropdown.remove();
+                if (window.invoiceActions) {
+                    switch (action) {
+                        case 'email':
+                            await window.invoiceActions.sendInvoice(invoiceNumber);
+                            break;
+                        case 'download':
+                            await window.invoiceActions.downloadPdf(invoiceNumber);
+                            break;
+                        case 'mark-paid':
+                            await window.invoiceActions.updateInvoiceStatus(invoiceNumber, 'paid');
+                            break;
+                        case 'create-credit-note':
+                            // TODO: Implement create credit note functionality
+                            console.log('Create Credit Note action clicked for', invoiceNumber);
+                            showNotification('Create Credit Note functionality not yet implemented', 'info');
+                            break;
+                        default:
+                            console.warn('Unknown action:', action);
+                    }
+                }
+            });
         });
 
         // Add click outside handler
         const clickOutsideHandler = (e) => {
-            if (!dropdown.contains(e.target)) {
+            if (!dropdown.contains(e.target) && e.target !== event.target) {
                 dropdown.remove();
                 document.removeEventListener('click', clickOutsideHandler);
             }
         };
         document.addEventListener('click', clickOutsideHandler);
 
-        // Add to DOM
+        // Append dropdown to body and show it
         document.body.appendChild(dropdown);
-    },
-
-    updatePaginationDisplay(currentPage, totalPages, totalItems) {
-        const controls = document.querySelector('.page-controls');
-        const pageInfo = document.querySelector('.page-info');
-        if (!controls || !pageInfo) return;
-
-        // Update page info text
-        const start = ((currentPage - 1) * 10) + 1;
-        const end = Math.min(currentPage * 10, totalItems);
-        pageInfo.textContent = `Showing ${start}-${end} of ${totalItems} invoices`;
-
-        // Clear existing pagination buttons
-        controls.innerHTML = '';
-
-        // Add previous button
-        controls.innerHTML += `
-            <button class="pagination-btn ${currentPage === 1 ? 'disabled' : ''}" 
-                    ${currentPage === 1 ? 'disabled' : ''}>
-                <i class="fas fa-chevron-left"></i>
-            </button>
-        `;
-
-        // Add page numbers
-        const maxVisiblePages = 5;
-        let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
-        let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
-
-        // Adjust start page if we're near the end
-        if (endPage - startPage + 1 < maxVisiblePages) {
-            startPage = Math.max(1, endPage - maxVisiblePages + 1);
-        }
-
-        // Add first page if not visible
-        if (startPage > 1) {
-            controls.innerHTML += `
-                <button class="pagination-btn">1</button>
-                ${startPage > 2 ? '<span class="pagination-ellipsis">...</span>' : ''}
-            `;
-        }
-
-        // Add page numbers
-        for (let i = startPage; i <= endPage; i++) {
-            controls.innerHTML += `
-                <button class="pagination-btn ${i === currentPage ? 'active' : ''}">${i}</button>
-            `;
-        }
-
-        // Add last page if not visible
-        if (endPage < totalPages) {
-            controls.innerHTML += `
-                ${endPage < totalPages - 1 ? '<span class="pagination-ellipsis">...</span>' : ''}
-                <button class="pagination-btn">${totalPages}</button>
-            `;
-        }
-
-        // Add next button
-        controls.innerHTML += `
-            <button class="pagination-btn ${currentPage === totalPages ? 'disabled' : ''}"
-                    ${currentPage === totalPages ? 'disabled' : ''}>
-                <i class="fas fa-chevron-right"></i>
-            </button>
-        `;
-
-        // Add click handlers for new buttons
-        this.setupPaginationHandlers(currentPage, totalPages);
-    },
-
-    setupPaginationHandlers(currentPage, totalPages) {
-        const controls = document.querySelector('.page-controls');
-        if (!controls) return;
-
-        controls.addEventListener('click', async (e) => {
-            const button = e.target.closest('.pagination-btn');
-            if (!button || button.disabled) return;
-
-            let newPage = currentPage;
-
-            if (button.querySelector('.fa-chevron-left')) {
-                newPage = currentPage - 1;
-            } else if (button.querySelector('.fa-chevron-right')) {
-                newPage = currentPage + 1;
-            } else {
-                newPage = parseInt(button.textContent);
-            }
-
-            if (newPage >= 1 && newPage <= totalPages) {
-                // Get current filters
-                const filters = {
-                    status: document.getElementById('statusFilter')?.value || 'all',
-                    dateRange: document.getElementById('dateFilter')?.value || 'all',
-                    clientId: document.getElementById('clientFilter')?.value || 'all',
-                    search: document.getElementById('searchInvoices')?.value.trim() || ''
-                };
-
-                await this.fetchAndDisplayInvoices(newPage, 10, filters);
-            }
-        });
+        dropdown.style.display = 'block';
     },
 
     formatDate(dateString) {
         if (!dateString) return '';
         const date = new Date(dateString);
-        return date.toLocaleDateString('en-GB', {
-            day: '2-digit',
+        return date.toLocaleDateString('en-US', {
+            year: 'numeric',
             month: 'short',
-            year: 'numeric'
+            day: 'numeric'
         });
     },
 
     formatCurrency(amount) {
-        if (!amount) return '0.00';
-        return parseFloat(amount).toLocaleString('en-GB', {
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2
-        });
+        if (amount === null || amount === undefined) return '';
+        return new Intl.NumberFormat('en-US', {
+            style: 'currency',
+            currency: 'USD'
+        }).format(amount);
     },
 
-    initializeEventListeners() {
-        // Date range filter
-        const dateRangeFilter = document.getElementById('dateRangeFilter');
-        if (dateRangeFilter) {
-            dateRangeFilter.addEventListener('change', (e) => {
-                this.currentFilters.dateRange = e.target.value;
-                if (e.target.value !== 'custom') {
-                    this.currentFilters.customDateRange = null;
-                }
-                this.applyFilters();
-            });
+    parseDateRange(range) {
+        const today = new Date();
+        const startDate = new Date();
+        const endDate = new Date();
+
+        switch (range) {
+            case 'today':
+                startDate.setHours(0, 0, 0, 0);
+                endDate.setHours(23, 59, 59, 999);
+                break;
+            case 'week':
+                startDate.setDate(today.getDate() - today.getDay());
+                endDate.setDate(startDate.getDate() + 6);
+                break;
+            case 'month':
+                startDate.setDate(1);
+                endDate.setMonth(startDate.getMonth() + 1);
+                endDate.setDate(0);
+                break;
+            case 'quarter':
+                const quarter = Math.floor(today.getMonth() / 3);
+                startDate.setMonth(quarter * 3);
+                startDate.setDate(1);
+                endDate.setMonth((quarter + 1) * 3);
+                endDate.setDate(0);
+                break;
+            case 'year':
+                startDate.setMonth(0, 1);
+                endDate.setMonth(11, 31);
+                break;
+            default:
+                return { startDate: null, endDate: null };
         }
-    },
 
-    filterByDateRange(startDate, endDate) {
-        this.currentFilters.customDateRange = {
-            start: new Date(startDate),
-            end: new Date(endDate)
+        return {
+            startDate: startDate.toISOString(),
+            endDate: endDate.toISOString()
         };
-        this.applyFilters();
     },
 
-    applyFilters() {
-        this.filteredInvoices = this.invoices.filter(invoice => {
-            // Status filter
-            if (this.currentFilters.status && invoice.status !== this.currentFilters.status) {
-                return false;
-            }
+    // New method to set up sort listeners
+    setupSorting() {
+        document.querySelectorAll('#invoicesTable th .sort-icon').forEach(icon => {
+            icon.addEventListener('click', () => {
+                const sortColumn = icon.getAttribute('data-sort');
+                this.toggleSort(sortColumn);
+            });
+        });
+    },
 
-            // Client filter
-            if (this.currentFilters.clientId && invoice.customer_id !== this.currentFilters.clientId) {
-                return false;
-            }
+    // New method to toggle sorting direction and re-fetch data
+    async toggleSort(sortColumn) {
+        if (this.currentSortColumn === sortColumn) {
+            // Toggle direction if clicking the same column
+            this.currentSortDirection = this.currentSortDirection === 'asc' ? 'desc' : 'asc';
+        } else {
+            // Set new column and default to ascending
+            this.currentSortColumn = sortColumn;
+            this.currentSortDirection = 'asc';
+        }
 
-            // Date range filter
-            const invoiceDate = new Date(invoice.issue_date);
-            if (this.currentFilters.customDateRange) {
-                if (invoiceDate < this.currentFilters.customDateRange.start || 
-                    invoiceDate > this.currentFilters.customDateRange.end) {
-                    return false;
-                }
-            } else {
-                const today = new Date();
-                const startDate = new Date();
-                
-                switch (this.currentFilters.dateRange) {
-                    case 'month':
-                        startDate.setMonth(startDate.getMonth() - 1);
-                        break;
-                    case 'quarter':
-                        startDate.setMonth(startDate.getMonth() - 3);
-                        break;
-                    case 'semester':
-                        startDate.setMonth(startDate.getMonth() - 6);
-                        break;
-                    case 'year':
-                        startDate.setFullYear(startDate.getFullYear() - 1);
-                        break;
-                    case 'all':
-                        return true;
-                }
+        // Update UI to show current sorting
+        this.updateSortIcons();
 
-                if (invoiceDate < startDate || invoiceDate > today) {
-                    return false;
-                }
-            }
+        // Fetch and display invoices with new sorting
+        await this.fetchAndDisplayInvoices(1, 10, window.invoiceTable.currentFilters || {});
+    },
 
-            // Search term filter
-            if (this.currentFilters.searchTerm) {
-                const searchTerm = this.currentFilters.searchTerm.toLowerCase();
-                return (
-                    invoice.invoiceNumber.toLowerCase().includes(searchTerm) ||
-                    invoice.customer_name.toLowerCase().includes(searchTerm) ||
-                    invoice.status.toLowerCase().includes(searchTerm)
-                );
-            }
-
-            return true;
+    // New method to update sort icons in the table header
+    updateSortIcons() {
+        document.querySelectorAll('#invoicesTable th .sort-icon').forEach(icon => {
+            icon.innerHTML = '<i class="fas fa-sort"></i>'; // Reset all icons
         });
 
-        this.renderTable();
-    },
-
-    renderTable() {
-        // Implementation of renderTable method
+        if (this.currentSortColumn) {
+            const currentIcon = document.querySelector(`#invoicesTable th .sort-icon[data-sort="${this.currentSortColumn}"]`);
+            if (currentIcon) {
+                currentIcon.innerHTML = this.currentSortDirection === 'asc' ? '<i class="fas fa-sort-up"></i>' : '<i class="fas fa-sort-down"></i>';
+            }
+        }
     }
 };
 
-// Export functions to global scope
-window.fetchAndDisplayInvoices = InvoiceTableModule.fetchAndDisplayInvoices.bind(InvoiceTableModule); 
+// Export the module
+window.InvoiceTableModule = InvoiceTableModule; 

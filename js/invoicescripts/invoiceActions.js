@@ -1,53 +1,15 @@
 // Invoice Actions Module
 class InvoiceActions {
     constructor() {
+        if (!window.supabase) {
+            throw new Error('Supabase client not initialized on window');
+        }
         this.supabase = window.supabase;
-        this.statusManager = window.InvoiceStatusManager;
+        this.statusManager = null;
         this.setupEventListeners();
     }
 
     setupEventListeners() {
-        // Mark as Paid button
-        const markPaidBtn = document.getElementById('markPaidBtn');
-        if (markPaidBtn) {
-            markPaidBtn.addEventListener('click', async () => {
-                const invoiceNumber = document.getElementById('viewInvoiceNumber').textContent;
-                await this.markAsPaid(invoiceNumber);
-            });
-        }
-
-        // Email Invoice button
-        const emailInvoiceBtn = document.getElementById('emailInvoiceBtn');
-        if (emailInvoiceBtn) {
-            emailInvoiceBtn.addEventListener('click', async () => {
-                const invoiceNumber = document.getElementById('viewInvoiceNumber').textContent;
-                await this.sendInvoice(invoiceNumber);
-            });
-        }
-
-        // Print Invoice button
-        const printInvoiceBtn = document.getElementById('printInvoiceBtn');
-        if (printInvoiceBtn) {
-            printInvoiceBtn.addEventListener('click', () => {
-                const previewContent = document.getElementById('invoicePreviewContent');
-                if (previewContent) {
-                    const printWindow = window.open('', '_blank');
-                    printWindow.document.write(previewContent.innerHTML);
-                    printWindow.document.close();
-                    printWindow.print();
-                }
-            });
-        }
-
-        // Download PDF button
-        const downloadPdfBtn = document.getElementById('downloadPdfBtn');
-        if (downloadPdfBtn) {
-            downloadPdfBtn.addEventListener('click', async () => {
-                const invoiceNumber = document.getElementById('viewInvoiceNumber').textContent;
-                await this.downloadPdf(invoiceNumber);
-            });
-        }
-
         // Close Invoice button
         const closeInvoiceBtn = document.getElementById('closeInvoiceBtn');
         if (closeInvoiceBtn) {
@@ -61,58 +23,48 @@ class InvoiceActions {
         }
     }
 
-    async markAsPaid(invoiceNumber) {
+    async updateInvoiceStatus(invoiceNumber, newStatus) {
         try {
-            // Update invoice status
-            const { error: updateError } = await window.supabase
-                .from('invoices')
-                .update({ 
-                    status: 'paid', 
-                    paid_date: new Date().toISOString() 
-                })
-                .eq('invoiceNumber', invoiceNumber);
+            console.log('Inside updateInvoiceStatus');
+            console.log('this.supabase:', this.supabase);
+            console.log('this.supabase.auth:', this.supabase ? this.supabase.auth : 'supabase is null or undefined');
 
-            if (updateError) throw updateError;
-
-            // Add timeline event
-            const { error: timelineError } = await window.supabase
-                .from('invoice_timeline')
-                .insert([{
-                    invoiceNumber: invoiceNumber,
-                    title: 'Payment Received',
-                    active: true,
-                    date: new Date().toISOString()
-                }]);
-
-            if (timelineError) throw timelineError;
-
-            // Update UI
-            const statusElement = document.getElementById('viewInvoiceStatus');
-            if (statusElement) {
-                statusElement.textContent = 'Paid';
-                statusElement.className = 'status paid';
+            // Check if user is authenticated
+            const { data: { user }, error: authError } = await window.supabase.auth.getUser();
+            if (authError) {
+                console.error('Authentication error:', authError);
+                showNotification('Please log in to update invoice status', 'error');
+                return;
             }
 
-            const markPaidBtn = document.getElementById('markPaidBtn');
-            if (markPaidBtn) {
-                markPaidBtn.style.display = 'none';
+            if (!user) {
+                showNotification('Please log in to update invoice status', 'error');
+                return;
             }
 
-            // Refresh timeline
-            const timeline = await this.fetchTimeline(invoiceNumber);
-            this.populateTimeline(timeline);
+            // Initialize status manager - Pass supabase client
+            this.statusManager = new window.InvoiceStatusManager(window.supabase);
+            await this.statusManager.initialize(invoiceNumber);
 
-            // Show notification
-            window.showNotification('Invoice marked as paid');
+            // Check if transition to new status is allowed
+            if (!this.statusManager.canTransitionTo(newStatus)) {
+                showNotification('Cannot change to this status in the current state', 'error');
+                return;
+            }
 
+            // Update status with user ID
+            await this.statusManager.updateStatus(newStatus, {
+                user_id: user.id,
+                date: new Date().toISOString()
+            });
+
+            showNotification(`Invoice marked as ${newStatus} successfully`, 'success');
+            
             // Refresh invoice list and metrics
             await this.refreshInvoiceList();
-
-            return true;
         } catch (error) {
-            console.error('Error marking invoice as paid:', error);
-            window.showNotification('Error updating invoice status');
-            return false;
+            console.error('Error updating invoice status:', error);
+            showNotification(error.message || 'Failed to update invoice status', 'error');
         }
     }
 
@@ -181,19 +133,11 @@ class InvoiceActions {
 
             if (deleteError) throw deleteError;
 
-            // Delete timeline events
-            const { error: timelineError } = await window.supabase
-                .from('invoice_timeline')
-                .delete()
-                .eq('invoiceNumber', invoiceNumber);
-
-            if (timelineError) throw timelineError;
-
             // Close modal if open
             window.closeAllModals();
 
             // Show notification
-            window.showNotification('Invoice deleted successfully');
+            showNotification('Invoice deleted successfully', 'success');
 
             // Refresh invoice list and metrics
             await this.refreshInvoiceList();
@@ -201,7 +145,7 @@ class InvoiceActions {
             return true;
         } catch (error) {
             console.error('Error deleting invoice:', error);
-            window.showNotification('Error deleting invoice');
+            showNotification('Error deleting invoice', 'error');
             return false;
         }
     }
@@ -240,20 +184,8 @@ class InvoiceActions {
 
             if (insertError) throw insertError;
 
-            // Add timeline event
-            const { error: timelineError } = await window.supabase
-                .from('invoice_timeline')
-                .insert([{
-                    invoiceNumber: newInvoiceNumber,
-                    title: 'Invoice Duplicated',
-                    active: true,
-                    date: new Date().toISOString()
-                }]);
-
-            if (timelineError) throw timelineError;
-
             // Show notification
-            window.showNotification('Invoice duplicated successfully');
+            showNotification('Invoice duplicated successfully', 'success');
 
             // Refresh invoice list
             await this.refreshInvoiceList();
@@ -261,7 +193,7 @@ class InvoiceActions {
             return newInvoiceNumber;
         } catch (error) {
             console.error('Error duplicating invoice:', error);
-            window.showNotification('Error duplicating invoice');
+            showNotification('Error duplicating invoice', 'error');
             return null;
         }
     }
@@ -318,7 +250,7 @@ class InvoiceActions {
     async downloadPdf(invoiceNumber) {
         try {
             // Fetch invoice data
-            const { data: invoice, error } = await this.supabase
+            const { data: invoice, error } = await window.supabase
                 .from('invoices')
                 .select('*')
                 .eq('invoiceNumber', invoiceNumber)
@@ -347,29 +279,26 @@ class InvoiceActions {
     }
 
     async refreshInvoiceList() {
-        try {
-            // Refresh metrics
-            if (typeof window.updateMetricsDisplay === 'function') {
-                await window.updateMetricsDisplay();
-            }
+        if (window.InvoiceTableModule) {
+            await window.InvoiceTableModule.fetchAndDisplayInvoices(1, 10, {});
+        }
+    }
 
-            // Refresh charts
-            if (typeof window.updateCharts === 'function') {
-                await window.updateCharts();
-            }
-
-            // Refresh invoice table
-            if (typeof window.fetchAndDisplayInvoices === 'function') {
-                await window.fetchAndDisplayInvoices();
-            }
-
-            console.log('Invoice list refreshed successfully');
-        } catch (error) {
-            console.error('Error refreshing invoice list:', error);
+    // Add print method
+    printInvoice() {
+        const previewContent = document.getElementById('invoicePreviewContent');
+        if (previewContent) {
+            const printWindow = window.open('', '_blank');
+            printWindow.document.write(previewContent.innerHTML);
+            printWindow.document.close();
+            printWindow.print();
         }
     }
 }
 
 // Initialize and attach to window
 const invoiceActions = new InvoiceActions();
-window.invoiceActions = invoiceActions; 
+window.invoiceActions = invoiceActions;
+
+// Export the class
+window.InvoiceActions = InvoiceActions; 

@@ -670,17 +670,6 @@
                     </div>
                     <div class="invoice-view-actions">
                         
-                        </div>
-                        <button class="btn icon-btn" id="downloadPdfBtn" title="Download PDF">
-                            <i class="fas fa-download"></i>
-                        </button>
-                        <button class="btn icon-btn" id="printInvoiceBtn" title="Print">
-                            <i class="fas fa-print"></i>
-                        </button>
-                        <button class="btn icon-btn" id="emailInvoiceBtn" title="Email">
-                            <i class="fas fa-envelope"></i>
-                        </button>
-                        
                     </div>
                 </div>
                 
@@ -690,42 +679,11 @@
                     </div>
                 </div>
                 
-                <div class="invoice-view-footer">
-                    <div class="payment-status">
-                        <h4>Payment Status</h4>
-                        <div class="status-timeline">
-                            <div class="timeline-item active">
-                                <div class="timeline-marker"></div>
-                                <div class="timeline-content">
-                                    <span class="timeline-date">Mar 15, 2025</span>
-                                    <span class="timeline-title">Invoice Created</span>
-                                </div>
-                            </div>
-                            <div class="timeline-item active">
-                                <div class="timeline-marker"></div>
-                                <div class="timeline-content">
-                                    <span class="timeline-date">Mar 16, 2025</span>
-                                    <span class="timeline-title">Sent to Client</span>
-                                </div>
-                            </div>
-                            <div class="timeline-item active">
-                                <div class="timeline-marker"></div>
-                                <div class="timeline-content">
-                                    <span class="timeline-date">Mar 20, 2025</span>
-                                    <span class="timeline-title">Payment Received</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                <div class="modal-footer">
+                    <button class="btn primary-btn" id="closeInvoiceBtn">
+                        <i class="fas fa-times"></i> Close
+                    </button>
                 </div>
-            </div>
-            <div class="modal-footer">
-                <button class="btn secondary-btn" id="markPaidBtn">
-                    <i class="fas fa-check-circle"></i> Mark as Paid
-                </button>
-                <button class="btn primary-btn" id="closeInvoiceBtn">
-                    <i class="fas fa-times"></i> Close
-                </button>
             </div>
         </div>
     </div>
@@ -807,8 +765,21 @@
         // Create single Supabase instance
         const supabase = createClient(
             'https://qvmtozjvjflygbkjecyj.supabase.co',
-            'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF2bXRvemp2amZseWdia2plY3lqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDYxMjc2MjMsImV4cCI6MjA2MTcwMzYyM30.DJMC1eM5_EouM1oc07JaoXsMX_bSLn2AVCozAcdfHmo'
+            'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF2bXRvemp2amZseWdia2plY3lqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDYxMjc2MjMsImV4cCI6MjA2MTcwMzYyM30.DJMC1eM5_EouM1oc07JaoXsMX_bSLn2AVCozAcdfHmo',
+            {
+                auth: {
+                    autoRefreshToken: true,
+                    persistSession: true,
+                    detectSessionInUrl: true
+                }
+            }
         );
+
+        // Check for existing session
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) {
+            console.warn('No active session found. Some features may be limited.');
+        }
 
         window.supabase = supabase;
 
@@ -969,9 +940,19 @@
         // Initialize everything
         document.addEventListener('DOMContentLoaded', async function() {
             try {
-                // Initialize Supabase client
-                if (!window.supabase) {
-                    throw new Error('Supabase client not initialized');
+                // Wait for window.supabase to be initialized by the module script
+                while (!window.supabase || !window.supabase.auth) {
+                    console.log('Waiting for Supabase client initialization...');
+                    await new Promise(resolve => setTimeout(resolve, 100)); // Wait 100ms
+                }
+                console.log('Supabase client initialized!', window.supabase);
+
+                // Initialize invoice actions - Pass the initialized supabase client
+                if (window.InvoiceActions && window.supabase) {
+                    window.invoiceActions = new window.InvoiceActions(window.supabase);
+                    console.log('Invoice actions initialized successfully');
+                } else {
+                    console.error('InvoiceActions class or Supabase client not found during actions initialization');
                 }
 
                 // Initialize table filters first
@@ -1023,14 +1004,6 @@
                     console.log('Charts updated successfully');
                 } else {
                     console.error('Chart update functions not found');
-                }
-
-                // Initialize invoice actions
-                if (window.invoiceActions) {
-                    window.invoiceActions.setupEventListeners();
-                    console.log('Invoice actions initialized successfully');
-                } else {
-                    console.error('Invoice actions not found');
                 }
 
                 // Setup client handlers
