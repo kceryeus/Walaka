@@ -4,7 +4,7 @@
 function setupTableFilters() {
     // Get filter elements
     const statusFilter = document.getElementById('statusFilter');
-    const dateFilter = document.getElementById('dateFilter');
+    const dateRangeFilter = document.getElementById('dateRangeFilter');
     const clientFilter = document.getElementById('clientFilter');
     const searchInput = document.getElementById('searchInvoices');
     const clearFiltersBtn = document.getElementById('clearFilters');
@@ -52,7 +52,7 @@ function setupTableFilters() {
             // Add client options
             clients.forEach(client => {
                 const option = document.createElement('option');
-                option.value = client.customer_id;
+                option.value = client.id;
                 option.textContent = client.customer_name;
                 clientFilter.appendChild(option);
             });
@@ -90,7 +90,7 @@ function setupTableFilters() {
     function getFilterValues() {
         return {
             status: statusFilter ? statusFilter.value : 'all',
-            dateRange: dateFilter ? dateFilter.value : 'all',
+            dateRange: dateRangeFilter ? dateRangeFilter.value : 'all',
             clientId: clientFilter ? clientFilter.value : 'all',
             search: searchInput ? searchInput.value.trim() : ''
         };
@@ -122,10 +122,15 @@ function setupTableFilters() {
         });
     }
 
-    if (dateFilter) {
-        dateFilter.addEventListener('change', () => {
-            console.log('Date filter changed:', dateFilter.value);
-            applyFilters();
+    if (dateRangeFilter) {
+        dateRangeFilter.addEventListener('change', () => {
+            console.log('Date range filter changed:', dateRangeFilter.value);
+            if (dateRangeFilter.value === 'custom') {
+                // Show the date range modal
+                $('#dateRangeModal').modal('show');
+            } else {
+                applyFilters();
+            }
         });
     }
 
@@ -146,7 +151,7 @@ function setupTableFilters() {
     // Function to reset filters
     function resetFilters() {
         if (statusFilter) statusFilter.value = 'all';
-        if (dateFilter) dateFilter.value = 'month';
+        if (dateRangeFilter) dateRangeFilter.value = 'all';
         if (clientFilter) clientFilter.value = 'all';
         if (searchInput) searchInput.value = '';
         applyFilters();
@@ -209,7 +214,7 @@ function setupTableSorting(table) {
             // Get current filters
             const filters = {
                 status: document.getElementById('statusFilter')?.value || 'all',
-                dateRange: document.getElementById('dateFilter')?.value || 'all',
+                dateRange: document.getElementById('dateRangeFilter')?.value || 'all',
                 clientId: document.getElementById('clientFilter')?.value || 'all',
                 search: document.getElementById('searchInvoices')?.value.trim() || ''
             };

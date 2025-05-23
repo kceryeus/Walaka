@@ -456,6 +456,16 @@
                                 <i class="fas fa-times"></i> Clear
                             </button>
                         </div>
+
+                        <!-- Export Buttons -->
+                        <div class="export-buttons">
+                            <button id="exportCsvBtn" class="btn btn-success">
+                                <i class="fas fa-file-csv"></i> Export CSV
+                            </button>
+                            <button id="exportSaftBtn" class="btn btn-primary">
+                                <i class="fas fa-file-code"></i> Export SAFT
+                            </button>
+                        </div>
                     </div>
                 </div>
                 
@@ -1140,34 +1150,7 @@
         </div>
     </div>
 
-    <!-- Export Buttons -->
-    <div class="export-buttons">
-        <button id="exportCsvBtn" class="btn btn-success">
-            <i class="fas fa-file-csv"></i> Export CSV
-        </button>
-        <button id="exportSaftBtn" class="btn btn-primary">
-            <i class="fas fa-file-code"></i> Export SAFT
-        </button>
-    </div>
-
     <style>
-    .export-buttons {
-        margin: 20px 0;
-        display: flex;
-        gap: 10px;
-    }
-
-    .export-buttons button {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        padding: 8px 16px;
-    }
-
-    .export-buttons button i {
-        font-size: 1.1em;
-    }
-
     #dateRangeModal .modal-body {
         padding: 20px;
     }
@@ -1196,16 +1179,16 @@
         const dateRangeFilter = document.getElementById('dateRangeFilter');
         const dateRangeModal = $('#dateRangeModal');
         
-        if (dateRangeFilter && dateRangeModal.length) { // Check if both element and modal are available
+        if (dateRangeFilter && dateRangeModal.length) {
             dateRangeFilter.addEventListener('change', function() {
                 if (this.value === 'custom') {
                     dateRangeModal.modal('show');
                 } else {
                     // Apply preset filter when a non-custom option is selected
                      if (window.invoiceTable && typeof window.invoiceTable.applyFilters === 'function') {
-                        window.invoiceTable.currentFilters.dateRange = this.value; // Update filter in invoiceTable
-                        window.invoiceTable.currentFilters.customDateRange = null; // Clear custom range
-                        window.invoiceTable.applyFilters(); // Apply filters
+                        window.invoiceTable.currentFilters.dateRange = this.value;
+                        window.invoiceTable.currentFilters.customDateRange = null;
+                        window.invoiceTable.applyFilters();
                     } else {
                         console.error('invoiceTable or applyFilters not found');
                     }
@@ -1226,7 +1209,7 @@
 
         // Handle date range application
         const applyDateRangeBtn = document.getElementById('applyDateRange');
-        if (applyDateRangeBtn && startDateInput && endDateInput) { // Check if all elements exist
+        if (applyDateRangeBtn && startDateInput && endDateInput) {
             applyDateRangeBtn.addEventListener('click', function() {
                 const startDate = startDateInput.value;
                 const endDate = endDateInput.value;
@@ -1242,28 +1225,29 @@
                 }
 
                 // Update the table with the custom date range
-                if (window.invoiceTable && typeof window.invoiceTable.filterByDateRange === 'function') {
-                    // Set the date range filter dropdown back to 'custom' for visual consistency
+                if (window.invoiceTable && typeof window.invoiceTable.applyFilters === 'function') {
                      if (dateRangeFilter) dateRangeFilter.value = 'custom';
-                    window.invoiceTable.filterByDateRange(startDate, endDate);
+                    window.invoiceTable.currentFilters.dateRange = 'custom';
+                    window.invoiceTable.currentFilters.customDateRange = {
+                        startDate: startDate,
+                        endDate: endDate
+                    };
+                    window.invoiceTable.applyFilters();
                 } else {
-                    console.error('invoiceTable or filterByDateRange not found');
+                    console.error('invoiceTable or applyFilters not found');
                 }
                 dateRangeModal.modal('hide');
             });
         }
 
-        // Handle export button clicks using event listeners
+        // Handle export button clicks
         const exportCsvBtn = document.getElementById('exportCsvBtn');
         const exportSaftBtn = document.getElementById('exportSaftBtn');
-        // Use the single date range filter for export period
         const exportPeriodFilter = document.getElementById('dateRangeFilter'); 
 
-        if (exportCsvBtn && typeof window.exportInvoicesAsCsv === 'function' && exportPeriodFilter) { // Check if all elements and function exist
+        if (exportCsvBtn && typeof window.exportInvoicesAsCsv === 'function' && exportPeriodFilter) {
             exportCsvBtn.addEventListener('click', function() {
-                // Use the value from the single filter dropdown for export period
                 const period = exportPeriodFilter.value;
-                 // If custom is selected for export, use the dates from the modal inputs
                 if (period === 'custom') {
                     const startDate = startDateInput ? startDateInput.value : null;
                     const endDate = endDateInput ? endDateInput.value : null;
@@ -1271,7 +1255,6 @@
                          showNotification('Please select custom dates for export first', 'error');
                          return;
                     }
-                    // Pass an object with start and end dates for custom range
                     window.exportInvoicesAsCsv({ period: 'custom', startDate: startDate, endDate: endDate });
                 } else {
                     window.exportInvoicesAsCsv(period);
@@ -1279,11 +1262,9 @@
             });
         }
 
-        if (exportSaftBtn && typeof window.exportInvoicesAsSaft === 'function' && exportPeriodFilter) { // Check if all elements and function exist
+        if (exportSaftBtn && typeof window.exportInvoicesAsSaft === 'function' && exportPeriodFilter) {
             exportSaftBtn.addEventListener('click', function() {
-                 // Use the value from the single filter dropdown for export period
                 const period = exportPeriodFilter.value;
-                 // If custom is selected for export, use the dates from the modal inputs
                  if (period === 'custom') {
                     const startDate = startDateInput ? startDateInput.value : null;
                     const endDate = endDateInput ? endDateInput.value : null;
@@ -1291,14 +1272,12 @@
                          showNotification('Please select custom dates for export first', 'error');
                          return;
                     }
-                    // Pass an object with start and end dates for custom range
                     window.exportInvoicesAsSaft({ period: 'custom', startDate: startDate, endDate: endDate });
                 } else {
                     window.exportInvoicesAsSaft(period);
                 }
             });
         }
-
     });
     </script>
 </body>

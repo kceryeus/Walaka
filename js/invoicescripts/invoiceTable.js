@@ -23,7 +23,7 @@ const InvoiceTableModule = {
             }
 
             if (filters.clientId && filters.clientId !== 'all') {
-                queryBuilder = queryBuilder.eq('customer_id', filters.clientId);
+                queryBuilder = queryBuilder.eq('client_id', filters.clientId);
             }
 
             if (filters.dateRange && filters.dateRange !== 'all') {
@@ -57,7 +57,7 @@ const InvoiceTableModule = {
 
             if (filters.search) {
                 queryBuilder = queryBuilder.or(
-                    `invoice_number.ilike.%${filters.search}%,customer_name.ilike.%${filters.search}%`
+                    `invoiceNumber.ilike.%${filters.search}%,customer_name.ilike.%${filters.search}%`
                 );
             }
 
@@ -96,14 +96,14 @@ const InvoiceTableModule = {
             invoices.forEach(invoice => {
                 const row = `
                     <tr>
-                        <td>${invoice.invoice_number || ''}</td>
+                        <td>${invoice.invoiceNumber || ''}</td>
                         <td>${invoice.customer_name || ''}</td>
                         <td>${this.formatDate(invoice.issue_date)}</td>
                         <td>${this.formatDate(invoice.due_date)}</td>
                         <td>${this.formatCurrency(invoice.total_amount)}</td>
                         <td><span class="status ${invoice.status?.toLowerCase()}">${invoice.status || 'Pending'}</span></td>
                         <td class="actions">
-                            <button class="action-btn view-btn" data-invoice="${invoice.invoice_number}" title="View">
+                            <button class="action-btn view-btn" data-invoice="${invoice.invoiceNumber}" title="View">
                                 <i class="fas fa-eye"></i>
                             </button>
                             <button class="action-btn send-btn" title="Send">
@@ -423,7 +423,7 @@ const InvoiceTableModule = {
             if (this.currentFilters.searchTerm) {
                 const searchTerm = this.currentFilters.searchTerm.toLowerCase();
                 return (
-                    invoice.invoice_number.toLowerCase().includes(searchTerm) ||
+                    invoice.invoiceNumber.toLowerCase().includes(searchTerm) ||
                     invoice.customer_name.toLowerCase().includes(searchTerm) ||
                     invoice.status.toLowerCase().includes(searchTerm)
                 );

@@ -11,23 +11,31 @@ async function exportInvoicesAsCsv(period = 'all') {
         }
 
         // Get date range based on period
-        const { startDate, endDate } = getDateRangeFromPeriod(period);
+        let startDate, endDate;
+        
+        if (typeof period === 'object' && period.period === 'custom') {
+            startDate = new Date(period.startDate);
+            endDate = new Date(period.endDate);
+        } else {
+            const dateRange = getDateRangeFromPeriod(period);
+            startDate = dateRange.startDate;
+            endDate = dateRange.endDate;
+        }
         
         // Fetch invoices from Supabase
         let queryBuilder = window.supabase
             .from('invoices')
             .select(`
                 invoiceNumber,
-                customer_name,
+                client:clients(customer_name),
                 issue_date,
                 due_date,
                 currency,
                 subtotal,
-                total_vat,
+                vat_amount,
                 total_amount,
                 status,
-                payment_method,
-                payment_date,
+                payment_terms,
                 notes
             `);
 
@@ -58,49 +66,50 @@ async function exportInvoicesAsCsv(period = 'all') {
             'VAT',
             'Total',
             'Status',
-            'Payment Method',
-            'Payment Date',
+            'Payment Terms',
             'Notes'
         ];
 
-        const rows = invoices.map(inv => [
-            inv.invoiceNumber,
-            inv.customer_name,
-            formatDate(inv.issue_date),
-            formatDate(inv.due_date),
-            inv.currency,
-            formatNumber(inv.subtotal),
-            formatNumber(inv.total_vat),
-            formatNumber(inv.total_amount),
-            inv.status,
-            inv.payment_method || '',
-            inv.payment_date ? formatDate(inv.payment_date) : '',
-            inv.notes || ''
-        ]);
-
-        // Generate CSV content
         const csvContent = [
             headers.join(','),
-            ...rows.map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(','))
-        ].join('\r\n');
+            ...invoices.map(invoice => [
+                invoice.invoiceNumber,
+                invoice.client?.customer_name || '',
+                formatDate(invoice.issue_date),
+                formatDate(invoice.due_date),
+                invoice.currency,
+                invoice.subtotal,
+                invoice.vat_amount,
+                invoice.total_amount,
+                invoice.status,
+                invoice.payment_terms,
+                `"${(invoice.notes || '').replace(/"/g, '""')}"`
+            ].join(','))
+        ].join('\n');
 
         // Create and download file
         const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
         const url = URL.createObjectURL(blob);
         const link = document.createElement('a');
         link.href = url;
-        link.download = `invoices_export_${period}_${formatDate(new Date())}.csv`;
+        link.download = `Invoices_${formatDate(new Date())}.csv`;
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
         URL.revokeObjectURL(url);
 
+        // Reset button state
+        if (exportBtn) {
+            exportBtn.disabled = false;
+            exportBtn.innerHTML = '<i class="fas fa-file-csv"></i> Export CSV';
+        }
+
         showNotification('CSV export completed successfully');
     } catch (error) {
-        console.error('Export error:', error);
-        showNotification('Error exporting invoices: ' + error.message);
-    } finally {
-        // Reset button state
+        console.error('Error exporting CSV:', error);
+        showNotification('Error exporting CSV: ' + error.message);
+        
+        // Reset button state on error
         const exportBtn = document.getElementById('exportCsvBtn');
         if (exportBtn) {
             exportBtn.disabled = false;
@@ -119,7 +128,16 @@ async function exportInvoicesAsSaft(period = 'all') {
         }
 
         // Get date range based on period
-        const { startDate, endDate } = getDateRangeFromPeriod(period);
+        let startDate, endDate;
+        
+        if (typeof period === 'object' && period.period === 'custom') {
+            startDate = new Date(period.startDate);
+            endDate = new Date(period.endDate);
+        } else {
+            const dateRange = getDateRangeFromPeriod(period);
+            startDate = dateRange.startDate;
+            endDate = dateRange.endDate;
+        }
         
         // Fetch invoices from Supabase
         let queryBuilder = window.supabase
@@ -130,14 +148,10 @@ async function exportInvoicesAsSaft(period = 'all') {
             `);
 
         // Apply date filter if not 'all'
-        if (period !== 'all' && period.period !== 'custom') {
+        if (period !== 'all') {
             queryBuilder = queryBuilder
                 .gte('issue_date', startDate.toISOString())
                 .lte('issue_date', endDate.toISOString());
-        } else if (period.period === 'custom') {
-             queryBuilder = queryBuilder
-                .gte('issue_date', new Date(period.startDate).toISOString())
-                .lte('issue_date', new Date(period.endDate).toISOString());
         }
 
         const { data: invoices, error } = await queryBuilder;
@@ -163,12 +177,18 @@ async function exportInvoicesAsSaft(period = 'all') {
         document.body.removeChild(link);
         URL.revokeObjectURL(url);
 
-        showNotification('SAFT file export completed successfully');
-    } catch (error) {
-        console.error('Export error:', error);
-        showNotification('Error exporting SAFT file: ' + error.message);
-    } finally {
         // Reset button state
+        if (exportBtn) {
+            exportBtn.disabled = false;
+            exportBtn.innerHTML = '<i class="fas fa-file-code"></i> Export SAFT';
+        }
+
+        showNotification('SAFT export completed successfully');
+    } catch (error) {
+        console.error('Error exporting SAFT:', error);
+        showNotification('Error exporting SAFT: ' + error.message);
+        
+        // Reset button state on error
         const exportBtn = document.getElementById('exportSaftBtn');
         if (exportBtn) {
             exportBtn.disabled = false;
@@ -217,14 +237,17 @@ function getDateRangeFromPeriod(period) {
     const startDate = new Date();
 
     switch (period) {
+        case 'today':
+            startDate.setHours(0, 0, 0, 0);
+            break;
+        case 'week':
+            startDate.setDate(startDate.getDate() - 7);
+            break;
         case 'month':
             startDate.setMonth(startDate.getMonth() - 1);
             break;
         case 'quarter':
             startDate.setMonth(startDate.getMonth() - 3);
-            break;
-        case 'semester':
-            startDate.setMonth(startDate.getMonth() - 6);
             break;
         case 'year':
             startDate.setFullYear(startDate.getFullYear() - 1);
