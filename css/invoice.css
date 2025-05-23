@@ -774,24 +774,36 @@
     background-color: #f0f0f0;
   }
   
-.status-dropdown {
-    position: absolute;
-    background: white;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-    z-index: 1000;
+.dropdown-menu {
+    position: fixed; /* Use fixed position to avoid issues with table scrolling */
+    background-color: var(--background-color, #fff); /* Use a variable or default */
+    border: 1px solid var(--border-color, #e0e0e0); /* Use a variable or default */
+    border-radius: var(--card-radius); /* Use the defined card radius */
+    box-shadow: var(--box-shadow); /* Use the defined box shadow */
+    z-index: 1000; /* Ensure it's above other content */
     min-width: 150px;
+    display: none; /* Hidden by default, shown by JS */
+    padding: 0.5rem 0; /* Add some vertical padding */
 }
 
 .dropdown-item {
     padding: 8px 12px;
     cursor: pointer;
-    font-size: 14px;
+    font-size: 0.9rem; /* Slightly smaller font size */
+    color: var(--text-color, #333); /* Use a variable or default */
+    display: flex; /* Use flexbox for icon and text alignment */
+    align-items: center;
+    gap: 0.5rem; /* Space between icon and text */
 }
 
 .dropdown-item:hover {
-    background-color: #f5f5f5;
+    background-color: var(--hover-background-color, #f0f0f0); /* Use a variable or default */
+    color: var(--primary-color, #007ec7); /* Highlight text on hover */
+}
+
+.dropdown-item i {
+    width: 1rem; /* Fixed width for icons */
+    text-align: center;
 }
 
 .table-filters {

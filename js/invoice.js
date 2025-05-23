@@ -799,7 +799,7 @@ async function markInvoiceAsPaid(invoiceNumber) {
         // Update invoice status
         const { error: updateError } = await window.supabase
             .from('invoices')
-            .update({ status: 'paid', paid_date: new Date().toISOString() })
+            .update({ status: 'paid', payment_date: new Date().toISOString() })
             .eq('invoiceNumber', invoiceNumber);
 
         if (updateError) throw updateError;
@@ -873,3 +873,42 @@ function getInvoiceData() {
         paymentTerms: document.getElementById('paymentTerms').value
     };
 }
+
+// Add fetchAndDisplayInvoices to global scope
+window.fetchAndDisplayInvoices = async function(page = 1, limit = 10, filters = {}) {
+    if (window.InvoiceTableModule) {
+        await window.InvoiceTableModule.fetchAndDisplayInvoices(page, limit, filters);
+        window.InvoiceTableModule.setupSorting(); // Setup sorting after table is displayed
+    } else {
+        console.error('InvoiceTableModule not found');
+    }
+};
+
+// Initialize InvoiceTableModule
+document.addEventListener('DOMContentLoaded', async function() {
+    try {
+        // Initialize table filters first
+        if (typeof window.setupTableFilters === 'function') {
+            window.setupTableFilters();
+            console.log('Table filters initialized successfully');
+        }
+
+        // Initialize invoice table
+        if (typeof window.fetchAndDisplayInvoices === 'function' && window.InvoiceTableModule) {
+            await window.fetchAndDisplayInvoices(1, 10, {});
+            console.log('Invoice table initialized successfully');
+        } else {
+            console.error('Invoice table functions not found or InvoiceTableModule not available');
+        }
+
+        // Initialize other components
+        if (window.invoiceActions) {
+            window.invoiceActions.setupEventListeners();
+            console.log('Invoice actions initialized successfully');
+        }
+
+    } catch (error) {
+        console.error('Error during initialization:', error);
+        showNotification('Error initializing application: ' + error.message);
+    }
+});
