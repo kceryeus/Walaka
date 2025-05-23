@@ -38,6 +38,263 @@ const TEMPLATE_PREVIEW_DATA = {
     ]
 };
 
+// Template definitions with styles and layout
+const TEMPLATES = {
+    'classic': {
+        name: 'Classic',
+        styles: `
+            .invoice-container {
+                max-width: 800px;
+                margin: 20px auto;
+                padding: 20px;
+                font-family: 'Inter', sans-serif;
+            }
+            .invoice-header {
+                display: flex;
+                justify-content: space-between;
+                margin-bottom: 40px;
+                border-bottom: 2px solid #eee;
+                padding-bottom: 20px;
+            }
+            .company-info {
+                flex: 1;
+            }
+            .invoice-details {
+                text-align: right;
+            }
+            .client-info {
+                margin-bottom: 30px;
+                padding: 20px;
+                background: #f9f9f9;
+                border-radius: 5px;
+            }
+            .invoice-items {
+                width: 100%;
+                border-collapse: collapse;
+                margin: 20px 0;
+            }
+            .invoice-items th {
+                background: #f5f5f5;
+                padding: 12px;
+                text-align: left;
+            }
+            .invoice-items td {
+                padding: 12px;
+                border-bottom: 1px solid #eee;
+            }
+            .invoice-totals {
+                text-align: right;
+                margin-top: 30px;
+            }
+            .total-row {
+                margin: 5px 0;
+            }
+            .grand-total {
+                font-weight: bold;
+                font-size: 1.2em;
+                border-top: 2px solid #eee;
+                padding-top: 10px;
+            }
+            .notes {
+                margin-top: 40px;
+                padding: 20px;
+                background: #f9f9f9;
+                border-radius: 5px;
+            }
+        `,
+        layout: `
+            <div class="invoice-container">
+                <div class="invoice-header">
+                    <div class="company-info">
+                        <h1 id="company-name">Company Name</h1>
+                        <p id="company-address">Company Address</p>
+                        <p id="company-contact">Email: <span id="company-email"></span> | Phone: <span id="company-phone"></span></p>
+                        <p>NUIT: <span id="company-nuit"></span></p>
+                    </div>
+                    <div class="invoice-details">
+                        <h2>INVOICE</h2>
+                        <p>Invoice #: <span id="invoice-number"></span></p>
+                        <p>Date: <span id="issue-date"></span></p>
+                        <p>Due Date: <span id="due-date"></span></p>
+                    </div>
+                </div>
+                
+                <div class="client-info">
+                    <h3>Bill To:</h3>
+                    <p id="client-name">Client Name</p>
+                    <p id="client-address">Client Address</p>
+                    <p>NUIT: <span id="client-nuit"></span></p>
+                    <p>Email: <span id="client-email"></span></p>
+                    <p>Contact: <span id="client-contact"></span></p>
+                </div>
+                
+                <table class="invoice-items">
+                    <thead>
+                        <tr>
+                            <th>Description</th>
+                            <th>Quantity</th>
+                            <th>Unit Price</th>
+                            <th>VAT (16%)</th>
+                            <th>Total</th>
+                        </tr>
+                    </thead>
+                    <tbody id="invoice-items-body">
+                        <!-- Items will be inserted here -->
+                    </tbody>
+                </table>
+                
+                <div class="invoice-totals">
+                    <div class="total-row">Subtotal: <span id="subtotal"></span></div>
+                    <div class="total-row">VAT: <span id="total-vat"></span></div>
+                    <div class="total-row">Discount: <span id="discount"></span></div>
+                    <div class="total-row grand-total">Total: <span id="total"></span></div>
+                </div>
+                
+                <div class="notes">
+                    <h4>Notes:</h4>
+                    <p id="notes"></p>
+                </div>
+            </div>
+        `
+    },
+    'modern': {
+        name: 'Modern',
+        styles: `
+            .invoice-container {
+                max-width: 800px;
+                margin: 20px auto;
+                padding: 30px;
+                font-family: 'Inter', sans-serif;
+                background: white;
+                box-shadow: 0 0 20px rgba(0,0,0,0.1);
+                border-radius: 10px;
+            }
+            .invoice-header {
+                display: flex;
+                justify-content: space-between;
+                margin-bottom: 40px;
+                padding-bottom: 20px;
+                border-bottom: 3px solid #007ec7;
+            }
+            .company-info {
+                flex: 1;
+            }
+            .invoice-details {
+                text-align: right;
+                background: #007ec7;
+                color: white;
+                padding: 20px;
+                border-radius: 5px;
+            }
+            .client-info {
+                margin-bottom: 30px;
+                padding: 25px;
+                background: #f8f9fa;
+                border-radius: 8px;
+                border-left: 4px solid #007ec7;
+            }
+            .invoice-items {
+                width: 100%;
+                border-collapse: separate;
+                border-spacing: 0;
+                margin: 20px 0;
+            }
+            .invoice-items th {
+                background: #007ec7;
+                color: white;
+                padding: 15px;
+                text-align: left;
+            }
+            .invoice-items td {
+                padding: 15px;
+                border-bottom: 1px solid #eee;
+            }
+            .invoice-items tr:hover {
+                background: #f8f9fa;
+            }
+            .invoice-totals {
+                text-align: right;
+                margin-top: 30px;
+                padding: 20px;
+                background: #f8f9fa;
+                border-radius: 8px;
+            }
+            .total-row {
+                margin: 8px 0;
+            }
+            .grand-total {
+                font-weight: bold;
+                font-size: 1.3em;
+                color: #007ec7;
+                border-top: 2px solid #007ec7;
+                padding-top: 15px;
+                margin-top: 15px;
+            }
+            .notes {
+                margin-top: 40px;
+                padding: 25px;
+                background: #f8f9fa;
+                border-radius: 8px;
+                border-left: 4px solid #007ec7;
+            }
+        `,
+        layout: `
+            <div class="invoice-container">
+                <div class="invoice-header">
+                    <div class="company-info">
+                        <h1 id="company-name">Company Name</h1>
+                        <p id="company-address">Company Address</p>
+                        <p id="company-contact">Email: <span id="company-email"></span> | Phone: <span id="company-phone"></span></p>
+                        <p>NUIT: <span id="company-nuit"></span></p>
+                    </div>
+                    <div class="invoice-details">
+                        <h2>INVOICE</h2>
+                        <p>Invoice #: <span id="invoice-number"></span></p>
+                        <p>Date: <span id="issue-date"></span></p>
+                        <p>Due Date: <span id="due-date"></span></p>
+                    </div>
+                </div>
+                
+                <div class="client-info">
+                    <h3>Bill To:</h3>
+                    <p id="client-name">Client Name</p>
+                    <p id="client-address">Client Address</p>
+                    <p>NUIT: <span id="client-nuit"></span></p>
+                    <p>Email: <span id="client-email"></span></p>
+                    <p>Contact: <span id="client-contact"></span></p>
+                </div>
+                
+                <table class="invoice-items">
+                    <thead>
+                        <tr>
+                            <th>Description</th>
+                            <th>Quantity</th>
+                            <th>Unit Price</th>
+                            <th>VAT (16%)</th>
+                            <th>Total</th>
+                        </tr>
+                    </thead>
+                    <tbody id="invoice-items-body">
+                        <!-- Items will be inserted here -->
+                    </tbody>
+                </table>
+                
+                <div class="invoice-totals">
+                    <div class="total-row">Subtotal: <span id="subtotal"></span></div>
+                    <div class="total-row">VAT: <span id="total-vat"></span></div>
+                    <div class="total-row">Discount: <span id="discount"></span></div>
+                    <div class="total-row grand-total">Total: <span id="total"></span></div>
+                </div>
+                
+                <div class="notes">
+                    <h4>Notes:</h4>
+                    <p id="notes"></p>
+                </div>
+            </div>
+        `
+    }
+};
+
 /**
  * Load a template by name
  * @param {string} templateName - The name of the template to load
@@ -46,8 +303,8 @@ const TEMPLATE_PREVIEW_DATA = {
 function loadTemplate(templateName) {
     const templateFile = TEMPLATE_PATHS[templateName] || 'template01.html'; // Default to classic
     
-    // Load from templates directory
-    return fetch(`templates/${templateFile}`)
+    // Load from root directory
+    return fetch(templateFile)
         .then(response => {
             if (!response.ok) throw new Error('Template not found');
             return response.text();
@@ -244,17 +501,29 @@ function setDataField(doc, id, value) {
 async function generateInvoiceHTML(invoiceData) {
     try {
         // Get selected template
-        const selectedTemplate = localStorage.getItem('selectedInvoiceTemplate') || 'classic';
-        const templatePath = TEMPLATE_PATHS[selectedTemplate];
-
-        // Load template
-        const response = await fetch(`/templates/${templatePath}`);
-        if (!response.ok) throw new Error('Template not found');
+        const selectedTemplate = await window.invoiceTemplateManager.getSelectedTemplate();
+        const template = TEMPLATES[selectedTemplate] || TEMPLATES['classic'];
         
-        const templateContent = await response.text();
+        // Create the full HTML document with styles
+        const html = `
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <meta charset="UTF-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <title>Invoice</title>
+                <style>
+                    ${template.styles}
+                </style>
+            </head>
+            <body>
+                ${template.layout}
+            </body>
+            </html>
+        `;
         
         // Populate template with data
-        return await populateTemplate(templateContent, invoiceData);
+        return await populateTemplate(html, invoiceData);
     } catch (error) {
         console.error('Error generating invoice HTML:', error);
         throw error;
@@ -268,26 +537,14 @@ async function generateInvoiceHTML(invoiceData) {
  */
 async function previewInvoice(invoiceData) {
     try {
-        // Load template based on selected template or default
-        const templateName = invoiceData.template?.name || 'template01';
-        const templateContent = await loadTemplate(templateName);
-        
-        // Create temporary container
-        const container = document.createElement('div');
-        container.innerHTML = templateContent;
-        
-        // Populate template with data
-        populateTemplate(container, templateContent, invoiceData);
-        
-        // Insert into preview container
+        const html = await generateInvoiceHTML(invoiceData);
         const previewContainer = document.getElementById('invoicePreviewContent');
         if (previewContainer) {
-            previewContainer.innerHTML = '';
-            previewContainer.appendChild(container);
+            previewContainer.innerHTML = html;
         }
-        
     } catch (error) {
         console.error('Error previewing invoice:', error);
+        throw error;
     }
 }
 
@@ -298,7 +555,7 @@ async function previewInvoice(invoiceData) {
  */
 async function previewTemplate(templateName) {
     try {
-        const templateContent = await loadTemplate(templateName);
+        const template = TEMPLATES[templateName] || TEMPLATES['classic'];
         const previewContainer = document.getElementById('template-preview-container');
         
         if (!previewContainer) return;
@@ -311,11 +568,26 @@ async function previewTemplate(templateName) {
         // Write template content to iframe
         const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
         iframeDoc.open();
-        iframeDoc.write(templateContent);
+        iframeDoc.write(`
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <meta charset="UTF-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <title>Template Preview</title>
+                <style>
+                    ${template.styles}
+                </style>
+            </head>
+            <body>
+                ${template.layout}
+            </body>
+            </html>
+        `);
         iframeDoc.close();
         
         // Populate template with preview data
-        await populateTemplate(iframeDoc, templateContent, TEMPLATE_PREVIEW_DATA);
+        await populateTemplate(iframeDoc, TEMPLATE_PREVIEW_DATA);
         
         // Adjust iframe height to content
         iframe.style.height = iframeDoc.body.scrollHeight + 'px';
@@ -342,11 +614,40 @@ function getSelectedTemplate() {
 
 // Export functions for external use
 window.invoiceTemplateManager = {
-    loadTemplate,
     generateInvoiceHTML,
     populateTemplate,
     previewInvoice,
     previewTemplate,
-    saveTemplateSelection,
-    getSelectedTemplate
+    getSelectedTemplate: async function() {
+        try {
+            const { data: { session } } = await window.supabase.auth.getSession();
+            if (!session || !session.user) return 'classic';
+
+            const { data: invoiceData } = await window.supabase
+                .from('invoice_settings')
+                .select('template')
+                .eq('user_id', session.user.id)
+                .single();
+
+            return invoiceData?.template || 'classic';
+        } catch (error) {
+            console.error('Error getting template:', error);
+            return 'classic';
+        }
+    },
+    saveTemplateSelection: async function(template) {
+        try {
+            const { data: { session } } = await window.supabase.auth.getSession();
+            if (!session || !session.user) return;
+
+            await window.supabase
+                .from('invoice_settings')
+                .upsert({
+                    user_id: session.user.id,
+                    template: template
+                }, { onConflict: 'user_id' });
+        } catch (error) {
+            console.error('Error saving template:', error);
+        }
+    }
 };

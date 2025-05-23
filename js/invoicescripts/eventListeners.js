@@ -91,14 +91,15 @@ function setupEventListeners() {
     }
 
     // Preview button
-    const previewInvoiceBtn = document.getElementById('previewInvoiceBtn');
-    if (previewInvoiceBtn) {
-        previewInvoiceBtn.addEventListener('click', async function() {
+    const previewBtn = document.getElementById('previewInvoiceBtn');
+    if (previewBtn) {
+        previewBtn.addEventListener('click', async function() {
             try {
-                await previewInvoice();
+                const invoiceData = collectInvoiceData();
+                await previewInvoice(invoiceData);
             } catch (error) {
-                console.error('Error generating preview:', error);
-                showNotification('Error generating preview: ' + error.message);
+                console.error('Error in preview:', error);
+                showNotification('Error: ' + error.message);
             }
         });
     }

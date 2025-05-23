@@ -80,43 +80,60 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Add template manager object
   window.invoiceTemplateManager = {
     getSelectedTemplate: async function() {
-      try {
-        const { data: { session } } = await window.supabase.auth.getSession();
-        if (!session || !session.user) return 'classic';
+        try {
+            const { data: { session } } = await window.supabase.auth.getSession();
+            if (!session || !session.user) return 'template01';
 
-        const { data: invoiceData } = await window.supabase
-          .from('invoice_settings')
-          .select('template')
-          .eq('user_id', session.user.id)
-          .single();
+            const { data: invoiceData } = await window.supabase
+                .from('invoice_settings')
+                .select('template')
+                .eq('user_id', session.user.id)
+                .single();
 
-        return invoiceData?.template || 'classic';
-      } catch (error) {
-        console.error('Error getting template:', error);
-        return 'classic';
-      }
+            return invoiceData?.template || 'template01';
+        } catch (error) {
+            console.error('Error getting template:', error);
+            return 'template01';
+        }
     },
     saveTemplateSelection: async function(template) {
-      try {
-        const { data: { session } } = await window.supabase.auth.getSession();
-        if (!session || !session.user) return;
+        try {
+            const { data: { session } } = await window.supabase.auth.getSession();
+            if (!session || !session.user) return;
 
-        await window.supabase
-          .from('invoice_settings')
-          .upsert({
-            user_id: session.user.id,
-            template: template
-          }, { onConflict: 'user_id' });
-      } catch (error) {
-        console.error('Error saving template:', error);
-      }
+            await window.supabase
+                .from('invoice_settings')
+                .upsert({
+                    user_id: session.user.id,
+                    template: template
+                }, { onConflict: 'user_id' });
+        } catch (error) {
+            console.error('Error saving template:', error);
+        }
+    },
+    loadTemplate: async function(templateName) {
+        const templateFile = {
+            'template01': 'template01.html',
+            'template02': 'template02.html',
+            'template03': 'template03.html',
+            'template04': 'template04.html'
+        }[templateName] || 'template01.html';
+
+        try {
+            const response = await fetch(templateFile);
+            if (!response.ok) throw new Error('Template not found');
+            return await response.text();
+        } catch (error) {
+            console.error('Error loading template:', error);
+            throw error;
+        }
     },
     previewTemplate: function(template) {
-      // For now, just log the template selection
-      console.log('Previewing template:', template);
-      // You can add actual preview logic here later
+        // For now, just log the template selection
+        console.log('Previewing template:', template);
+        // You can add actual preview logic here later
     }
-  };
+};
 
   async function fetchUserSettings() {
     try {
@@ -343,13 +360,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     invoicePrefixInput.value = invoiceSettings.prefix;
     invoiceNextNumberInput.value = invoiceSettings.nextNumber;
 
-    // Get the selected template from localStorage or use default
-    // Prioritize value from invoiceSettings if it exists
-    const selectedTemplate = invoiceSettings.template || window.invoiceTemplateManager.getSelectedTemplate();
-    invoiceTemplateInput.value = selectedTemplate;
-
-    // Preview the selected template
-    window.invoiceTemplateManager.previewTemplate(selectedTemplate);
+    // Get the selected template from Supabase
+    window.invoiceTemplateManager.getSelectedTemplate().then(template => {
+        invoiceTemplateInput.value = template;
+        // Preview the selected template
+        window.invoiceTemplateManager.previewTemplate(template);
+    });
 
     invoiceColorInput.value = invoiceSettings.color;
     invoiceColorValue.textContent = invoiceSettings.color;
@@ -1630,24 +1646,29 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Template selection
     const templateSelect = document.getElementById('invoice-template');
     if (templateSelect) {
-      console.log('Template select element found:', templateSelect);
-      
-      // Add change event listener
-      templateSelect.addEventListener('change', function() {
-        const selectedTemplateValue = this.value;
-        console.log('Template changed to:', selectedTemplateValue);
+        // Populate template options
+        const templates = {
+            'classic': 'Classic',
+            'modern': 'Modern'
+        };
         
-        // Save to localStorage
-        window.invoiceTemplateManager.saveTemplateSelection(selectedTemplateValue);
+        templateSelect.innerHTML = Object.entries(templates)
+            .map(([value, label]) => `<option value="${value}">${label}</option>`)
+            .join('');
         
-        // Preview the template
-        window.invoiceTemplateManager.previewTemplate(selectedTemplateValue);
-        
-        // Show success message
-        showToast('success', 'Template Updated', `Invoice template changed to ${selectedTemplateValue}`);
-      });
-    } else {
-      console.warn('Template select element not found!');
+        // Add change event listener
+        templateSelect.addEventListener('change', function() {
+            const selectedTemplate = this.value;
+            
+            // Save to Supabase
+            window.invoiceTemplateManager.saveTemplateSelection(selectedTemplate);
+            
+            // Preview the template
+            window.invoiceTemplateManager.previewTemplate(selectedTemplate);
+            
+            // Show success message
+            showToast('success', 'Template Updated', `Invoice template changed to ${templates[selectedTemplate]}`);
+        });
     }
     
     // Save invoice settings

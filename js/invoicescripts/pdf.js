@@ -87,14 +87,41 @@ async function generatePDF(invoiceData) {
     }
 }
 
+/**
+ * Generate invoice HTML from data
+ * @param {Object} invoiceData - The invoice data
+ * @returns {Promise<string>} The generated HTML
+ */
 async function generateInvoiceHTML(invoiceData) {
-    // Get selected template
-    const selectedTemplate = localStorage.getItem('selectedInvoiceTemplate') || 'classic';
-    // Use loadTemplate from templateManager
-    const templateContent = await window.invoiceTemplateManager.loadTemplate(selectedTemplate);
-
-    // Populate template with data using populateTemplate from templateManager
-    return await window.invoiceTemplateManager.populateTemplate(templateContent, invoiceData);
+    try {
+        // Get selected template
+        const selectedTemplate = await window.invoiceTemplateManager.getSelectedTemplate();
+        const template = await window.invoiceTemplateManager.getTemplate(selectedTemplate);
+        
+        // Create the full HTML document with styles
+        const html = `
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <meta charset="UTF-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <title>Invoice</title>
+                <style>
+                    ${template.styles}
+                </style>
+            </head>
+            <body>
+                ${template.layout}
+            </body>
+            </html>
+        `;
+        
+        // Populate template with data
+        return await populateTemplate(html, invoiceData);
+    } catch (error) {
+        console.error('Error generating invoice HTML:', error);
+        throw error;
+    }
 }
 
 // Attach to window for global access
