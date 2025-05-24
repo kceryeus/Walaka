@@ -32,9 +32,22 @@ document.addEventListener('DOMContentLoaded', function() {
     // Menu toggle functionality
     const menuToggle = document.querySelector('.menu-toggle');
     const sidebar = document.querySelector('.sidebar');
-    if (menuToggle && sidebar) {
+    const mainContent = document.querySelector('.main-content');
+    
+    if (menuToggle && sidebar && mainContent) {
         menuToggle.addEventListener('click', () => {
             sidebar.classList.toggle('collapsed');
+            mainContent.classList.toggle('expanded');
+            document.body.classList.toggle('sidebar-collapsed');
+        });
+    }
+
+    // Initialize notification bell
+    const notificationBell = document.querySelector('.notification-bell');
+    if (notificationBell) {
+        notificationBell.addEventListener('click', () => {
+            // Add notification functionality here
+            console.log('Notification bell clicked');
         });
     }
 });
@@ -42,7 +55,6 @@ document.addEventListener('DOMContentLoaded', function() {
 // Function to display error messages
 function displayErrorMessage(message) {
     console.error(message);
-    // You can implement a more user-friendly error display here
     const errorDiv = document.createElement('div');
     errorDiv.className = 'error-message';
     errorDiv.textContent = message;
@@ -119,11 +131,7 @@ async function initializeDashboard() {
         updateMetricsDisplay(metrics);
     } catch (error) {
         console.error('Error initializing dashboard:', error);
-        // Show a user-friendly error message
-        const errorMessage = document.createElement('div');
-        errorMessage.className = 'error-message';
-        errorMessage.textContent = 'Unable to load dashboard data. Please try refreshing the page.';
-        document.querySelector('.main-content').prepend(errorMessage);
+        displayErrorMessage('Unable to load dashboard data. Please try refreshing the page.');
     }
 }
 

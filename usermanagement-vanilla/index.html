@@ -6,8 +6,142 @@
     <title>User Management</title>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/sidebar.css">
+    <link rel="stylesheet" href="css/topbar-menu.css">
 </head>
 <body class="bg-gray-100">
+    <div class="dashboard-container">
+        <!-- Sidebar Menu -->
+        <nav class="sidebar">
+            <div class="logo">
+                <i class="fas fa-chart-line"></i>
+                <span>WALAKA</span>
+            </div>
+            
+            <div class="nav-menu">
+                <a href="../dashboard.html" class="nav-item">
+                    <i class="fas fa-home"></i>
+                    <span>Dashboard</span>
+                </a>
+                
+                <div class="nav-section">
+                    <h3>Facturação</h3>
+                </div>
+                <a href="../invoices.html" class="nav-item active">
+                    <i class="fas fa-file-invoice-dollar"></i>
+                    <span>Facturas</span>
+                </a>
+
+                <a href="../clients/clients.html" class="nav-item">
+                    <i class="fas fa-users"></i>
+                    <span>Clientes</span>
+                </a>
+
+                <a href="../products.html" class="nav-item">
+                    <i class="fas fa-shopping-cart"></i>
+                    <span>Produtos</span>
+                </a>
+                
+                <div class="nav-section">
+                    <h3>Comercial</h3>
+                </div>
+                <a href="#" class="nav-item">
+                    <i class="fas fa-boxes"></i>
+                    <span>Inventário</span>
+                </a>
+                <a href="#" class="nav-item">
+                    <i class="fas fa-truck"></i>
+                    <span>Fornecedores</span>
+                </a>
+                <a href="#" class="nav-item">
+                    <i class="fas fa-exchange-alt"></i>
+                    <span>Movimentos</span>
+                </a>
+                <a href="#" class="nav-item">
+                    <i class="fas fa-money-bill-wave"></i>
+                    <span>Despesas</span>
+                </a>
+                <div class="nav-section">
+                    <h3>Contabilidade</h3>
+                 <a href="#" class="nav-item">
+                      <i class="fas fa-book"></i>
+                      <span>Lançamentos</span> 
+                    </a>
+                    <a href="#" class="nav-item">
+                      <i class="fas fa-list-alt"></i>
+                     <span>Plano de Contas</span>
+                    </a>
+                    <a href="#" class="nav-item">
+                      <i class="fas fa-percent"></i>
+                      <span>Impostos</span> 
+                    </a>
+                  </div>
+
+                <div class="nav-section">
+                    <h3>Finanças</h3>
+                </div>
+               
+                <a href="#" class="nav-item">
+                    <i class="fas fa-chart-pie"></i>
+                    <span>Relatórios</span>
+                </a>
+                <a href="#" class="nav-item">
+                    <i class="fas fa-chart-line"></i>
+                    Indicadores-chave
+                  </a>
+
+                <div class="nav-section">
+                    <h3>Settings</h3>
+                </div>
+                <a href="../settings.html" class="nav-item">
+                    <i class="fas fa-cog"></i>
+                    <span>Settings</span>
+                </a>
+                <a href="index.html" class="nav-item">
+                    <i class="fas fa-user-cog"></i>
+                    <span>Gestão de Utilizadores</span>
+                </a>
+                <a href="#" class="nav-item">
+                    <i class="fas fa-question-circle"></i>
+                    <span>Ajuda</span>
+                </a>
+            </div>
+        </nav>
+        
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Top Bar -->
+            <div class="top-bar">
+                <button class="menu-toggle">
+                    <i class="fas fa-bars"></i>
+                </button>
+                
+                <div class="user-menu" style="margin-left:auto;">
+                    <div class="notification-bell">
+                        <i class="fas fa-bell"></i>
+                        <span class="badge">3</span>
+                    </div>
+                    
+                    <div class="user-profile" id="userProfile">
+                        <div class="avatar">
+                            <i class="fas fa-user"></i>
+                        </div>
+                        <span id="user-displayname">Loading...</span>
+                        <div class="dropdown-menu" id="userDropdown">
+                            <a href="#">
+                                <i class="fas fa-user-circle"></i> My Profile
+                            </a>
+                            <a href="settings.html">
+                                <i class="fas fa-cog"></i> Settings
+                            </a>
+                            <a href="#">
+                                <i class="fas fa-sign-out-alt"></i> Logout
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
     <div class="min-h-screen">
         <header class="bg-white shadow">
             <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
@@ -16,7 +150,7 @@
         </header>
 
         <main>
-            <div class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+            <div class="page-content">
                 <!-- Page Header -->
                 <div class="flex justify-between items-center mb-6">
                     <div>
@@ -89,7 +223,8 @@
                     <div>
                         <label for="role" class="block text-sm font-medium text-gray-700">Role</label>
                         <select id="role" name="role" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-                            <option value="user">User</option>
+                            <option value="viewer">Viewer</option>
+                            <option value="basic">Basic</option>
                             <option value="admin">Admin</option>
                         </select>
                     </div>
@@ -130,6 +265,8 @@
     <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="js/config.js"></script>
+    <script src="js/displayname.js"></script>
+    <script src="js/dashboard.js"></script>
     <script src="js/toast.js"></script>
     <script src="js/api.js"></script>
     <script src="js/ui.js"></script>

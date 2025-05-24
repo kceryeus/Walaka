@@ -160,45 +160,26 @@ class UI {
             row.innerHTML = `
                 <td class="px-6 py-4 whitespace-nowrap">
                     <div class="flex items-center">
-                        <div>
+                        <div class="ml-4">
                             <div class="text-sm font-medium text-gray-900">${user.username}</div>
                             <div class="text-sm text-gray-500">${user.email}</div>
                         </div>
                     </div>
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap">
-                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
-                        ${user.role}
-                    </span>
+                    <div class="text-sm text-gray-900">${user.role}</div>
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap">
-                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                        user.is_active
-                            ? 'bg-green-100 text-green-800'
-                            : 'bg-red-100 text-red-800'
-                    }">
-                        ${user.is_active ? 'Active' : 'Inactive'}
+                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${user.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}">
+                        ${user.status === 'active' ? 'Active' : 'Inactive'}
                     </span>
                 </td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                    <button
-                        class="text-blue-600 hover:text-blue-900 mr-4"
-                        onclick="ui.showUserModal(${JSON.stringify(user)})"
-                    >
-                        Edit
-                    </button>
-                    <button
-                        class="text-blue-600 hover:text-blue-900 mr-4"
-                        onclick="ui.showConfirmationModal(${JSON.stringify(user)}, 'toggle')"
-                    >
-                        ${user.is_active ? 'Deactivate' : 'Activate'}
-                    </button>
-                    <button
-                        class="text-red-600 hover:text-red-900"
-                        onclick="ui.showConfirmationModal(${JSON.stringify(user)}, 'delete')"
-                    >
-                        Delete
-                    </button>
+                <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                    <a href="#" class="text-indigo-600 hover:text-indigo-900 mr-4" onclick='ui.showUserModal(${JSON.stringify(user).replace(/'/g, "&apos;")})'>Edit</a>
+                    <a href="#" class="text-red-600 hover:text-red-900 mr-4" onclick='ui.showConfirmationModal(${JSON.stringify(user).replace(/'/g, "&apos;")}, "delete")'>Delete</a>
+                    <a href="#" class="text-blue-600 hover:text-blue-900" onclick='ui.showConfirmationModal(${JSON.stringify(user).replace(/'/g, "&apos;")}, "toggle")'>
+                        ${user.status === 'active' ? 'Deactivate' : 'Activate'}
+                    </a>
                 </td>
             `;
             this.usersTableBody.appendChild(row);

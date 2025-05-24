@@ -19,7 +19,7 @@
                     displayName = userRecord.username;
                 }
             } catch (e) {
-                // fallback to email
+                console.error('Error fetching user record:', e);
             }
 
             const userSpan = document.getElementById('user-displayname');
@@ -38,29 +38,50 @@
         });
 
         // Dropdown open/close logic for user menu
-        const userProfile = document.getElementById('userProfile');
-        const userDropdown = document.getElementById('userDropdown');
+        document.addEventListener('DOMContentLoaded', () => {
+            const userProfile = document.getElementById('userProfile');
+            const userDropdown = document.getElementById('userDropdown');
 
-        let dropdownTimeout;
+            if (!userProfile || !userDropdown) return;
 
-        function openDropdown() {
-            clearTimeout(dropdownTimeout);
-            userProfile.classList.add('open');
-        }
-        function closeDropdown() {
-            dropdownTimeout = setTimeout(() => {
-                userProfile.classList.remove('open');
-            }, 150);
-        }
+            let dropdownTimeout;
 
-        userProfile.addEventListener('mouseenter', openDropdown);
-        userProfile.addEventListener('mouseleave', closeDropdown);
-        userDropdown.addEventListener('mouseenter', openDropdown);
-        userDropdown.addEventListener('mouseleave', closeDropdown);
-
-        // Optional: close on click outside
-        document.addEventListener('click', function(e) {
-            if (!userProfile.contains(e.target)) {
-                userProfile.classList.remove('open');
+            function openDropdown() {
+                clearTimeout(dropdownTimeout);
+                userProfile.classList.add('open');
             }
+
+            function closeDropdown() {
+                dropdownTimeout = setTimeout(() => {
+                    userProfile.classList.remove('open');
+                }, 150);
+            }
+
+            // Mouse events for desktop
+            userProfile.addEventListener('mouseenter', openDropdown);
+            userProfile.addEventListener('mouseleave', closeDropdown);
+            userDropdown.addEventListener('mouseenter', openDropdown);
+            userDropdown.addEventListener('mouseleave', closeDropdown);
+
+            // Click events for mobile
+            userProfile.addEventListener('click', (e) => {
+                e.stopPropagation();
+                if (window.innerWidth <= 768) {
+                    userProfile.classList.toggle('open');
+                }
+            });
+
+            // Close dropdown when clicking outside
+            document.addEventListener('click', (e) => {
+                if (!userProfile.contains(e.target)) {
+                    userProfile.classList.remove('open');
+                }
+            });
+
+            // Handle window resize
+            window.addEventListener('resize', () => {
+                if (window.innerWidth > 768) {
+                    userProfile.classList.remove('open');
+                }
+            });
         });

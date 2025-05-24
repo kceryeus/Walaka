@@ -1,3 +1,64 @@
+/* Base Styles and Reset */
+:root {
+  --primary-color: #3b82f6;
+  --primary-dark: #2563eb;
+  --primary-light: #dbeafe;
+  --primary-100: #eff6ff;
+  --primary-700: #1d4ed8;
+  --primary-800: #1e40af;
+  --gray-50: #f9fafb;
+  --gray-100: #f3f4f6;
+  --gray-200: #e5e7eb;
+  --gray-300: #d1d5db;
+  --gray-400: #9ca3af;
+  --gray-500: #6b7280;
+  --gray-600: #4b5563;
+  --gray-700: #374151;
+  --gray-800: #1f2937;
+  --gray-900: #111827;
+  --green-500: #10b981;
+  --yellow-500: #f59e0b;
+  --red-500: #ef4444;
+  
+  /* Background and text colors */
+  --bg-color: #fff;
+  --text-color: var(--gray-700);
+  --heading-color: var(--gray-900);
+  --card-bg: #fff;
+  --border-color: var(--gray-200);
+  --shadow-color: rgba(0, 0, 0, 0.1);
+  --card-radius: 8px;
+  --box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+}
+
+/* Dark mode theme */
+html[data-theme="dark"] {
+  --primary-color: #60a5fab8;
+  --primary-dark: #3b82f6;
+  --primary-light: #1e3a8a;
+  --primary-100: #172554;
+  --primary-700: #93c5fd;
+  --primary-800: #bfdbfe;
+  --gray-50: #111827;
+  --gray-100: #4b4b4b;
+  --gray-200: #374151;
+  --gray-300: #4b5563;
+  --gray-400: #6b7280;
+  --gray-500: #9ca3af;
+  --gray-600: #d1d5db;
+  --gray-700: #e5e7eb;
+  --gray-800: #f3f4f6;
+  --gray-900: #f9fafb;
+  
+  /* Background and text colors */
+  --bg-color: #0f172a;
+  --text-color: var(--gray-500);
+  --heading-color: var(--gray-300);
+  --card-bg: #1e293b;
+  --border-color: #334155;
+  --shadow-color: rgba(0, 0, 0, 0.5);
+}
+
 /* Custom styles */
 .modal-backdrop {
     transition: opacity 0.3s ease-in-out;
@@ -5,6 +66,9 @@
 
 .modal-content {
     transition: transform 0.3s ease-in-out;
+    background-color: var(--card-bg);
+    border-radius: var(--card-radius);
+    box-shadow: var(--box-shadow);
 }
 
 /* Toast animations */
@@ -41,7 +105,7 @@
 /* Loading spinner */
 .spinner {
     border: 4px solid rgba(0, 0, 0, 0.1);
-    border-left-color: #3b82f6;
+    border-left-color: var(--primary-color);
     border-radius: 50%;
     width: 40px;
     height: 40px;
@@ -52,4 +116,133 @@
     to {
         transform: rotate(360deg);
     }
+}
+
+/* Common button styles */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.5rem 1rem;
+    border-radius: var(--card-radius);
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-primary {
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+}
+
+.btn-primary:hover {
+    background-color: var(--primary-dark);
+}
+
+.btn-secondary {
+    background-color: var(--gray-100);
+    color: var(--gray-700);
+    border: 1px solid var(--gray-300);
+}
+
+.btn-secondary:hover {
+    background-color: var(--gray-200);
+}
+
+/* Table styles */
+.table-container {
+    background: var(--card-bg);
+    border-radius: var(--card-radius);
+    box-shadow: var(--box-shadow);
+    overflow: hidden;
+}
+
+.table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.table th,
+.table td {
+    padding: 1rem;
+    text-align: left;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.table th {
+    background-color: var(--gray-50);
+    font-weight: 600;
+    color: var(--gray-700);
+}
+
+.table tr:hover {
+    background-color: var(--gray-50);
+}
+
+/* Status badges */
+.status-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px;
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+.status-badge.active {
+    background-color: var(--green-500);
+    color: white;
+}
+
+.status-badge.inactive {
+    background-color: var(--gray-300);
+    color: var(--gray-700);
+}
+
+/* Form styles */
+.form-group {
+    margin-bottom: 1rem;
+}
+
+.form-label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+    color: var(--gray-700);
+}
+
+.form-input {
+    width: 100%;
+    padding: 0.5rem;
+    border: 1px solid var(--border-color);
+    border-radius: var(--card-radius);
+    background-color: var(--card-bg);
+    color: var(--text-color);
+}
+
+.form-input:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 2px var(--primary-100);
+}
+
+/* Dashboard Layout */
+.dashboard-container {
+    display: flex;
+    min-height: 100vh;
+}
+
+.main-content {
+    flex-grow: 1;
+    padding: 2rem;
+    background-color: var(--bg-color);
+    margin-left: var(--sidebar-width, 250px); /* Adjust based on sidebar width */
+    transition: margin-left 0.3s ease;
+}
+
+.page-content {
+    max-width: 1200px; /* Match container width from invoice page */
+    margin: 0 auto;
+    padding-top: 1.5rem;
 } 

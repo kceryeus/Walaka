@@ -2,111 +2,81 @@
 const supabaseClient = supabase.createClient(config.supabaseUrl, config.supabaseAnonKey);
 
 class API {
+    async _callFunction(action, payload = {}) {
+        const { data, error: functionError } = await supabaseClient.functions.invoke('service-role', {
+            body: JSON.stringify({ action, ...payload }) // Ensure body is stringified
+        });
+
+        if (functionError) {
+            // Handle errors from invoking the function itself (e.g., network issue, function not found)
+            console.error(`Error invoking function for action "${action}":`, functionError);
+            throw functionError;
+        }
+
+        // The function response is expected to be JSON, parse it if it's a string
+        // Supabase functions might return the data directly or it might be stringified
+        let responseData = data;
+        if (typeof data === 'string') {
+            try {
+                responseData = JSON.parse(data);
+            } catch (e) {
+                // If it's not JSON, it might be a simple string response or an unhandled error string
+                console.error('Function returned non-JSON string:', data);
+                throw new Error('Unexpected response from server function.');
+            }
+        }
+
+
+        if (responseData && responseData.error) {
+            // Handle errors returned by the business logic within the function
+            console.error(`Error from function action "${action}":`, responseData.error);
+            throw new Error(responseData.error);
+        }
+
+        // Check if responseData itself is the data or if it's nested under a 'data' key
+        // Based on your edge function, it returns { data: users } or { data: profileData } etc.
+        return responseData && responseData.data !== undefined ? responseData.data : responseData;
+    }
+
     async fetchUsers() {
         try {
-            console.log('Fetching users...');
+            // Query the 'users' table directly, selecting specific columns
             const { data, error } = await supabaseClient
                 .from('users')
-                .select('*')
-                .order('created_at', { ascending: false });
+                .select('id, username, email, role, status'); // Select only needed columns
 
-            if (error) throw error;
+            if (error) {
+                console.error('Error fetching users:', error);
+                throw error;
+            }
+
+            console.log('Users fetched:', data);
             return data;
         } catch (error) {
-            console.error('Error fetching users:', error);
+            console.error('Error in fetchUsers API call:', error);
             throw error;
         }
     }
 
     async createUser(userData) {
-        try {
-            console.log('Creating user with data:', userData);
-            
-            // Create user profile in the users table
-            const { data, error } = await supabaseClient
-                .from('users')
-                .insert([
-                    {
-                        email: userData.email,
-                        username: userData.username,
-                        role: userData.role,
-                        status: 'active'
-                    }
-                ])
-                .select()
-                .single();
-
-            if (error) throw error;
-
-            toast.show({
-                title: 'Success',
-                description: 'User created successfully',
-                type: 'success'
-            });
-
-            return data;
-        } catch (error) {
-            console.error('Error creating user:', error);
-
-            toast.show({
-                title: 'Error',
-                description: error.message || 'Failed to create user',
-                type: 'error'
-            });
-
-            throw error;
-        }
+        console.log('Creating user via function with data:', userData);
+        return await this._callFunction('createUser', { userData });
     }
 
     async updateUser(userId, userData) {
-        try {
-            const { data, error } = await supabaseClient
-                .from('users')
-                .update(userData)
-                .eq('id', userId)
-                .select()
-                .single();
-
-            if (error) throw error;
-            return data;
-        } catch (error) {
-            console.error('Error updating user:', error);
-            throw error;
-        }
+        console.log(`Updating user ${userId} via function with data:`, userData);
+        return await this._callFunction('updateUser', { userId, userData });
     }
 
     async deleteUser(userId) {
-        try {
-            const { error } = await supabaseClient
-                .from('users')
-                .delete()
-                .eq('id', userId);
-
-            if (error) throw error;
-            return { success: true };
-        } catch (error) {
-            console.error('Error deleting user:', error);
-            throw error;
-        }
+        console.log(`Deleting user ${userId} via function...`);
+        return await this._callFunction('deleteUser', { userId });
     }
 
     async toggleUserStatus(userId, currentStatus) {
-        try {
-            const newStatus = currentStatus === 'active' ? 'inactive' : 'active';
-            const { data, error } = await supabaseClient
-                .from('users')
-                .update({ status: newStatus })
-                .eq('id', userId)
-                .select()
-                .single();
-
-            if (error) throw error;
-            return data;
-        } catch (error) {
-            console.error('Error toggling user status:', error);
-            throw error;
-        }
+        console.log(`Toggling status for user ${userId} (current: ${currentStatus}) via function...`);
+        return await this._callFunction('toggleUserStatus', { userId, currentStatus });
     }
 }
 
-const api = new API(); 
+const api = new API();
