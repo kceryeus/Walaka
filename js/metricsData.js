@@ -1,9 +1,11 @@
-
+// Fetch metrics data from Supabase
 async function fetchMetricsData() {
     try {
-        // Fetch invoices data
-        const invoicesResponse = await fetch('api/invoices');
-        const invoices = await invoicesResponse.json();
+        const { data: invoices, error: invoicesError } = await window.supabase
+            .from('invoices')
+            .select('*');
+
+        if (invoicesError) throw invoicesError;
 
         // Fetch clients data from clients/clients.html
         const clientsResponse = await fetch('clients/clients.html');
@@ -42,9 +44,11 @@ async function fetchMetricsData() {
         };
 
         updateMetricsDisplay(metrics);
+
+        return metrics;
     } catch (error) {
         console.error('Error fetching metrics data:', error);
-        displayErrorMessage('Failed to load metrics data');
+        throw error;
     }
 }
 
@@ -133,6 +137,99 @@ function isNewClient(clientElement) {
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
     return new Date(dateStr) >= thirtyDaysAgo;
+}
+
+// Calculation functions
+function calculatePercentageChange(invoices) {
+    const currentMonth = new Date().getMonth();
+    const currentYear = new Date().getFullYear();
+    
+    const currentMonthInvoices = invoices.filter(inv => {
+        const date = new Date(inv.issue_date);
+        return date.getMonth() === currentMonth && date.getFullYear() === currentYear;
+    });
+    
+    const lastMonthInvoices = invoices.filter(inv => {
+        const date = new Date(inv.issue_date);
+        const lastMonth = currentMonth === 0 ? 11 : currentMonth - 1;
+        const lastMonthYear = currentMonth === 0 ? currentYear - 1 : currentYear;
+        return date.getMonth() === lastMonth && date.getFullYear() === lastMonthYear;
+    });
+    
+    if (lastMonthInvoices.length === 0) return 0;
+    return ((currentMonthInvoices.length - lastMonthInvoices.length) / lastMonthInvoices.length * 100).toFixed(1);
+}
+
+function calculateTotalRevenue(invoices) {
+    return invoices.reduce((total, inv) => total + (Number(inv.total) || 0), 0);
+}
+
+function calculateRevenueByCategory(invoices) {
+    const categories = {};
+    invoices.forEach(inv => {
+        const category = inv.category || 'Other';
+        categories[category] = (categories[category] || 0) + (Number(inv.total) || 0);
+    });
+    return categories;
+}
+
+function calculateRevenueChange(invoices) {
+    const currentMonth = new Date().getMonth();
+    const currentYear = new Date().getFullYear();
+    
+    const currentMonthRevenue = invoices
+        .filter(inv => {
+            const date = new Date(inv.issue_date);
+            return date.getMonth() === currentMonth && date.getFullYear() === currentYear;
+        })
+        .reduce((total, inv) => total + (Number(inv.total) || 0), 0);
+    
+    const lastMonthRevenue = invoices
+        .filter(inv => {
+            const date = new Date(inv.issue_date);
+            const lastMonth = currentMonth === 0 ? 11 : currentMonth - 1;
+            const lastMonthYear = currentMonth === 0 ? currentYear - 1 : currentYear;
+            return date.getMonth() === lastMonth && date.getFullYear() === lastMonthYear;
+        })
+        .reduce((total, inv) => total + (Number(inv.total) || 0), 0);
+    
+    if (lastMonthRevenue === 0) return 0;
+    return ((currentMonthRevenue - lastMonthRevenue) / lastMonthRevenue * 100).toFixed(1);
+}
+
+function calculateTotalExpenses(invoices) {
+    // For now, return 0 as we don't have expenses data
+    return 0;
+}
+
+function calculateExpensesByCategory(invoices) {
+    // For now, return empty object as we don't have expenses data
+    return {};
+}
+
+function calculateExpensesChange(invoices) {
+    // For now, return 0 as we don't have expenses data
+    return 0;
+}
+
+function calculateClientsChange(clients) {
+    const currentMonth = new Date().getMonth();
+    const currentYear = new Date().getFullYear();
+    
+    const currentMonthClients = clients.filter(c => {
+        const date = new Date(c.querySelector('.registration-date').textContent);
+        return date.getMonth() === currentMonth && date.getFullYear() === currentYear;
+    });
+    
+    const lastMonthClients = clients.filter(c => {
+        const date = new Date(c.querySelector('.registration-date').textContent);
+        const lastMonth = currentMonth === 0 ? 11 : currentMonth - 1;
+        const lastMonthYear = currentMonth === 0 ? currentYear - 1 : currentYear;
+        return date.getMonth() === lastMonth && date.getFullYear() === lastMonthYear;
+    });
+    
+    if (lastMonthClients.length === 0) return 0;
+    return ((currentMonthClients.length - lastMonthClients.length) / lastMonthClients.length * 100).toFixed(1);
 }
 
 // Initialize metrics data when the page loads

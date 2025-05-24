@@ -18,33 +18,105 @@
     <link rel="stylesheet" href="css/styles.css">
     <link rel="stylesheet" href="css/metrics.css">
     
+    <style>
+        .back-button {
+            margin: 10px 0;
+            padding: 8px 16px;
+            background-color: #007ec7;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .back-button:hover {
+            background-color: #0066a3;
+        }
+
+        .daily-invoices-table {
+            padding: 20px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .daily-invoices-table h4 {
+            margin: 0 0 15px 0;
+            color: #333;
+        }
+
+        .daily-invoices-table table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 15px;
+        }
+
+        .daily-invoices-table th,
+        .daily-invoices-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+
+        .daily-invoices-table th {
+            background-color: #f8f9fa;
+            font-weight: 600;
+        }
+
+        .daily-invoices-table tr:hover {
+            background-color: #f8f9fa;
+        }
+
+        .chart-container {
+            position: relative;
+        }
+
+        .chart-container .back-button {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            z-index: 1;
+        }
+    </style>
+    
     <script>
         function toggleLanguage(lang) {
             const elements = document.querySelectorAll('[data-lang]');
             elements.forEach(el => {
+                if (!el) return; // Skip if element is null
+                
                 if (el.tagName === 'INPUT' && el.type === 'text') {
-                    el.placeholder = el.dataset[lang];
+                    el.placeholder = el.dataset[lang] || '';
                 } else if (el.tagName === 'OPTION') {
-                    el.textContent = el.dataset[lang];
+                    el.textContent = el.dataset[lang] || '';
                 } else {
-                    el.textContent = el.dataset[lang];
+                    el.textContent = el.dataset[lang] || '';
                 }
             });
-            localStorage.setItem('selectedLanguage', lang); // Store the language
+            localStorage.setItem('selectedLanguage', lang);
 
             // Update chart labels
-            updateChartLabels(lang);
+            if (typeof updateChartLabels === 'function') {
+                updateChartLabels(lang);
+            }
         }
 
         // Define o estado ativo para os botões de idioma
         function setActiveLanguage(lang) {
-            document.querySelectorAll('.language-toggle button').forEach(btn => btn.classList.remove('active'));
-            document.getElementById(`lang-${lang}`).classList.add('active');
+            const buttons = document.querySelectorAll('.language-toggle button');
+            if (!buttons.length) return; // Skip if no buttons found
+            
+            buttons.forEach(btn => btn.classList.remove('active'));
+            const activeButton = document.getElementById(`lang-${lang}`);
+            if (activeButton) {
+                activeButton.classList.add('active');
+            }
         }
 
         // Função para definir o idioma inicial
         function setInitialLanguage() {
-            const storedLanguage = localStorage.getItem('selectedLanguage') || 'en'; // Padrão para inglês
+            const storedLanguage = localStorage.getItem('selectedLanguage') || 'en';
             toggleLanguage(storedLanguage);
             setActiveLanguage(storedLanguage);
         }
@@ -264,7 +336,7 @@
                 <div class="table-filters">
                     <div class="filter-group">
                         <label for="statusFilter" data-lang="statusLabel" data-en="Status:" data-pt="Estado:">Status:</label>
-                        <select id="statusFilter" class="filter-select" onchange="filterInvoices()">
+                        <select id="statusFilter" class="filter-select">
                             <option value="all" data-lang="allStatuses" data-en="All Statuses" data-pt="Todos os Status">All Statuses</option>
                             <option value="paid" data-lang="paid" data-en="Paid" data-pt="Pago">Paid</option>
                             <option value="pending" data-lang="pending" data-en="Pending" data-pt="Pendente">Pending</option>
@@ -273,7 +345,7 @@
                     </div>
                     <div class="filter-group">
                         <label for="dateFilter" data-lang="dateRangeLabel" data-en="Date Range:" data-pt="Período:">Date Range:</label>
-                        <select id="dateFilter" class="filter-select" onchange="filterInvoices()">
+                        <select id="dateFilter" class="filter-select">
                             <option value="all" data-lang="allTime" data-en="All Time" data-pt="Todo o Tempo">All Time</option>
                             <option value="today" data-lang="today" data-en="Today" data-pt="Hoje">Today</option>
                             <option value="week" data-lang="thisWeek" data-en="This Week" data-pt="Esta Semana">This Week</option>
@@ -283,7 +355,7 @@
                     </div>
                     <div class="filter-group">
                         <label for="amountFilter" data-lang="amountLabel" data-en="Amount:" data-pt="Valor:">Amount:</label>
-                        <select id="amountFilter" class="filter-select" onchange="filterInvoices()">
+                        <select id="amountFilter" class="filter-select">
                             <option value="all">All Amounts</option>
                             <option value="under1000">Under MZN 1,000</option>
                             <option value="1000to5000">MZN 1,000 - MZN 5,000</option>
@@ -292,7 +364,6 @@
                     </div>
                     <div class="filter-group search-filter">
                         <input type="text" id="searchInvoices" placeholder="Search invoices..." 
-                               oninput="filterInvoices()" 
                                data-lang="searchInvoicesPlaceholder" 
                                data-en="Search invoices..." 
                                data-pt="Pesquisar faturas...">
@@ -303,10 +374,10 @@
                     <table id="invoicesTable">
                         <thead>
                             <tr>
-                                <th onclick="sortInvoices('invoice_number')">Invoice # <i class="fas fa-sort"></i></th>
-                                <th onclick="sortInvoices('client_name')">Client <i class="fas fa-sort"></i></th>
-                                <th onclick="sortInvoices('issue_date')">Date <i class="fas fa-sort"></i></th>
-                                <th onclick="sortInvoices('total')">Amount <i class="fas fa-sort"></i></th>
+                                <th data-sort="invoice_number">Invoice # <i class="fas fa-sort sort-icon"></i></th>
+                                <th data-sort="client_name">Client <i class="fas fa-sort sort-icon"></i></th>
+                                <th data-sort="issue_date">Date <i class="fas fa-sort sort-icon"></i></th>
+                                <th data-sort="total">Amount <i class="fas fa-sort sort-icon"></i></th>
                                 <th>Status</th>
                                 <th>Actions</th>
                             </tr>
@@ -316,138 +387,408 @@
                         </tbody>
                     </table>
                 </div>
+                <div class="pagination">
+                    <div class="page-info"></div>
+                    <div class="page-controls"></div>
+                </div>
                 <div id="noResultsMessage" class="no-results" style="display: none;">
-                    <p data-lang="noInvoicesFound">No invoices match your filter criteria. <a href="#" onclick="resetFilters()">Reset filters</a></p>
+                    <p data-lang="noInvoicesFound">No invoices match your filter criteria. <a href="#" id="resetFiltersLink">Reset filters</a></p>
                 </div>
             </div>
 
             <script>
-                let invoices = [];
-                let sortConfig = {
-                    column: 'issue_date',
-                    direction: 'desc'
+                // Initialize invoice table module
+                const invoiceTable = {
+                    currentPage: 1,
+                    itemsPerPage: 10,
+                    currentFilters: {},
+                    currentSort: {
+                        column: 'issue_date',
+                        direction: 'desc'
+                    },
+
+                    async fetchAndDisplayInvoices(page = 1, limit = 10, filters = {}) {
+                        try {
+                            const tbody = document.querySelector('#invoicesTable tbody');
+                            const pageInfo = document.querySelector('.page-info');
+                            
+                            if (!tbody) {
+                                console.error('Invoice table body not found');
+                                return;
+                            }
+
+                            // Build query
+                            let query = window.supabase
+                                .from('invoices')
+                                .select('*, clients(customer_name)', { count: 'exact' });
+
+                            // Apply filters
+                            if (filters.status && filters.status !== 'all') {
+                                query = query.eq('status', filters.status);
+                            }
+                            if (filters.dateRange && filters.dateRange !== 'all') {
+                                const { startDate, endDate } = this.parseDateRange(filters.dateRange);
+                                if (startDate && endDate) {
+                                    query = query.gte('issue_date', startDate).lte('issue_date', endDate);
+                                }
+                            }
+                            if (filters.amount && filters.amount !== 'all') {
+                                switch(filters.amount) {
+                                    case 'under1000':
+                                        query = query.lt('total_amount', 1000);
+                                        break;
+                                    case '1000to5000':
+                                        query = query.gte('total_amount', 1000).lte('total_amount', 5000);
+                                        break;
+                                    case 'over5000':
+                                        query = query.gt('total_amount', 5000);
+                                        break;
+                                }
+                            }
+                            if (filters.search) {
+                                query = query.or(`invoiceNumber.ilike.%${filters.search}%,clients.customer_name.ilike.%${filters.search}%`);
+                            }
+
+                            // Add sorting
+                            if (this.currentSort.column) {
+                                query = query.order(this.currentSort.column, { ascending: this.currentSort.direction === 'asc' });
+                            }
+
+                            // Add pagination
+                            const start = (page - 1) * limit;
+                            query = query.range(start, start + limit - 1);
+
+                            // Execute query
+                            const { data: invoices, error, count } = await query;
+
+                            if (error) {
+                                console.error('Supabase query error:', error);
+                                throw new Error(`Failed to fetch invoices: ${error.message}`);
+                            }
+
+                            // Clear existing rows
+                            tbody.innerHTML = '';
+
+                            if (!invoices || invoices.length === 0) {
+                                tbody.innerHTML = '<tr><td colspan="6" class="text-center">No invoices found</td></tr>';
+                                if (pageInfo) {
+                                    pageInfo.textContent = 'No invoices found';
+                                }
+                                return;
+                            }
+
+                            // Add invoice rows
+                            invoices.forEach(invoice => {
+                                const row = `
+                                    <tr>
+                                        <td>${invoice.invoiceNumber || ''}</td>
+                                        <td>${invoice.clients?.customer_name || invoice.customer_name || ''}</td>
+                                        <td>${this.formatDate(invoice.issue_date)}</td>
+                                        <td>${this.formatCurrency(invoice.total_amount)}</td>
+                                        <td>
+                                            <span class="status ${invoice.status.toLowerCase()}">
+                                                ${invoice.status}
+                                            </span>
+                                        </td>
+                                        <td class="actions">
+                                            <button class="action-btn view-btn" data-invoice="${invoice.invoiceNumber}" title="View">
+                                                <i class="fas fa-eye"></i>
+                                            </button>
+                                            <button class="action-btn more-btn" title="More">
+                                                <i class="fas fa-ellipsis-v"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                `;
+                                tbody.insertAdjacentHTML('beforeend', row);
+                            });
+
+                            // Update pagination
+                            this.updatePagination(page, limit, count, filters);
+
+                            // Setup action buttons
+                            this.setupActionButtons();
+
+                        } catch (error) {
+                            console.error('Error in fetchAndDisplayInvoices:', error);
+                            this.showError(error.message || 'Failed to fetch invoices');
+                        }
+                    },
+
+                    updatePagination(currentPage, limit, totalCount, filters) {
+                        const pageControls = document.querySelector('.pagination .page-controls');
+                        const pageInfo = document.querySelector('.pagination .page-info');
+                        if (!pageControls || !pageInfo) return;
+
+                        pageControls.innerHTML = '';
+                        const totalPages = Math.ceil(totalCount / limit);
+
+                        // Update page info
+                        pageInfo.textContent = `Showing ${(currentPage - 1) * limit + 1}-${Math.min(currentPage * limit, totalCount)} of ${totalCount} invoices`;
+
+                        // Add Previous button
+                        const prevBtn = document.createElement('button');
+                        prevBtn.className = 'pagination-btn';
+                        prevBtn.innerHTML = '<i class="fas fa-chevron-left"></i>';
+                        prevBtn.disabled = currentPage === 1;
+                        prevBtn.addEventListener('click', () => this.fetchAndDisplayInvoices(currentPage - 1, limit, filters));
+                        pageControls.appendChild(prevBtn);
+
+                        // Add page buttons
+                        const maxButtons = 5;
+                        const startPage = Math.max(1, currentPage - Math.floor(maxButtons / 2));
+                        const endPage = Math.min(totalPages, startPage + maxButtons - 1);
+
+                        if (startPage > 1) {
+                            this.addPageButton(1, currentPage, limit, filters, pageControls);
+                            if (startPage > 2) {
+                                const ellipsis = document.createElement('span');
+                                ellipsis.className = 'pagination-ellipsis';
+                                ellipsis.textContent = '...';
+                                pageControls.appendChild(ellipsis);
+                            }
+                        }
+
+                        for (let i = startPage; i <= endPage; i++) {
+                            this.addPageButton(i, currentPage, limit, filters, pageControls);
+                        }
+
+                        if (endPage < totalPages) {
+                            if (endPage < totalPages - 1) {
+                                const ellipsis = document.createElement('span');
+                                ellipsis.className = 'pagination-ellipsis';
+                                ellipsis.textContent = '...';
+                                pageControls.appendChild(ellipsis);
+                            }
+                            this.addPageButton(totalPages, currentPage, limit, filters, pageControls);
+                        }
+
+                        // Add Next button
+                        const nextBtn = document.createElement('button');
+                        nextBtn.className = 'pagination-btn';
+                        nextBtn.innerHTML = '<i class="fas fa-chevron-right"></i>';
+                        nextBtn.disabled = currentPage === totalPages;
+                        nextBtn.addEventListener('click', () => this.fetchAndDisplayInvoices(currentPage + 1, limit, filters));
+                        pageControls.appendChild(nextBtn);
+                    },
+
+                    addPageButton(pageNumber, currentPage, limit, filters, container) {
+                        const button = document.createElement('button');
+                        button.className = 'pagination-btn';
+                        if (pageNumber === currentPage) {
+                            button.classList.add('active');
+                        }
+                        button.textContent = pageNumber;
+                        button.addEventListener('click', () => this.fetchAndDisplayInvoices(pageNumber, limit, filters));
+                        container.appendChild(button);
+                    },
+
+                    setupActionButtons() {
+                        document.querySelectorAll('.view-btn').forEach(btn => {
+                            btn.addEventListener('click', () => {
+                                const invoiceNumber = btn.getAttribute('data-invoice');
+                                window.location.href = `invoices.html?invoice=${invoiceNumber}`;
+                            });
+                        });
+
+                        document.querySelectorAll('.more-btn').forEach(btn => {
+                            btn.addEventListener('click', (e) => {
+                                const invoiceNumber = btn.closest('tr').querySelector('.view-btn').getAttribute('data-invoice');
+                                this.showMoreOptions(e, invoiceNumber);
+                            });
+                        });
+                    },
+
+                    showMoreOptions(event, invoiceNumber) {
+                        const dropdown = document.createElement('div');
+                        dropdown.className = 'dropdown-menu';
+                        dropdown.innerHTML = `
+                            <button class="dropdown-item" data-action="mark-paid">
+                                <i class="fas fa-check-circle"></i> Mark as Paid
+                            </button>
+                            <button class="dropdown-item" data-action="download">
+                                <i class="fas fa-download"></i> Download PDF
+                            </button>
+                            <button class="dropdown-item" data-action="email">
+                                <i class="fas fa-envelope"></i> Send Email
+                            </button>
+                        `;
+
+                        const rect = event.target.getBoundingClientRect();
+                        dropdown.style.position = 'fixed';
+                        dropdown.style.top = `${rect.bottom}px`;
+                        dropdown.style.left = `${rect.left + window.scrollX}px`;
+
+                        dropdown.querySelectorAll('.dropdown-item').forEach(item => {
+                            item.addEventListener('click', async () => {
+                                const action = item.getAttribute('data-action');
+                                dropdown.remove();
+
+                                switch (action) {
+                                    case 'mark-paid':
+                                        await this.updateInvoiceStatus(invoiceNumber, 'paid');
+                                        break;
+                                    case 'download':
+                                        await this.downloadInvoice(invoiceNumber);
+                                        break;
+                                    case 'email':
+                                        await this.sendInvoice(invoiceNumber);
+                                        break;
+                                }
+                            });
+                        });
+
+                        const clickOutsideHandler = (e) => {
+                            if (!dropdown.contains(e.target) && e.target !== event.target) {
+                                dropdown.remove();
+                                document.removeEventListener('click', clickOutsideHandler);
+                            }
+                        };
+                        document.addEventListener('click', clickOutsideHandler);
+
+                        document.body.appendChild(dropdown);
+                        dropdown.style.display = 'block';
+                    },
+
+                    async updateInvoiceStatus(invoiceNumber, status) {
+                        try {
+                            const { error } = await window.supabase
+                                .from('invoices')
+                                .update({ status })
+                                .eq('invoiceNumber', invoiceNumber);
+
+                            if (error) throw error;
+                            this.fetchAndDisplayInvoices(this.currentPage, this.itemsPerPage, this.currentFilters);
+                        } catch (error) {
+                            console.error('Error updating invoice status:', error);
+                            this.showError('Failed to update invoice status');
+                        }
+                    },
+
+                    async downloadInvoice(invoiceNumber) {
+                        // Implement PDF download functionality
+                        console.log('Download invoice:', invoiceNumber);
+                    },
+
+                    async sendInvoice(invoiceNumber) {
+                        // Implement email sending functionality
+                        console.log('Send invoice:', invoiceNumber);
+                    },
+
+                    formatDate(dateString) {
+                        if (!dateString) return '';
+                        return new Date(dateString).toLocaleDateString('en-US', {
+                            year: 'numeric',
+                            month: 'short',
+                            day: 'numeric'
+                        });
+                    },
+
+                    formatCurrency(amount) {
+                        if (amount === null || amount === undefined) return '';
+                        return new Intl.NumberFormat('pt-MZ', {
+                            style: 'currency',
+                            currency: 'MZN'
+                        }).format(amount);
+                    },
+
+                    parseDateRange(range) {
+                        const today = new Date();
+                        const startDate = new Date();
+                        const endDate = new Date();
+
+                        switch (range) {
+                            case 'today':
+                                startDate.setHours(0, 0, 0, 0);
+                                endDate.setHours(23, 59, 59, 999);
+                                break;
+                            case 'week':
+                                startDate.setDate(today.getDate() - today.getDay());
+                                endDate.setDate(startDate.getDate() + 6);
+                                break;
+                            case 'month':
+                                startDate.setDate(1);
+                                endDate.setMonth(startDate.getMonth() + 1);
+                                endDate.setDate(0);
+                                break;
+                            case 'quarter':
+                                const quarter = Math.floor(today.getMonth() / 3);
+                                startDate.setMonth(quarter * 3);
+                                startDate.setDate(1);
+                                endDate.setMonth((quarter + 1) * 3);
+                                endDate.setDate(0);
+                                break;
+                            default:
+                                return { startDate: null, endDate: null };
+                        }
+
+                        return {
+                            startDate: startDate.toISOString(),
+                            endDate: endDate.toISOString()
+                        };
+                    },
+
+                    showError(message) {
+                        const noResults = document.getElementById('noResultsMessage');
+                        if (noResults) {
+                            noResults.style.display = 'block';
+                            noResults.querySelector('p').textContent = message;
+                        }
+                    }
                 };
 
-                async function fetchInvoices() {
-                    try {
-                        const { data, error } = await supabase
-                            .from('invoices')
-                            .select('*')
-                            .order('issue_date', { ascending: false })
-                            .limit(10);
+                // Initialize filters
+                document.addEventListener('DOMContentLoaded', () => {
+                    const statusFilter = document.getElementById('statusFilter');
+                    const dateFilter = document.getElementById('dateFilter');
+                    const amountFilter = document.getElementById('amountFilter');
+                    const searchInput = document.getElementById('searchInvoices');
+                    const resetFiltersLink = document.getElementById('resetFiltersLink');
 
-                        if (error) throw error;
-                        invoices = data;
-                        displayInvoices(data);
-                    } catch (error) {
-                        console.error('Error fetching invoices:', error);
-                        showNoResults('Error loading invoices');
-                    }
-                }
-
-                function displayInvoices(invoicesToShow) {
-                    const tbody = document.getElementById('invoicesTableBody');
-                    tbody.innerHTML = '';
-
-                    if (!invoicesToShow.length) {
-                        showNoResults();
-                        return;
+                    function applyFilters() {
+                        const filters = {
+                            status: statusFilter.value,
+                            dateRange: dateFilter.value,
+                            amount: amountFilter.value,
+                            search: searchInput.value.trim()
+                        };
+                        invoiceTable.currentFilters = filters;
+                        invoiceTable.fetchAndDisplayInvoices(1, invoiceTable.itemsPerPage, filters);
                     }
 
-                    invoicesToShow.forEach(invoice => {
-                        const row = `<tr>
-                            <td>${invoice.invoice_number}</td>
-                            <td>${invoice.client_name}</td>
-                            <td>${formatDate(invoice.issue_date)}</td>
-                            <td>${formatCurrency(invoice.total)}</td>
-                            <td><span class="status ${invoice.status.toLowerCase()}">${invoice.status}</span></td>
-                            <td class="actions">
-                                <button onclick="viewInvoice('${invoice.id}')" title="View">
-                                    <i class="fas fa-eye"></i>
-                                </button>
-                                <button onclick="editInvoice('${invoice.id}')" title="Edit">
-                                    <i class="fas fa-edit"></i>
-                                </button>
-                            </td>
-                        </tr>`;
-                        tbody.innerHTML += row;
-                    });
+                    // Add event listeners
+                    statusFilter.addEventListener('change', applyFilters);
+                    dateFilter.addEventListener('change', applyFilters);
+                    amountFilter.addEventListener('change', applyFilters);
+                    searchInput.addEventListener('input', debounce(applyFilters, 300));
 
-                    document.getElementById('noResultsMessage').style.display = 'none';
-                    document.getElementById('invoicesTable').style.display = 'table';
-                }
-
-                function filterInvoices() {
-                    const status = document.getElementById('statusFilter').value;
-                    const dateRange = document.getElementById('dateFilter').value;
-                    const amount = document.getElementById('amountFilter').value;
-                    const search = document.getElementById('searchInvoices').value.toLowerCase();
-
-                    let filtered = invoices.filter(invoice => {
-                        const matchesStatus = status === 'all' || invoice.status.toLowerCase() === status;
-                        const matchesAmount = checkAmountFilter(invoice.total, amount);
-                        const matchesDate = checkDateFilter(invoice.issue_date, dateRange);
-                        const matchesSearch = search === '' || 
-                            invoice.invoice_number.toLowerCase().includes(search) ||
-                            invoice.client_name.toLowerCase().includes(search);
-
-                        return matchesStatus && matchesAmount && matchesDate && matchesSearch;
-                    });
-
-                    displayInvoices(filtered);
-                }
-
-                function showNoResults(message = 'No invoices match your filter criteria') {
-                    document.getElementById('invoicesTable').style.display = 'none';
-                    const noResults = document.getElementById('noResultsMessage');
-                    noResults.style.display = 'block';
-                    noResults.querySelector('p').textContent = message;
-                }
-
-                // Helper functions for formatting and filtering
-                function formatDate(dateString) {
-                    return new Date(dateString).toLocaleDateString();
-                }
-
-                function formatCurrency(amount) {
-                    return new Intl.NumberFormat('pt-MZ', {
-                        style: 'currency',
-                        currency: 'MZN'
-                    }).format(amount);
-                }
-
-                function checkAmountFilter(amount, filter) {
-                    switch(filter) {
-                        case 'under1000': return amount < 1000;
-                        case '1000to5000': return amount >= 1000 && amount <= 5000;
-                        case 'over5000': return amount > 5000;
-                        default: return true;
+                    if (resetFiltersLink) {
+                        resetFiltersLink.addEventListener('click', (e) => {
+                            e.preventDefault();
+                            statusFilter.value = 'all';
+                            dateFilter.value = 'all';
+                            amountFilter.value = 'all';
+                            searchInput.value = '';
+                            applyFilters();
+                        });
                     }
-                }
 
-                function checkDateFilter(date, filter) {
-                    const invoiceDate = new Date(date);
-                    const today = new Date();
-                    
-                    switch(filter) {
-                        case 'today':
-                            return invoiceDate.toDateString() === today.toDateString();
-                        case 'week':
-                            const weekAgo = new Date(today.setDate(today.getDate() - 7));
-                            return invoiceDate >= weekAgo;
-                        case 'month':
-                            const monthAgo = new Date(today.setMonth(today.getMonth() - 1));
-                            return invoiceDate >= monthAgo;
-                        case 'quarter':
-                            const quarterAgo = new Date(today.setMonth(today.getMonth() - 3));
-                            return invoiceDate >= quarterAgo;
-                        default:
-                            return true;
-                    }
-                }
+                    // Initialize table
+                    invoiceTable.fetchAndDisplayInvoices(1, invoiceTable.itemsPerPage, {});
+                });
 
-                // Initialize on page load
-                document.addEventListener('DOMContentLoaded', fetchInvoices);
+                // Debounce function
+                function debounce(func, wait) {
+                    let timeout;
+                    return function executedFunction(...args) {
+                        const later = () => {
+                            clearTimeout(timeout);
+                            func(...args);
+                        };
+                        clearTimeout(timeout);
+                        timeout = setTimeout(later, wait);
+                    };
+                }
             </script>
 
             <!-- Metrics Cards moved here -->
@@ -636,164 +977,41 @@
     </div>
     
     <!-- JavaScript -->
-    <script src="js/dashboard.js"></script>
-    <script src="js/metricsData.js"></script>
-    
-    <!-- Initialize Charts -->
-    <script>
-        // Revenue Chart
-        const revenueCtx = document.getElementById('revenueChart').getContext('2d');
-        const revenueChart = new Chart(revenueCtx, {
-            type: 'bar',
-            data: {
-                labels: [], // Will be populated with months
-                datasets: [{
-                    label: 'Revenue',
-                    data: [], // Will be populated with revenue data
-                    backgroundColor: '#007ec7',
-                    borderRadius: 4
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        display: false
-                    }
-                },
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        grid: {
-                            color: 'rgba(0, 0, 0, 0.05)'
-                        }
-                    },
-                    x: {
-                        grid: {
-                            display: false
-                        }
-                    }
-                }
-            }
-        });
-
-        async function updateRevenueChart() {
-            try {
-                const today = new Date();
-                const startOfYear = new Date(today.getFullYear(), 0, 1);
-                
-                const { data: invoices, error } = await supabase
-                    .from('invoices')
-                    .select('total, issue_date')
-                    .gte('issue_date', startOfYear.toISOString())
-                    .order('issue_date');
-
-                if (error) throw error;
-
-                // Initialize monthly revenue data
-                const monthlyRevenue = Array(12).fill(0);
-                const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-
-                // Calculate revenue for each month
-                invoices.forEach(invoice => {
-                    const date = new Date(invoice.issue_date);
-                    const month = date.getMonth();
-                    monthlyRevenue[month] += Number(invoice.total);
-                });
-
-                // Update chart data
-                revenueChart.data.labels = months;
-                revenueChart.data.datasets[0].data = monthlyRevenue;
-                revenueChart.update();
-
-                // Update total revenue display
-                const totalRevenue = monthlyRevenue.reduce((acc, curr) => acc + curr, 0);
-                const revenueDisplay = document.querySelector('#revenueCard .metric-value');
-                if (revenueDisplay) {
-                    revenueDisplay.setAttribute('data-base-amount', totalRevenue.toString());
-                    const currentCurrency = document.getElementById('currency-selector').value;
-                    revenueDisplay.textContent = formatCurrencyByCode(totalRevenue * exchangeRates[currentCurrency], currentCurrency);
-                }
-            } catch (error) {
-                console.error('Error updating revenue chart:', error);
-            }
-        }
-
-        // Call updateRevenueChart when page loads and after new invoices are added
-        document.addEventListener('DOMContentLoaded', updateRevenueChart);
-
-        // Invoice Status Chart
-        const invoiceStatusCtx = document.getElementById('invoiceStatusChart').getContext('2d');
-        const invoiceStatusData = { // Store chart data
-            labels: ['Paid', 'Pending', 'Overdue'],
-            datasets: [{
-                data: [65, 25, 10],
-                backgroundColor: ['#3bb077', '#f7b924', '#e55353'],
-                borderWidth: 0
-            }]
-        };
-        const invoiceStatusOptions = { // Store chart options
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: {
-                    position: 'right'
-                }
-            },
-            cutout: '70%'
-        };
-        const invoiceStatusChart = new Chart(invoiceStatusCtx, {
-            type: 'doughnut',
-            data: invoiceStatusData,
-            options: invoiceStatusOptions
-        });
-
-        function updateChartLabels(lang) {
-            // Translate Revenue Chart
-            revenueChart.data.datasets[0].label = lang === 'pt' ? 'Receita' : 'Revenue';
-            revenueChart.update();
-
-            // Translate Invoice Status Chart
-            invoiceStatusChart.data.labels = lang === 'pt' ? ['Pago', 'Pendente', 'Atrasado'] : ['Paid', 'Pending', 'Overdue'];
-            invoiceStatusChart.update();
-        }
-    </script>
-
     <script type="module">
         import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.0.0/+esm';
 
         const supabaseUrl = 'https://qvmtozjvjflygbkjecyj.supabase.co';
         const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF2bXRvemp2amZseWdia2plY3lqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDYxMjc2MjMsImV4cCI6MjA2MTcwMzYyM30.DJMC1eM5_EouM1oc07JaoXsMX_bSLn2AVCozAcdfHmo';
 
-        const supabase = createClient(supabaseUrl, supabaseKey);
-
+        window.supabase = createClient(supabaseUrl, supabaseKey);
+/*
+        // Apply user settings
         async function applySettings() {
             try {
-                const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+                const { data: { session }, error: sessionError } = await window.supabase.auth.getSession();
                 if (sessionError || !session) {
-                    console.error('Erro ao buscar sessão:', sessionError?.message);
+                    console.error('Error fetching session:', sessionError?.message);
                     return;
                 }
 
                 const userId = session.user.id;
 
-                const { data: settingsData, error: settingsError } = await supabase
+                const { data: settingsData, error: settingsError } = await window.supabase
                     .from('settings')
                     .select('*')
                     .eq('user_id', userId)
                     .single();
 
                 if (settingsError) {
-                    console.error('Erro ao buscar configurações:', settingsError.message);
+                    console.error('Error fetching settings:', settingsError.message);
                     return;
                 }
 
-                // Aplicar configurações à página
+                // Apply settings to page
                 if (settingsData) {
                     document.documentElement.style.setProperty('--primary-color', settingsData.invoice_color || '#007ec7');
 
-                    // Atualizar o logo, se disponível
+                    // Update logo if available
                     const logoUrl = settingsData.logo_url;
                     if (logoUrl) {
                         const userAvatar = document.querySelector('.avatar');
@@ -802,29 +1020,29 @@
                         }
                     }
 
-                    // Definir o idioma
+                    // Set language
                     const language = settingsData.language || 'pt';
                     document.documentElement.setAttribute('lang', language);
+                    toggleLanguage(language);
                 }
             } catch (err) {
-                console.error('Erro ao aplicar configurações:', err);
-            }
+                console.error('Error applying settings:', err);
+
+                }
         }
-
-        document.addEventListener('DOMContentLoaded', applySettings);
-
+*/
         // Function to fetch and update client metrics
         async function updateClientMetrics() {
             try {
                 // Get total clients
-                const { data: totalClients, error: totalError } = await supabase
+                const { data: totalClients, error: totalError } = await window.supabase
                     .from('clients')
                     .select('count');
 
                 if (totalError) throw totalError;
 
                 // Get active clients
-                const { data: activeClients, error: activeError } = await supabase
+                const { data: activeClients, error: activeError } = await window.supabase
                     .from('clients')
                     .select('count')
                     .eq('status', 'active');
@@ -832,7 +1050,7 @@
                 if (activeError) throw activeError;
 
                 // Get inactive clients
-                const { data: inactiveClients, error: inactiveError } = await supabase
+                const { data: inactiveClients, error: inactiveError } = await window.supabase
                     .from('clients')
                     .select('count')
                     .eq('status', 'inactive');
@@ -843,7 +1061,7 @@
                 const thirtyDaysAgo = new Date();
                 thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
                 
-                const { data: newClients, error: newError } = await supabase
+                const { data: newClients, error: newError } = await window.supabase
                     .from('clients')
                     .select('count')
                     .gte('created_at', thirtyDaysAgo.toISOString());
@@ -851,7 +1069,7 @@
                 if (newError) throw newError;
 
                 // Calculate growth percentage (comparing to previous month)
-                const { data: previousMonthClients, error: prevError } = await supabase
+                const { data: previousMonthClients, error: prevError } = await window.supabase
                     .from('clients')
                     .select('count')
                     .lt('created_at', thirtyDaysAgo.toISOString());
@@ -877,43 +1095,225 @@
             }
         }
 
-        // Call the function when the page loads
+        // Function to update invoice metrics
+        async function updateInvoiceMetrics() {
+            try {
+                // Get all invoices for total count
+                const { data: allInvoices, error: allError } = await window.supabase
+                    .from('invoices')
+                    .select('total_amount, status, issue_date');
+
+                if (allError) throw allError;
+
+                // Calculate total invoices and revenue
+                const totalInvoices = allInvoices.length;
+                const totalRevenue = allInvoices
+                    .filter(invoice => invoice.status === 'paid')
+                    .reduce((sum, invoice) => sum + (invoice.total_amount || 0), 0);
+
+                // Get this month's invoices
+                const today = new Date();
+                const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+                const thisMonthInvoices = allInvoices.filter(invoice => 
+                    new Date(invoice.issue_date) >= startOfMonth
+                );
+
+                // Calculate this month's metrics
+                const thisMonthTotal = thisMonthInvoices.length;
+                const thisMonthRevenue = thisMonthInvoices
+                    .filter(invoice => invoice.status === 'paid')
+                    .reduce((sum, invoice) => sum + (invoice.total_amount || 0), 0);
+
+                // Get last month's invoices for comparison
+                const firstDayOfThisMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+                const endOfLastMonth = new Date(firstDayOfThisMonth);
+                endOfLastMonth.setDate(firstDayOfThisMonth.getDate() - 1);
+
+                const startOfLastMonth = new Date(endOfLastMonth.getFullYear(), endOfLastMonth.getMonth(), 1);
+
+                console.log('Start of last month:', startOfLastMonth.toISOString());
+                console.log('End of last month:', endOfLastMonth.toISOString());
+
+                const lastMonthInvoices = allInvoices.filter(invoice => {
+                    const invoiceDate = new Date(invoice.issue_date);
+                    return invoiceDate >= startOfLastMonth && invoiceDate <= endOfLastMonth;
+                });
+
+                // Calculate growth percentages
+                const lastMonthTotal = lastMonthInvoices.length;
+                const lastMonthRevenue = lastMonthInvoices
+                    .filter(invoice => invoice.status === 'paid')
+                    .reduce((sum, invoice) => sum + (invoice.total_amount || 0), 0);
+
+                const totalGrowth = lastMonthTotal > 0 
+                    ? ((thisMonthTotal - lastMonthTotal) / lastMonthTotal * 100).toFixed(1)
+                    : 0;
+
+                const revenueGrowthPercentage = lastMonthRevenue > 0
+                    ? ((thisMonthRevenue - lastMonthRevenue) / lastMonthRevenue * 100).toFixed(1)
+                    : 0;
+
+                console.log('This Month Total:', thisMonthTotal);
+                console.log('Last Month Total:', lastMonthTotal);
+                console.log('This Month Revenue:', thisMonthRevenue);
+                console.log('Last Month Revenue:', lastMonthRevenue);
+                console.log('Total Growth Percentage:', totalGrowth);
+                console.log('Revenue Growth Percentage:', revenueGrowthPercentage);
+
+                // Update Total Invoices card
+                const totalInvoicesValue = document.querySelector('#totalInvoicesCard .metric-value');
+                if (totalInvoicesValue) {
+                    totalInvoicesValue.textContent = thisMonthTotal;
+                }
+
+                const totalInvoicesGrowth = document.querySelector('#totalInvoicesCard .metric-change');
+                if (totalInvoicesGrowth) {
+                    totalInvoicesGrowth.textContent = `${totalGrowth}%`;
+                    totalInvoicesGrowth.className = `metric-change ${totalGrowth >= 0 ? 'positive' : 'negative'}`;
+                }
+
+                // Update Revenue card
+                const revenueValue = document.querySelector('#revenueCard .metric-value');
+                if (revenueValue) {
+                    revenueValue.setAttribute('data-base-amount', thisMonthRevenue.toString());
+                    revenueValue.textContent = formatCurrencyByCode(thisMonthRevenue, 'MZN');
+                }
+
+                const revenueGrowthElement = document.querySelector('#revenueCard .metric-change');
+                if (revenueGrowthElement) {
+                    revenueGrowthElement.textContent = `${revenueGrowthPercentage}%`;
+                    revenueGrowthElement.className = `metric-change ${revenueGrowthPercentage >= 0 ? 'positive' : 'negative'}`;
+                }
+
+                // Update drilldown data
+                updateInvoiceDrilldown(allInvoices);
+
+            } catch (error) {
+                console.error('Error updating invoice metrics:', error);
+            }
+        }
+
+        // Function to update invoice drilldown data
+        function updateInvoiceDrilldown(invoices) {
+            const drilldownData = document.querySelector('#totalInvoicesDetail .drilldown-data');
+            if (!drilldownData) return;
+
+            const today = new Date();
+            const thirtyDaysAgo = new Date(today);
+            thirtyDaysAgo.setDate(today.getDate() - 30);
+
+            const newInvoices = invoices.filter(invoice => 
+                new Date(invoice.issue_date) >= thirtyDaysAgo
+            ).length;
+
+            const sentInvoices = invoices.filter(invoice => 
+                invoice.status === 'pending'
+            ).length;
+
+            const paidInvoices = invoices.filter(invoice => 
+                invoice.status === 'paid'
+            ).length;
+
+            const overdueInvoices = invoices.filter(invoice => 
+                invoice.status === 'overdue'
+            ).length;
+
+            // Update drilldown items
+            const items = drilldownData.querySelectorAll('.drilldown-item');
+            if (items.length >= 4) {
+                items[0].querySelector('span:last-child').textContent = newInvoices;
+                items[1].querySelector('span:last-child').textContent = sentInvoices;
+                items[2].querySelector('span:last-child').textContent = paidInvoices;
+                items[3].querySelector('span:last-child').textContent = overdueInvoices;
+            }
+        }
+
+        // Call the functions when the page loads
         document.addEventListener('DOMContentLoaded', () => {
             updateClientMetrics();
+            updateInvoiceMetrics();
             // Update metrics every 5 minutes
-            setInterval(updateClientMetrics, 300000);
+            setInterval(() => {
+                updateClientMetrics();
+                updateInvoiceMetrics();
+            }, 300000);
+
+            // Add drilldown button functionality
+            document.querySelectorAll('.drilldown-btn').forEach(button => {
+                button.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const targetId = button.getAttribute('data-target');
+                    const content = document.getElementById(targetId);
+                    const isExpanded = button.getAttribute('aria-expanded') === 'true';
+
+                    // Toggle expanded state
+                    button.setAttribute('aria-expanded', !isExpanded);
+                    
+                    // Toggle icon
+                    const icon = button.querySelector('i');
+                    if (icon) {
+                        icon.className = isExpanded ? 'fas fa-chevron-down' : 'fas fa-chevron-up';
+                    }
+
+                    // Toggle content visibility
+                    if (content) {
+                        content.style.display = isExpanded ? 'none' : 'block';
+                    }
+                });
+            });
         });
 
-
-/* Display user name script 
-
+        // Display user name function
         document.addEventListener('DOMContentLoaded', async () => {
-            if (typeof supabase === 'undefined') return;
+            if (typeof window.supabase === 'undefined') return;
 
-            const { data: { session } } = await supabase.auth.getSession();
+            const { data: { session } } = await window.supabase.auth.getSession();
             if (!session || !session.user) return;
 
             let displayName = session.user.email;
             try {
-                const { data: userRecord, error } = await supabase
+                const { data: userRecord, error } = await window.supabase
                     .from('users')
                     .select('username')
                     .eq('id', session.user.id)
-                    .maybeSingle(); // Use maybeSingle for better null handling
-
-                console.log('Supabase userRecord:', userRecord, 'error:', error);
+                    .maybeSingle();
 
                 if (userRecord && userRecord.username) {
                     displayName = userRecord.username;
                 }
             } catch (e) {
-                console.error('Error fetching username from users table:', e);
+                console.error('Error fetching username:', e);
             }
 
             const userSpan = document.getElementById('user-displayname');
             if (userSpan) userSpan.textContent = displayName;
+
+            // Update subtitle with displayName
+            const subtitle = document.getElementById('dashboard-subtitle');
+            if (subtitle) {
+                ['en', 'pt'].forEach(lang => {
+                    if (subtitle.dataset[lang]) {
+                        subtitle.dataset[lang] = subtitle.dataset[lang].replace(/User/g, displayName);
+                    }
+                });
+                subtitle.textContent = subtitle.textContent.replace(/User/g, displayName);
+            }
         });
-*/
+
+        // Global variables and functions
+        const exchangeRates = {
+            MZN: 1,
+            USD: 0.016,  // 1 MZN = 0.016 USD
+            EUR: 0.015,  // 1 MZN = 0.015 EUR
+            ZAR: 0.30    // 1 MZN = 0.30 ZAR
+        };
+
+        function formatCurrencyByCode(amount, currencyCode) {
+            return new Intl.NumberFormat('pt-MZ', {
+                style: 'currency',
+                currency: currencyCode
+            }).format(amount);
+        }
 
         function changeCurrency(newCurrency) {
             try {
@@ -942,13 +1342,6 @@
             }
         }
 
-        function formatCurrencyByCode(amount, currencyCode) {
-            return new Intl.NumberFormat('pt-MZ', {
-                style: 'currency',
-                currency: currencyCode
-            }).format(amount);
-        }
-
         function updateDrilldownCurrency(currencyCode) {
             document.querySelectorAll('.drilldown-item span:last-child').forEach(span => {
                 const baseMZN = parseFloat(span.getAttribute('data-base-amount') || '0');
@@ -964,49 +1357,6 @@
             if (currencySelector) {
                 currencySelector.value = savedCurrency;
                 changeCurrency(savedCurrency);
-            }
-        });
-
-    // Update the updateRevenueChart function to store base amounts
-    //    async function updateRevenueChart() {
-    //        try {
-
-        //Display user name function
-        // This function will fetch the username from the Supabase database and display it
-        // in the user-displayname span element
-        document.addEventListener('DOMContentLoaded', async () => {
-            if (typeof supabase === 'undefined') return;
-
-            const { data: { session } } = await supabase.auth.getSession();
-            if (!session || !session.user) return;
-
-            let displayName = session.user.email;
-            try {
-                const { data: userRecord, error } = await supabase
-                    .from('users')
-                    .select('username')
-                    .eq('id', session.user.id)
-                    .maybeSingle();
-
-                if (userRecord && userRecord.username) {
-                    displayName = userRecord.username;
-                }
-            } catch (e) {
-                // fallback to email
-            }
-
-            const userSpan = document.getElementById('user-displayname');
-            if (userSpan) userSpan.textContent = displayName;
-
-            // Update subtitle with displayName
-            const subtitle = document.getElementById('dashboard-subtitle');
-            if (subtitle) {
-                ['en', 'pt'].forEach(lang => {
-                    if (subtitle.dataset[lang]) {
-                        subtitle.dataset[lang] = subtitle.dataset[lang].replace(/User/g, displayName);
-                    }
-                });
-                subtitle.textContent = subtitle.textContent.replace(/User/g, displayName);
             }
         });
 
@@ -1028,23 +1378,372 @@
 
         userProfile.addEventListener('mouseenter', openDropdown);
         userProfile.addEventListener('mouseleave', closeDropdown);
-        userDropdown.addEventListener('mouseenter', openDropdown);
-        userDropdown.addEventListener('mouseleave', closeDropdown);
+    </script>
+    <script src="js/metricsData.js"></script>
+    <script src="js/dashboard.js"></script>
+    
+    <!-- Initialize Charts -->
+    <script>
+        // Global functions
+        function formatCurrencyByCode(amount, currencyCode) {
+            return new Intl.NumberFormat('pt-MZ', {
+                style: 'currency',
+                currency: currencyCode
+            }).format(amount);
+        }
 
-        // Optional: close on click outside
-        document.addEventListener('click', function(e) {
-            if (!userProfile.contains(e.target)) {
-                userProfile.classList.remove('open');
+        // Revenue Chart
+        const revenueCtx = document.getElementById('revenueChart').getContext('2d');
+        const revenueChart = new Chart(revenueCtx, {
+            type: 'bar',
+            data: {
+                labels: [], // Will be populated with months
+                datasets: [{
+                    label: 'Revenue',
+                    data: [], // Will be populated with revenue data
+                    backgroundColor: '#007ec7',
+                    borderRadius: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        callbacks: {
+                            title: function(context) {
+                                const label = context[0].label;
+                                return `Click to see ${label} details`;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: {
+                            color: 'rgba(0, 0, 0, 0.05)'
+                        },
+                        ticks: {
+                            callback: function(value) {
+                                return formatCurrencyByCode(value, 'MZN');
+                            }
+                        }
+                    },
+                    x: {
+                        grid: {
+                            display: false
+                        }
+                    }
+                },
+                onClick: async function(event, elements) {
+                    if (elements.length > 0) {
+                        const index = elements[0].index;
+                        const currentView = this.data.datasets[0].view || 'year';
+                        const currentLabel = this.data.labels[index];
+                        
+                        if (currentView === 'year') {
+                            // Drill down to month view
+                            await showMonthView(currentLabel);
+                        } else if (currentView === 'month') {
+                            // Drill down to day view
+                            await showDayView(currentLabel);
+                        }
+                    }
+                }
             }
         });
 
-        // Add this after your existing scripts
-        const exchangeRates = {
-            MZN: 1,
-            USD: 0.016,  // 1 MZN = 0.016 USD
-            EUR: 0.015,  // 1 MZN = 0.015 EUR
-            ZAR: 0.30    // 1 MZN = 0.30 ZAR
+        // Store the original year data for navigation
+        let yearData = {
+            labels: [],
+            data: []
         };
+
+        async function updateRevenueChart() {
+            try {
+                const today = new Date();
+                const startOfYear = new Date(today.getFullYear(), 0, 1);
+                
+                const { data: invoices, error } = await window.supabase
+                    .from('invoices')
+                    .select('total_amount, issue_date, status, invoiceNumber')
+                    .gte('issue_date', startOfYear.toISOString())
+                    .order('issue_date', { ascending: true });
+
+                if (error) throw error;
+
+                // Initialize monthly revenue data
+                const monthlyRevenue = Array(12).fill(0);
+                const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+                // Calculate revenue for each month (only paid invoices)
+                invoices.forEach(invoice => {
+                    if (invoice.status === 'paid') {
+                        const date = new Date(invoice.issue_date);
+                        const month = date.getMonth();
+                        monthlyRevenue[month] += Number(invoice.total_amount || 0);
+                    }
+                });
+
+                // Store year data for navigation
+                yearData = {
+                    labels: months,
+                    data: monthlyRevenue
+                };
+
+                // Update chart data
+                revenueChart.data.labels = months;
+                revenueChart.data.datasets[0].data = monthlyRevenue;
+                revenueChart.data.datasets[0].view = 'year';
+                revenueChart.update();
+
+            } catch (error) {
+                console.error('Error updating revenue chart:', error);
+            }
+        }
+
+        async function showMonthView(monthLabel) {
+            try {
+                const monthIndex = yearData.labels.indexOf(monthLabel);
+                if (monthIndex === -1) return;
+
+                const today = new Date();
+                const startOfMonth = new Date(today.getFullYear(), monthIndex, 1);
+                const endOfMonth = new Date(today.getFullYear(), monthIndex + 1, 0);
+
+                const { data: invoices, error } = await window.supabase
+                    .from('invoices')
+                    .select('total_amount, issue_date, status, invoiceNumber')
+                    .gte('issue_date', startOfMonth.toISOString())
+                    .lte('issue_date', endOfMonth.toISOString())
+                    .order('issue_date', { ascending: true });
+
+                if (error) throw error;
+
+                // Create array for all days in the month
+                const daysInMonth = endOfMonth.getDate();
+                const dailyRevenue = Array(daysInMonth).fill(0);
+                const dayLabels = Array.from({length: daysInMonth}, (_, i) => i + 1);
+
+                // Calculate daily revenue
+                invoices.forEach(invoice => {
+                    if (invoice.status === 'paid') {
+                        const date = new Date(invoice.issue_date);
+                        const day = date.getDate() - 1; // 0-based index
+                        dailyRevenue[day] += Number(invoice.total_amount || 0);
+                    }
+                });
+
+                // Update chart
+                revenueChart.data.labels = dayLabels;
+                revenueChart.data.datasets[0].data = dailyRevenue;
+                revenueChart.data.datasets[0].view = 'month';
+                revenueChart.options.scales.x.title = {
+                    display: true,
+                    text: monthLabel
+                };
+                revenueChart.update();
+
+            } catch (error) {
+                console.error('Error showing month view:', error);
+            }
+        }
+
+        async function showDayView(dayLabel) {
+            try {
+                const currentView = revenueChart.data.datasets[0].view;
+                if (currentView !== 'month') return;
+
+                const monthIndex = yearData.labels.indexOf(revenueChart.options.scales.x.title.text);
+                const selectedDate = new Date(new Date().getFullYear(), monthIndex, parseInt(dayLabel));
+                const nextDate = new Date(selectedDate);
+                nextDate.setDate(nextDate.getDate() + 1);
+
+                const { data: invoices, error } = await window.supabase
+                    .from('invoices')
+                    .select('total_amount, issue_date, status, invoiceNumber')
+                    .gte('issue_date', selectedDate.toISOString())
+                    .lt('issue_date', nextDate.toISOString())
+                    .order('issue_date', { ascending: true });
+
+                if (error) throw error;
+
+                // Create table for daily invoices
+                const tableContainer = document.createElement('div');
+                tableContainer.className = 'daily-invoices-table';
+                tableContainer.innerHTML = `
+                    <h4>Invoices for ${selectedDate.toLocaleDateString()}</h4>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Invoice #</th>
+                                <th>Amount</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${invoices.map(invoice => `
+                                <tr>
+                                    <td>${invoice.invoiceNumber}</td>
+                                    <td>${formatCurrencyByCode(invoice.total_amount, 'MZN')}</td>
+                                    <td>${invoice.status}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                    <button class="back-button" onclick="showMonthView('${revenueChart.options.scales.x.title.text}')">
+                        <i class="fas fa-arrow-left"></i>
+                    </button>
+                `;
+
+                // Replace chart with table
+                const chartContainer = revenueChart.canvas.parentElement;
+                chartContainer.innerHTML = '';
+                chartContainer.appendChild(tableContainer);
+
+            } catch (error) {
+                console.error('Error showing day view:', error);
+            }
+        }
+
+        // Add back button functionality
+        function addBackButton() {
+            const chartContainer = revenueChart.canvas.parentElement;
+            const backButton = document.createElement('button');
+            backButton.className = 'back-button';
+            backButton.innerHTML = '<i class="fas fa-arrow-left"></i>';
+            backButton.onclick = () => {
+                revenueChart.data.labels = yearData.labels;
+                revenueChart.data.datasets[0].data = yearData.data;
+                revenueChart.data.datasets[0].view = 'year';
+                revenueChart.options.scales.x.title = {
+                    display: false
+                };
+                revenueChart.update();
+                backButton.remove();
+            };
+            chartContainer.appendChild(backButton);
+        }
+
+        // Update the CSS for the back button
+        const style = document.createElement('style');
+        style.textContent = `
+            .back-button {
+                width: 32px;
+                height: 32px;
+                padding: 0;
+                background-color: #007ec7;
+                color: white;
+                border: none;
+                border-radius: 50%;
+                cursor: pointer;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                position: absolute;
+                top: 10px;
+                right: 10px;
+                z-index: 1;
+                transition: background-color 0.2s;
+            }
+
+            .back-button:hover {
+                background-color: #0066a3;
+            }
+
+            .back-button i {
+                font-size: 14px;
+            }
+
+            .daily-invoices-table .back-button {
+                position: static;
+                margin-top: 15px;
+            }
+        `;
+        document.head.appendChild(style);
+
+        // Invoice Status Chart
+        const invoiceStatusCtx = document.getElementById('invoiceStatusChart').getContext('2d');
+        const invoiceStatusChart = new Chart(invoiceStatusCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Paid', 'Pending', 'Overdue'],
+                datasets: [{
+                    data: [0, 0, 0], // Will be populated with real data
+                    backgroundColor: ['#3bb077', '#f7b924', '#e55353'],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'right'
+                    }
+                },
+                cutout: '70%'
+            }
+        });
+
+        async function updateInvoiceStatusChart() {
+            try {
+                const { data: invoices, error } = await window.supabase
+                    .from('invoices')
+                    .select('status');
+
+                if (error) throw error;
+
+                // Count invoices by status
+                const statusCounts = {
+                    paid: 0,
+                    pending: 0,
+                    overdue: 0
+                };
+
+                invoices.forEach(invoice => {
+                    if (statusCounts.hasOwnProperty(invoice.status)) {
+                        statusCounts[invoice.status]++;
+                    }
+                });
+
+                // Update chart data
+                invoiceStatusChart.data.datasets[0].data = [
+                    statusCounts.paid,
+                    statusCounts.pending,
+                    statusCounts.overdue
+                ];
+                invoiceStatusChart.update();
+
+            } catch (error) {
+                console.error('Error updating invoice status chart:', error);
+            }
+        }
+
+        function updateChartLabels(lang) {
+            // Translate Revenue Chart
+            revenueChart.data.datasets[0].label = lang === 'pt' ? 'Receita' : 'Revenue';
+            revenueChart.update();
+
+            // Translate Invoice Status Chart
+            invoiceStatusChart.data.labels = lang === 'pt' ? ['Pago', 'Pendente', 'Atrasado'] : ['Paid', 'Pending', 'Overdue'];
+            invoiceStatusChart.update();
+        }
+
+        // Call updateRevenueChart when page loads and after new invoices are added
+        document.addEventListener('DOMContentLoaded', () => {
+            updateRevenueChart();
+            updateInvoiceStatusChart();
+            // Update charts every 5 minutes
+            setInterval(() => {
+                updateRevenueChart();
+                updateInvoiceStatusChart();
+            }, 300000);
+        });
     </script>
 </body>
 </html>
