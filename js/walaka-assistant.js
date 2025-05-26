@@ -19,6 +19,8 @@ class WalakaAssistant {
         headers: {
           "Authorization": `Bearer ${apiKey}`,
           "Content-Type": "application/json"
+         "HTTP-Referer": "https://kceryeus.github.io/Walaka/", # Optional. Site URL for rankings on openrouter.ai.
+    "X-Title": "WALAKA", # Optional. Site title for rankings on openrouter.ai.
         },
         body: JSON.stringify({
           model: "qwen/qwen3-30b-a3b:free",
