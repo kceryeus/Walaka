@@ -12,7 +12,7 @@ class WalakaAssistant {
 
   // Função para chamada à API OpenRouter
   async callOpenRouter(messages) {
-    const apiKey = "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";
+    const apiKey = "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";
     try {
       const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
         method: "POST",
@@ -30,7 +30,12 @@ class WalakaAssistant {
       });
       const data = await response.json();
       if (data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content) {
-        return data.choices[0].message.content;
+        // Formatar resposta para negrito com <b> e quebra de linha com <br>
+        let formatted = data.choices[0].message.content
+          .replace(/\*\*(.*?)\*\*/g, '<b>$1</b>') // **texto** para <b>texto</b>
+          .replace(/\n\s*\n/g, '<br>') // Dupla quebra de linha para <br>
+          .replace(/\n/g, '<br>'); // Simples quebra de linha para <br>
+        return formatted;
       } else {
         return "Desculpe, não consegui obter resposta da IA no momento.";
       }
