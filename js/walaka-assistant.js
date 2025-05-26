@@ -12,7 +12,7 @@ class WalakaAssistant {
 
   // Função para chamada à API OpenRouter
   async callOpenRouter(messages) {
-    const apiKey = "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";
+    const apiKey = "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";
     try {
       const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
         method: "POST",
