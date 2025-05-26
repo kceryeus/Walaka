@@ -64,8 +64,6 @@ async function generatePDF(invoiceData) {
     // Create a temporary container
     const container = document.createElement('div');
     container.innerHTML = invoiceHTML;
-    container.style.width = '210mm';
-    container.style.padding = '10mm';
     document.body.appendChild(container);
     
     // Generate PDF using html2pdf

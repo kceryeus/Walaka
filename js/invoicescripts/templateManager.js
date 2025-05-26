@@ -3,7 +3,7 @@ const templateManager = {
     // Default template content
     defaultTemplate: {
         styles: `
-            .invoice-container { padding: 20px; }
+            .invoice-container { padding: 20px; max-width: 800px; margin: 0 auto; }
             .invoice-header { margin-bottom: 20px; }
             .invoice-details { margin-bottom: 20px; }
             .invoice-items { width: 100%; border-collapse: collapse; }
