@@ -18,7 +18,10 @@ class WalakaAssistant {
         method: "POST",
         headers: {
           "Authorization": `Bearer ${apiKey}`,
-          "Content-Type": "application/json"
+          "Content-Type": "application/json",
+          // Cabeçalhos extras para funcionar online e ranquear no OpenRouter
+          "HTTP-Referer": window.location.origin, // URL do seu site
+          "X-Title": "WALAKA ERP" // Nome do seu site
         },
         body: JSON.stringify({
           model: "qwen/qwen3-30b-a3b:free",
@@ -151,19 +154,11 @@ window.walakaAssistant = new WalakaAssistant({
   const form = document.getElementById('walaka-chatbot-form');
   const input = document.getElementById('walaka-chatbot-input');
 
-  function formatBold(text) {
-    // Converte **texto** para <b>texto</b> e ### para quebra de linha dupla
-    return text
-      .replace(/\*\*(.*?)\*\*/g, '<b>$1</b>')
-      .replace(/###/g, '<br><br>');
-  }
-
   function addMessage(content, sender = 'user') {
     const msg = document.createElement('div');
     msg.style.margin = '8px 0';
     msg.style.textAlign = sender === 'user' ? 'right' : 'left';
-    // Aplica o formatBold para destacar em bold
-    msg.innerHTML = `<span style="display:inline-block;max-width:80%;padding:8px 12px;border-radius:12px;background:${sender==='user'?'#e0e6ed':'#fff'};color:#222;font-size:15px;">${formatBold(content)}</span>`;
+    msg.innerHTML = `<span style="display:inline-block;max-width:80%;padding:8px 12px;border-radius:12px;background:${sender==='user'?'#e0e6ed':'#fff'};color:#222;font-size:15px;">${content}</span>`;
     messagesDiv.appendChild(msg);
     messagesDiv.scrollTop = messagesDiv.scrollHeight;
   }
