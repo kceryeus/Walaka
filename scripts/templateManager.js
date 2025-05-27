@@ -461,26 +461,27 @@ async function populateTemplate(templateContent, invoiceData) {
     setDataField(doc, 'client-contact', invoiceData.client_contact);
 
     // Totals with proper number formatting
-    setDataField(doc, 'subtotal', `${invoiceData.currency} ${subtotal.toFixed(2)}`);
-    setDataField(doc, 'totalVat', `${invoiceData.currency} ${totalVat.toFixed(2)}`);
-    setDataField(doc, 'discount', `${invoiceData.currency} ${discount.toFixed(2)}`);
-    setDataField(doc, 'total', `${invoiceData.currency} ${total.toFixed(2)}`);
+    setDataField(doc, 'subtotal', `${invoiceData.currency} ${parseFloat(invoiceData.subtotal || 0).toFixed(2)}`);
+    setDataField(doc, 'total-vat', `${invoiceData.currency} ${parseFloat(invoiceData.totalVat || 0).toFixed(2)}`);
+    setDataField(doc, 'total', `${invoiceData.currency} ${parseFloat(invoiceData.total || 0).toFixed(2)}`);
 
     // Notes
     setDataField(doc, 'notes', invoiceData.notes);
 
     // Populate Items
-    const itemsContainer = doc.getElementById('invoice-items');
-    if (itemsContainer && invoiceData.items) {
+    const itemsContainer = doc.getElementById('invoice-items-body');
+    if (itemsContainer && invoiceData.items && Array.isArray(invoiceData.items)) {
         itemsContainer.innerHTML = invoiceData.items.map(item => `
             <tr>
-                <td>${item.description}</td>
-                <td>${item.quantity}</td>
-                <td>${invoiceData.currency} ${parseFloat(item.price).toFixed(2)}</td>
-                <td>${parseFloat(item.vat).toFixed(2)}%</td>
-                <td>${invoiceData.currency} ${parseFloat(item.total).toFixed(2)}</td>
+                <td>${item.description || ''}</td>
+                <td>${item.quantity || ''}</td>
+                <td>${invoiceData.currency || ''} ${parseFloat(item.price || 0).toFixed(2)}</td>
+                <td>${parseFloat(item.vat || 0).toFixed(2)}%</td>
+                <td>${invoiceData.currency || ''} ${parseFloat(item.total || 0).toFixed(2)}</td>
             </tr>
         `).join('');
+    } else if (itemsContainer) {
+        itemsContainer.innerHTML = ''; // Clear items if none exist or data is invalid
     }
 
     return doc.documentElement.outerHTML;

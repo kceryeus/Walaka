@@ -21,21 +21,17 @@ document.addEventListener('DOMContentLoaded', function() {
                 name: document.getElementById('client-list')?.value,
                 address: document.getElementById('clientAddress')?.value,
                 email: document.getElementById('clientEmail')?.value,
-                nuit: document.getElementById('clientTaxId')?.value
+                taxId: document.getElementById('clientTaxId')?.value
             },
-            invoice: {
-                number: document.getElementById('invoiceNumber')?.value,
-                issueDate: document.getElementById('issueDate')?.value,
-                dueDate: document.getElementById('dueDate')?.value,
-                currency: document.getElementById('currency')?.value,
-                items: getInvoiceItems(),
-                totals: {
-                    subtotal: parseFloat(document.getElementById('subtotal')?.textContent || '0'),
-                    vat: parseFloat(document.getElementById('totalVat')?.textContent || '0'),
-                    total: parseFloat(document.getElementById('invoiceTotal')?.textContent || '0')
-                },
-                notes: document.getElementById('notes')?.value
-            },
+            invoiceNumber: document.getElementById('invoiceNumber')?.value,
+            issueDate: document.getElementById('issueDate')?.value,
+            dueDate: document.getElementById('dueDate')?.value,
+            currency: document.getElementById('currency')?.value,
+            items: getInvoiceItems(),
+            subtotal: parseFloat(document.getElementById('subtotal')?.textContent || '0'),
+            totalVat: parseFloat(document.getElementById('totalVat')?.textContent || '0'),
+            total: parseFloat(document.getElementById('invoiceTotal')?.textContent || '0'),
+            notes: document.getElementById('notes')?.value,
             template: {
                 name: 'template01', // Default template
                 color: getComputedStyle(document.documentElement).getPropertyValue('--primary-color').trim()

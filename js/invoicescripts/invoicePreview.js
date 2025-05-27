@@ -10,16 +10,25 @@ async function previewInvoice(invoiceData) {
         
         // Ensure we have the required data structure
         const formattedData = {
-            ...invoiceData,
-            // Ensure dates are in the correct format
-            issue_date: invoiceData.issue_date || invoiceData.issueDate,
-            due_date: invoiceData.due_date || invoiceData.dueDate,
-            // Ensure client data is available
-            customer_name: invoiceData.customer_name || invoiceData.client?.name,
-            // Ensure totals are calculated
-            subtotal: invoiceData.subtotal || 0,
-            vat_amount: invoiceData.vat_amount || 0,
-            total_amount: invoiceData.total_amount || invoiceData.total || 0
+            invoiceNumber: invoiceData.invoice_number || invoiceData.invoiceNumber,
+            issueDate: invoiceData.issue_date || invoiceData.issueDate,
+            dueDate: invoiceData.due_date || invoiceData.dueDate,
+            status: invoiceData.status || 'pending',
+            currency: invoiceData.currency || 'MZN',
+            client: {
+                name: invoiceData.client_data?.name || invoiceData.client?.name,
+                email: invoiceData.client_data?.email || invoiceData.client?.email,
+                address: invoiceData.client_data?.address || invoiceData.client?.address,
+                taxId: invoiceData.client_data?.taxId || invoiceData.client?.taxId,
+                contact: invoiceData.client_data?.contact || invoiceData.client?.contact
+            },
+            company: invoiceData.company || {},
+            items: invoiceData.items || [],
+            subtotal: invoiceData.totals?.subtotal || invoiceData.subtotal || 0,
+            totalVat: invoiceData.totals?.vat || invoiceData.totalVat || 0,
+            total: invoiceData.totals?.total || invoiceData.total || 0,
+            notes: invoiceData.notes || '',
+            paymentTerms: invoiceData.payment_terms || invoiceData.paymentTerms || 'net30'
         };
         
         console.log('Formatted data for preview:', formattedData);

@@ -257,7 +257,7 @@ class InvoiceForm {
                 issue_date: invoiceData.issueDate,
                 due_date: invoiceData.dueDate,
                 status: invoiceData.status || 'pending',
-                currency: invoiceData.currency,
+                currency: invoiceData.currency || 'MZN',
                 client_data: {
                     name: invoiceData.client.name,
                     email: invoiceData.client.email,
@@ -265,14 +265,21 @@ class InvoiceForm {
                     taxId: invoiceData.client.taxId,
                     contact: invoiceData.client.contact
                 },
-                items: invoiceData.items,
+                company: invoiceData.company,
+                items: invoiceData.items.map(item => ({
+                    description: item.description,
+                    quantity: item.quantity,
+                    price: item.price,
+                    vat: item.vat,
+                    total: item.total
+                })),
                 totals: {
                     subtotal: invoiceData.subtotal,
                     vat: invoiceData.totalVat,
                     total: invoiceData.total
                 },
-                notes: invoiceData.notes,
-                payment_terms: invoiceData.paymentTerms
+                notes: invoiceData.notes || '',
+                payment_terms: invoiceData.paymentTerms || 'net30'
             };
 
             const { data, error } = await this.supabase
