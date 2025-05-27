@@ -467,11 +467,15 @@ document.addEventListener('DOMContentLoaded', async () => {
             username: userNameInput.value,
             email: userEmailInput.value,
             phone: userPhoneInput.value,
-            language: userLanguageSelect.value
+            language: userLanguageSelect.value,
+            updated_at: new Date().toISOString()
           })
           .eq('id', userId);
 
-        if (error) throw error;
+        if (error) {
+          console.error('Error updating user settings:', error);
+          throw error;
+        }
 
         // Update local settings
         userSettings.name = userNameInput.value;
@@ -479,6 +483,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         userSettings.phone = userPhoneInput.value;
         userSettings.language = userLanguageSelect.value;
         
+        // Update UI
         userNameDisplay.textContent = userSettings.name;
         
         // Disable inputs

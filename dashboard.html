@@ -1108,7 +1108,6 @@
                 // Calculate total invoices and revenue
                 const totalInvoices = allInvoices.length;
                 const totalRevenue = allInvoices
-                    .filter(invoice => invoice.status === 'paid')
                     .reduce((sum, invoice) => sum + (invoice.total_amount || 0), 0);
 
                 // Get this month's invoices
@@ -1121,7 +1120,6 @@
                 // Calculate this month's metrics
                 const thisMonthTotal = thisMonthInvoices.length;
                 const thisMonthRevenue = thisMonthInvoices
-                    .filter(invoice => invoice.status === 'paid')
                     .reduce((sum, invoice) => sum + (invoice.total_amount || 0), 0);
 
                 // Get last month's invoices for comparison
@@ -1142,7 +1140,6 @@
                 // Calculate growth percentages
                 const lastMonthTotal = lastMonthInvoices.length;
                 const lastMonthRevenue = lastMonthInvoices
-                    .filter(invoice => invoice.status === 'paid')
                     .reduce((sum, invoice) => sum + (invoice.total_amount || 0), 0);
 
                 const totalGrowth = lastMonthTotal > 0 
@@ -1480,13 +1477,11 @@
                 const monthlyRevenue = Array(12).fill(0);
                 const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
-                // Calculate revenue for each month (only paid invoices)
+                // Calculate revenue for each month (all invoices)
                 invoices.forEach(invoice => {
-                    if (invoice.status === 'paid') {
-                        const date = new Date(invoice.issue_date);
-                        const month = date.getMonth();
-                        monthlyRevenue[month] += Number(invoice.total_amount || 0);
-                    }
+                    const date = new Date(invoice.issue_date);
+                    const month = date.getMonth();
+                    monthlyRevenue[month] += Number(invoice.total_amount || 0);
                 });
 
                 // Store year data for navigation
@@ -1529,13 +1524,11 @@
                 const dailyRevenue = Array(daysInMonth).fill(0);
                 const dayLabels = Array.from({length: daysInMonth}, (_, i) => i + 1);
 
-                // Calculate daily revenue
+                // Calculate daily revenue (all invoices)
                 invoices.forEach(invoice => {
-                    if (invoice.status === 'paid') {
-                        const date = new Date(invoice.issue_date);
-                        const day = date.getDate() - 1; // 0-based index
-                        dailyRevenue[day] += Number(invoice.total_amount || 0);
-                    }
+                    const date = new Date(invoice.issue_date);
+                    const day = date.getDate() - 1; // 0-based index
+                    dailyRevenue[day] += Number(invoice.total_amount || 0);
                 });
 
                 // Update chart
