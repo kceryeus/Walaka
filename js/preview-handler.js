@@ -44,10 +44,7 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Show preview modal
         if (viewInvoiceModal) {
-            viewInvoiceModal.style.display = 'block';
-            document.querySelector('.modal-overlay').style.display = 'block';
-            
-            // Preview invoice
+            // Preview invoice - this function now handles showing the modal
             await window.invoiceTemplateManager.previewInvoice(invoiceData);
         }
     }
@@ -73,8 +70,12 @@ document.addEventListener('DOMContentLoaded', function() {
     const closeButtons = document.querySelectorAll('.close-modal, #closeInvoiceBtn');
     closeButtons.forEach(button => {
         button.addEventListener('click', () => {
-            viewInvoiceModal.style.display = 'none';
-            document.querySelector('.modal-overlay').style.display = 'none';
+            viewInvoiceModal.classList.remove('active');
+            document.body.classList.remove('modal-open');
+            const modalOverlay = document.querySelector('.modal-overlay');
+            if (modalOverlay) {
+                 modalOverlay.classList.remove('active'); // Assuming overlay also uses active class
+            }
         });
     });
 });

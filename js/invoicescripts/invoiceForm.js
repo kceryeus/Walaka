@@ -114,6 +114,8 @@ class InvoiceForm {
 
     collectInvoiceData() {
         try {
+            console.log('Starting to collect invoice data...');
+            
             // Get required form elements with null checks
             const clientList = document.getElementById('client-list');
             const invoiceNumber = document.getElementById('invoiceNumber');
@@ -123,23 +125,38 @@ class InvoiceForm {
             const notes = document.getElementById('notes');
             const paymentTerms = document.getElementById('paymentTerms');
 
+            console.log('Form elements found:', {
+                clientList: !!clientList,
+                invoiceNumber: !!invoiceNumber,
+                issueDate: !!issueDate,
+                dueDate: !!dueDate,
+                currency: !!currency,
+                notes: !!notes,
+                paymentTerms: !!paymentTerms
+            });
+
             // Validate all required fields exist
             if (!clientList || !invoiceNumber || !issueDate || !dueDate || !currency) {
                 throw new Error('Required form fields are missing');
             }
 
-            // Get client data safely
-            // Assuming client-list value is the client name for now, as parsing might be complex
+            // Get client data
             const clientName = clientList.value || '';
             const clientEmail = document.getElementById('clientEmail')?.value || '';
             const clientAddress = document.getElementById('clientAddress')?.value || '';
             const clientTaxId = document.getElementById('clientTaxId')?.value || '';
-            // Add client_contact field, assuming a form field with ID 'clientContact' exists or leave empty
             const clientContact = document.getElementById('clientContact')?.value || '';
 
-            // Get company data (assuming these might come from settings or other global source)
-            // For now, use placeholder data or fetch from settings if available globally
-            const companyData = window.companySettings || { // Assuming companySettings might be available globally
+            console.log('Client data collected:', {
+                name: clientName,
+                email: clientEmail,
+                address: clientAddress,
+                taxId: clientTaxId,
+                contact: clientContact
+            });
+
+            // Get company data from settings or use defaults
+            const companyData = window.companySettings || {
                 name: 'Your Company Name',
                 address: 'Your Company Address',
                 email: 'info@yourcompany.com',
@@ -148,48 +165,37 @@ class InvoiceForm {
                 logo: '' // Placeholder for logo URL
             };
 
-            const invoiceData = {
-                invoiceNumber: invoiceNumber.value,
-                issueDate: issueDate.value,
-                dueDate: dueDate.value,
-                currency: currency.value || 'MZN',
-                 // Use standardized client data keys
-                client: {
-                    name: clientName,
-                    email: clientEmail,
-                    address: clientAddress,
-                    taxId: clientTaxId,
-                    contact: clientContact
-                },
-                 // Include company data
-                company: companyData,
-                paymentTerms: paymentTerms.value || 'net30',
-                notes: notes?.value || '',
-                status: 'pending',
-                items: [],
-                 // Ensure these are numbers, not text content
-                subtotal: parseFloat(document.getElementById('subtotal')?.textContent || '0'),
-                totalVat: parseFloat(document.getElementById('totalVat')?.textContent || '0'),
-                total: parseFloat(document.getElementById('invoiceTotal')?.textContent || '0')
-            };
+            console.log('Company data:', companyData);
 
-            // Validate required fields have values
-            if (!invoiceData.invoiceNumber || !invoiceData.client.name) {
-                throw new Error('Invoice number and client name are required');
-            }
+            // Calculate totals
+            const subtotal = parseFloat(document.getElementById('subtotal')?.textContent || '0');
+            const totalVat = parseFloat(document.getElementById('totalVat')?.textContent || '0');
+            const total = parseFloat(document.getElementById('invoiceTotal')?.textContent || '0');
+
+            console.log('Totals calculated:', { subtotal, totalVat, total });
 
             // Collect items
+            const items = [];
             const itemRows = document.querySelectorAll('.item-row');
-            itemRows.forEach(row => {
+            console.log('Found item rows:', itemRows.length);
+
+            itemRows.forEach((row, index) => {
                 const description = row.querySelector('.item-description')?.value;
                 const quantity = parseFloat(row.querySelector('.item-quantity')?.value) || 0;
                 const price = parseFloat(row.querySelector('.item-price')?.value) || 0;
-                 // Get VAT and Total directly from calculated spans
                 const vat = parseFloat(row.querySelector('.item-vat')?.textContent) || 0;
                 const total = parseFloat(row.querySelector('.item-total')?.textContent) || 0;
 
-                if (description && quantity > 0 && price >= 0) { // Ensure price is not negative
-                    invoiceData.items.push({
+                console.log(`Item ${index + 1}:`, {
+                    description,
+                    quantity,
+                    price,
+                    vat,
+                    total
+                });
+
+                if (description && quantity > 0 && price >= 0) {
+                    items.push({
                         description,
                         quantity,
                         price,
@@ -200,14 +206,88 @@ class InvoiceForm {
             });
 
             // Validate invoice has items
-            if (invoiceData.items.length === 0) {
+            if (items.length === 0) {
                 throw new Error('Invoice must have at least one item');
+            }
+
+            // Construct the complete invoice data object
+            const invoiceData = {
+                invoiceNumber: invoiceNumber.value,
+                issueDate: issueDate.value,
+                dueDate: dueDate.value,
+                currency: currency.value || 'MZN',
+                status: 'pending',
+                client: {
+                    name: clientName,
+                    email: clientEmail,
+                    address: clientAddress,
+                    taxId: clientTaxId,
+                    contact: clientContact
+                },
+                company: companyData,
+                paymentTerms: paymentTerms.value || 'net30',
+                notes: notes?.value || '',
+                items: items,
+                subtotal: subtotal,
+                totalVat: totalVat,
+                total: total
+            };
+
+            console.log('Complete invoice data:', invoiceData);
+
+            // Validate required fields have values
+            if (!invoiceData.invoiceNumber || !invoiceData.client.name) {
+                throw new Error('Invoice number and client name are required');
             }
 
             return invoiceData;
         } catch (error) {
             console.error('Error collecting invoice data:', error);
             throw new Error('Failed to collect invoice data: ' + error.message);
+        }
+    }
+
+    async saveInvoice() {
+        try {
+            const invoiceData = this.collectInvoiceData();
+            
+            // Format data for Supabase storage
+            const formattedData = {
+                invoice_number: invoiceData.invoiceNumber,
+                issue_date: invoiceData.issueDate,
+                due_date: invoiceData.dueDate,
+                status: invoiceData.status || 'pending',
+                currency: invoiceData.currency,
+                client_data: {
+                    name: invoiceData.client.name,
+                    email: invoiceData.client.email,
+                    address: invoiceData.client.address,
+                    taxId: invoiceData.client.taxId,
+                    contact: invoiceData.client.contact
+                },
+                items: invoiceData.items,
+                totals: {
+                    subtotal: invoiceData.subtotal,
+                    vat: invoiceData.totalVat,
+                    total: invoiceData.total
+                },
+                notes: invoiceData.notes,
+                payment_terms: invoiceData.paymentTerms
+            };
+
+            const { data, error } = await this.supabase
+                .from('invoices')
+                .insert([formattedData])
+                .select();
+
+            if (error) throw error;
+
+            showNotification('Invoice saved successfully', 'success');
+            return data[0];
+        } catch (error) {
+            console.error('Error saving invoice:', error);
+            showNotification('Error saving invoice: ' + error.message, 'error');
+            throw error;
         }
     }
 }

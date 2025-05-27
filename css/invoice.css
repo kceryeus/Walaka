@@ -370,7 +370,7 @@
 
 /* Modal Styling */
 .modal {
-    display: none;
+    display: none; 
     position: fixed;
     z-index: 1001;
     left: 0;
@@ -380,6 +380,14 @@
     overflow: auto;
 }
 
+.modal.active {
+    display: flex; /* Show the modal when the active class is present */
+    /* The other properties like position, z-index, etc., are inherited from .modal or can be redefined here if needed */
+    /* Ensure it's centered or positioned as desired */
+    align-items: center; /* Center content vertically */
+    justify-content: center; /* Center content horizontally */
+}
+
 .modal-overlay {
     display: none;
     position: fixed;
@@ -387,8 +395,12 @@
     left: 0;
     right: 0;
     bottom: 0;
-    background-color: rgba(0, 0, 0, 0.5);
-    z-index: 1000;
+    background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent black background */
+    z-index: 1000; /* Lower z-index than the modal */
+}
+
+.modal-overlay.active {
+    display: block; /* Show the overlay when the active class is present */
 }
 
 .modal-content {
@@ -1005,7 +1017,7 @@
     }
 }
 
-/* Date Range Modal Styles */
+/* Date Range Modal Styles 
 #dateRangeModal .modal-content {
     border-radius: 8px;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
@@ -1089,7 +1101,7 @@
     background-color: #0069d9;
     border-color: #0062cc;
 }
-
+*/
 /* Export Buttons Styles */
 .export-buttons {
     display: flex;
