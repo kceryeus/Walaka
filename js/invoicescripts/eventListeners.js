@@ -95,8 +95,60 @@ function setupEventListeners() {
     if (previewBtn) {
         previewBtn.addEventListener('click', async function() {
             try {
-                const invoiceData = collectInvoiceData();
-                await previewInvoice(invoiceData);
+                // Get all form data
+                const invoiceData = {
+                    invoiceNumber: document.getElementById('invoiceNumber')?.value || 'Draft Invoice',
+                    issueDate: document.getElementById('issueDate')?.value || new Date().toISOString().split('T')[0],
+                    dueDate: document.getElementById('dueDate')?.value || new Date(Date.now() + 30*24*60*60*1000).toISOString().split('T')[0],
+                    currency: document.getElementById('currency')?.value || 'MZN',
+                    status: 'draft',
+                    client: {
+                        name: document.getElementById('client-list')?.value || '',
+                        email: document.getElementById('clientEmail')?.value || '',
+                        address: document.getElementById('clientAddress')?.value || '',
+                        taxId: document.getElementById('clientTaxId')?.value || ''
+                    },
+                    company: {
+                        name: 'Your Company Name', // These should be replaced with actual company data
+                        address: 'Your Company Address',
+                        taxId: 'Your Tax ID',
+                        contact: 'Your Contact Info'
+                    },
+                    items: [],
+                    subtotal: 0,
+                    totalVat: 0,
+                    total: 0,
+                    notes: document.getElementById('notes')?.value || '',
+                    paymentTerms: document.getElementById('paymentTerms')?.value || 'net30'
+                };
+
+                // Collect items from the table
+                const itemRows = document.querySelectorAll('#itemsTable tbody .item-row');
+                itemRows.forEach(row => {
+                    const description = row.querySelector('.item-description')?.value || '';
+                    const quantity = parseFloat(row.querySelector('.item-quantity')?.value || '0');
+                    const price = parseFloat(row.querySelector('.item-price')?.value || '0');
+                    const vat = parseFloat(row.querySelector('.item-vat')?.textContent || '0');
+                    const total = parseFloat(row.querySelector('.item-total')?.textContent || '0');
+
+                    if (description) {
+                        invoiceData.items.push({
+                            description,
+                            quantity,
+                            price,
+                            vat,
+                            total
+                        });
+                    }
+                });
+
+                // Get totals
+                invoiceData.subtotal = parseFloat(document.getElementById('subtotal')?.textContent || '0');
+                invoiceData.totalVat = parseFloat(document.getElementById('totalVat')?.textContent || '0');
+                invoiceData.total = parseFloat(document.getElementById('invoiceTotal')?.textContent || '0');
+
+                console.log('Preview data:', invoiceData);
+                await window.previewInvoice(invoiceData);
             } catch (error) {
                 console.error('Error in preview:', error);
                 showNotification('Error: ' + error.message);

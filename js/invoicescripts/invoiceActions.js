@@ -1,10 +1,7 @@
 // Invoice Actions Module
 class InvoiceActions {
-    constructor() {
-        if (!window.supabase) {
-            throw new Error('Supabase client not initialized on window');
-        }
-        this.supabase = window.supabase;
+    constructor(supabase) {
+        this.supabase = supabase;
         this.statusManager = null;
         this.setupEventListeners();
     }
@@ -30,7 +27,7 @@ class InvoiceActions {
             console.log('this.supabase.auth:', this.supabase ? this.supabase.auth : 'supabase is null or undefined');
 
             // Check if user is authenticated
-            const { data: { user }, error: authError } = await window.supabase.auth.getUser();
+            const { data: { user }, error: authError } = await this.supabase.auth.getUser();
             if (authError) {
                 console.error('Authentication error:', authError);
                 showNotification('Please log in to update invoice status', 'error');
@@ -43,7 +40,7 @@ class InvoiceActions {
             }
 
             // Initialize status manager - Pass supabase client
-            this.statusManager = new window.InvoiceStatusManager(window.supabase);
+            this.statusManager = new window.InvoiceStatusManager(this.supabase);
             await this.statusManager.initialize(invoiceNumber);
 
             // Check if transition to new status is allowed
@@ -71,7 +68,7 @@ class InvoiceActions {
     async sendInvoice(invoiceNumber) {
         try {
             // Update invoice status
-            const { error: updateError } = await window.supabase
+            const { error: updateError } = await this.supabase
                 .from('invoices')
                 .update({ 
                     status: 'sent',
@@ -82,7 +79,7 @@ class InvoiceActions {
             if (updateError) throw updateError;
 
             // Add timeline event
-            const { error: timelineError } = await window.supabase
+            const { error: timelineError } = await this.supabase
                 .from('invoice_timeline')
                 .insert([{
                     invoiceNumber: invoiceNumber,
@@ -126,7 +123,7 @@ class InvoiceActions {
             }
 
             // Delete invoice
-            const { error: deleteError } = await window.supabase
+            const { error: deleteError } = await this.supabase
                 .from('invoices')
                 .delete()
                 .eq('invoiceNumber', invoiceNumber);
@@ -153,7 +150,7 @@ class InvoiceActions {
     async duplicateInvoice(invoiceNumber) {
         try {
             // Fetch original invoice
-            const { data: originalInvoice, error: fetchError } = await window.supabase
+            const { data: originalInvoice, error: fetchError } = await this.supabase
                 .from('invoices')
                 .select('*')
                 .eq('invoiceNumber', invoiceNumber)
@@ -178,7 +175,7 @@ class InvoiceActions {
             delete newInvoice.id;
 
             // Insert new invoice
-            const { error: insertError } = await window.supabase
+            const { error: insertError } = await this.supabase
                 .from('invoices')
                 .insert([newInvoice]);
 
@@ -200,7 +197,7 @@ class InvoiceActions {
 
     async fetchTimeline(invoiceNumber) {
         try {
-            const { data: timeline, error } = await window.supabase
+            const { data: timeline, error } = await this.supabase
                 .from('invoice_timeline')
                 .select('*')
                 .eq('invoiceNumber', invoiceNumber)
@@ -247,34 +244,135 @@ class InvoiceActions {
         });
     }
 
+    async previewInvoice(invoiceNumber) {
+        try {
+            // Fetch invoice data from Supabase with joined client data
+            const { data: invoice, error } = await this.supabase
+                .from('invoices')
+                .select(`
+                    *,
+                    client:clients (
+                        customer_name,
+                        customer_tax_id,
+                        contact,
+                        email,
+                        telephone,
+                        billing_address,
+                        city,
+                        postal_code,
+                        province,
+                        country
+                    )
+                `)
+                .eq('invoiceNumber', invoiceNumber)
+                .maybeSingle();
+
+            if (error) throw error;
+            if (!invoice) {
+                throw new Error('Invoice not found');
+            }
+
+            // Format the data for preview
+            const formattedData = {
+                invoiceNumber: invoice.invoiceNumber,
+                issueDate: invoice.issueDate,
+                dueDate: invoice.dueDate,
+                status: invoice.status,
+                projectName: invoice.projectName,
+                subtotal: invoice.subtotal,
+                totalVat: invoice.totalVat,
+                total: invoice.total,
+                discount: invoice.discount,
+                notes: invoice.notes,
+                paymentTerms: invoice.paymentTerms,
+                currency: invoice.currency,
+                items: invoice.items,
+                client: invoice.client
+            };
+
+            // Call the preview function
+            await window.previewInvoice(formattedData);
+        } catch (error) {
+            console.error('Error previewing invoice:', error);
+            showNotification('Error previewing invoice: ' + error.message, 'error');
+        }
+    }
+
     async downloadPdf(invoiceNumber) {
         try {
-            // Fetch invoice data
-            const { data: invoice, error } = await window.supabase
+            // Fetch invoice data from Supabase
+            const { data: invoice, error } = await this.supabase
                 .from('invoices')
-                .select('*')
+                .select('*, clients(*)')
                 .eq('invoiceNumber', invoiceNumber)
                 .single();
 
             if (error) throw error;
+            if (!invoice) throw new Error('Invoice not found');
 
-            // Generate PDF using html2pdf
-            const element = document.getElementById('invoicePreviewContent');
-            const opt = {
-                margin: 1,
-                filename: `Invoice-${invoiceNumber}.pdf`,
-                image: { type: 'jpeg', quality: 0.98 },
-                html2canvas: { scale: 2 },
-                jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
-            };
+            // Generate PDF using the fetched data
+            const pdfBlob = await window.generatePDF(invoice);
 
-            html2pdf().set(opt).from(element).save();
+            // Create download link
+            const url = URL.createObjectURL(pdfBlob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `Invoice-${invoiceNumber}.pdf`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
 
-            // Show notification
             window.showNotification('PDF downloaded successfully');
         } catch (error) {
             console.error('Error downloading PDF:', error);
-            window.showNotification('Error downloading PDF');
+            window.showNotification('Error downloading PDF: ' + error.message, 'error');
+        }
+    }
+
+    async emailInvoice(invoiceNumber, emailAddress) {
+        try {
+            // Fetch invoice data from Supabase
+            const { data: invoice, error } = await this.supabase
+                .from('invoices')
+                .select('*, clients(*)')
+                .eq('invoiceNumber', invoiceNumber)
+                .single();
+
+            if (error) throw error;
+            if (!invoice) throw new Error('Invoice not found');
+
+            // Generate PDF
+            const pdfBlob = await window.generatePDF(invoice);
+
+            // Create form data for email
+            const formData = new FormData();
+            formData.append('to', emailAddress);
+            formData.append('subject', `Invoice ${invoiceNumber}`);
+            formData.append('attachment', pdfBlob, `${invoiceNumber}.pdf`);
+
+            // Get email template
+            const { data: template } = await this.supabase
+                .from('email_templates')
+                .select('content')
+                .eq('type', 'invoice')
+                .single();
+
+            formData.append('message', template?.content || 'Please find attached invoice.');
+
+            // Send email via Supabase Edge Function
+            const { data, error: emailError } = await this.supabase.functions.invoke('send-email', {
+                body: formData
+            });
+
+            if (emailError) throw emailError;
+
+            window.showNotification('Invoice sent successfully');
+            return data;
+        } catch (error) {
+            console.error('Error sending invoice:', error);
+            window.showNotification('Error sending invoice: ' + error.message, 'error');
+            throw error;
         }
     }
 
@@ -295,10 +393,6 @@ class InvoiceActions {
         }
     }
 }
-
-// Initialize and attach to window
-const invoiceActions = new InvoiceActions();
-window.invoiceActions = invoiceActions;
 
 // Export the class
 window.InvoiceActions = InvoiceActions; 

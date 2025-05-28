@@ -1,84 +1,86 @@
 // Template Manager for Invoice System
 const templateManager = {
     // Default template content
-    defaultTemplate: {
-        styles: `
-            .invoice-container { padding: 20px; max-width: 800px; margin: 0 auto; }
-            .invoice-header { margin-bottom: 20px; }
-            .invoice-details { margin-bottom: 20px; }
-            .invoice-items { width: 100%; border-collapse: collapse; }
-            .invoice-items th, .invoice-items td { padding: 8px; border: 1px solid #ddd; }
-            .invoice-total { margin-top: 20px; text-align: right; }
-            .company-header { display: flex; justify-content: space-between; margin-bottom: 20px; }
-            .company-logo { max-width: 200px; max-height: 100px; }
-            .company-details { text-align: right; }
-            .invoice-status { margin-top: 10px; padding: 5px 10px; border-radius: 4px; display: inline-block; }
-            .status-paid { background-color: #e6f4ea; color: #1e7e34; }
-            .status-pending { background-color: #fff3cd; color: #856404; }
-            .status-overdue { background-color: #f8d7da; color: #721c24; }
-        `,
-        layout: `
-            <div class="invoice-container">
-                <div class="company-header">
-                    <div class="company-logo">
-                        {{#if company.logo}}
-                            <img src="{{company.logo}}" alt="{{company.name}}">
-                        {{/if}}
+    defaultTemplate: `
+        <div class="invoice-container">
+            <div class="invoice-header">
+                <div class="company-info">
+                    <div class="company-branding">
+                        <div id="company-logo" data-field="company.logo">
+                            {{#if company.logo}}
+                                <img src="{{company.logo}}" alt="{{company.name}}">
+                            {{/if}}
+                        </div>
+                        <h1 id="display-company-name" data-field="company.name">{{company.name}}</h1>
                     </div>
                     <div class="company-details">
-                        <h2>{{company.name}}</h2>
-                        <p>{{company.address}}</p>
-                        <p>NUIT: {{company.nuit}}</p>
-                        <p>Tel: {{company.phone}}</p>
-                        <p>Email: {{company.email}}</p>
+                        <p id="display-company-address" data-field="company.address">{{company.address}}</p>
+                        <p>Email: <span id="display-company-email" data-field="company.email">{{company.email}}</span></p>
+                        <p>Phone: <span id="display-company-phone" data-field="company.phone">{{company.phone}}</span></p>
+                        <p>NUIT: <span id="display-company-nuit" data-field="company.nuit">{{company.nuit}}</span></p>
                     </div>
                 </div>
-                <div class="invoice-header">
-                    <h1>Invoice {{invoiceNumber}}</h1>
-                    <p>Date: {{issueDate}}</p>
-                    <p>Due Date: {{dueDate}}</p>
-                    <p>Status: <span class="invoice-status status-{{status}}">{{status}}</span></p>
-                </div>
                 <div class="invoice-details">
-                    <h2>Bill To:</h2>
-                    <p><strong>{{client.name}}</strong></p>
-                    <p>Tax ID: {{client.taxId}}</p>
-                    <p>Email: {{client.email}}</p>
-                    <p>Address: {{client.address}}</p>
-                    {{#if client.contact}}
-                    <p>Contact: {{client.contact}}</p>
-                    {{/if}}
-                </div>
-                <table class="invoice-items">
-                    <thead>
-                        <tr>
-                            <th>Description</th>
-                            <th>Quantity</th>
-                            <th>Unit Price</th>
-                            <th>VAT (16%)</th>
-                            <th>Total</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {{items}}
-                    </tbody>
-                </table>
-                <div class="invoice-total">
-                    <p>Subtotal: {{currency}} {{subtotal}}</p>
-                    <p>VAT: {{currency}} {{totalVat}}</p>
-                    <p><strong>Total: {{currency}} {{total}}</strong></p>
-                </div>
-                <div class="invoice-notes">
-                    <h3>Notes:</h3>
-                    <p>{{notes}}</p>
-                </div>
-                <div class="payment-terms">
-                    <h3>Payment Terms:</h3>
-                    <p>{{paymentTerms}}</p>
+                    <h2>INVOICE</h2>
+                    <p>Invoice #: <span id="display-invoice-number" data-field="invoice.number">{{invoice.number}}</span></p>
+                    <p>Date: <span id="display-issue-date" data-field="invoice.issueDate">{{invoice.issueDate}}</span></p>
+                    <p>Due Date: <span id="display-due-date" data-field="invoice.dueDate">{{invoice.dueDate}}</span></p>
+                    <p>Status: <span id="display-invoice-status" data-field="invoice.status">{{invoice.status}}</span></p>
                 </div>
             </div>
-        `
-    },
+            
+            <div class="client-info">
+                <h3>Bill To:</h3>
+                <p id="display-client-name" data-field="client.name">{{client.name}}</p>
+                <p id="display-client-address" data-field="client.address">{{client.address}}</p>
+                <p>NUIT: <span id="display-client-nuit" data-field="client.nuit">{{client.nuit}}</span></p>
+                <p>Email: <span id="display-client-email" data-field="client.email">{{client.email}}</span></p>
+                <p>Contact: <span id="display-client-contact" data-field="client.contact">{{client.contact}}</span></p>
+            </div>
+            
+            <table class="invoice-items">
+                <thead>
+                    <tr>
+                        <th>Description</th>
+                        <th>Quantity</th>
+                        <th>Unit Price</th>
+                        <th>VAT (%)</th>
+                        <th>Total</th>
+                    </tr>
+                </thead>
+                <tbody id="display-items" data-field="invoice.items">
+                    {{#each items}}
+                    <tr>
+                        <td>{{description}}</td>
+                        <td>{{quantity}}</td>
+                        <td>{{currency}} {{price}}</td>
+                        <td>{{vat}}</td>
+                        <td>{{currency}} {{total}}</td>
+                    </tr>
+                    {{/each}}
+                </tbody>
+            </table>
+            
+            <div class="invoice-totals">
+                <div class="total-row">Subtotal: <span id="display-subtotal" data-field="invoice.subtotal">{{currency}} {{invoice.subtotal}}</span></div>
+                <div class="total-row">VAT: <span id="display-totalVat" data-field="invoice.vat">{{currency}} {{invoice.vat}}</span></div>
+                {{#if invoice.discount}}
+                <div class="total-row">Discount: <span id="display-discount" data-field="invoice.discount">{{currency}} {{invoice.discount}}</span></div>
+                {{/if}}
+                <div class="total-row grand-total">Total: <span id="display-total" data-field="invoice.total">{{currency}} {{invoice.total}}</span></div>
+            </div>
+            
+            <div class="notes">
+                <h4>Notes:</h4>
+                <p id="display-notes" data-field="invoice.notes">{{invoice.notes}}</p>
+            </div>
+            
+            <div class="payment-terms">
+                <h4>Payment Terms:</h4>
+                <p id="display-payment-terms" data-field="invoice.paymentTerms">{{invoice.paymentTerms}}</p>
+            </div>
+        </div>
+    `,
 
     // Get selected template from Supabase
     async getSelectedTemplate() {
@@ -206,36 +208,40 @@ const templateManager = {
     },
 
     // Generate invoice HTML from data
-    async generateInvoiceHTML(invoiceData) {
+    async generateInvoiceHTML(data) {
         try {
-            console.log('Generating invoice HTML for data:', invoiceData);
+            console.log('Generating invoice HTML with data:', data);
             
-            // Get selected template
-            const selectedTemplate = await this.getSelectedTemplate();
-            const template = await this.getTemplate(selectedTemplate);
+            // Format dates
+            if (data.invoice.issueDate) {
+                data.invoice.issueDate = this.formatDate(data.invoice.issueDate);
+            }
+            if (data.invoice.dueDate) {
+                data.invoice.dueDate = this.formatDate(data.invoice.dueDate);
+            }
+
+            // Format currency values
+            data.invoice.subtotal = this.formatCurrency(data.invoice.subtotal);
+            data.invoice.vat = this.formatCurrency(data.invoice.vat);
+            data.invoice.total = this.formatCurrency(data.invoice.total);
+            if (data.invoice.discount) {
+                data.invoice.discount = this.formatCurrency(data.invoice.discount);
+            }
+
+            // Format item values
+            data.items = data.items.map(item => ({
+                ...item,
+                price: this.formatCurrency(item.price),
+                vat: this.formatCurrency(item.vat),
+                total: this.formatCurrency(item.total)
+            }));
+
+            // Use Handlebars to compile the template
+            const template = Handlebars.compile(this.defaultTemplate);
+            const html = template(data);
             
-            // Create the full HTML document with styles
-            const html = `
-                <!DOCTYPE html>
-                <html>
-                <head>
-                    <meta charset="UTF-8">
-                    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                    <title>Invoice ${invoiceData.invoiceNumber}</title>
-                    <style>
-                        ${template.styles}
-                    </style>
-                </head>
-                <body>
-                    ${template.layout}
-                </body>
-                </html>
-            `;
-            
-            // Populate template with data
-            const populatedHtml = await this.populateTemplate(html, invoiceData);
-            console.log('Generated HTML:', populatedHtml);
-            return populatedHtml;
+            console.log('Generated HTML:', html);
+            return html;
         } catch (error) {
             console.error('Error generating invoice HTML:', error);
             throw error;
@@ -322,8 +328,8 @@ const templateManager = {
         const d = new Date(date);
         return d.toLocaleDateString('en-US', {
             year: 'numeric',
-            month: 'long',
-            day: 'numeric'
+            month: '2-digit',
+            day: '2-digit'
         });
     },
 

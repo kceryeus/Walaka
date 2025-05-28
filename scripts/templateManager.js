@@ -38,6 +38,49 @@ const TEMPLATE_PREVIEW_DATA = {
     ]
 };
 
+// Supabase data fetching function
+async function fetchInvoiceData(invoiceId) {
+    try {
+        const { data: invoice, error } = await supabase
+            .from('invoices')
+            .select(`
+                *,
+                client:clients(*),
+                items:invoice_items(*),
+                company:company_settings(*)
+            `)
+            .eq('id', invoiceId)
+            .single();
+
+        if (error) throw error;
+        return invoice;
+    } catch (error) {
+        console.error('Error fetching invoice data:', error);
+        throw error;
+    }
+}
+
+// Helper functions for data formatting
+function formatDate(dateString) {
+    if (!dateString) return '';
+    return new Date(dateString).toLocaleDateString();
+}
+
+function formatCurrency(amount, currency = 'MZN') {
+    return new Intl.NumberFormat('pt-MZ', {
+        style: 'currency',
+        currency: currency
+    }).format(amount || 0);
+}
+
+function calculateSubtotal(items) {
+    return items.reduce((sum, item) => sum + (item.unit_price * item.quantity), 0);
+}
+
+function calculateVAT(subtotal, vatRate = 16) {
+    return (subtotal * vatRate) / 100;
+}
+
 // Template definitions with styles and layout
 const TEMPLATES = {
     'classic': {
@@ -48,6 +91,7 @@ const TEMPLATES = {
                 margin: 20px auto;
                 padding: 20px;
                 font-family: 'Inter', sans-serif;
+                color: #000000;
             }
             .invoice-header {
                 display: flex;
@@ -434,39 +478,37 @@ async function populateTemplate(templateContent, invoiceData) {
     const parser = new DOMParser();
     const doc = parser.parseFromString(templateContent, 'text/html');
 
-    // Convert string values to numbers for calculations
-    const subtotal = parseFloat(invoiceData.subtotal) || 0;
-    const totalVat = parseFloat(invoiceData.totalVat) || 0;
-    const discount = parseFloat(invoiceData.discount) || 0;
-    const total = parseFloat(invoiceData.total) || 0;
-
     // Company Information 
-    setDataField(doc, 'company-name', invoiceData.company_name);
-    setDataField(doc, 'company-address', invoiceData.company_address);
-    setDataField(doc, 'company-email', invoiceData.company_email);
-    setDataField(doc, 'company-phone', invoiceData.company_phone);
-    setDataField(doc, 'company-nuit', invoiceData.company_nuit);
+    setDataField(doc, 'company-name', invoiceData.company?.name || '');
+    setDataField(doc, 'company-address', invoiceData.company?.address || '');
+    setDataField(doc, 'company-email', invoiceData.company?.email || '');
+    setDataField(doc, 'company-phone', invoiceData.company?.phone || '');
+    setDataField(doc, 'company-nuit', invoiceData.company?.nuit || '');
 
     // Invoice Details
-    setDataField(doc, 'invoice-number', invoiceData.invoiceNumber);
-    setDataField(doc, 'issue-date', invoiceData.issueDate);
-    setDataField(doc, 'due-date', invoiceData.dueDate);
-    setDataField(doc, 'project-name', invoiceData.projectName);
+    setDataField(doc, 'invoice-number', invoiceData.invoice_number || '');
+    setDataField(doc, 'issue-date', formatDate(invoiceData.issue_date));
+    setDataField(doc, 'due-date', formatDate(invoiceData.due_date));
 
     // Client Information
-    setDataField(doc, 'client-name', invoiceData.clientName);
-    setDataField(doc, 'client-address', invoiceData.clientAddress);
-    setDataField(doc, 'client-nuit', invoiceData.clientTaxId);
-    setDataField(doc, 'client-email', invoiceData.clientEmail);
-    setDataField(doc, 'client-contact', invoiceData.client_contact);
+    setDataField(doc, 'client-name', invoiceData.client?.name || '');
+    setDataField(doc, 'client-address', invoiceData.client?.address || '');
+    setDataField(doc, 'client-nuit', invoiceData.client?.nuit || '');
+    setDataField(doc, 'client-email', invoiceData.client?.email || '');
+    setDataField(doc, 'client-contact', invoiceData.client?.phone || '');
+
+    // Calculate totals
+    const subtotal = calculateSubtotal(invoiceData.items || []);
+    const totalVat = calculateVAT(subtotal);
+    const total = subtotal + totalVat;
 
     // Totals with proper number formatting
-    setDataField(doc, 'subtotal', `${invoiceData.currency} ${parseFloat(invoiceData.subtotal || 0).toFixed(2)}`);
-    setDataField(doc, 'total-vat', `${invoiceData.currency} ${parseFloat(invoiceData.totalVat || 0).toFixed(2)}`);
-    setDataField(doc, 'total', `${invoiceData.currency} ${parseFloat(invoiceData.total || 0).toFixed(2)}`);
+    setDataField(doc, 'subtotal', formatCurrency(subtotal, invoiceData.currency));
+    setDataField(doc, 'total-vat', formatCurrency(totalVat, invoiceData.currency));
+    setDataField(doc, 'total', formatCurrency(total, invoiceData.currency));
 
     // Notes
-    setDataField(doc, 'notes', invoiceData.notes);
+    setDataField(doc, 'notes', invoiceData.notes || '');
 
     // Populate Items
     const itemsContainer = doc.getElementById('invoice-items-body');
@@ -475,13 +517,11 @@ async function populateTemplate(templateContent, invoiceData) {
             <tr>
                 <td>${item.description || ''}</td>
                 <td>${item.quantity || ''}</td>
-                <td>${invoiceData.currency || ''} ${parseFloat(item.price || 0).toFixed(2)}</td>
-                <td>${parseFloat(item.vat || 0).toFixed(2)}%</td>
-                <td>${invoiceData.currency || ''} ${parseFloat(item.total || 0).toFixed(2)}</td>
+                <td>${formatCurrency(item.unit_price, invoiceData.currency)}</td>
+                <td>${item.vat_rate || 16}%</td>
+                <td>${formatCurrency(item.total, invoiceData.currency)}</td>
             </tr>
         `).join('');
-    } else if (itemsContainer) {
-        itemsContainer.innerHTML = ''; // Clear items if none exist or data is invalid
     }
 
     return doc.documentElement.outerHTML;
@@ -496,11 +536,14 @@ function setDataField(doc, id, value) {
 
 /**
  * Generate invoice HTML from data
- * @param {Object} invoiceData - The invoice data
+ * @param {string} invoiceId - The ID of the invoice
  * @returns {Promise<string>} The generated HTML
  */
-async function generateInvoiceHTML(invoiceData) {
+async function generateInvoiceHTML(invoiceId) {
     try {
+        // Fetch invoice data from Supabase
+        const invoiceData = await fetchInvoiceData(invoiceId);
+        
         // Get selected template
         const selectedTemplate = await window.invoiceTemplateManager.getSelectedTemplate();
         const template = TEMPLATES[selectedTemplate] || TEMPLATES['classic'];
@@ -512,7 +555,7 @@ async function generateInvoiceHTML(invoiceData) {
             <head>
                 <meta charset="UTF-8">
                 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                <title>Invoice</title>
+                <title>Invoice ${invoiceData.invoice_number}</title>
                 <style>
                     ${template.styles}
                 </style>
@@ -538,7 +581,7 @@ async function generateInvoiceHTML(invoiceData) {
  */
 async function previewInvoice(invoiceData) {
     try {
-        const html = await generateInvoiceHTML(invoiceData);
+        const html = await generateInvoiceHTML(invoiceData.id);
         const previewContainer = document.getElementById('invoicePreviewContent');
         if (previewContainer) {
             previewContainer.innerHTML = html;

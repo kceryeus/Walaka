@@ -108,13 +108,32 @@
                     <span>Dashboard</span>
                 </a>
                 
-                <div class="nav-section">
+<!--                <div class="nav-section">
                     <h3>Facturação</h3>
+                </div>-->
+                <div class="nav-section">
+                    <h3 class="nav-header has-submenu">
+                        Facturação
+                    </h3>
+                    <div class="submenu">
+                        <a href="invoices.html" class="nav-item active">
+                            <i class="fas fa-file-invoice-dollar"></i>
+                            <span>Facturas</span>
+                        </a>
+                        <a href="credit_notes.html" class="nav-item">
+                            <i class="fas fa-file-invoice"></i>
+                            <span>Notas de Crédito</span>
+                        </a>
+                        <a href="debit_notes.html" class="nav-item">
+                            <i class="fas fa-file-invoice"></i>
+                            <span>Notas de Débito</span>
+                        </a>
+                        <a href="receipts.html" class="nav-item">
+                            <i class="fas fa-receipt"></i>
+                            <span>Recibos</span>
+                        </a>
+                    </div>
                 </div>
-                <a href="invoices.html" class="nav-item active">
-                    <i class="fas fa-file-invoice-dollar"></i>
-                    <span>Facturas</span>
-                </a>
 
                 <a href="clients/clients.html" class="nav-item">
                     <i class="fas fa-users"></i>
@@ -200,24 +219,6 @@
                     <i class="fas fa-bars"></i>
                 </button>
                 
-                <div class="top-bar-menu">
-                    <a href="invoices.html" class="top-bar-menu-item active">
-                        <i class="fas fa-file-invoice-dollar"></i>
-                        <span>Invoices</span>
-                    </a>
-                    <a href="credit_notes.html" class="top-bar-menu-item">
-                        <i class="fas fa-file-invoice"></i>
-                        <span>Credit Notes</span>
-                    </a>
-                    <a href="debit_notes.html" class="top-bar-menu-item">
-                        <i class="fas fa-file-invoice"></i>
-                        <span>Debit Notes</span>
-                    </a>
-                    <a href="receipts.html" class="top-bar-menu-item">
-                        <i class="fas fa-receipt"></i>
-                        <span>Receipts</span>
-                    </a>
-                </div>
                 
                 <div class="user-menu" style="margin-left:auto;">
                     <div class="notification-bell">
@@ -483,18 +484,7 @@
             <div class="modal-body">
                 <form id="invoiceForm">
                     <div class="form-grid">
-                    <!--    <div class="form-section">
-                            <h3>Client Information</h3>
-                            <div class="form-row">
-                                <div class="form-group">
-                                    <label for="client-list">Client Name</label>
-                                    <input type="text" id="client-list" required autocomplete="off">
-                                </div>
-                            </div>
-                            <div id="expand-client-form" style="display: none;">
-                                 New client form fields go here 
-                            </div>
-                        </div>-->
+
                         <div class="form-section">
                             <h3>Client Information</h3>
                             <div class="form-row">

@@ -1221,3 +1221,86 @@
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
 }
+
+/* Sidebar Submenu Styles */
+.nav-section .nav-header.has-submenu {
+    color: rgba(255, 255, 255, 0.7); /* Lighter color */
+    font-size: 0.75rem; /* Smaller font size */
+    text-transform: uppercase; /* Uppercase text */
+    letter-spacing: 0.05rem; /* Add letter spacing */
+    margin: 1.5rem 0 0.5rem 0; /* Match margin of nav-section h3 */
+    padding: 0 0 0 0.5rem; /* Match padding of nav-section h3 */
+    cursor: pointer; /* Keep cursor pointer for clickability */
+    font-weight: 600; /* Match font weight of nav-section h3 */
+    display: block; /* Ensure it takes full width */
+}
+
+.nav-section .nav-header.has-submenu:hover {
+    color: rgba(255, 255, 255, 1); /* Slightly brighter on hover */
+    background: none; /* No background change on hover */
+}
+
+/* Remove icon and submenu icon specific styles for the header */
+.nav-section .nav-header.has-submenu i {
+    display: none;
+}
+
+.submenu-icon {
+    /* Keep original submenu icon styles for when it's added via JS for active state if needed, though not in HTML now */
+    margin-left: auto;
+    transition: transform 0.2s ease;
+    font-size: 0.8rem;
+}
+
+.nav-section.active .submenu-icon {
+    transform: rotate(180deg);
+}
+
+.submenu {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease;
+    background-color: rgba(0, 0, 0, 0.02); /* Slightly different background for submenu */
+}
+
+.nav-section.active .submenu {
+    max-height: 500px;
+}
+
+.submenu .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 1rem 0.75rem 2rem; /* Adjusted left padding for indentation */
+    color: #b8c2cc;
+    text-decoration: none;
+    transition: all var(--transition-speed) ease;
+    border-radius: var(--card-radius);
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+.submenu .nav-item i {
+    width: 20px;
+    text-align: center;
+    font-size: 1rem;
+    margin-right: 0;
+}
+
+.submenu .nav-item:hover {
+    background: rgba(255, 255, 255, 0.1); /* Match standard nav-item hover background */
+    color: white;
+}
+
+.submenu .nav-item:hover i {
+    color: white; /* Match standard nav-item hover icon color */
+}
+
+.submenu .nav-item.active {
+    background: var(--primary-color);
+    color: white;
+}
+
+.submenu .nav-item.active i {
+    color: white;
+}

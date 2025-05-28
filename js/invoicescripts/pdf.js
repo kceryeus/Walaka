@@ -57,30 +57,76 @@ function formatCurrency(amount) {
     }).format(amount || 0);
 }
 
+/**
+ * Generate PDF from invoice data
+ * @param {Object} invoiceData - The invoice data
+ * @returns {Promise<Blob>} - The generated PDF blob
+ */
 async function generatePDF(invoiceData) {
-    // Generate invoice HTML using the function from templateManager
-    const invoiceHTML = await window.invoiceTemplateManager.generateInvoiceHTML(invoiceData);
-    
-    // Create a temporary container
-    const container = document.createElement('div');
-    container.innerHTML = invoiceHTML;
-    document.body.appendChild(container);
-    
-    // Generate PDF using html2pdf
-    const opt = {
-        margin: 10,
-        filename: `${invoiceData.invoiceNumber}.pdf`,
-        image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { scale: 2 },
-        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-    };
-    
     try {
-        const pdf = await html2pdf().from(container).set(opt).outputPdf('blob');
+        // If we have an invoice number, fetch the full data from Supabase
+        if (invoiceData.invoiceNumber) {
+            const { data: fullInvoiceData, error } = await window.supabase
+                .from('invoices')
+                .select('*, clients(*)')
+                .eq('invoiceNumber', invoiceData.invoiceNumber)
+                .single();
+
+            if (error) throw error;
+            if (fullInvoiceData) {
+                invoiceData = fullInvoiceData;
+            }
+        }
+
+        // Format the data for the template
+        const formattedData = {
+            invoiceNumber: invoiceData.invoice_number || invoiceData.invoiceNumber,
+            issueDate: invoiceData.issue_date || invoiceData.issueDate,
+            dueDate: invoiceData.due_date || invoiceData.dueDate,
+            status: invoiceData.status || 'pending',
+            currency: invoiceData.currency || 'MZN',
+            client: {
+                name: invoiceData.client_data?.name || invoiceData.client?.name || invoiceData.clients?.customer_name,
+                email: invoiceData.client_data?.email || invoiceData.client?.email || invoiceData.clients?.email,
+                address: invoiceData.client_data?.address || invoiceData.client?.address || invoiceData.clients?.address,
+                taxId: invoiceData.client_data?.taxId || invoiceData.client?.taxId || invoiceData.clients?.nuit,
+                contact: invoiceData.client_data?.contact || invoiceData.client?.contact || invoiceData.clients?.contact
+            },
+            company: invoiceData.company || {},
+            items: invoiceData.items || [],
+            subtotal: invoiceData.totals?.subtotal || invoiceData.subtotal || 0,
+            totalVat: invoiceData.totals?.vat || invoiceData.totalVat || 0,
+            total: invoiceData.totals?.total || invoiceData.total || 0,
+            notes: invoiceData.notes || '',
+            paymentTerms: invoiceData.payment_terms || invoiceData.paymentTerms || 'net30'
+        };
+
+        // Generate HTML using the template manager
+        const html = await window.invoiceTemplateManager.generateInvoiceHTML(formattedData);
+
+        // Create a temporary container for the PDF generation
+        const container = document.createElement('div');
+        container.innerHTML = html;
+        document.body.appendChild(container);
+
+        // Configure PDF options
+        const opt = {
+            margin: 1,
+            filename: `Invoice-${formattedData.invoiceNumber}.pdf`,
+            image: { type: 'jpeg', quality: 0.98 },
+            html2canvas: { scale: 2 },
+            jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
+        };
+
+        // Generate PDF
+        const pdf = await html2pdf().set(opt).from(container).outputPdf('blob');
+
+        // Clean up
         document.body.removeChild(container);
+
         return pdf;
     } catch (error) {
-        document.body.removeChild(container);
+        console.error('Error generating PDF:', error);
         throw error;
     }
 }

@@ -8,27 +8,54 @@ async function previewInvoice(invoiceData) {
     try {
         console.log('Preview Invoice - Received Data:', invoiceData);
         
-        // Ensure we have the required data structure
+        // Format the data for the template
         const formattedData = {
-            invoiceNumber: invoiceData.invoice_number || invoiceData.invoiceNumber,
-            issueDate: invoiceData.issue_date || invoiceData.issueDate,
-            dueDate: invoiceData.due_date || invoiceData.dueDate,
-            status: invoiceData.status || 'pending',
-            currency: invoiceData.currency || 'MZN',
-            client: {
-                name: invoiceData.client_data?.name || invoiceData.client?.name,
-                email: invoiceData.client_data?.email || invoiceData.client?.email,
-                address: invoiceData.client_data?.address || invoiceData.client?.address,
-                taxId: invoiceData.client_data?.taxId || invoiceData.client?.taxId,
-                contact: invoiceData.client_data?.contact || invoiceData.client?.contact
+            // Company info
+            company: {
+                name: window.companySettings?.name || 'Your Company Name',
+                address: window.companySettings?.address || 'Your Company Address',
+                email: window.companySettings?.email || 'info@yourcompany.com',
+                phone: window.companySettings?.phone || '+258 XX XXX XXXX',
+                nuit: window.companySettings?.nuit || '123456789',
+                logo: window.companySettings?.logo || ''
             },
-            company: invoiceData.company || {},
-            items: invoiceData.items || [],
-            subtotal: invoiceData.totals?.subtotal || invoiceData.subtotal || 0,
-            totalVat: invoiceData.totals?.vat || invoiceData.totalVat || 0,
-            total: invoiceData.totals?.total || invoiceData.total || 0,
-            notes: invoiceData.notes || '',
-            paymentTerms: invoiceData.payment_terms || invoiceData.paymentTerms || 'net30'
+            // Invoice details
+            invoice: {
+                number: invoiceData.invoiceNumber || 'Draft Invoice',
+                issueDate: invoiceData.issueDate || new Date().toISOString().split('T')[0],
+                dueDate: invoiceData.dueDate || new Date(Date.now() + 30*24*60*60*1000).toISOString().split('T')[0],
+                status: invoiceData.status || 'draft',
+                projectName: invoiceData.projectName || '',
+                subtotal: invoiceData.subtotal || 0,
+                vat: invoiceData.totalVat || 0,
+                total: invoiceData.total || 0,
+                discount: invoiceData.discount || 0,
+                notes: invoiceData.notes || '',
+                paymentTerms: invoiceData.paymentTerms || 'net30'
+            },
+            // Client info
+            client: {
+                name: invoiceData.client?.customer_name || 'Client Name',
+                address: invoiceData.client?.billing_address || '',
+                nuit: invoiceData.client?.customer_tax_id || '',
+                email: invoiceData.client?.email || '',
+                contact: invoiceData.client?.contact || '',
+                phone: invoiceData.client?.telephone || '',
+                city: invoiceData.client?.city || '',
+                postal_code: invoiceData.client?.postal_code || '',
+                province: invoiceData.client?.province || '',
+                country: invoiceData.client?.country || ''
+            },
+            // Items
+            items: invoiceData.items?.map(item => ({
+                description: item.description || '',
+                quantity: item.quantity || 0,
+                price: item.price || 0,
+                vat: item.vat || 0,
+                total: item.total || 0
+            })) || [],
+            // Currency
+            currency: invoiceData.currency || 'MZN'
         };
         
         console.log('Formatted data for preview:', formattedData);
@@ -51,16 +78,10 @@ async function previewInvoice(invoiceData) {
         // Show the preview modal
         const viewInvoiceModal = document.getElementById('viewInvoiceModal');
         if (viewInvoiceModal) {
-            console.log('View invoice modal element found.', viewInvoiceModal);
-            console.log('Attempting to activate modal...');
-            viewInvoiceModal.classList.add('active');
+            console.log('View invoice modal element found.');
+            viewInvoiceModal.style.display = 'block';
             document.body.classList.add('modal-open');
-            console.log('Modal activated. Current classList:', viewInvoiceModal.classList);
-            // Optional: Check computed style, though class might not apply inline style
-            // console.log('Modal computed display style:', window.getComputedStyle(viewInvoiceModal).display);
-
-            console.log('Body classList after modal-open:', document.body.classList);
-            console.log('Modal activated'); // Keep original log
+            console.log('Modal activated');
         } else {
             console.error('View invoice modal not found');
         }
@@ -70,18 +91,14 @@ async function previewInvoice(invoiceData) {
         const invoiceStatusElement = document.getElementById('viewInvoiceStatus');
         
         if (invoiceNumberElement) {
-            invoiceNumberElement.textContent = formattedData.invoiceNumber;
-            console.log('Updated invoice number:', formattedData.invoiceNumber);
-        } else {
-            console.error('Invoice number element not found');
+            invoiceNumberElement.textContent = formattedData.invoice.number;
+            console.log('Updated invoice number:', formattedData.invoice.number);
         }
         
         if (invoiceStatusElement) {
-            invoiceStatusElement.textContent = formattedData.status;
-            invoiceStatusElement.className = `status ${formattedData.status.toLowerCase()}`;
-            console.log('Updated invoice status:', formattedData.status);
-        } else {
-            console.error('Invoice status element not found');
+            invoiceStatusElement.textContent = formattedData.invoice.status;
+            invoiceStatusElement.className = `status ${formattedData.invoice.status.toLowerCase()}`;
+            console.log('Updated invoice status:', formattedData.invoice.status);
         }
 
         // Add action buttons to the modal header
@@ -95,7 +112,6 @@ async function previewInvoice(invoiceData) {
                     <i class="fas fa-paper-plane"></i> Send
                 </button>
             `;
-            console.log('Added action buttons');
 
             // Add event listeners for the action buttons
             const downloadPdfBtn = document.getElementById('downloadPdfBtn');
@@ -112,11 +128,9 @@ async function previewInvoice(invoiceData) {
                     openEmailModal(formattedData);
                 });
             }
-        } else {
-            console.error('Actions container not found');
         }
     } catch (error) {
-        console.error('Error generating preview:', error);
+        console.error('Error in previewInvoice:', error);
         showNotification('Error generating preview: ' + error.message, 'error');
     }
 }
@@ -137,7 +151,7 @@ async function downloadInvoicePdf(invoiceData) {
         // Generate PDF using html2pdf
         const opt = {
             margin: 10,
-            filename: `${invoiceData.invoiceNumber}.pdf`,
+            filename: `${invoiceData.invoice.number}.pdf`,
             image: { type: 'jpeg', quality: 0.98 },
             html2canvas: { scale: 2 },
             jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
@@ -167,9 +181,9 @@ function openEmailModal(invoiceData) {
     const emailMessage = document.getElementById('emailMessage');
 
     if (emailTo) emailTo.value = invoiceData.client.email || '';
-    if (emailSubject) emailSubject.value = `Invoice ${invoiceData.invoiceNumber} from ${invoiceData.company.name}`;
+    if (emailSubject) emailSubject.value = `Invoice ${invoiceData.invoice.number} from ${invoiceData.company.name}`;
     if (emailMessage) {
-        emailMessage.value = `Dear ${invoiceData.client.name},\n\nPlease find attached invoice ${invoiceData.invoiceNumber} for ${invoiceData.currency} ${invoiceData.total}.\n\nPayment is due by ${new Date(invoiceData.dueDate).toLocaleDateString()}.\n\nThank you for your business.\n\nBest regards,\n${invoiceData.company.name}`;
+        emailMessage.value = `Dear ${invoiceData.client.name},\n\nPlease find attached invoice ${invoiceData.invoice.number} for ${invoiceData.currency} ${invoiceData.total}.\n\nPayment is due by ${new Date(invoiceData.dueDate).toLocaleDateString()}.\n\nThank you for your business.\n\nBest regards,\n${invoiceData.company.name}`;
     }
 
     // Show modal
