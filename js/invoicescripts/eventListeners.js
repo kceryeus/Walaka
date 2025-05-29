@@ -103,16 +103,16 @@ function setupEventListeners() {
                     currency: document.getElementById('currency')?.value || 'MZN',
                     status: 'draft',
                     client: {
-                        name: document.getElementById('client-list')?.value || '',
+                        customer_name: document.getElementById('client-list')?.value || '',
                         email: document.getElementById('clientEmail')?.value || '',
-                        address: document.getElementById('clientAddress')?.value || '',
-                        taxId: document.getElementById('clientTaxId')?.value || ''
+                        billing_address: document.getElementById('clientAddress')?.value || '',
+                        customer_tax_id: Number(document.getElementById('clientTaxId')?.value) || 0
                     },
                     company: {
-                        name: 'Your Company Name', // These should be replaced with actual company data
-                        address: 'Your Company Address',
-                        taxId: 'Your Tax ID',
-                        contact: 'Your Contact Info'
+                        name: document.getElementById('company-name')?.textContent || 'Your Company Name',
+                        address: document.getElementById('company-address')?.textContent || 'Your Company Address',
+                        nuit: Number(document.getElementById('company-nuit')?.textContent) || 0,
+                        phone: document.getElementById('company-phone')?.textContent || 'Your Contact Info'
                     },
                     items: [],
                     subtotal: 0,

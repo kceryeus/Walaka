@@ -14,14 +14,14 @@ document.addEventListener('DOMContentLoaded', function() {
                 address: document.getElementById('company-address')?.textContent,
                 email: document.getElementById('company-email')?.textContent,
                 phone: document.getElementById('company-phone')?.textContent,
-                nuit: document.getElementById('company-nuit')?.textContent,
+                nuit: Number(document.getElementById('company-nuit')?.textContent) || 0,
                 softwareCertNo: document.getElementById('software-cert-no')?.textContent
             },
             client: {
                 name: document.getElementById('client-list')?.value,
                 address: document.getElementById('clientAddress')?.value,
                 email: document.getElementById('clientEmail')?.value,
-                taxId: document.getElementById('clientTaxId')?.value
+                taxId: Number(document.getElementById('clientTaxId')?.value) || 0
             },
             invoiceNumber: document.getElementById('invoiceNumber')?.value,
             issueDate: document.getElementById('issueDate')?.value,

@@ -16,7 +16,7 @@ async function previewInvoice(invoiceData) {
                 address: window.companySettings?.address || 'Your Company Address',
                 email: window.companySettings?.email || 'info@yourcompany.com',
                 phone: window.companySettings?.phone || '+258 XX XXX XXXX',
-                nuit: window.companySettings?.nuit || '123456789',
+                nuit: Number(window.companySettings?.nuit) || 0,
                 logo: window.companySettings?.logo || ''
             },
             // Invoice details
@@ -37,7 +37,7 @@ async function previewInvoice(invoiceData) {
             client: {
                 name: invoiceData.client?.customer_name || 'Client Name',
                 address: invoiceData.client?.billing_address || '',
-                nuit: invoiceData.client?.customer_tax_id || '',
+                nuit: Number(invoiceData.client?.customer_tax_id) || 0,
                 email: invoiceData.client?.email || '',
                 contact: invoiceData.client?.contact || '',
                 phone: invoiceData.client?.telephone || '',
@@ -60,10 +60,6 @@ async function previewInvoice(invoiceData) {
         
         console.log('Formatted data for preview:', formattedData);
         
-        // Generate HTML using the template manager
-        const html = await window.invoiceTemplateManager.generateInvoiceHTML(formattedData);
-        console.log('Generated HTML:', html);
-        
         // Get the preview container
         const previewContainer = document.getElementById('invoicePreviewContent');
         if (!previewContainer) {
@@ -71,8 +67,33 @@ async function previewInvoice(invoiceData) {
             throw new Error('Preview container not found');
         }
         
+        // Get selected template
+        const selectedTemplate = await window.invoiceTemplateManager.getSelectedTemplate();
+        const template = window.invoiceTemplateManager.TEMPLATES[selectedTemplate] || window.invoiceTemplateManager.TEMPLATES['classic'];
+        
+        // Create the full HTML document with styles
+        const html = `
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <meta charset="UTF-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <title>Invoice ${formattedData.invoice.number}</title>
+                <style>
+                    ${template.styles}
+                </style>
+            </head>
+            <body>
+                ${template.layout}
+            </body>
+            </html>
+        `;
+        
+        // Populate template with data
+        const populatedHtml = await window.invoiceTemplateManager.populateTemplate(html, formattedData);
+        
         // Clear and update the preview content
-        previewContainer.innerHTML = html;
+        previewContainer.innerHTML = populatedHtml;
         console.log('Updated preview content');
         
         // Show the preview modal

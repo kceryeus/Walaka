@@ -17,7 +17,7 @@ const templateManager = {
                         <p id="display-company-address" data-field="company.address">{{company.address}}</p>
                         <p>Email: <span id="display-company-email" data-field="company.email">{{company.email}}</span></p>
                         <p>Phone: <span id="display-company-phone" data-field="company.phone">{{company.phone}}</span></p>
-                        <p>NUIT: <span id="display-company-nuit" data-field="company.nuit">{{company.nuit}}</span></p>
+                        <p>NUIT: <span id="display-company-nuit" data-field="company.nuit">{{#if company.nuit}}{{company.nuit}}{{else}}0{{/if}}</span></p>
                     </div>
                 </div>
                 <div class="invoice-details">
@@ -33,7 +33,7 @@ const templateManager = {
                 <h3>Bill To:</h3>
                 <p id="display-client-name" data-field="client.name">{{client.name}}</p>
                 <p id="display-client-address" data-field="client.address">{{client.address}}</p>
-                <p>NUIT: <span id="display-client-nuit" data-field="client.nuit">{{client.nuit}}</span></p>
+                <p>NUIT: <span id="display-client-nuit" data-field="client.nuit">{{#if client.nuit}}{{client.nuit}}{{else}}0{{/if}}</span></p>
                 <p>Email: <span id="display-client-email" data-field="client.email">{{client.email}}</span></p>
                 <p>Contact: <span id="display-client-contact" data-field="client.contact">{{client.contact}}</span></p>
             </div>
@@ -85,30 +85,40 @@ const templateManager = {
     // Get selected template from Supabase
     async getSelectedTemplate() {
         try {
-            console.log('Getting selected template...');
             const { data: { session } } = await supabase.auth.getSession();
             if (!session) {
                 console.warn('No active session, using default template');
                 return 'classic';
             }
 
-            const { data, error } = await supabase
-                .from('invoice_templates')
-                .select('id, name')
+            // First get user's settings to know which template they selected
+            const { data: settings, error: settingsError } = await supabase
+                .from('invoice_settings')
+                .select('template')
                 .eq('user_id', session.user.id)
-                .eq('is_default', true)
                 .single();
 
-            if (error) {
-                console.error('Error fetching template:', error);
+            if (settingsError) {
+                console.error('Error fetching settings:', settingsError);
                 return 'classic';
             }
 
-            console.log('Selected template:', data?.name || 'classic');
-            return data?.id || 'classic';
+            // Then get the actual template content
+            const { data: template, error: templateError } = await supabase
+                .from('invoice_templates')
+                .select('content')
+                .eq('name', settings.template)
+                .single();
+
+            if (templateError) {
+                console.error('Error fetching template:', templateError);
+                return this.defaultTemplate;
+            }
+
+            return template.content;
         } catch (error) {
             console.error('Error in getSelectedTemplate:', error);
-            return 'classic';
+            return this.defaultTemplate;
         }
     },
 
@@ -228,6 +238,14 @@ const templateManager = {
                 data.invoice.discount = this.formatCurrency(data.invoice.discount);
             }
 
+            // Ensure NUIT values are numbers
+            if (data.company) {
+                data.company.nuit = Number(data.company.nuit) || 0;
+            }
+            if (data.client) {
+                data.client.nuit = Number(data.client.nuit) || 0;
+            }
+
             // Format item values
             data.items = data.items.map(item => ({
                 ...item,
@@ -274,12 +292,12 @@ const templateManager = {
             address: 'Your Company Address',
             email: 'info@yourcompany.com',
             phone: '+258 XX XXX XXXX',
-            nuit: '123456789',
+            nuit: 0,
             logo: ''
         };
         html = html.replace(/{{company\.name}}/g, companyData.name);
         html = html.replace(/{{company\.address}}/g, companyData.address);
-        html = html.replace(/{{company\.nuit}}/g, companyData.nuit);
+        html = html.replace(/{{company\.nuit}}/g, Number(companyData.nuit) || 0);
         html = html.replace(/{{company\.phone}}/g, companyData.phone);
         html = html.replace(/{{company\.email}}/g, companyData.email);
         html = html.replace(/{{company\.logo}}/g, companyData.logo);

@@ -41,19 +41,42 @@ const TEMPLATE_PREVIEW_DATA = {
 // Supabase data fetching function
 async function fetchInvoiceData(invoiceId) {
     try {
-        const { data: invoice, error } = await supabase
+        // First fetch the invoice with client and business profile info
+        const { data: invoice, error: invoiceError } = await supabase
             .from('invoices')
             .select(`
                 *,
                 client:clients(*),
-                items:invoice_items(*),
-                company:company_settings(*)
+                business:business_profiles(*)
             `)
             .eq('id', invoiceId)
             .single();
 
-        if (error) throw error;
-        return invoice;
+        if (invoiceError) throw invoiceError;
+
+        // Then fetch the products
+        const { data: products, error: productsError } = await supabase
+            .from('products')
+            .select('*')
+            .eq('user_id', invoice.user_id);
+
+        if (productsError) throw productsError;
+
+        // Format the products data to match the expected structure
+        const formattedItems = products.map(product => ({
+            description: product.description,
+            quantity: 1, // Default quantity, should be updated based on actual invoice data
+            unit_price: product.price,
+            vat_rate: product.tax_rate,
+            vat_amount: (product.price * product.tax_rate) / 100,
+            total: product.price + ((product.price * product.tax_rate) / 100)
+        }));
+
+        // Combine the data
+        return {
+            ...invoice,
+            items: formattedItems || []
+        };
     } catch (error) {
         console.error('Error fetching invoice data:', error);
         throw error;
@@ -478,12 +501,13 @@ async function populateTemplate(templateContent, invoiceData) {
     const parser = new DOMParser();
     const doc = parser.parseFromString(templateContent, 'text/html');
 
-    // Company Information 
+    // Business Profile Information 
     setDataField(doc, 'company-name', invoiceData.company?.name || '');
     setDataField(doc, 'company-address', invoiceData.company?.address || '');
     setDataField(doc, 'company-email', invoiceData.company?.email || '');
     setDataField(doc, 'company-phone', invoiceData.company?.phone || '');
     setDataField(doc, 'company-nuit', invoiceData.company?.nuit || '');
+    setDataField(doc, 'company-website', invoiceData.company?.website || '');
 
     // Invoice Details
     setDataField(doc, 'invoice-number', invoiceData.invoice_number || '');
@@ -516,9 +540,9 @@ async function populateTemplate(templateContent, invoiceData) {
         itemsContainer.innerHTML = invoiceData.items.map(item => `
             <tr>
                 <td>${item.description || ''}</td>
-                <td>${item.quantity || ''}</td>
-                <td>${formatCurrency(item.unit_price, invoiceData.currency)}</td>
-                <td>${item.vat_rate || 16}%</td>
+                <td>${item.quantity || 1}</td>
+                <td>${formatCurrency(item.price, invoiceData.currency)}</td>
+                <td>${item.vat}%</td>
                 <td>${formatCurrency(item.total, invoiceData.currency)}</td>
             </tr>
         `).join('');
@@ -544,6 +568,61 @@ async function generateInvoiceHTML(invoiceId) {
         // Fetch invoice data from Supabase
         const invoiceData = await fetchInvoiceData(invoiceId);
         
+        if (!invoiceData) {
+            throw new Error('No invoice data found');
+        }
+
+        // Format the data for the template
+        const formattedData = {
+            // Business profile info
+            company: {
+                name: invoiceData.business?.company_name || 'Your Company Name',
+                address: invoiceData.business?.address || 'Your Company Address',
+                email: invoiceData.business?.email || 'info@yourcompany.com',
+                phone: invoiceData.business?.phone || '+258 XX XXX XXXX',
+                nuit: invoiceData.business?.tax_id || '123456789',
+                website: invoiceData.business?.website || '',
+                logo: '' // Add logo field if needed
+            },
+            // Invoice details
+            invoice: {
+                number: invoiceData.invoice_number || 'Draft Invoice',
+                issueDate: invoiceData.issue_date || new Date().toISOString().split('T')[0],
+                dueDate: invoiceData.due_date || new Date(Date.now() + 30*24*60*60*1000).toISOString().split('T')[0],
+                status: invoiceData.status || 'draft',
+                projectName: invoiceData.project_name || '',
+                subtotal: invoiceData.subtotal || 0,
+                vat: invoiceData.vat_amount || 0,
+                total: invoiceData.total_amount || 0,
+                discount: invoiceData.discount || 0,
+                notes: invoiceData.notes || '',
+                paymentTerms: invoiceData.payment_terms || 'net30'
+            },
+            // Client info
+            client: {
+                name: invoiceData.client?.customer_name || 'Client Name',
+                address: invoiceData.client?.address || '',
+                nuit: invoiceData.client?.customer_tax_id || '',
+                email: invoiceData.client?.email || '',
+                contact: invoiceData.client?.contact || '',
+                phone: invoiceData.client?.telephone || '',
+                city: invoiceData.client?.city || '',
+                postal_code: invoiceData.client?.postal_code || '',
+                province: invoiceData.client?.province || '',
+                country: invoiceData.client?.country || ''
+            },
+            // Items - now using product data structure
+            items: (invoiceData.items || []).map(item => ({
+                description: item.description || '',
+                quantity: item.quantity || 1,
+                price: item.unit_price || 0,
+                vat: item.vat_rate || 0,
+                total: item.total || (item.unit_price * (1 + (item.vat_rate / 100)))
+            })),
+            // Currency
+            currency: invoiceData.currency || 'MZN'
+        };
+        
         // Get selected template
         const selectedTemplate = await window.invoiceTemplateManager.getSelectedTemplate();
         const template = TEMPLATES[selectedTemplate] || TEMPLATES['classic'];
@@ -555,7 +634,7 @@ async function generateInvoiceHTML(invoiceId) {
             <head>
                 <meta charset="UTF-8">
                 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                <title>Invoice ${invoiceData.invoice_number}</title>
+                <title>Invoice ${formattedData.invoice.number}</title>
                 <style>
                     ${template.styles}
                 </style>
@@ -567,7 +646,7 @@ async function generateInvoiceHTML(invoiceId) {
         `;
         
         // Populate template with data
-        return await populateTemplate(html, invoiceData);
+        return await populateTemplate(html, formattedData);
     } catch (error) {
         console.error('Error generating invoice HTML:', error);
         throw error;
@@ -581,7 +660,12 @@ async function generateInvoiceHTML(invoiceId) {
  */
 async function previewInvoice(invoiceData) {
     try {
-        const html = await generateInvoiceHTML(invoiceData.id);
+        // Ensure we have a numeric ID
+        const invoiceId = typeof invoiceData === 'object' ? invoiceData.id : invoiceData;
+        if (!invoiceId || typeof invoiceId !== 'number') {
+            throw new Error('Invalid invoice ID provided');
+        }
+        const html = await generateInvoiceHTML(invoiceId);
         const previewContainer = document.getElementById('invoicePreviewContent');
         if (previewContainer) {
             previewContainer.innerHTML = html;
@@ -658,6 +742,7 @@ function getSelectedTemplate() {
 
 // Export functions for external use
 window.invoiceTemplateManager = {
+    TEMPLATES,
     generateInvoiceHTML,
     populateTemplate,
     previewInvoice,
