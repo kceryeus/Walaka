@@ -163,6 +163,7 @@ async function previewInvoice(invoiceData) {
  */
 async function downloadInvoicePdf(invoiceData) {
     try {
+<<<<<<< HEAD
         // Get the preview content
         const previewContent = document.getElementById('invoicePreviewContent');
         if (!previewContent) {
@@ -170,6 +171,31 @@ async function downloadInvoicePdf(invoiceData) {
         }
 
         // Configure PDF options
+=======
+        // Ensure we have valid invoice data
+        if (!invoiceData) {
+            throw new Error('Invalid invoice data');
+        }
+
+        // Get the invoice ID from the data - try different possible locations
+        const invoiceId = invoiceData.id || invoiceData.invoice_id || (invoiceData.invoice && invoiceData.invoice.id);
+        if (!invoiceId) {
+            console.error('Invoice data received:', invoiceData);
+            throw new Error('Invoice ID not found in data');
+        }
+
+        console.log('Using invoice ID for PDF generation:', invoiceId);
+
+        // Generate HTML using the template manager with the invoice ID
+        const html = await window.invoiceTemplateManager.generateInvoiceHTML(invoiceId);
+        
+        // Create a temporary container
+        const container = document.createElement('div');
+        container.innerHTML = html;
+        document.body.appendChild(container);
+        
+        // Generate PDF using html2pdf
+>>>>>>> d973a6f09dc70f5ea42a1b5a80a33089c2285e50
         const opt = {
             margin: 10,
             filename: `${invoiceData.invoiceNumber || 'invoice'}.pdf`,
