@@ -21,6 +21,7 @@ async function previewInvoice(invoiceData) {
             },
             // Invoice details
             invoice: {
+                id: invoiceData.id || invoiceData.invoice_id,
                 number: invoiceData.invoiceNumber || 'Draft Invoice',
                 issueDate: invoiceData.issueDate || new Date().toISOString().split('T')[0],
                 dueDate: invoiceData.dueDate || new Date(Date.now() + 30*24*60*60*1000).toISOString().split('T')[0],
@@ -140,7 +141,7 @@ async function previewInvoice(invoiceData) {
 
             if (downloadPdfBtn) {
                 downloadPdfBtn.addEventListener('click', () => {
-                    downloadInvoicePdf(formattedData);
+                    downloadInvoicePdf(invoiceData);
                 });
             }
 
@@ -163,12 +164,21 @@ async function previewInvoice(invoiceData) {
 async function downloadInvoicePdf(invoiceData) {
     try {
         // Ensure we have valid invoice data
-        if (!invoiceData || !invoiceData.invoice) {
+        if (!invoiceData) {
             throw new Error('Invalid invoice data');
         }
 
-        // Generate HTML using the template manager
-        const html = await window.invoiceTemplateManager.generateInvoiceHTML(invoiceData);
+        // Get the invoice ID from the data - try different possible locations
+        const invoiceId = invoiceData.id || invoiceData.invoice_id || (invoiceData.invoice && invoiceData.invoice.id);
+        if (!invoiceId) {
+            console.error('Invoice data received:', invoiceData);
+            throw new Error('Invoice ID not found in data');
+        }
+
+        console.log('Using invoice ID for PDF generation:', invoiceId);
+
+        // Generate HTML using the template manager with the invoice ID
+        const html = await window.invoiceTemplateManager.generateInvoiceHTML(invoiceId);
         
         // Create a temporary container
         const container = document.createElement('div');
@@ -178,7 +188,7 @@ async function downloadInvoicePdf(invoiceData) {
         // Generate PDF using html2pdf
         const opt = {
             margin: 10,
-            filename: `${invoiceData.invoice.number || 'invoice'}.pdf`,
+            filename: `${invoiceData.invoiceNumber || 'invoice'}.pdf`,
             image: { type: 'jpeg', quality: 0.98 },
             html2canvas: { scale: 2 },
             jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }

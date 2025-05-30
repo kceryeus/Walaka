@@ -220,48 +220,81 @@ const templateManager = {
     },
 
     // Generate invoice HTML from data
-    async generateInvoiceHTML(data) {
+    async generateInvoiceHTML(invoiceId) {
         try {
-            console.log('Generating invoice HTML with data:', data);
-
-            // Use the provided data directly without fetching from the database again
-            const invoiceData = data;
-            
-            // Format dates
-            if (invoiceData.invoice.issueDate) {
-                invoiceData.invoice.issueDate = this.formatDate(invoiceData.invoice.issueDate);
-            }
-            if (invoiceData.invoice.dueDate) {
-                invoiceData.invoice.dueDate = this.formatDate(invoiceData.invoice.dueDate);
+            // Ensure we have a valid invoice ID
+            if (!invoiceId || (typeof invoiceId !== 'number' && typeof invoiceId !== 'string')) {
+                throw new Error('Invalid invoice ID provided');
             }
 
-            // Format currency values
-            invoiceData.invoice.subtotal = this.formatCurrency(invoiceData.invoice.subtotal);
-            invoiceData.invoice.vat = this.formatCurrency(invoiceData.invoice.vat);
-            invoiceData.invoice.total = this.formatCurrency(invoiceData.invoice.total);
-            if (invoiceData.invoice.discount) {
-                invoiceData.invoice.discount = this.formatCurrency(invoiceData.invoice.discount);
+            // Fetch invoice data from Supabase
+            const { data: invoiceData, error } = await supabase
+                .from('invoices')
+                .select(`
+                    *,
+                    client:clients(*),
+                    business:business_profiles(*)
+                `)
+                .eq('id', invoiceId)
+                .single();
+
+            if (error) throw error;
+            if (!invoiceData) {
+                throw new Error('No invoice data found');
             }
 
-            // Ensure NUIT values are numbers
-            if (invoiceData.company) {
-                invoiceData.company.nuit = Number(invoiceData.company.nuit) || 0;
-            }
-            if (invoiceData.client) {
-                invoiceData.client.nuit = Number(invoiceData.client.nuit) || 0;
-            }
-
-            // Format item values
-            invoiceData.items = invoiceData.items.map(item => ({
-                ...item,
-                price: this.formatCurrency(item.price),
-                vat: this.formatCurrency(item.vat),
-                total: this.formatCurrency(item.total)
-            }));
+            // Format the data for the template
+            const formattedData = {
+                // Business profile info
+                company: {
+                    name: invoiceData.business?.company_name || 'Your Company Name',
+                    address: invoiceData.business?.address || 'Your Company Address',
+                    email: invoiceData.business?.email || 'info@yourcompany.com',
+                    phone: invoiceData.business?.phone || '+258 XX XXX XXXX',
+                    nuit: invoiceData.business?.tax_id || '123456789',
+                    website: invoiceData.business?.website || '',
+                    logo: '' // Add logo field if needed
+                },
+                // Invoice details
+                invoice: {
+                    id: invoiceData.id, // Include the invoice ID
+                    number: invoiceData.invoice_number || 'Draft Invoice',
+                    issueDate: invoiceData.issue_date || new Date().toISOString().split('T')[0],
+                    dueDate: invoiceData.due_date || new Date(Date.now() + 30*24*60*60*1000).toISOString().split('T')[0],
+                    status: invoiceData.status || 'draft',
+                    projectName: invoiceData.project_name || '',
+                    subtotal: invoiceData.subtotal || 0,
+                    vat: invoiceData.vat_amount || 0,
+                    total: invoiceData.total_amount || 0,
+                    discount: invoiceData.discount || 0,
+                    notes: invoiceData.notes || '',
+                    paymentTerms: invoiceData.payment_terms || 'net30'
+                },
+                client: {
+                    name: invoiceData.client?.name || invoiceData.client?.customer_name || 'Client Name',
+                    address: invoiceData.client?.address || invoiceData.client?.billing_address || '',
+                    nuit: Number(invoiceData.client?.nuit || invoiceData.client?.customer_tax_id) || 0,
+                    email: invoiceData.client?.email || '',
+                    contact: invoiceData.client?.contact || '',
+                    phone: invoiceData.client?.phone || invoiceData.client?.telephone || '',
+                    city: invoiceData.client?.city || '',
+                    postal_code: invoiceData.client?.postal_code || '',
+                    province: invoiceData.client?.province || '',
+                    country: invoiceData.client?.country || ''
+                },
+                items: (invoiceData.items || []).map(item => ({
+                    description: item.description || '',
+                    quantity: item.quantity || 0,
+                    price: this.formatCurrency(item.price || 0),
+                    vat: this.formatCurrency(item.vat || 0),
+                    total: this.formatCurrency(item.total || 0)
+                })),
+                currency: invoiceData.currency || 'MZN'
+            };
 
             // Use Handlebars to compile the template
             const template = Handlebars.compile(this.defaultTemplate);
-            const html = template(invoiceData);
+            const html = template(formattedData);
             
             console.log('Generated HTML:', html);
             return html;
