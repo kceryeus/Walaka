@@ -38,18 +38,37 @@ document.addEventListener('DOMContentLoaded', function() {
             if (currentPath.includes(link.getAttribute('href'))) {
                 isActive = true;
                 link.classList.add('active');
+                // Only expand the immediate parent of the active link
+                const parentSection = link.closest('.nav-section');
+                if (parentSection) {
+                    parentSection.classList.add('active');
+                }
             }
         });
-        
-        // If current page is in submenu, expand it
-        if (isActive) {
-            navSection.classList.add('active');
-        }
         
         // Toggle submenu on click
         header.addEventListener('click', (e) => {
             e.preventDefault();
+            e.stopPropagation(); // Prevent event from bubbling up
+            
+            // Toggle the current submenu
             navSection.classList.toggle('active');
+            
+            // If this is a parent menu, don't close other parent menus
+            if (!navSection.closest('.submenu')) {
+                return;
+            }
+            
+            // If this is a child menu, close other child menus at the same level
+            const parentSubmenu = navSection.closest('.submenu');
+            if (parentSubmenu) {
+                const siblingSections = parentSubmenu.querySelectorAll('.nav-section');
+                siblingSections.forEach(section => {
+                    if (section !== navSection) {
+                        section.classList.remove('active');
+                    }
+                });
+            }
         });
     });
 }); 
