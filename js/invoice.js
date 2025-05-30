@@ -580,13 +580,18 @@ async function saveInvoice() {
                 customer_name: invoiceData.client.name,
                 user_id: session.user.id // Add user_id for RLS
             }])
-            .select()
-            .single();
+            .select();
 
         console.log('Invoice insert result:', invoice, insertError);
 
         if (insertError) throw insertError;
-        if (!invoice || !invoice.invoiceNumber) {
+        if (!invoice || invoice.length === 0) {
+            throw new Error('Invoice insert did not return any data');
+        }
+
+        // Get the first (and should be only) inserted invoice
+        const insertedInvoice = invoice[0];
+        if (!insertedInvoice.invoiceNumber) {
             throw new Error('Invoice insert did not return invoiceNumber');
         }
 

@@ -162,6 +162,12 @@ async function previewInvoice(invoiceData) {
  */
 async function downloadInvoicePdf(invoiceData) {
     try {
+        // Ensure we have valid invoice data
+        if (!invoiceData || !invoiceData.invoice) {
+            throw new Error('Invalid invoice data');
+        }
+
+        // Generate HTML using the template manager
         const html = await window.invoiceTemplateManager.generateInvoiceHTML(invoiceData);
         
         // Create a temporary container
@@ -172,7 +178,7 @@ async function downloadInvoicePdf(invoiceData) {
         // Generate PDF using html2pdf
         const opt = {
             margin: 10,
-            filename: `${invoiceData.invoice.number}.pdf`,
+            filename: `${invoiceData.invoice.number || 'invoice'}.pdf`,
             image: { type: 'jpeg', quality: 0.98 },
             html2canvas: { scale: 2 },
             jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }

@@ -86,9 +86,11 @@ const templateManager = {
     async getSelectedTemplate() {
         try {
             const { data: { session } } = await supabase.auth.getSession();
-            if (!session) {
-                console.warn('No active session, using default template');
-                return 'classic';
+
+            // Check if session and user exist and user.id is available
+            if (!session || !session.user || !session.user.id) {
+                console.warn('No active session or user ID, using default template');
+                return 'classic'; // Or handle as appropriate for no logged-in user
             }
 
             // First get user's settings to know which template they selected
@@ -221,33 +223,36 @@ const templateManager = {
     async generateInvoiceHTML(data) {
         try {
             console.log('Generating invoice HTML with data:', data);
+
+            // Use the provided data directly without fetching from the database again
+            const invoiceData = data;
             
             // Format dates
-            if (data.invoice.issueDate) {
-                data.invoice.issueDate = this.formatDate(data.invoice.issueDate);
+            if (invoiceData.invoice.issueDate) {
+                invoiceData.invoice.issueDate = this.formatDate(invoiceData.invoice.issueDate);
             }
-            if (data.invoice.dueDate) {
-                data.invoice.dueDate = this.formatDate(data.invoice.dueDate);
+            if (invoiceData.invoice.dueDate) {
+                invoiceData.invoice.dueDate = this.formatDate(invoiceData.invoice.dueDate);
             }
 
             // Format currency values
-            data.invoice.subtotal = this.formatCurrency(data.invoice.subtotal);
-            data.invoice.vat = this.formatCurrency(data.invoice.vat);
-            data.invoice.total = this.formatCurrency(data.invoice.total);
-            if (data.invoice.discount) {
-                data.invoice.discount = this.formatCurrency(data.invoice.discount);
+            invoiceData.invoice.subtotal = this.formatCurrency(invoiceData.invoice.subtotal);
+            invoiceData.invoice.vat = this.formatCurrency(invoiceData.invoice.vat);
+            invoiceData.invoice.total = this.formatCurrency(invoiceData.invoice.total);
+            if (invoiceData.invoice.discount) {
+                invoiceData.invoice.discount = this.formatCurrency(invoiceData.invoice.discount);
             }
 
             // Ensure NUIT values are numbers
-            if (data.company) {
-                data.company.nuit = Number(data.company.nuit) || 0;
+            if (invoiceData.company) {
+                invoiceData.company.nuit = Number(invoiceData.company.nuit) || 0;
             }
-            if (data.client) {
-                data.client.nuit = Number(data.client.nuit) || 0;
+            if (invoiceData.client) {
+                invoiceData.client.nuit = Number(invoiceData.client.nuit) || 0;
             }
 
             // Format item values
-            data.items = data.items.map(item => ({
+            invoiceData.items = invoiceData.items.map(item => ({
                 ...item,
                 price: this.formatCurrency(item.price),
                 vat: this.formatCurrency(item.vat),
@@ -256,7 +261,7 @@ const templateManager = {
 
             // Use Handlebars to compile the template
             const template = Handlebars.compile(this.defaultTemplate);
-            const html = template(data);
+            const html = template(invoiceData);
             
             console.log('Generated HTML:', html);
             return html;
@@ -270,73 +275,57 @@ const templateManager = {
     async populateTemplate(template, data) {
         console.log('Populating template with data:', data);
         
-        // Replace placeholders with actual data
-        let html = template;
+        // Use Handlebars to compile the template
+        const compiledTemplate = Handlebars.compile(template);
         
-        // Basic invoice info
-        html = html.replace(/{{invoiceNumber}}/g, data.invoiceNumber || '');
-        html = html.replace(/{{issueDate}}/g, this.formatDate(data.issue_date || data.issueDate) || '');
-        html = html.replace(/{{dueDate}}/g, this.formatDate(data.due_date || data.dueDate) || '');
-        html = html.replace(/{{status}}/g, data.status || 'pending');
-        
-        // Client info - Matching Supabase template placeholders
-        html = html.replace(/{{client\.name}}/g, data.client?.name || data.customer_name || '');
-        html = html.replace(/{{client\.email}}/g, data.client?.email || data.client_email || '');
-        html = html.replace(/{{client\.address}}/g, data.client?.address || data.client_address || '');
-        html = html.replace(/{{client\.taxId}}/g, data.client?.taxId || data.client_tax_id || '');
-        html = html.replace(/{{client\.contact}}/g, data.client?.contact || data.client_contact || '');
-
-        // Company info - Matching Supabase template placeholders
-        const companyData = window.companySettings || {
-            name: 'Your Company Name',
-            address: 'Your Company Address',
-            email: 'info@yourcompany.com',
-            phone: '+258 XX XXX XXXX',
-            nuit: 0,
-            logo: ''
+        // Format the data to match the expected structure
+        const formattedData = {
+            company: {
+                name: data.company?.name || window.companySettings?.name || 'Your Company Name',
+                address: data.company?.address || window.companySettings?.address || 'Your Company Address',
+                email: data.company?.email || window.companySettings?.email || 'info@yourcompany.com',
+                phone: data.company?.phone || window.companySettings?.phone || '+258 XX XXX XXXX',
+                nuit: Number(data.company?.nuit || window.companySettings?.nuit) || 0,
+                logo: data.company?.logo || window.companySettings?.logo || ''
+            },
+            invoice: {
+                number: data.invoice?.number || data.invoiceNumber || 'Draft Invoice',
+                issueDate: this.formatDate(data.invoice?.issueDate || data.issueDate),
+                dueDate: this.formatDate(data.invoice?.dueDate || data.dueDate),
+                status: data.invoice?.status || data.status || 'draft',
+                projectName: data.invoice?.projectName || '',
+                subtotal: this.formatCurrency(data.invoice?.subtotal || data.subtotal || 0),
+                vat: this.formatCurrency(data.invoice?.vat || data.totalVat || 0),
+                total: this.formatCurrency(data.invoice?.total || data.total || 0),
+                discount: this.formatCurrency(data.invoice?.discount || data.discount || 0),
+                notes: data.invoice?.notes || data.notes || '',
+                paymentTerms: data.invoice?.paymentTerms || data.paymentTerms || 'net30'
+            },
+            client: {
+                name: data.client?.name || data.client?.customer_name || 'Client Name',
+                address: data.client?.address || data.client?.billing_address || '',
+                nuit: Number(data.client?.nuit || data.client?.customer_tax_id) || 0,
+                email: data.client?.email || '',
+                contact: data.client?.contact || '',
+                phone: data.client?.phone || data.client?.telephone || '',
+                city: data.client?.city || '',
+                postal_code: data.client?.postal_code || '',
+                province: data.client?.province || '',
+                country: data.client?.country || ''
+            },
+            items: (data.items || []).map(item => ({
+                description: item.description || '',
+                quantity: item.quantity || 0,
+                price: this.formatCurrency(item.price || 0),
+                vat: this.formatCurrency(item.vat || 0),
+                total: this.formatCurrency(item.total || 0)
+            })),
+            currency: data.currency || 'MZN'
         };
-        html = html.replace(/{{company\.name}}/g, companyData.name);
-        html = html.replace(/{{company\.address}}/g, companyData.address);
-        html = html.replace(/{{company\.nuit}}/g, Number(companyData.nuit) || 0);
-        html = html.replace(/{{company\.phone}}/g, companyData.phone);
-        html = html.replace(/{{company\.email}}/g, companyData.email);
-        html = html.replace(/{{company\.logo}}/g, companyData.logo);
-        
-        // Items - handle both array and string format
-        let itemsHtml = '';
-        const itemsData = Array.isArray(data.items) ? data.items : (typeof data.items === 'string' ? JSON.parse(data.items || '[]') : []);
 
-        if (itemsData && itemsData.length > 0) {
-            itemsHtml = itemsData.map(item => `
-                <tr>
-                    <td>${item.description || ''}</td>
-                    <td>${item.quantity || ''}</td>
-                    <td>${this.formatCurrency(item.price)}</td>
-                    <td>${this.formatCurrency(item.vat)}</td>
-                    <td>${this.formatCurrency(item.total)}</td>
-                </tr>
-            `).join('');
-        } else {
-             console.warn('No items data found or items data is empty.', data.items);
-             itemsHtml = '<tr><td colspan="5">No items available</td></tr>';
-        }
-        html = html.replace(/{{items}}/g, itemsHtml);
-        
-        // Totals - handle both direct properties and nested structure
-        const subtotal = data.subtotal || data.total_amount - data.vat_amount || 0;
-        const totalVat = data.vat_amount || 0;
-        const total = data.total_amount || data.total || (parseFloat(subtotal) + parseFloat(totalVat)) || 0;
-
-        html = html.replace(/{{subtotal}}/g, this.formatCurrency(subtotal));
-        html = html.replace(/{{totalVat}}/g, this.formatCurrency(totalVat));
-        html = html.replace(/{{total}}/g, this.formatCurrency(total));
-        html = html.replace(/{{currency}}/g, data.currency || 'MZN');
-        
-        // Notes and payment terms
-        html = html.replace(/{{notes}}/g, data.notes || '');
-        html = html.replace(/{{paymentTerms}}/g, data.payment_terms || data.paymentTerms || 'Net 30');
-        
-        console.log('Template populated successfully');
+        console.log('Formatted data for template:', formattedData);
+        const html = compiledTemplate(formattedData);
+        console.log('Generated HTML:', html);
         return html;
     },
 
@@ -355,6 +344,32 @@ const templateManager = {
     formatCurrency(amount) {
         if (amount === undefined || amount === null) return '0.00';
         return parseFloat(amount).toFixed(2);
+    },
+
+    async fetchInvoiceData(invoiceData) {
+        try {
+            // If invoiceData is already an object with the required data, return it
+            if (invoiceData && typeof invoiceData === 'object' && invoiceData.invoice) {
+                return invoiceData;
+            }
+
+            // If invoiceData is a numeric ID, fetch from database
+            if (typeof invoiceData === 'number' || typeof invoiceData === 'string') {
+                const { data, error } = await supabase
+                    .from('invoices')
+                    .select('*')
+                    .eq('id', invoiceData)
+                    .single();
+
+                if (error) throw error;
+                return data;
+            }
+
+            throw new Error('Invalid invoice data format');
+        } catch (error) {
+            console.error('Error fetching invoice data:', error);
+            throw error;
+        }
     }
 };
 
