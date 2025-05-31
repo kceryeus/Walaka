@@ -21,6 +21,7 @@ async function previewInvoice(invoiceData) {
             },
             // Invoice details
             invoice: {
+                id: invoiceData.id || invoiceData.invoice_id,
                 number: invoiceData.invoiceNumber || 'Draft Invoice',
                 issueDate: invoiceData.issueDate || new Date().toISOString().split('T')[0],
                 dueDate: invoiceData.dueDate || new Date(Date.now() + 30*24*60*60*1000).toISOString().split('T')[0],
@@ -140,7 +141,7 @@ async function previewInvoice(invoiceData) {
 
             if (downloadPdfBtn) {
                 downloadPdfBtn.addEventListener('click', () => {
-                    downloadInvoicePdf(formattedData);
+                    downloadInvoicePdf(invoiceData);
                 });
             }
 
@@ -162,30 +163,23 @@ async function previewInvoice(invoiceData) {
  */
 async function downloadInvoicePdf(invoiceData) {
     try {
-        // Ensure we have valid invoice data
-        if (!invoiceData || !invoiceData.invoice) {
-            throw new Error('Invalid invoice data');
+        // Get the preview content
+        const previewContent = document.getElementById('invoicePreviewContent');
+        if (!previewContent) {
+            throw new Error('Preview content not found');
         }
 
-        // Generate HTML using the template manager
-        const html = await window.invoiceTemplateManager.generateInvoiceHTML(invoiceData);
-        
-        // Create a temporary container
-        const container = document.createElement('div');
-        container.innerHTML = html;
-        document.body.appendChild(container);
-        
-        // Generate PDF using html2pdf
+        // Configure PDF options
         const opt = {
             margin: 10,
-            filename: `${invoiceData.invoice.number || 'invoice'}.pdf`,
+            filename: `${invoiceData.invoiceNumber || 'invoice'}.pdf`,
             image: { type: 'jpeg', quality: 0.98 },
             html2canvas: { scale: 2 },
             jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
         };
-        
-        await html2pdf().from(container).set(opt).save();
-        document.body.removeChild(container);
+
+        // Generate PDF from the preview content
+        await html2pdf().from(previewContent).set(opt).save();
         
         showNotification('PDF downloaded successfully', 'success');
     } catch (error) {

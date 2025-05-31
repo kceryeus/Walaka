@@ -1223,36 +1223,40 @@
 }
 
 /* Sidebar Submenu Styles */
+.nav-section {
+    margin: 10px 0 5px; /* Reduced from 20px 0 10px */
+    padding: 0 20px;
+}
+
 .nav-section .nav-header.has-submenu {
-    color: rgba(255, 255, 255, 0.7); /* Lighter color */
-    font-size: 0.75rem; /* Smaller font size */
-    text-transform: uppercase; /* Uppercase text */
-    letter-spacing: 0.05rem; /* Add letter spacing */
-    margin: 1.5rem 0 0.5rem 0; /* Match margin of nav-section h3 */
-    padding: 0 0 0 0.5rem; /* Match padding of nav-section h3 */
-    cursor: pointer; /* Keep cursor pointer for clickability */
-    font-weight: 600; /* Match font weight of nav-section h3 */
-    display: block; /* Ensure it takes full width */
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05rem;
+    padding: 0.5rem 1rem; /* Reduced from 0.75rem */
+    cursor: pointer;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    transition: all 0.2s ease;
 }
 
 .nav-section .nav-header.has-submenu:hover {
     color: rgba(255, 255, 255, 1); /* Slightly brighter on hover */
-    background: none; /* No background change on hover */
+    background: rgba(255, 255, 255, 0.1); /* Add subtle background on hover */
 }
 
-/* Remove icon and submenu icon specific styles for the header */
-.nav-section .nav-header.has-submenu i {
-    display: none;
-}
-
-.submenu-icon {
-    /* Keep original submenu icon styles for when it's added via JS for active state if needed, though not in HTML now */
-    margin-left: auto;
-    transition: transform 0.2s ease;
+/* Add submenu icon */
+.nav-section .nav-header.has-submenu::after {
+    content: '\f107'; /* Font Awesome chevron-down icon */
+    font-family: 'Font Awesome 5 Free';
+    font-weight: 900;
     font-size: 0.8rem;
+    transition: transform 0.2s ease;
 }
 
-.nav-section.active .submenu-icon {
+.nav-section.active > .nav-header.has-submenu::after {
     transform: rotate(180deg);
 }
 
@@ -1263,10 +1267,26 @@
     background-color: rgba(0, 0, 0, 0.02); /* Slightly different background for submenu */
 }
 
-.nav-section.active .submenu {
-    max-height: 500px;
+.nav-section.active > .submenu {
+    max-height: 1000px; /* Increased to accommodate nested submenus */
 }
 
+/* Nested submenu styles */
+.submenu .nav-section {
+    margin: 0;
+    padding: 0;
+}
+
+.submenu .nav-section .nav-header.has-submenu {
+    padding-left: 2rem; /* Indent nested headers */
+    font-size: 0.8rem; /* Slightly larger than parent */
+}
+
+.submenu .submenu .nav-item {
+    padding-left: 3rem; /* Indent nested items */
+}
+
+/* Ensure proper spacing for nested items */
 .submenu .nav-item {
     display: flex;
     align-items: center;
@@ -1288,12 +1308,12 @@
 }
 
 .submenu .nav-item:hover {
-    background: rgba(255, 255, 255, 0.1); /* Match standard nav-item hover background */
+    background: rgba(255, 255, 255, 0.1);
     color: white;
 }
 
 .submenu .nav-item:hover i {
-    color: white; /* Match standard nav-item hover icon color */
+    color: white;
 }
 
 .submenu .nav-item.active {

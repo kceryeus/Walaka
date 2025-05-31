@@ -10,6 +10,9 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet" />
+  
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="css/styles.css">
   <link rel="stylesheet" href="css/invoice.css">
   <link rel="stylesheet" href="assets/css/settings.css">
 </head>
@@ -21,75 +24,133 @@
         <i class="fas fa-chart-line"></i>
         <span>WALAKA</span>
       </div>
+      
       <div class="nav-menu">
         <a href="dashboard.html" class="nav-item">
           <i class="fas fa-home"></i>
           <span>Dashboard</span>
         </a>
+        
         <div class="nav-section">
-          <h3>Facturação</h3>
+          <h3 class="nav-header has-submenu">
+            Facturação
+          </h3>
+          <div class="submenu">
+            <div class="nav-section">
+              <h3 class="nav-header has-submenu">
+                Documents
+              </h3>
+              <div class="submenu">
+                <a href="invoices.html" class="nav-item">
+                  <i class="fas fa-file-invoice-dollar"></i>
+                  <span>Facturas</span>
+                </a>
+                <a href="credit_notes.html" class="nav-item">
+                  <i class="fas fa-file-invoice"></i>
+                  <span>Notas de Crédito</span>
+                </a>
+                <a href="debit_notes.html" class="nav-item">
+                  <i class="fas fa-file-invoice"></i>
+                  <span>Notas de Débito</span>
+                </a>
+                <a href="receipts.html" class="nav-item">
+                  <i class="fas fa-receipt"></i>
+                  <span>Recibos</span>
+                </a>
+              </div>
+            </div>
+            <a href="clients/clients.html" class="nav-item">
+              <i class="fas fa-users"></i>
+              <span>Clientes</span>
+            </a>
+            <a href="products.html" class="nav-item">
+              <i class="fas fa-shopping-cart"></i>
+              <span>Produtos</span>
+            </a>
+          </div>
         </div>
-        <a href="invoices.html" class="nav-item">
-          <i class="fas fa-file-invoice-dollar"></i>
-          <span>Facturas</span>
-        </a>
-        <a href="products.html" class="nav-item">
-          <i class="fas fa-shopping-cart"></i>
-          <span>Produtos</span>
-        </a>
-        <a href="clients/clients.html" class="nav-item">
-          <i class="fas fa-users"></i>
-          <span>Clientes</span>
-        </a>
-        <a href="taxes.html" class="nav-item">
-          <i class="fas fa-percentage"></i>
-          <span>Impostos</span>
-        </a>
+
+        <!--
         <div class="nav-section">
-          <h3>Finanças</h3>
+          <h3 class="nav-header has-submenu">
+            Comercial
+          </h3>
+          <div class="submenu">
+            <a href="#" class="nav-item">
+              <i class="fas fa-boxes"></i>
+              <span>Inventário</span>
+            </a>
+            <a href="#" class="nav-item">
+              <i class="fas fa-truck"></i>
+              <span>Fornecedores</span>
+            </a>
+            <a href="#" class="nav-item">
+              <i class="fas fa-exchange-alt"></i>
+              <span>Movimentos</span>
+            </a>
+            <a href="#" class="nav-item">
+              <i class="fas fa-money-bill-wave"></i>
+              <span>Despesas</span>
+            </a>
+          </div>
         </div>
-        <a href="expenses.html" class="nav-item">
-          <i class="fas fa-money-bill-wave"></i>
-          <span>Despesas</span>
-        </a>
-        <a href="reports.html" class="nav-item">
-          <i class="fas fa-chart-pie"></i>
-          <span>Relatórios</span>
-        </a>
-        <a href="payments.html" class="nav-item">
-          <i class="fas fa-hand-holding-usd"></i>
-          <span>Pagamentos</span>
-        </a>
+
         <div class="nav-section">
-          <h3>Inventário</h3>
+          <h3 class="nav-header has-submenu">
+            Contabilidade
+          </h3>
+          <div class="submenu">
+            <a href="#" class="nav-item">
+              <i class="fas fa-book"></i>
+              <span>Lançamentos</span>
+            </a>
+            <a href="#" class="nav-item">
+              <i class="fas fa-list-alt"></i>
+              <span>Plano de Contas</span>
+            </a>
+            <a href="#" class="nav-item">
+              <i class="fas fa-percent"></i>
+              <span>Impostos</span>
+            </a>
+          </div>
         </div>
-        <a href="stock.html" class="nav-item">
-          <i class="fas fa-boxes"></i>
-          <span>Inventário</span>
-        </a>
-        <a href="suppliers.html" class="nav-item">
-          <i class="fas fa-truck"></i>
-          <span>Fornecedores</span>
-        </a>
-        <a href="movements.html" class="nav-item">
-          <i class="fas fa-exchange-alt"></i>
-          <span>Movimentos</span>
-        </a>
+
         <div class="nav-section">
-          <h3>Settings</h3>
+          <h3 class="nav-header has-submenu">
+            Finanças
+          </h3>
+          <div class="submenu">
+            <a href="#" class="nav-item">
+              <i class="fas fa-chart-pie"></i>
+              <span>Relatórios</span>
+            </a>
+            <a href="#" class="nav-item">
+              <i class="fas fa-chart-line"></i>
+              <span>Indicadores-chave</span>
+            </a>
+          </div>
         </div>
-        <a href="settings.html" class="nav-item active">
-          <i class="fas fa-cog"></i>
-          <span>Settings</span>
-        </a>
-        <a href="usermanagement-vanilla/index.html" class="nav-item">
-          <i class="fas fa-user-cog"></i>
-          <span>Gestão de utilizadores</span>
-        </a>
-        <a href="help.html" class="nav-item">
-          <i class="fas fa-question-circle"></i>
-          <span>Ajuda</span>
-        </a>
+        -->
+
+        <div class="nav-section">
+          <h3 class="nav-header has-submenu">
+            Settings
+          </h3>
+          <div class="submenu">
+            <a href="settings.html" class="nav-item active">
+              <i class="fas fa-cog"></i>
+              <span>Settings</span>
+            </a>
+            <a href="usermanagement-vanilla/index.html" class="nav-item">
+              <i class="fas fa-user-cog"></i>
+              <span>Gestão de Utilizadores</span>
+            </a>
+            <a href="#" class="nav-item">
+              <i class="fas fa-question-circle"></i>
+              <span>Ajuda</span>
+            </a>
+          </div>
+        </div>
       </div>
     </nav>
 
@@ -721,5 +782,8 @@
   
   <!-- Load your settings.js -->
   <script src="assets/js/settings.js"></script>
+  
+  <!-- Load sidebar menu functionality -->
+  <script src="js/sidebar-menu.js"></script>
 </body>
 </html>

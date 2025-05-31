@@ -149,6 +149,14 @@ function setupEventListeners() {
 
                 console.log('Preview data:', invoiceData);
                 await window.previewInvoice(invoiceData);
+
+                // Add event listener for download button after preview is shown
+                const downloadPdfBtn = document.getElementById('downloadPdfBtn');
+                if (downloadPdfBtn) {
+                    downloadPdfBtn.addEventListener('click', () => {
+                        window.downloadInvoicePdf(invoiceData);
+                    });
+                }
             } catch (error) {
                 console.error('Error in preview:', error);
                 showNotification('Error: ' + error.message);
