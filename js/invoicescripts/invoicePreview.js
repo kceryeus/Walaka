@@ -163,13 +163,20 @@ async function previewInvoice(invoiceData) {
  */
 async function downloadInvoicePdf(invoiceData) {
     try {
-        // Get the preview content
-        const previewContent = document.getElementById('invoicePreviewContent');
-        if (!previewContent) {
-            throw new Error('Preview content not found');
+        // Ensure we have valid invoice data
+        if (!invoiceData || !invoiceData.invoice) {
+            throw new Error('Invalid invoice data');
         }
 
-        // Configure PDF options
+        // Generate HTML using the template manager
+        const html = await window.invoiceTemplateManager.generateInvoiceHTML(invoiceData);
+        
+        // Create a temporary container
+        const container = document.createElement('div');
+        container.innerHTML = html;
+        document.body.appendChild(container);
+        
+        // Generate PDF using html2pdf
         const opt = {
             margin: 10,
             filename: `${invoiceData.invoiceNumber || 'invoice'}.pdf`,
