@@ -175,6 +175,7 @@
                     <input type="password" id="loginPassword" required placeholder="Enter your password">
                 </div>
                 <button type="submit">Sign In</button>
+                <div id="error-message" style="color: red; display: none;"></div>
             </form>
             <div class="switch-form">
                 New here?<a href="#" onclick="toggleForms()">Create an account</a>
@@ -197,6 +198,7 @@
                     <input type="password" id="confirmPassword" required placeholder="Confirm your password">
                 </div>
                 <button type="submit">Create Account</button>
+                <div id="signup-error-message" style="color: red; display: none;"></div>
             </form>
             <div class="switch-form">
                 Already have an account?<a href="#" onclick="toggleForms()">Sign in</a>
@@ -205,7 +207,12 @@
     </div>
 
     <script type="module">
-        import { supabase } from './auth.js';
+        import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm'
+        
+        const supabaseUrl = 'https://qvmtozjvjflygbkjecyj.supabase.co'
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF2bXRvemp2amZseWdia2plY3lqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDYxMjc2MjMsImV4cCI6MjA2MTcwMzYyM30.DJMC1eM5_EouM1oc07JaoXsMX_bSLn2AVCozAcdfHmo';
+        const supabase = createClient(supabaseUrl, supabaseKey)
+        window.supabase = supabase // Make supabase available globally
 
         console.log('Supabase client initialized:', supabase);
 
@@ -213,10 +220,12 @@
         function toggleForms() {
             const loginForm = document.getElementById('loginForm');
             const signupForm = document.getElementById('signupForm');
-
-            // Toggle the "active" class to show/hide forms
             loginForm.classList.toggle('active');
             signupForm.classList.toggle('active');
+            
+            // Clear error messages when switching forms
+            document.getElementById('error-message').style.display = 'none';
+            document.getElementById('signup-error-message').style.display = 'none';
         }
 
         // Attach the function to the global window object
@@ -226,6 +235,8 @@
             event.preventDefault();
             const email = document.getElementById('loginEmail').value;
             const password = document.getElementById('loginPassword').value;
+            const errorDiv = document.getElementById('error-message');
+            errorDiv.style.display = 'none';
 
             try {
                 const { data, error } = await supabase.auth.signInWithPassword({
@@ -238,19 +249,23 @@
                 window.location.href = "dashboard.html";
             } catch (error) {
                 console.error('Error logging in:', error.message);
+                errorDiv.textContent = error.message || 'Login failed';
+                errorDiv.style.display = 'block';
             }
         }
 
         async function handleSignup(event) {
             event.preventDefault();
-            console.log('Signup function called');
-
+            const errorDiv = document.getElementById('signup-error-message');
+            errorDiv.style.display = 'none';
+            
             const email = document.getElementById('signupEmail').value;
             const password = document.getElementById('signupPassword').value;
             const confirmPassword = document.getElementById('confirmPassword').value;
-
+            
             if (password !== confirmPassword) {
-                alert('Passwords do not match!');
+                errorDiv.textContent = 'Passwords do not match';
+                errorDiv.style.display = 'block';
                 return;
             }
 
@@ -263,13 +278,17 @@
 
                 if (error) {
                     console.error('Error signing up:', error.message);
-                    alert(`Error: ${error.message}`);
+                    errorDiv.textContent = error.message;
+                    errorDiv.style.display = 'block';
                 } else {
                     console.log('Signed up successfully:', data);
-                    alert('Account created successfully!');
+                    alert('Account created successfully! Please check your email to confirm.');
+                    toggleForms(); // Switch to login form after successful signup
                 }
             } catch (error) {
                 console.error('Unexpected error:', error.message);
+                errorDiv.textContent = error.message || 'Signup failed';
+                errorDiv.style.display = 'block';
             }
         }
 

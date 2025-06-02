@@ -1,0 +1,1159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WALAKA Dashboard - ERP System</title>
+    
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Google Fonts - Inter -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap">
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/metrics.css">
+    <link rel="stylesheet" href="css/trial-banner.css">
+    
+    <script>
+        function toggleLanguage(lang) {
+            const elements = document.querySelectorAll('[data-lang]');
+            elements.forEach(el => {
+                if (el.tagName === 'INPUT' && el.type === 'text') {
+                    el.placeholder = el.dataset[lang];
+                } else if (el.tagName === 'OPTION') {
+                    el.textContent = el.dataset[lang];
+                } else {
+                    el.textContent = el.dataset[lang];
+                }
+            });
+            localStorage.setItem('selectedLanguage', lang); // Store the language
+
+            // Update chart labels
+            updateChartLabels(lang);
+        }
+
+        // Define o estado ativo para os botões de idioma
+        function setActiveLanguage(lang) {
+            document.querySelectorAll('.language-toggle button').forEach(btn => btn.classList.remove('active'));
+            document.getElementById(`lang-${lang}`).classList.add('active');
+        }
+
+        // Função para definir o idioma inicial
+        function setInitialLanguage() {
+            const storedLanguage = localStorage.getItem('selectedLanguage') || 'en'; // Padrão para inglês
+            toggleLanguage(storedLanguage);
+            setActiveLanguage(storedLanguage);
+        }
+
+        // Chama setInitialLanguage quando a página é carregada
+        window.onload = setInitialLanguage;
+    </script>
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- Sidebar Menu -->
+        <nav class="sidebar">
+            <div class="logo">
+                <i class="fas fa-chart-line"></i>
+                <span>WALAKA</span>
+            </div>
+            
+            <div class="nav-menu">
+                <a href="dashboard.html" class="nav-item active">
+                    <i class="fas fa-home"></i>
+                    <span>Dashboard</span>
+                </a>
+                
+                <div class="nav-section">
+                    <h3>Facturação</h3>
+                </div>
+                <a href="invoices.html" class="nav-item">
+                    <i class="fas fa-file-invoice-dollar"></i>
+                    <span>Facturas</span>
+                </a>
+
+                <a href="clients/clients.html" class="nav-item">
+                    <i class="fas fa-users"></i>
+                    <span>Clientes</span>
+                </a>
+
+                <a href="products.html" class="nav-item">
+                    <i class="fas fa-shopping-cart"></i>
+                    <span>Produtos</span>
+                </a>
+
+                <div class="nav-section">
+                    <h3>Commercio</h3>
+                </div>
+                <a href="#" class="nav-item">
+                    <i class="fas fa-boxes"></i>
+                    <span>Estoque</span>
+                </a>
+                <a href="#" class="nav-item">
+                    <i class="fas fa-truck"></i>
+                    <span>Fornecedores</span>
+                </a>
+                <a href="#" class="nav-item">
+                    <i class="fas fa-exchange-alt"></i>
+                    <span>Movimentos</span>
+                </a>
+                <a href="#" class="nav-item">
+                    <i class="fas fa-money-bill-wave"></i>
+                    <span>Expenses</span>
+                </a>
+                <div class="nav-section">
+                    <h3>Accounting </h3>
+                 <a href="#" class="nav-item">
+                      <i class="fas fa-book"></i>
+                      <span>Entries</span> 
+                    </a>
+                    <a href="#" class="nav-item">
+                      <i class="fas fa-list-alt"></i>
+                     <span> Chart of Accounts</span>
+                    </a>
+                    <a href="#" class="nav-item">
+                      <i class="fas fa-percent"></i>
+                      <span>Taxes</span> 
+                    </a>
+                  </div>
+
+                <div class="nav-section">
+                    <h3>Finances</h3>
+                </div>
+               
+                <a href="#" class="nav-item">
+                    <i class="fas fa-chart-pie"></i>
+                    <span>Reports</span>
+                </a>
+                <a href="#" class="nav-item">
+                    <i class="fas fa-chart-line"></i>
+                    Key Metrics
+                  </a>
+
+                <div class="nav-section">
+                    <h3>Settings</h3>
+                </div>
+                <a href="settings.html" class="nav-item">
+                    <i class="fas fa-cog"></i>
+                    <span>Settings</span>
+                </a>
+                <a href="profile.html" class="nav-item">
+                    <i class="fas fa-user-cog"></i>
+                    <span>Account</span>
+                </a>
+                <a href="#" class="nav-item">
+                    <i class="fas fa-question-circle"></i>
+                    <span>Help</span>
+                </a>
+            </div>
+        </nav>
+        
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Top Bar -->
+            <div class="top-bar">
+                <button class="menu-toggle">
+                    <i class="fas fa-bars"></i>
+                </button>
+                
+                <div class="search-bar">
+                    <input type="text" placeholder="Search..." data-lang="searchPlaceholder" data-en="Search..." data-pt="Pesquisar...">
+                </div>
+                
+                <div class="user-menu">
+                    <div class="language-toggle">
+                        <button id="lang-en" onclick="toggleLanguage('en'); setActiveLanguage('en')">
+                            <img src="assets/uk-flag.svg" alt="English" style="width: 20px; height: 15px;">
+                        </button>
+                        <button id="lang-pt" onclick="toggleLanguage('pt'); setActiveLanguage('pt')">
+                            <img src="assets/mz-flag.svg" alt="Português" style="width: 20px; height: 15px;">
+                        </button>
+                    </div>
+                    <div class="notification-bell">
+                        <i class="fas fa-bell"></i>
+                        <span class="badge">3</span>
+                    </div>
+                    
+                    <div class="user-profile">
+                        <div class="avatar">
+                            <i class="fas fa-user"></i>
+                        </div>
+                        <span id="user-displayname">John Doe</span>
+                        <div class="dropdown-menu">
+                            <a href="#">
+                                <i class="fas fa-user-circle"></i> My Profile
+                            </a>
+                            <a href="settings.html">
+                                <i class="fas fa-cog"></i> Settings
+                            </a>
+                            <a href="#">
+                                <i class="fas fa-sign-out-alt"></i> Logout
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Add this after top bar section -->
+            <div class="trial-banner" id="trial-banner">
+                <div class="trial-info">
+                    <div class="trial-header">
+                        <h3>Your Free Trial</h3>
+                        <span class="trial-badge">Trial</span>
+                    </div>
+                    <div class="trial-details">
+                        <div class="trial-metric">
+                            <div class="trial-metric-value" id="days-remaining">14</div>
+                            <div class="trial-metric-label">Days Remaining</div>
+                        </div>
+                        <div class="trial-progress">
+                            <div class="progress-bar">
+                                <div class="progress-fill" id="trial-progress"></div>
+                            </div>
+                        </div>
+                        <div class="trial-metric">
+                            <div class="trial-metric-value" id="invoices-remaining">5</div>
+                            <div class="trial-metric-label">Invoices Remaining</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="trial-actions">
+                    <button class="trial-btn" id="upgrade-btn">
+                        <i class="fas fa-crown"></i>
+                        Upgrade Now
+                    </button>
+                </div>
+            </div>
+
+            <!-- Dashboard Content -->
+            <h2 data-lang="title" data-en="Dashboard Overview" data-pt="Visão Geral do Painel">Dashboard Overview</h2>
+            <p class="subtitle" data-lang="subtitle" data-en="Welcome back, John! Here's what's happening with your business today." data-pt="Bem-vindo de volta, John! Aqui está o que está acontecendo com o seu negócio hoje.">Welcome back, John! Here's what's happening with your business today.</p>
+            
+            <!-- Trial Status Banner -->
+            <div class="trial-status-banner" id="trialStatusBanner" style="display: none;">
+                <div class="trial-info">
+                    <i class="fas fa-clock"></i>
+                    <span id="trialStatus">Loading trial status...</span>
+                </div>
+                <button class="upgrade-btn" onclick="showUpgradeModal(trialInfo)">
+                    Upgrade Now
+                </button>
+            </div>
+
+            <!-- Quick Actions Section -->
+            <h3 data-lang="quickActions" data-en="Quick Actions" data-pt="Ações Rápidas">Quick Actions</h3>
+            <div class="quick-actions-grid">
+                <div class="action-card">
+                    <a href="invoices.html" style="text-decoration: none; color: inherit;">
+                        <i class="fas fa-file-invoice"></i>
+                        <h4 data-lang="newInvoice" data-en="New Invoice" data-pt="Nova Fatura">New Invoice</h4>
+                        <p data-lang="createANewInvoice" data-en="Create a new invoice" data-pt="Criar uma nova fatura">Create a new invoice</p>
+                    </a>
+                </div>
+                <div class="action-card">
+                    <a href="clients/clients.html" style="text-decoration: none; color: inherit;">
+                        <i class="fas fa-user-plus"></i>
+                        <h4 data-lang="addClient" data-en="Add Client" data-pt="Adicionar Cliente">Add Client</h4>
+                        <p data-lang="registerANewClient" data-en="Register a new client" data-pt="Registar um novo cliente">Register a new client</p>
+                    </a>
+                </div>
+                <div class="action-card">
+                    <a href="products.html" style="text-decoration: none; color: inherit;">
+                        <i class="fas fa-box"></i>
+                        <h4 data-lang="addProduct" data-en="Add Product" data-pt="Adicionar Produto">Add Product</h4>
+                        <p data-lang="addProductToInventory" data-en="Add product to inventory" data-pt="Adicionar produto ao inventário">Add product to inventory</p>
+                    </a>
+                </div>
+                <div class="action-card">
+                    <i class="fas fa-file-export"></i>
+                    <h4 data-lang="exportReport" data-en="Export Report" data-pt="Exportar Relatório">Export Report</h4>
+                    <p data-lang="downloadFinancialReports" data-en="Download financial reports" data-pt="Baixar relatórios financeiros">Download financial reports</p>
+                </div>
+            </div>
+
+            <!-- Charts -->
+            <div class="chart-grid">
+                <div class="chart-card">
+                    <h3>
+                        Monthly Revenue
+                        <div class="chart-actions">
+                            <button id="monthlyBtn" class="active">Monthly</button>
+                            <button id="quarterlyBtn">Quarterly</button>
+                        </div>
+                    </h3>
+                    <div class="chart-container">
+                        <canvas id="revenueChart"></canvas>
+                    </div>
+                </div>
+                
+                <div class="chart-card">
+                    <h3>
+                        Invoice Status
+                        <div class="chart-actions">
+                            <button id="allTimeBtn" class="active">All Time</button>
+                            <button id="thisYearBtn">This Year</button>
+                        </div>
+                    </h3>
+                    <div class="chart-container">
+                        <canvas id="invoiceStatusChart"></canvas>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Recent Invoices Table -->
+            <div class="recent-transactions">
+                <h3>
+                    Recent Invoices
+                    <a href="invoices.html" class="view-all" data-lang="viewAllInvoices" data-en="View All" data-pt="Ver Todos">View All</a>
+                </h3>
+                <div class="table-filters">
+                    <div class="filter-group">
+                        <label for="statusFilter" data-lang="statusLabel" data-en="Status:" data-pt="Estado:">Status:</label>
+                        <select id="statusFilter" class="filter-select" onchange="filterInvoices()">
+                            <option value="all" data-lang="allStatuses" data-en="All Statuses" data-pt="Todos os Status">All Statuses</option>
+                            <option value="paid" data-lang="paid" data-en="Paid" data-pt="Pago">Paid</option>
+                            <option value="pending" data-lang="pending" data-en="Pending" data-pt="Pendente">Pending</option>
+                            <option value="overdue" data-lang="overdue" data-en="Overdue" data-pt="Atrasado">Overdue</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label for="dateFilter" data-lang="dateRangeLabel" data-en="Date Range:" data-pt="Período:">Date Range:</label>
+                        <select id="dateFilter" class="filter-select" onchange="filterInvoices()">
+                            <option value="all" data-lang="allTime" data-en="All Time" data-pt="Todo o Tempo">All Time</option>
+                            <option value="today" data-lang="today" data-en="Today" data-pt="Hoje">Today</option>
+                            <option value="week" data-lang="thisWeek" data-en="This Week" data-pt="Esta Semana">This Week</option>
+                            <option value="month" selected data-lang="thisMonth" data-en="This Month" data-pt="Este Mês">This Month</option>
+                            <option value="quarter" data-lang="thisQuarter" data-en="This Quarter" data-pt="Este Trimestre">This Quarter</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label for="amountFilter" data-lang="amountLabel" data-en="Amount:" data-pt="Valor:">Amount:</label>
+                        <select id="amountFilter" class="filter-select" onchange="filterInvoices()">
+                            <option value="all">All Amounts</option>
+                            <option value="under1000">Under MZN 1,000</option>
+                            <option value="1000to5000">MZN 1,000 - MZN 5,000</option>
+                            <option value="over5000">Over MZN 5,000</option>
+                        </select>
+                    </div>
+                    <div class="filter-group search-filter">
+                        <input type="text" id="searchInvoices" placeholder="Search invoices..." 
+                               oninput="filterInvoices()" 
+                               data-lang="searchInvoicesPlaceholder" 
+                               data-en="Search invoices..." 
+                               data-pt="Pesquisar faturas...">
+                    </div>
+                </div>
+                
+                <div class="table-responsive">
+                    <table id="invoicesTable">
+                        <thead>
+                            <tr>
+                                <th onclick="sortInvoices('invoice_number')">Invoice # <i class="fas fa-sort"></i></th>
+                                <th onclick="sortInvoices('client_name')">Client <i class="fas fa-sort"></i></th>
+                                <th onclick="sortInvoices('issue_date')">Date <i class="fas fa-sort"></i></th>
+                                <th onclick="sortInvoices('total')">Amount <i class="fas fa-sort"></i></th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="invoicesTableBody">
+                            <!-- Data will be dynamically inserted here -->
+                        </tbody>
+                    </table>
+                </div>
+                <div id="noResultsMessage" class="no-results" style="display: none;">
+                    <p data-lang="noInvoicesFound">No invoices match your filter criteria. <a href="#" onclick="resetFilters()">Reset filters</a></p>
+                </div>
+            </div>
+
+            <script>
+                let invoices = [];
+                let sortConfig = {
+                    column: 'issue_date',
+                    direction: 'desc'
+                };
+
+                async function fetchInvoices() {
+                    try {
+                        const { data, error } = await supabase
+                            .from('invoices')
+                            .select('*')
+                            .order('issue_date', { ascending: false })
+                            .limit(10);
+
+                        if (error) throw error;
+                        invoices = data;
+                        displayInvoices(data);
+                    } catch (error) {
+                        console.error('Error fetching invoices:', error);
+                        showNoResults('Error loading invoices');
+                    }
+                }
+
+                function displayInvoices(invoicesToShow) {
+                    const tbody = document.getElementById('invoicesTableBody');
+                    tbody.innerHTML = '';
+
+                    if (!invoicesToShow.length) {
+                        showNoResults();
+                        return;
+                    }
+
+                    invoicesToShow.forEach(invoice => {
+                        const row = `<tr>
+                            <td>${invoice.invoice_number}</td>
+                            <td>${invoice.client_name}</td>
+                            <td>${formatDate(invoice.issue_date)}</td>
+                            <td>${formatCurrency(invoice.total)}</td>
+                            <td><span class="status ${invoice.status.toLowerCase()}">${invoice.status}</span></td>
+                            <td class="actions">
+                                <button onclick="viewInvoice('${invoice.id}')" title="View">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                                <button onclick="editInvoice('${invoice.id}')" title="Edit">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                            </td>
+                        </tr>`;
+                        tbody.innerHTML += row;
+                    });
+
+                    document.getElementById('noResultsMessage').style.display = 'none';
+                    document.getElementById('invoicesTable').style.display = 'table';
+                }
+
+                function filterInvoices() {
+                    const status = document.getElementById('statusFilter').value;
+                    const dateRange = document.getElementById('dateFilter').value;
+                    const amount = document.getElementById('amountFilter').value;
+                    const search = document.getElementById('searchInvoices').value.toLowerCase();
+
+                    let filtered = invoices.filter(invoice => {
+                        const matchesStatus = status === 'all' || invoice.status.toLowerCase() === status;
+                        const matchesAmount = checkAmountFilter(invoice.total, amount);
+                        const matchesDate = checkDateFilter(invoice.issue_date, dateRange);
+                        const matchesSearch = search === '' || 
+                            invoice.invoice_number.toLowerCase().includes(search) ||
+                            invoice.client_name.toLowerCase().includes(search);
+
+                        return matchesStatus && matchesAmount && matchesDate && matchesSearch;
+                    });
+
+                    displayInvoices(filtered);
+                }
+
+                function showNoResults(message = 'No invoices match your filter criteria') {
+                    document.getElementById('invoicesTable').style.display = 'none';
+                    const noResults = document.getElementById('noResultsMessage');
+                    noResults.style.display = 'block';
+                    noResults.querySelector('p').textContent = message;
+                }
+
+                // Helper functions for formatting and filtering
+                function formatDate(dateString) {
+                    return new Date(dateString).toLocaleDateString();
+                }
+
+                function formatCurrency(amount) {
+                    return new Intl.NumberFormat('pt-MZ', {
+                        style: 'currency',
+                        currency: 'MZN'
+                    }).format(amount);
+                }
+
+                function checkAmountFilter(amount, filter) {
+                    switch(filter) {
+                        case 'under1000': return amount < 1000;
+                        case '1000to5000': return amount >= 1000 && amount <= 5000;
+                        case 'over5000': return amount > 5000;
+                        default: return true;
+                    }
+                }
+
+                function checkDateFilter(date, filter) {
+                    const invoiceDate = new Date(date);
+                    const today = new Date();
+                    
+                    switch(filter) {
+                        case 'today':
+                            return invoiceDate.toDateString() === today.toDateString();
+                        case 'week':
+                            const weekAgo = new Date(today.setDate(today.getDate() - 7));
+                            return invoiceDate >= weekAgo;
+                        case 'month':
+                            const monthAgo = new Date(today.setMonth(today.getMonth() - 1));
+                            return invoiceDate >= monthAgo;
+                        case 'quarter':
+                            const quarterAgo = new Date(today.setMonth(today.getMonth() - 3));
+                            return invoiceDate >= quarterAgo;
+                        default:
+                            return true;
+                    }
+                }
+
+                // Initialize on page load
+                document.addEventListener('DOMContentLoaded', fetchInvoices);
+            </script>
+
+            <!-- Metrics Cards moved here -->
+            <div class="metrics-grid">
+                <div class="metric-card" id="totalInvoicesCard">
+                    <div class="metric-header">
+                        <i class="fas fa-file-invoice"></i>
+                        <span data-lang="totalInvoices" data-en="Total Invoices" data-pt="Total de Faturas">Total Invoices</span>
+                    </div>
+                    <div class="metric-value">0</div>
+                    <div class="metric-footer">
+                        <span class="metric-label" data-lang="thisMonth" data-en="This Month" data-pt="Este Mês">This Month</span>
+                        <span class="metric-change positive">0%</span>
+                    </div>
+                    <button class="drilldown-btn" data-target="totalInvoicesDetail" aria-expanded="false" aria-label="Show invoice details">
+                        <i class="fas fa-chevron-down"></i>
+                    </button>
+                    <div class="drilldown-content" id="totalInvoicesDetail">
+                        <div class="drilldown-header">
+                            <h4 data-lang="invoiceBreakdown" data-en="Invoice Breakdown" data-pt="Detalhes da Fatura">Invoice Breakdown</h4>
+                            <div class="drilldown-actions">
+                                <button class="drilldown-tab active" data-view="daily" data-lang="daily" data-en="Daily" data-pt="Diário">Daily</button>
+                                <button class="drilldown-tab" data-view="weekly" data-lang="weekly" data-en="Weekly" data-pt="Semanal">Weekly</button>
+                                <button class="drilldown-tab" data-view="monthly" data-lang="monthly" data-en="Monthly" data-pt="Mensal">Monthly</button>
+                            </div>
+                        </div>
+                        <div class="drilldown-data">
+                            <div class="drilldown-item">
+                                <span data-lang="newInvoices" data-en="New Invoices" data-pt="Novas Faturas">New Invoices</span>
+                                <span>42</span>
+                            </div>
+                            <div class="drilldown-item">
+                                <span data-lang="sentInvoices" data-en="Sent Invoices" data-pt="Faturas Enviadas">Sent Invoices</span>
+                                <span>128</span>
+                            </div>
+                            <div class="drilldown-item">
+                                <span data-lang="paidInvoices" data-en="Paid Invoices" data-pt="Faturas Pagas">Paid Invoices</span>
+                                <span>156</span>
+                            </div>
+                            <div class="drilldown-item">
+                                <span data-lang="overdueInvoices" data-en="Overdue Invoices" data-pt="Faturas Atrasadas">Overdue Invoices</span>
+                                <span>32</span>
+                            </div>
+                        </div>
+                        <div class="drilldown-footer">
+                            <a href="#" class="drilldown-link" data-lang="viewAllInvoices" data-en="View All Invoices" data-pt="Ver Todas as Faturas">View All Invoices <i class="fas fa-arrow-right"></i></a>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="metric-card" id="revenueCard">
+                    <div class="metric-header">
+                        <i class="fas fa-money-bill"></i>
+                        <span data-lang="revenue" data-en="Revenue" data-pt="Receita">Revenue</span>
+                        <select id="currency-selector" class="currency-select" onchange="changeCurrency(this.value)">
+                            <option value="MZN">MZN</option>
+                            <option value="USD">USD</option>
+                            <option value="EUR">EUR</option>
+                            <option value="ZAR">ZAR</option>
+                        </select>
+                    </div>
+                    <div class="metric-value">MZN 0.00</div>
+                    <div class="metric-footer">
+                        <span class="metric-label" data-lang="thisMonth" data-en="This Month" data-pt="Este Mês">This Month</span>
+                        <span class="metric-change positive">0%</span>
+                    </div>
+                    <button class="drilldown-btn" data-target="revenueDetail" aria-expanded="false" aria-label="Show revenue details">
+                        <i class="fas fa-chevron-down"></i>
+                    </button>
+                    <div class="drilldown-content" id="revenueDetail">
+                        <div class="drilldown-header">
+                            <h4 data-lang="revenueBreakdown" data-en="Revenue Breakdown" data-pt="Detalhes da Receita">Revenue Breakdown</h4>
+                            <div class="drilldown-actions">
+                                <button class="drilldown-tab active" data-view="category" data-lang="byCategory" data-en="By Category" data-pt="Por Categoria">By Category</button>
+                                <button class="drilldown-tab" data-view="client" data-lang="byClient" data-en="By Client" data-pt="Por Cliente">By Client</button>
+                            </div>
+                        </div>
+                        <div class="drilldown-data">
+                            <div class="drilldown-item">
+                                <span data-lang="products" data-en="Products" data-pt="Produtos">Products</span>
+                                <span>MZN 18,250</span>
+                            </div>
+                            <div class="drilldown-item">
+                                <span data-lang="services" data-en="Services" data-pt="Serviços">Services</span>
+                                <span>MZN 15,330</span>
+                            </div>
+                            <div class="drilldown-item">
+                                <span data-lang="subscriptions" data-en="Subscriptions" data-pt="Assinaturas">Subscriptions</span>
+                                <span>MZN 9,000</span>
+                            </div>
+                        </div>
+                        <div class="drilldown-footer">
+                            <a href="#" class="drilldown-link" data-lang="viewFinancialReport" data-en="View Financial Report" data-pt="Ver Relatório Financeiro">View Financial Report <i class="fas fa-arrow-right"></i></a>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="metric-card" id="expensesCard">
+                    <div class="metric-header">
+                        <i class="fas fa-credit-card"></i>
+                        <span data-lang="expenses" data-en="Expenses" data-pt="Despesas">Expenses</span>
+                    </div>
+                    <div class="metric-value">MZN 0.00</div>
+                    <div class="metric-footer">
+                        <span class="metric-label" data-lang="thisMonth" data-en="This Month" data-pt="Este Mês">This Month</span>
+                        <span class="metric-change negative">0%</span>
+                    </div>
+                    <button class="drilldown-btn" data-target="expensesDetail" aria-expanded="false" aria-label="Show expenses details">
+                        <i class="fas fa-chevron-down"></i>
+                    </button>
+                    <div class="drilldown-content" id="expensesDetail">
+                        <div class="drilldown-header">
+                            <h4 data-lang="expensesBreakdown" data-en="Expenses Breakdown" data-pt="Detalhes das Despesas">Expenses Breakdown</h4>
+                            <div class="drilldown-actions">
+                                <button class="drilldown-tab active" data-view="category" data-lang="byCategory" data-en="By Category" data-pt="Por Categoria">By Category</button>
+                                <button class="drilldown-tab" data-view="vendor" data-lang="byVendor" data-en="By Vendor" data-pt="Por Fornecedor">By Vendor</button>
+                            </div>
+                        </div>
+                        <div class="drilldown-data">
+                            <div class="drilldown-item">
+                                <span data-lang="operations" data-en="Operations" data-pt="Operações">Operations</span>
+                                <span>MZN 5,240</span>
+                            </div>
+                            <div class="drilldown-item">
+                                <span data-lang="marketing" data-en="Marketing" data-pt="Marketing">Marketing</span>
+                                <span>MZN 3,150</span>
+                            </div>
+                            <div class="drilldown-item">
+                                <span data-lang="payroll" data-en="Payroll" data-pt="Folha de Pagamento">Payroll</span>
+                                <span>MZN 2,800</span>
+                            </div>
+                            <div class="drilldown-item">
+                                <span data-lang="other" data-en="Other" data-pt="Outros">Other</span>
+                                <span>MZN 1,290</span>
+                            </div>
+                        </div>
+                        <div class="drilldown-footer">
+                            <a href="#" class="drilldown-link" data-lang="viewAllExpenses" data-en="View All Expenses" data-pt="Ver Todas as Despesas">View All Expenses <i class="fas fa-arrow-right"></i></a>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="metric-card" id="clientsCard">
+                    <div class="metric-header">
+                        <i class="fas fa-users"></i>
+                        <span data-lang="clients" data-en="Clients" data-pt="Clientes">Clients</span>
+                    </div>
+                    <div class="metric-value" id="totalClientsValue">0</div>
+                    <div class="metric-footer">
+                        <span class="metric-label" data-lang="totalActive" data-en="Total Active" data-pt="Total Ativo">Total Active</span>
+                        <span class="metric-change positive" id="clientsGrowth">0%</span>
+                    </div>
+                    <button class="drilldown-btn" data-target="clientsDetail" aria-expanded="false" aria-label="Show client details">
+                        <i class="fas fa-chevron-down"></i>
+                    </button>
+                    <div class="drilldown-content" id="clientsDetail">
+                        <div class="drilldown-header">
+                            <h4 data-lang="clientsBreakdown" data-en="Clients Breakdown" data-pt="Detalhes dos Clientes">Clients Breakdown</h4>
+                            <div class="drilldown-actions">
+                                <button class="drilldown-tab active" data-view="status" data-lang="byStatus" data-en="By Status" data-pt="Por Status">By Status</button>
+                                <button class="drilldown-tab" data-view="type" data-lang="byType" data-en="By Type" data-pt="Por Tipo">By Type</button>
+                            </div>
+                        </div>
+                        <div class="drilldown-data">
+                            <div class="drilldown-item">
+                                <span data-lang="newClients" data-en="New Clients" data-pt="Novos Clientes">New Clients</span>
+                                <span id="newClientsCount">0</span>
+                            </div>
+                            <div class="drilldown-item">
+                                <span data-lang="activeClients" data-en="Active Clients" data-pt="Clientes Ativos">Active Clients</span>
+                                <span id="activeClientsCount">0</span>
+                            </div>
+                            <div class="drilldown-item">
+                                <span data-lang="inactiveClients" data-en="Inactive Clients" data-pt="Clientes Inativos">Inactive Clients</span>
+                                <span id="inactiveClientsCount">0</span>
+                            </div>
+                        </div>
+                        <div class="drilldown-footer">
+                            <a href="clients/clients.html" class="drilldown-link" data-lang="viewAllClients" data-en="View All Clients" data-pt="Ver Todos os Clientes">View All Clients <i class="fas fa-arrow-right"></i></a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- JavaScript -->
+    <script src="js/dashboard.js"></script>
+    <script src="js/metricsData.js"></script>
+    <script src="js/auth-helper.js"></script>
+    
+    <!-- Initialize Charts -->
+    <script>
+        // Revenue Chart
+        const revenueCtx = document.getElementById('revenueChart').getContext('2d');
+        const revenueChart = new Chart(revenueCtx, {
+            type: 'bar',
+            data: {
+                labels: [], // Will be populated with months
+                datasets: [{
+                    label: 'Revenue',
+                    data: [], // Will be populated with revenue data
+                    backgroundColor: '#007ec7',
+                    borderRadius: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: {
+                            color: 'rgba(0, 0, 0, 0.05)'
+                        }
+                    },
+                    x: {
+                        grid: {
+                            display: false
+                        }
+                    }
+                }
+            }
+        });
+
+        async function updateRevenueChart() {
+            try {
+                const today = new Date();
+                const startOfYear = new Date(today.getFullYear(), 0, 1);
+                
+                const { data: invoices, error } = await supabase
+                    .from('invoices')
+                    .select('total, issue_date')
+                    .gte('issue_date', startOfYear.toISOString())
+                    .order('issue_date');
+
+                if (error) throw error;
+
+                // Initialize monthly revenue data
+                const monthlyRevenue = Array(12).fill(0);
+                const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+                // Calculate revenue for each month
+                invoices.forEach(invoice => {
+                    const date = new Date(invoice.issue_date);
+                    const month = date.getMonth();
+                    monthlyRevenue[month] += Number(invoice.total);
+                });
+
+                // Update chart data
+                revenueChart.data.labels = months;
+                revenueChart.data.datasets[0].data = monthlyRevenue;
+                revenueChart.update();
+
+                // Update total revenue display
+                const totalRevenue = monthlyRevenue.reduce((acc, curr) => acc + curr, 0);
+                const revenueDisplay = document.querySelector('#revenueCard .metric-value');
+                if (revenueDisplay) {
+                    revenueDisplay.setAttribute('data-base-amount', totalRevenue.toString());
+                    const currentCurrency = document.getElementById('currency-selector').value;
+                    revenueDisplay.textContent = formatCurrencyByCode(totalRevenue * exchangeRates[currentCurrency], currentCurrency);
+                }
+            } catch (error) {
+                console.error('Error updating revenue chart:', error);
+            }
+        }
+
+        // Call updateRevenueChart when page loads and after new invoices are added
+        document.addEventListener('DOMContentLoaded', updateRevenueChart);
+
+        // Invoice Status Chart
+        let invoiceStatusChart;
+        
+        function initializeInvoiceStatusChart() {
+            const invoiceStatusCtx = document.getElementById('invoiceStatusChart').getContext('2d');
+            const invoiceStatusData = {
+                labels: ['Paid', 'Pending', 'Overdue'],
+                datasets: [{
+                    data: [65, 25, 10],
+                    backgroundColor: ['#3bb077', '#f7b924', '#e55353'],
+                    borderWidth: 0
+                }]
+            };
+            const invoiceStatusOptions = {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'right'
+                    }
+                },
+                cutout: '70%'
+            };
+            
+            invoiceStatusChart = new Chart(invoiceStatusCtx, {
+                type: 'doughnut',
+                data: invoiceStatusData,
+                options: invoiceStatusOptions
+            });
+        }
+
+        // Initialize Invoice Status Chart when DOM is loaded
+        document.addEventListener('DOMContentLoaded', initializeInvoiceStatusChart);
+
+        function updateChartLabels(lang) {
+            // Translate Revenue Chart
+            revenueChart.data.datasets[0].label = lang === 'pt' ? 'Receita' : 'Revenue';
+            revenueChart.update();
+
+            // Translate Invoice Status Chart
+            if (invoiceStatusChart) {
+                invoiceStatusChart.data.labels = lang === 'pt' ? ['Pago', 'Pendente', 'Atrasado'] : ['Paid', 'Pending', 'Overdue'];
+                invoiceStatusChart.update();
+            }
+        }
+    </script>
+
+    <script type="module">
+        import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.0.0/+esm';
+
+        const supabaseUrl = 'https://qvmtozjvjflygbkjecyj.supabase.co';
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF2bXRvemp2amZseWdia2plY3lqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDYxMjc2MjMsImV4cCI6MjA2MTcwMzYyM30.DJMC1eM5_EouM1oc07JaoXsMX_bSLn2AVCozAcdfHmo';
+
+        const supabase = createClient(supabaseUrl, supabaseKey);
+
+        async function applySettings() {
+            try {
+                const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+                if (sessionError || !session) {
+                    console.error('Erro ao buscar sessão:', sessionError?.message);
+                    return;
+                }
+
+                const userId = session.user.id;
+
+                const { data: settingsData, error: settingsError } = await supabase
+                    .from('settings')
+                    .select('*')
+                    .eq('user_id', userId)
+                    .single();
+
+                if (settingsError) {
+                    console.error('Erro ao buscar configurações:', settingsError.message);
+                    return;
+                }
+
+                // Aplicar configurações à página
+                if (settingsData) {
+                    document.documentElement.style.setProperty('--primary-color', settingsData.invoice_color || '#007ec7');
+
+                    // Atualizar o logo, se disponível
+                    const logoUrl = settingsData.logo_url;
+                    if (logoUrl) {
+                        const userAvatar = document.querySelector('.avatar');
+                        if (userAvatar) {
+                            userAvatar.innerHTML = `<img src="${logoUrl}" alt="User Logo" style="width: 100%; height: 100%; border-radius: 50%;">`;
+                        }
+                    }
+
+                    // Definir o idioma
+                    const language = settingsData.language || 'pt';
+                    document.documentElement.setAttribute('lang', language);
+                }
+            } catch (err) {
+                console.error('Erro ao aplicar configurações:', err);
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', applySettings);
+
+        // Function to fetch and update client metrics
+        async function updateClientMetrics() {
+            try {
+                // Get total clients
+                const { data: totalClients, error: totalError } = await supabase
+                    .from('clients')
+                    .select('count');
+
+                if (totalError) throw totalError;
+
+                // Get active clients
+                const { data: activeClients, error: activeError } = await supabase
+                    .from('clients')
+                    .select('count')
+                    .eq('status', 'active');
+
+                if (activeError) throw activeError;
+
+                // Get inactive clients
+                const { data: inactiveClients, error: inactiveError } = await supabase
+                    .from('clients')
+                    .select('count')
+                    .eq('status', 'inactive');
+
+                if (inactiveError) throw inactiveError;
+
+                // Get new clients (added in the last 30 days)
+                const thirtyDaysAgo = new Date();
+                thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+                
+                const { data: newClients, error: newError } = await supabase
+                    .from('clients')
+                    .select('count')
+                    .gte('created_at', thirtyDaysAgo.toISOString());
+
+                if (newError) throw newError;
+
+                // Calculate growth percentage (comparing to previous month)
+                const { data: previousMonthClients, error: prevError } = await supabase
+                    .from('clients')
+                    .select('count')
+                    .lt('created_at', thirtyDaysAgo.toISOString());
+
+                if (prevError) throw prevError;
+
+                const growth = previousMonthClients.length > 0 
+                    ? ((totalClients[0].count - previousMonthClients[0].count) / previousMonthClients[0].count * 100).toFixed(1)
+                    : 0;
+
+                // Update the UI
+                document.getElementById('totalClientsValue').textContent = totalClients[0].count;
+                document.getElementById('activeClientsCount').textContent = activeClients[0].count;
+                document.getElementById('inactiveClientsCount').textContent = inactiveClients[0].count;
+                document.getElementById('newClientsCount').textContent = newClients[0].count;
+                
+                const growthElement = document.getElementById('clientsGrowth');
+                growthElement.textContent = `${growth}%`;
+                growthElement.className = `metric-change ${growth >= 0 ? 'positive' : 'negative'}`;
+
+            } catch (error) {
+                console.error('Error fetching client metrics:', error);
+            }
+        }
+
+        // Call the function when the page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            updateClientMetrics();
+            // Update metrics every 5 minutes
+            setInterval(updateClientMetrics, 300000);
+        });
+    </script>
+
+    <!-- Display user name script -->
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            if (typeof supabase === 'undefined') return;
+
+            const { data: { session } } = await supabase.auth.getSession();
+            if (!session || !session.user) return;
+
+            let displayName = session.user.email;
+            try {
+                const { data: userRecord, error } = await supabase
+                    .from('users')
+                    .select('username')
+                    .eq('id', session.user.id)
+                    .maybeSingle(); // Use maybeSingle for better null handling
+
+                console.log('Supabase userRecord:', userRecord, 'error:', error);
+
+                if (userRecord && userRecord.username) {
+                    displayName = userRecord.username;
+                }
+            } catch (e) {
+                console.error('Error fetching username from users table:', e);
+            }
+
+            const userSpan = document.getElementById('user-displayname');
+            if (userSpan) userSpan.textContent = displayName;
+        });
+    </script>
+
+    <script>
+        // Add this after your existing scripts
+        const exchangeRates = {
+            MZN: 1,
+            USD: 0.016,  // 1 MZN = 0.016 USD
+            EUR: 0.015,  // 1 MZN = 0.015 EUR
+            ZAR: 0.30    // 1 MZN = 0.30 ZAR
+        };
+
+        function changeCurrency(newCurrency) {
+            try {
+                const revenueValue = document.querySelector('#revenueCard .metric-value');
+                const expensesValue = document.querySelector('#expensesCard .metric-value');
+                
+                // Get the base amounts in MZN
+                const revenueMZN = parseFloat(revenueValue.getAttribute('data-base-amount') || '0');
+                const expensesMZN = parseFloat(expensesValue.getAttribute('data-base-amount') || '0');
+                
+                // Convert to new currency
+                const revenueConverted = revenueMZN * exchangeRates[newCurrency];
+                const expensesConverted = expensesMZN * exchangeRates[newCurrency];
+                
+                // Update displays with new currency
+                revenueValue.textContent = formatCurrencyByCode(revenueConverted, newCurrency);
+                expensesValue.textContent = formatCurrencyByCode(expensesConverted, newCurrency);
+                
+                // Save preference
+                localStorage.setItem('preferredCurrency', newCurrency);
+                
+                // Update all drilldown values
+                updateDrilldownCurrency(newCurrency);
+            } catch (error) {
+                console.error('Error changing currency:', error);
+            }
+        }
+
+        function formatCurrencyByCode(amount, currencyCode) {
+            return new Intl.NumberFormat('pt-MZ', {
+                style: 'currency',
+                currency: currencyCode
+            }).format(amount);
+        }
+
+        function updateDrilldownCurrency(currencyCode) {
+            document.querySelectorAll('.drilldown-item span:last-child').forEach(span => {
+                const baseMZN = parseFloat(span.getAttribute('data-base-amount') || '0');
+                const converted = baseMZN * exchangeRates[currencyCode];
+                span.textContent = formatCurrencyByCode(converted, currencyCode);
+            });
+        }
+
+        // Initialize with saved preference or default to MZN
+        document.addEventListener('DOMContentLoaded', () => {
+            const savedCurrency = localStorage.getItem('preferredCurrency') || 'MZN';
+            const currencySelector = document.getElementById('currency-selector');
+            if (currencySelector) {
+                currencySelector.value = savedCurrency;
+                changeCurrency(savedCurrency);
+            }
+        });
+
+        // Update the updateRevenueChart function to store base amounts
+        async function updateRevenueChart() {
+            try {
+                const today = new Date();
+                const startOfYear = new Date(today.getFullYear(), 0, 1);
+                
+                const { data: invoices, error } = await supabase
+                    .from('invoices')
+                    .select('total, issue_date')
+                    .gte('issue_date', startOfYear.toISOString())
+                    .order('issue_date');
+
+                if (error) throw error;
+
+                // Initialize monthly revenue data
+                const monthlyRevenue = Array(12).fill(0);
+                const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+                // Calculate revenue for each month
+                invoices.forEach(invoice => {
+                    const date = new Date(invoice.issue_date);
+                    const month = date.getMonth();
+                    monthlyRevenue[month] += Number(invoice.total);
+                });
+
+                // Update chart data
+                revenueChart.data.labels = months;
+                revenueChart.data.datasets[0].data = monthlyRevenue;
+                revenueChart.update();
+
+                // Update total revenue display
+                const totalRevenue = monthlyRevenue.reduce((acc, curr) => acc + curr, 0);
+                const revenueDisplay = document.querySelector('#revenueCard .metric-value');
+                if (revenueDisplay) {
+                    revenueDisplay.setAttribute('data-base-amount', totalRevenue.toString());
+                    const currentCurrency = document.getElementById('currency-selector').value;
+                    revenueDisplay.textContent = formatCurrencyByCode(totalRevenue * exchangeRates[currentCurrency], currentCurrency);
+                }
+            } catch (error) {
+                console.error('Error updating revenue chart:', error);
+            }
+        }
+
+        // Call updateRevenueChart when page loads and after new invoices are added
+        document.addEventListener('DOMContentLoaded', updateRevenueChart);
+
+        // Invoice Status Chart
+        const invoiceStatusCtx = document.getElementById('invoiceStatusChart').getContext('2d');
+        const invoiceStatusData = { // Store chart data
+            labels: ['Paid', 'Pending', 'Overdue'],
+            datasets: [{
+                data: [65, 25, 10],
+                backgroundColor: ['#3bb077', '#f7b924', '#e55353'],
+                borderWidth: 0
+            }]
+        };
+        const invoiceStatusOptions = { // Store chart options
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'right'
+                }
+            },
+            cutout: '70%'
+        };
+        const invoiceStatusChart = new Chart(invoiceStatusCtx, {
+            type: 'doughnut',
+            data: invoiceStatusData,
+            options: invoiceStatusOptions
+        });
+
+        function updateChartLabels(lang) {
+            // Translate Revenue Chart
+            revenueChart.data.datasets[0].label = lang === 'pt' ? 'Receita' : 'Revenue';
+            revenueChart.update();
+
+            // Translate Invoice Status Chart
+            invoiceStatusChart.data.labels = lang === 'pt' ? ['Pago', 'Pendente', 'Atrasado'] : ['Paid', 'Pending', 'Overdue'];
+            invoiceStatusChart.update();
+        }
+    </script>
+
+    <script>
+        async function showTrialStatus() {
+            try {
+                const { data: { user } } = await supabase.auth.getSession();
+                if (!user) return;
+
+                const trialStatus = await checkTrialStatus(user.id);
+                const statusEl = document.getElementById('trialStatus');
+                const bannerEl = document.getElementById('trialStatusBanner');
+                
+                if (bannerEl) {
+                    if (trialStatus.error || (!trialStatus.canCreate && !trialStatus.unlimited)) {
+                        statusEl.textContent = `Trial expired. Please upgrade to continue.`;
+                        bannerEl.style.display = 'flex';
+                    } else if (!trialStatus.unlimited) {
+                        statusEl.textContent = `Trial: ${trialStatus.daysLeft} days and ${trialStatus.invoicesLeft} invoices remaining`;
+                        bannerEl.style.display = 'flex';
+                    } else {
+                        bannerEl.style.display = 'none';
+                    }
+                }
+            } catch (error) {
+                console.error('Error showing trial status:', error);
+            }
+        }
+
+        document.getElementById('upgradeBtn')?.addEventListener('click', function() {
+            showUpgradeModal({
+                daysLeft: window.trialInfo?.daysLeft || 0,
+                invoicesLeft: window.trialInfo?.invoicesLeft || 0
+            });
+        });
+
+        // Check trial status when page loads
+        document.addEventListener('DOMContentLoaded', showTrialStatus);
+    </script>
+</body>
+</html>

@@ -1,0 +1,135 @@
+<!-- Step 3: Subscription Plan -->
+                <div class="onboarding-step" id="step-3" style="display: none;">
+                    <div class="step-header">
+                        <h3 data-lang="en">3. Subscription Plan</h3>
+                        <h3 data-lang="pt">3. Plano de Assinatura</h3>
+                        <p data-lang="en">Select your subscription plan and payment method.</p>
+                        <p data-lang="pt">Selecione seu plano de assinatura e método de pagamento.</p>
+                    </div>
+                    
+                    <form id="payment-form" class="onboarding-form">
+                        <div class="form-group subscription-plan">
+                            <div class="plan-card">
+                                <div class="plan-header">
+                                    <h4 data-lang="en">WALAKA ERP Subscription</h4>
+                                    <h4 data-lang="pt">Assinatura WALAKA ERP</h4>
+                                    <div class="plan-price">
+                                        <span class="price">399 MZN</span>
+                                        <span class="period" data-lang="en">/ month</span>
+                                        <span class="period" data-lang="pt">/ mês</span>
+                                    </div>
+                                </div>
+                                <div class="plan-features">
+                                    <ul>
+                                        <li data-lang="en"><i class="fas fa-check"></i> Full access to all modules</li>
+                                        <li data-lang="pt"><i class="fas fa-check"></i> Acesso completo a todos os módulos</li>
+                                        <li data-lang="en"><i class="fas fa-check"></i> Unlimited invoice creation</li>
+                                        <li data-lang="pt"><i class="fas fa-check"></i> Criação ilimitada de faturas</li>
+                                        <li data-lang="en"><i class="fas fa-check"></i> Customer management</li>
+                                        <li data-lang="pt"><i class="fas fa-check"></i> Gestão de clientes</li>
+                                        <li data-lang="en"><i class="fas fa-check"></i> Email support</li>
+                                        <li data-lang="pt"><i class="fas fa-check"></i> Suporte por email</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group payment-methods">
+                            <label data-lang="en">Payment Method</label>
+                            <label data-lang="pt">Método de Pagamento</label>
+                            
+                            <div class="radio-group">
+                                <div class="radio-option">
+                                    <input type="radio" id="payment-bank" name="payment-method" value="bank_deposit">
+                                    <label for="payment-bank">
+                                        <i class="fas fa-university"></i>
+                                        <span data-lang="en">Bank Deposit (Cash)</span>
+                                        <span data-lang="pt">Depósito Bancário (Dinheiro)</span>
+                                        <p class="option-description" data-lang="en">Upload proof of deposit. Account confirmation may take 1-2 business days.</p>
+                                        <p class="option-description" data-lang="pt">Envie comprovante de depósito. Confirmação da conta pode levar 1-2 dias úteis.</p>
+                                    </label>
+                                </div>
+                                
+                                <div class="radio-option">
+                                    <input type="radio" id="payment-mpesa" name="payment-method" value="mpesa">
+                                    <label for="payment-mpesa">
+                                        <i class="fas fa-mobile-alt"></i>
+                                        <span data-lang="en">M-PESA</span>
+                                        <span data-lang="pt">M-PESA</span>
+                                        <p class="option-description" data-lang="en">Pay with your M-PESA mobile money account.</p>
+                                        <p class="option-description" data-lang="pt">Pague com sua conta de dinheiro móvel M-PESA.</p>
+                                    </label>
+                                </div>
+                                
+                                <div class="radio-option">
+                                    <input type="radio" id="payment-emola" name="payment-method" value="emola">
+                                    <label for="payment-emola">
+                                        <i class="fas fa-mobile-alt"></i>
+                                        <span data-lang="en">E-MOLA</span>
+                                        <span data-lang="pt">E-MOLA</span>
+                                        <p class="option-description" data-lang="en">Pay with your E-MOLA mobile money account.</p>
+                                        <p class="option-description" data-lang="pt">Pague com sua conta de dinheiro móvel E-MOLA.</p>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Bank deposit details section -->
+                        <div class="form-group bank-details" id="bank-details-section" style="display: none;">
+                            <label data-lang="en">Bank Account Details</label>
+                            <label data-lang="pt">Detalhes da Conta Bancária</label>
+                            
+                            <div class="bank-info">
+                                <p data-lang="en">Please deposit the subscription amount to the following account:</p>
+                                <p data-lang="pt">Por favor, deposite o valor da assinatura na seguinte conta:</p>
+                                <div class="bank-details-info">
+                                    <div class="detail-row">
+                                        <span class="detail-label" data-lang="en">Bank:</span>
+                                        <span class="detail-label" data-lang="pt">Banco:</span>
+                                        <span class="detail-value">BIM - Banco Internacional de Moçambique</span>
+                                    </div>
+                                    <div class="detail-row">
+                                        <span class="detail-label" data-lang="en">Account Name:</span>
+                                        <span class="detail-label" data-lang="pt">Nome da Conta:</span>
+                                        <span class="detail-value">WALAKA Systems, Lda.</span>
+                                    </div>
+                                    <div class="detail-row">
+                                        <span class="detail-label" data-lang="en">Account Number:</span>
+                                        <span class="detail-label" data-lang="pt">Número da Conta:</span>
+                                        <span class="detail-value">123456789</span>
+                                    </div>
+                                    <div class="detail-row">
+                                        <span class="detail-label" data-lang="en">NIB:</span>
+                                        <span class="detail-label" data-lang="pt">NIB:</span>
+                                        <span class="detail-value">000100001234567890157</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="deposit-proof" data-lang="en">Upload Proof of Payment</label>
+                                <label for="deposit-proof" data-lang="pt">Enviar Comprovativo de Pagamento</label>
+                                <input type="file" id="deposit-proof" name="deposit-proof" accept="image/*, application/pdf">
+                                <div class="form-help">
+                                    <i class="fas fa-info-circle"></i>
+                                    <span data-lang="en">Accepted formats: JPG, PNG, PDF (max 5MB)</span>
+                                    <span data-lang="pt">Formatos aceitos: JPG, PNG, PDF (máx 5MB)</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Mobile Money section -->
+                        <div class="form-group mobile-money" id="mobile-money-section" style="display: none;">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="mobile-number" data-lang="en">Mobile Number</label>
+                                    <label for="mobile-number" data-lang="pt">Número de Celular</label>
+                                    <input type="tel" id="mobile-number" name="mobile-number" placeholder="84/85/86/87 XXX XXXX">
+                                    <div class="form-help">
+                                        <i class="fas fa-info-circle"></i>
+                                        <span data-lang="en">Enter the number registered with your mobile money account.</span>
+                                        <span data-lang="pt">Digite o número registrado em sua conta de dinheiro móvel.</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>

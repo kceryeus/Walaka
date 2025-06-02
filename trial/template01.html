@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="pt-MZ">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Professional Invoice Template</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #3498db;
+            --text-color: #333;
+            --light-text: #666;
+            --border-color: #e0e0e0;
+            --background-color: #f5f5f5;
+            --white: #fff;
+        }
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        /* Enhanced A4 Page Setup */
+        @page {
+            size: A4;
+            margin: 0;
+        }
+        
+        html, body {
+            /* A4 dimensions */
+            width: 210mm;
+            height: 297mm;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            line-height: 1.6;
+            color: var(--text-color);
+            background-color: var(--background-color);
+        }
+        
+        .invoice-container {
+            /* Ensure content fits A4 with margins */
+            width: 210mm;
+            min-height: 297mm;
+            padding: 20mm;
+            margin: 0;
+            box-sizing: border-box;
+            max-width: 800px;
+            background-color: var(--white);
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+        }
+        
+        @media print {
+            html, body, .invoice-container {
+                width: 210mm;
+                height: 297mm;
+            }
+            
+            .invoice-container {
+                margin: 0;
+                padding: 20mm;
+                box-shadow: none;
+                border: none;
+            }
+        }
+        
+        .invoice-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 40px;
+        }
+        
+        .company-info {
+            display: flex;
+            align-items: flex-start;
+            gap: 20px;
+        }
+        
+        .company-branding {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            margin-bottom: 15px;
+        }
+
+        .company-title {
+            margin: 0;
+            font-size: 24px;
+            color: var(--primary-color);
+        }
+
+        .company-details {
+            font-size: 14px;
+            line-height: 1.4;
+        }
+        
+        #company-logo {
+            max-width: 200px;
+            height: auto;
+        }
+
+        #company-logo img {
+            max-width: 100%;
+            max-height: 80px;
+            object-fit: contain;
+        }
+        
+        .invoice-details {
+            text-align: right;
+        }
+        
+        .invoice-details h2 {
+            font-size: 28px;
+            margin-bottom: 10px;
+            color: var(--primary-color);
+        }
+        
+        .invoice-details p {
+            font-size: 14px;
+            margin-bottom: 5px;
+        }
+        
+        .client-info {
+            margin-bottom: 30px;
+            padding: 20px;
+            background-color: var(--background-color);
+            border-radius: 6px;
+        }
+        
+        .client-info h3 {
+            font-size: 16px;
+            margin-bottom: 10px;
+            color: var(--primary-color);
+        }
+        
+        .client-info p {
+            font-size: 14px;
+            margin-bottom: 5px;
+        }
+        
+        .invoice-items {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 30px;
+        }
+        
+        .invoice-items th {
+            background-color: var(--primary-color);
+            color: var(--white);
+            padding: 12px;
+            text-align: left;
+            font-size: 14px;
+        }
+        
+        .invoice-items td {
+            padding: 12px;
+            border-bottom: 1px solid var(--border-color);
+            font-size: 14px;
+        }
+        
+        .invoice-items tr:last-child td {
+            border-bottom: none;
+        }
+        
+        .invoice-totals {
+            text-align: right;
+            margin-top: 20px;
+            margin-bottom: 40px;
+        }
+        
+        .total-row {
+            margin: 5px 0;
+            font-size: 14px;
+        }
+        
+        .grand-total {
+            font-weight: 700;
+            font-size: 18px;
+            margin-top: 10px;
+            color: var(--primary-color);
+        }
+        
+        .notes {
+            margin-top: 30px;
+            padding: 20px;
+            background-color: var(--background-color);
+            border-radius: 6px;
+        }
+        
+        .notes h4 {
+            font-size: 16px;
+            margin-bottom: 10px;
+            color: var(--primary-color);
+        }
+        
+        .notes p {
+            font-size: 14px;
+            color: var(--light-text);
+        }
+        
+        .invoice-footer {
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid var(--border-color);
+            font-size: 12px;
+            color: var(--light-text);
+            text-align: center;
+        }
+        
+        @media print {
+            body {
+                background-color: var(--white);
+            }
+            
+            .invoice-container {
+                max-width: 100%;
+                box-shadow: none;
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="invoice-container">
+        <div class="invoice-header">
+            <div class="company-info">
+                <div class="company-branding">
+                    <div id="company-logo" data-field="company.logo">
+                        <!-- Logo will be inserted here -->
+                    </div>
+                    <h1 id="display-company-name" data-field="company.name">Company Name</h1>
+                </div>
+                <div class="company-details">
+                    <p id="display-company-address" data-field="company.address">Company Address</p>
+                    <p>Email: <span id="display-company-email" data-field="company.email">info@company.com</span></p>
+                    <p>Phone: <span id="display-company-phone" data-field="company.phone">+258 XX XXX XXXX</span></p>
+                    <p>NUIT: <span id="display-company-nuit" data-field="company.nuit">123456789</span></p>
+                </div>
+            </div>
+            <div class="invoice-details">
+                <h2>INVOICE</h2>
+                <p>Invoice #: <span id="display-invoice-number" data-field="invoice.number">INV-001</span></p>
+                <p>Date: <span id="display-issue-date" data-field="invoice.issueDate">01/01/2023</span></p>
+                <p>Due Date: <span id="display-due-date" data-field="invoice.dueDate">31/01/2023</span></p>
+                <p>Project: <span id="display-project-name" data-field="invoice.projectName"></span></p>
+            </div>
+        </div>
+        
+        <div class="client-info">
+            <h3>Bill To:</h3>
+            <p id="display-client-name" data-field="client.name">Client Name</p>
+            <p id="display-client-address" data-field="client.address">Client Address</p>
+            <p>NUIT: <span id="display-client-nuit" data-field="client.nuit">987654321</span></p>
+            <p>Email: <span id="display-client-email" data-field="client.email">client@example.com</span></p>
+            <p>Contact: <span id="display-client-contact" data-field="client.contact">+258 XX XXX XXXX</span></p>
+        </div>
+        
+        <table class="invoice-items">
+            <thead>
+                <tr>
+                    <th>Description</th>
+                    <th>Quantity</th>
+                    <th>Unit Price</th>
+                    <th>VAT (%)</th>
+                    <th>Total</th>
+                </tr>
+            </thead>
+            <tbody id="display-items" data-field="invoice.items">
+                <!-- Items will be inserted here dynamically -->
+            </tbody>
+        </table>
+        
+        <div class="invoice-totals">
+            <div class="total-row">Subtotal: <span id="display-subtotal" data-field="invoice.subtotal">MZN 0.00</span></div>
+            <div class="total-row">VAT: <span id="display-totalVat" data-field="invoice.vat">MZN 0.00</span></div>
+            <div class="total-row">Discount: <span id="display-discount" data-field="invoice.discount">MZN 0.00</span></div>
+            <div class="total-row grand-total">Total: <span id="display-total" data-field="invoice.total">MZN 0.00</span></div>
+        </div>
+        
+        <div class="notes">
+            <h4>Notes:</h4>
+            <p id="display-notes" data-field="invoice.notes">Thank you for your business.</p>
+        </div>
+        
+        <div class="invoice-footer">
+            <p>This invoice was generated by WALAKA Invoice Generator</p>
+            <p>Software Certification Number: <span id="software-cert-no">AT-XXXX-XXXX</span></p>
+            <p>Document Control Hash: <span id="invoice-hash">XXXXXXXX</span></p>
+        </div>
+    </div>
+    <script>
+        // Add data binding functionality
+        function populateInvoiceData(data) {
+            // Company info
+            document.getElementById('company-name').textContent = data.company?.name || '';
+            document.getElementById('company-address').textContent = data.company?.address || '';
+            document.getElementById('company-email').textContent = data.company?.email || '';
+            document.getElementById('company-phone').textContent = data.company?.phone || '';
+            document.getElementById('company-nuit').textContent = data.company?.nuit || '';
+            
+            // Invoice details
+            document.getElementById('invoice-number').textContent = data.invoiceNumber || '';
+            document.getElementById('issue-date').textContent = data.issueDate || '';
+            document.getElementById('due-date').textContent = data.dueDate || '';
+            document.getElementById('project-name').textContent = data.projectName || '';
+            
+            // Client info
+            document.getElementById('client-name').textContent = data.client?.name || '';
+            document.getElementById('client-address').textContent = data.client?.address || '';
+            document.getElementById('client-nuit').textContent = data.client?.nuit || '';
+            document.getElementById('client-email').textContent = data.client?.email || '';
+            document.getElementById('client-contact').textContent = data.client?.contact || '';
+            
+            // Populate items
+            const itemsBody = document.getElementById('invoice-items-body');
+            itemsBody.innerHTML = data.items?.map(item => `
+                <tr>
+                    <td>${item.description}</td>
+                    <td>${item.quantity}</td>
+                    <td>${item.price}</td>
+                    <td>${item.vat}</td>
+                    <td>${item.total}</td>
+                </tr>
+            `).join('') || '';
+            
+            // Totals
+            document.getElementById('subtotal').textContent = `${data.currency || 'MZN'} ${data.subtotal || '0.00'}`;
+            document.getElementById('total-vat').textContent = `${data.currency || 'MZN'} ${data.totalVat || '0.00'}`;
+            document.getElementById('discount').textContent = `${data.currency || 'MZN'} ${data.discount || '0.00'}`;
+            document.getElementById('total').textContent = `${data.currency || 'MZN'} ${data.total || '0.00'}`;
+            
+            // Notes
+            document.getElementById('notes').textContent = data.notes || 'Thank you for your business.';
+        }
+        
+        // Export function for external use
+        window.populateInvoiceData = populateInvoiceData;
+    </script>
+</body>
+</html>
