@@ -617,6 +617,18 @@
     <!-- Notification container for messages -->
     <div class="notification-container"></div>
     
+    <!-- Load Supabase -->
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    
+    <!-- Initialize Supabase -->
+    <script>
+        // Initialize Supabase client
+        const supabaseUrl = 'https://qvmtozjvjflygbkjecyj.supabase.co';
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF2bXRvemp2amZseWdia2plY3lqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDYxMjc2MjMsImV4cCI6MjA2MTcwMzYyM30.DJMC1eM5_EouM1oc07JaoXsMX_bSLn2AVCozAcdfHmo';
+        window.supabase = supabase.createClient(supabaseUrl, supabaseKey);
+    </script>
+
+    <!-- Load application scripts -->
     <script src="js/language-toggle.js"></script>
     <script src="js/form-validation.js"></script>
     <script src="js/getting-started.js"></script>

@@ -277,7 +277,7 @@
                     // 4. Set onboarding flag
                     localStorage.setItem('needsOnboarding', 'true');
                     alert('Account created successfully! Please check your email to confirm your account.');
-                    window.location.href = "gettingstarted/gettingstarted.html";
+                    window.location.href = "trial-login.html";
                 } catch (error) {
                     console.error('Error during signup:', error);
                     errorDiv.textContent = error.message || 'Signup failed';

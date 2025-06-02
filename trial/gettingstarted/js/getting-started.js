@@ -13,23 +13,134 @@ let onboardingData = {
 
 // Check if user needs onboarding
 document.addEventListener('DOMContentLoaded', async function() {
-    const needsOnboarding = localStorage.getItem('needsOnboarding');
-    if (!needsOnboarding) {
-        window.location.href = '../dashboard.html';
-        return;
-    }
+    try {
+        // Check if user is logged in
+        const { data: { user } } = await window.supabase.auth.getUser();
+        if (!user) {
+            window.location.href = '../login.html';
+            return;
+        }
 
-    // Initialize Supabase client
-    const { data: { session }, error } = await supabase.auth.getSession();
-    if (error || !session) {
-        window.location.href = '../login.html';
-        return;
-    }
+        // Set onboarding flag if not set
+        if (!localStorage.getItem('needsOnboarding')) {
+            localStorage.setItem('needsOnboarding', 'true');
+        }
 
-    // Initialize form validation and event listeners
-    initializeFormValidation();
-    setupEventListeners();
+        // Initialize form validation
+        initializeFormValidation();
+        
+        // Setup event listeners
+        setupEventListeners();
+        
+        // Load any existing data
+        await loadExistingData();
+
+    } catch (error) {
+        console.error('Error during initialization:', error);
+        showNotification('Error initializing application. Please try again.', 'error');
+    }
 });
+
+// Load existing data from Supabase
+async function loadExistingData() {
+    try {
+        const { data: { user } } = await window.supabase.auth.getUser();
+        if (!user) {
+            window.location.href = '../login.html';
+            return;
+        }
+
+        // Load organization data
+        const { data: orgData, error: orgError } = await window.supabase
+            .from('organizations')
+            .select('*')
+            .eq('user_id', user.id)
+            .single();
+
+        if (orgData) {
+            onboardingData.organization = orgData;
+            populateOrganizationForm(orgData);
+        }
+
+        // Load invoice settings
+        const { data: invoiceData, error: invoiceError } = await window.supabase
+            .from('invoice_settings')
+            .select('*')
+            .eq('user_id', user.id)
+            .single();
+
+        if (invoiceData) {
+            onboardingData.invoice = invoiceData;
+            populateInvoiceForm(invoiceData);
+        }
+
+    } catch (error) {
+        console.error('Error loading data:', error);
+        // Don't show error for new users
+        if (!error.message.includes('No rows found')) {
+            showNotification('Error loading data. Please try again.', 'error');
+        }
+    }
+}
+
+// Populate organization form with existing data
+function populateOrganizationForm(data) {
+    const form = document.getElementById('organization-form');
+    if (!form) return;
+
+    const fields = {
+        'org-name': data.name,
+        'org-industry': data.industry,
+        'org-location': data.location,
+        'org-address': data.address,
+        'org-tax-id': data.tax_id,
+        'org-currency': data.currency || 'MZN'
+    };
+
+    Object.entries(fields).forEach(([id, value]) => {
+        const element = form.querySelector(`#${id}`);
+        if (element && value) {
+            element.value = value;
+        }
+    });
+}
+
+// Populate invoice form with existing data
+function populateInvoiceForm(data) {
+    const form = document.getElementById('invoice-form');
+    if (!form) return;
+
+    const fields = {
+        'invoice-template': data.template,
+        'payment-terms': data.payment_terms,
+        'invoice-notes': data.notes
+    };
+
+    Object.entries(fields).forEach(([id, value]) => {
+        const element = form.querySelector(`#${id}`);
+        if (element && value) {
+            element.value = value;
+        }
+    });
+
+    // Handle template selection
+    if (data.template) {
+        const templateOption = form.querySelector(`.template-option[data-template="${data.template}"]`);
+        if (templateOption) {
+            document.querySelectorAll('.template-option').forEach(opt => opt.classList.remove('selected'));
+            templateOption.classList.add('selected');
+        }
+    }
+
+    // Handle color theme
+    if (data.color) {
+        const colorOption = form.querySelector(`.color-option[data-color="${data.color}"]`);
+        if (colorOption) {
+            document.querySelectorAll('.color-option').forEach(opt => opt.classList.remove('selected'));
+            colorOption.classList.add('selected');
+        }
+    }
+}
 
 // Initialize form validation
 function initializeFormValidation() {
@@ -128,53 +239,90 @@ function validateForm(form) {
 
 // Save and continue to next step
 async function saveAndContinue(step) {
-    const form = document.getElementById(getFormId(step));
-    const formData = new FormData(form);
-    
-    // Save form data to onboardingData
-    switch(step) {
-        case '1':
-            onboardingData.organization = Object.fromEntries(formData);
-            break;
-        case '2':
-            onboardingData.invoice = {
-                ...onboardingData.invoice,
-                ...Object.fromEntries(formData)
-            };
-            break;
-        case '3':
-            onboardingData.subscription = {
-                ...onboardingData.subscription,
-                ...Object.fromEntries(formData)
-            };
-            break;
-        case '4':
-            onboardingData.modules = {
-                ...onboardingData.modules,
-                ...Object.fromEntries(formData)
-            };
-            break;
-    }
-
-    // Save to Supabase
     try {
-        const { data: { session } } = await supabase.auth.getSession();
-        const userId = session.user.id;
+        const formId = getFormId(step);
+        const form = document.getElementById(formId);
+        
+        if (!form) {
+            console.error(`Form ${formId} not found`);
+            return;
+        }
 
-        await supabase
-            .from('settings')
-            .update({
-                organization: onboardingData.organization,
-                invoice: onboardingData.invoice,
-                subscription: onboardingData.subscription,
-                modules: onboardingData.modules
-            })
-            .eq('user_id', userId);
+        if (!validateForm(form)) {
+            return;
+        }
 
-        // Go to next step
-        goToStep(parseInt(step) + 1);
+        const formData = collectFormData(form);
+        const { data: { user } } = await window.supabase.auth.getUser();
+
+        if (!user) {
+            window.location.href = '../login.html';
+            return;
+        }
+
+        switch(step) {
+            case 1: // Organization
+                const { data: orgData, error: orgError } = await window.supabase
+                    .from('organizations')
+                    .upsert({
+                        user_id: user.id,
+                        ...formData
+                    })
+                    .select()
+                    .single();
+
+                if (orgError) throw orgError;
+                onboardingData.organization = orgData;
+                break;
+
+            case 2: // Invoice Settings
+                const { data: invoiceData, error: invoiceError } = await window.supabase
+                    .from('invoice_settings')
+                    .upsert({
+                        user_id: user.id,
+                        ...formData
+                    })
+                    .select()
+                    .single();
+
+                if (invoiceError) throw invoiceError;
+                onboardingData.invoice = invoiceData;
+                break;
+
+            case 3: // Subscription
+                const { data: subData, error: subError } = await window.supabase
+                    .from('subscriptions')
+                    .upsert({
+                        user_id: user.id,
+                        ...formData
+                    })
+                    .select()
+                    .single();
+
+                if (subError) throw subError;
+                onboardingData.subscription = subData;
+                break;
+
+            case 4: // Modules
+                const { data: modulesData, error: modulesError } = await window.supabase
+                    .from('user_modules')
+                    .upsert({
+                        user_id: user.id,
+                        ...formData
+                    })
+                    .select()
+                    .single();
+
+                if (modulesError) throw modulesError;
+                onboardingData.modules = modulesData;
+                break;
+        }
+
+        goToStep(step + 1);
+        showNotification('Data saved successfully!', 'success');
+
     } catch (error) {
-        console.error('Error saving onboarding data:', error);
+        console.error('Error saving data:', error);
         showNotification('Error saving data. Please try again.', 'error');
     }
 }
@@ -182,11 +330,11 @@ async function saveAndContinue(step) {
 // Complete setup
 async function completeSetup() {
     try {
-        const { data: { session } } = await supabase.auth.getSession();
+        const { data: { session } } = await window.supabase.auth.getSession();
         const userId = session.user.id;
 
         // Update user profile with onboarding completion
-        await supabase
+        await window.supabase
             .from('profiles')
             .update({ onboarding_completed: true })
             .eq('user_id', userId);
@@ -215,8 +363,16 @@ function getFormId(step) {
 }
 
 function goToStep(step) {
-    document.querySelectorAll('.onboarding-step').forEach(s => s.style.display = 'none');
-    document.getElementById(`step-${step}`).style.display = 'block';
+    const steps = document.querySelectorAll('.onboarding-step');
+    const targetStep = document.getElementById(`step-${step}`);
+    
+    if (!targetStep) {
+        console.error(`Step ${step} not found`);
+        return;
+    }
+
+    steps.forEach(s => s.style.display = 'none');
+    targetStep.style.display = 'block';
     
     // Update progress steps
     document.querySelectorAll('.progress-step').forEach((s, index) => {
@@ -225,11 +381,14 @@ function goToStep(step) {
 }
 
 function showNotification(message, type = 'success') {
+    const container = document.querySelector('.notification-container');
+    if (!container) return;
+
     const notification = document.createElement('div');
     notification.className = `notification ${type}`;
     notification.textContent = message;
     
-    document.querySelector('.notification-container').appendChild(notification);
+    container.appendChild(notification);
     
     setTimeout(() => {
         notification.remove();
