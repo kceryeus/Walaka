@@ -883,14 +883,16 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         const invoiceData = {
           user_id: session.user.id,
-          prefix: invoicePrefixInput.value,
-          next_number: parseInt(invoiceNextNumberInput.value),
           template: invoiceTemplateInput.value,
-          color: invoiceColorInput.value,
-          currency: defaultCurrencyInput.value,
-          tax_rate: parseFloat(defaultTaxRateInput.value),
-          payment_terms: paymentTermsInput.value,
-          notes: invoiceNotesInput.value,
+          content: {
+            prefix: invoicePrefixInput.value,
+            next_number: parseInt(invoiceNextNumberInput.value),
+            color: invoiceColorInput.value,
+            currency: defaultCurrencyInput.value,
+            tax_rate: parseFloat(defaultTaxRateInput.value),
+            payment_terms: paymentTermsInput.value,
+            notes: invoiceNotesInput.value
+          },
           created_at: existingSettings ? existingSettings.created_at : new Date().toISOString(),
           updated_at: new Date().toISOString()
         };
@@ -916,14 +918,14 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         // Update local settings
         invoiceSettings = {
-          prefix: invoiceData.prefix,
-          nextNumber: invoiceData.next_number,
+          prefix: invoiceData.content.prefix,
+          nextNumber: invoiceData.content.next_number,
           template: invoiceData.template,
-          color: invoiceData.color,
-          currency: invoiceData.currency,
-          taxRate: invoiceData.tax_rate,
-          paymentTerms: invoiceData.payment_terms,
-          notes: invoiceData.notes
+          color: invoiceData.content.color,
+          currency: invoiceData.content.currency,
+          taxRate: invoiceData.content.tax_rate,
+          paymentTerms: invoiceData.content.payment_terms,
+          notes: invoiceData.content.notes
         };
         
         hideLoadingOverlay();
@@ -958,15 +960,15 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
 
             if (invoiceData) {
-              invoicePrefixInput.value = invoiceData.prefix || 'FAT-';
-              invoiceNextNumberInput.value = invoiceData.next_number || 1001;
+              invoicePrefixInput.value = invoiceData.content.prefix || 'FAT-';
+              invoiceNextNumberInput.value = invoiceData.content.next_number || 1001;
               invoiceTemplateInput.value = invoiceData.template || 'classic';
-              invoiceColorInput.value = invoiceData.color || '#007ec7';
-              invoiceColorValue.textContent = invoiceData.color || '#007ec7';
-              defaultCurrencyInput.value = invoiceData.currency || 'MZN';
-              defaultTaxRateInput.value = invoiceData.tax_rate || 17;
-              paymentTermsInput.value = invoiceData.payment_terms || 'net-30';
-              invoiceNotesInput.value = invoiceData.notes || 'Obrigado pela preferência. O pagamento deve ser efetuado no prazo de 30 dias.';
+              invoiceColorInput.value = invoiceData.content.color || '#007ec7';
+              invoiceColorValue.textContent = invoiceData.content.color || '#007ec7';
+              defaultCurrencyInput.value = invoiceData.content.currency || 'MZN';
+              defaultTaxRateInput.value = invoiceData.content.tax_rate || 17;
+              paymentTermsInput.value = invoiceData.content.payment_terms || 'net-30';
+              invoiceNotesInput.value = invoiceData.content.notes || 'Obrigado pela preferência. O pagamento deve ser efetuado no prazo de 30 dias.';
             } else {
               // Reset to default values if no settings exist
               invoicePrefixInput.value = 'FAT-';
@@ -1476,14 +1478,14 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       if (invoiceData) {
         invoiceSettings = {
-          prefix: invoiceData.prefix || 'FAT-',
-          nextNumber: invoiceData.next_number || 1001,
+          prefix: invoiceData.content.prefix || 'FAT-',
+          nextNumber: invoiceData.content.next_number || 1001,
           template: invoiceData.template || 'classic',
-          color: invoiceData.color || '#007ec7',
-          currency: invoiceData.currency || 'MZN',
-          taxRate: invoiceData.tax_rate || 17,
-          paymentTerms: invoiceData.payment_terms || 'net-30',
-          notes: invoiceData.notes || 'Obrigado pela preferência. O pagamento deve ser efetuado no prazo de 30 dias.'
+          color: invoiceData.content.color || '#007ec7',
+          currency: invoiceData.content.currency || 'MZN',
+          taxRate: invoiceData.content.tax_rate || 17,
+          paymentTerms: invoiceData.content.payment_terms || 'net-30',
+          notes: invoiceData.content.notes || 'Obrigado pela preferência. O pagamento deve ser efetuado no prazo de 30 dias.'
         };
       }
 
@@ -1497,16 +1499,16 @@ document.addEventListener('DOMContentLoaded', async () => {
       if (notificationData) {
         notificationSettings = {
           emailNotifications: {
-            invoiceCreated: notificationData.invoice_created,
-            paymentReceived: notificationData.payment_received,
-            invoiceDue: notificationData.invoice_due,
-            invoiceOverdue: notificationData.invoice_overdue
+            invoiceCreated: notificationData.emailNotifications.invoiceCreated,
+            paymentReceived: notificationData.emailNotifications.paymentReceived,
+            invoiceDue: notificationData.emailNotifications.invoiceDue,
+            invoiceOverdue: notificationData.emailNotifications.invoiceOverdue
           },
           systemNotifications: {
-            productLowStock: notificationData.product_low_stock,
-            systemUpdates: notificationData.system_updates,
-            clientActivity: notificationData.client_activity,
-            loginAttempts: notificationData.login_attempts
+            productLowStock: notificationData.systemNotifications.productLowStock,
+            systemUpdates: notificationData.systemNotifications.systemUpdates,
+            clientActivity: notificationData.systemNotifications.clientActivity,
+            loginAttempts: notificationData.systemNotifications.loginAttempts
           }
         };
       }
@@ -1923,14 +1925,15 @@ document.addEventListener('DOMContentLoaded', async () => {
       if (error) throw error;
 
       if (invoiceData) {
-        document.getElementById('invoice-prefix').value = invoiceData.prefix || '';
-        document.getElementById('invoice-next-number').value = invoiceData.next_number || 1;
+        const content = invoiceData.content || {};
+        document.getElementById('invoice-prefix').value = content.prefix || '';
+        document.getElementById('invoice-next-number').value = content.next_number || 1;
         document.getElementById('invoice-template').value = invoiceData.template || 'classic';
-        document.getElementById('invoice-color').value = invoiceData.color || '#007ec7';
-        document.getElementById('default-currency').value = invoiceData.currency || 'MZN';
-        document.getElementById('default-tax-rate').value = invoiceData.tax_rate || 23;
-        document.getElementById('payment-terms').value = invoiceData.payment_terms || 'net-30';
-        document.getElementById('invoice-notes').value = invoiceData.notes || '';
+        document.getElementById('invoice-color').value = content.color || '#007ec7';
+        document.getElementById('default-currency').value = content.currency || 'MZN';
+        document.getElementById('default-tax-rate').value = content.tax_rate || 23;
+        document.getElementById('payment-terms').value = content.payment_terms || 'net-30';
+        document.getElementById('invoice-notes').value = content.notes || '';
       }
     } catch (error) {
       console.error('Error loading invoice settings:', error);
@@ -1947,14 +1950,18 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       const invoiceData = {
         user_id: session.user.id,
-        prefix: document.getElementById('invoice-prefix').value,
-        next_number: parseInt(document.getElementById('invoice-next-number').value),
-        template: document.getElementById('invoice-template').value,
-        color: document.getElementById('invoice-color').value,
-        currency: document.getElementById('default-currency').value,
-        tax_rate: parseFloat(document.getElementById('default-tax-rate').value),
-        payment_terms: document.getElementById('payment-terms').value,
-        notes: document.getElementById('invoice-notes').value
+        template: invoiceTemplateInput.value,
+        content: {
+          prefix: invoicePrefixInput.value,
+          next_number: parseInt(invoiceNextNumberInput.value),
+          color: invoiceColorInput.value,
+          currency: defaultCurrencyInput.value,
+          tax_rate: parseFloat(defaultTaxRateInput.value),
+          payment_terms: paymentTermsInput.value,
+          notes: invoiceNotesInput.value
+        },
+        created_at: existingSettings ? existingSettings.created_at : new Date().toISOString(),
+        updated_at: new Date().toISOString()
       };
 
       const { error } = await window.supabase
@@ -1987,14 +1994,14 @@ document.addEventListener('DOMContentLoaded', async () => {
       if (error) throw error;
 
       if (notificationData) {
-        document.getElementById('notify-invoice-created').checked = notificationData.invoice_created;
-        document.getElementById('notify-payment-received').checked = notificationData.payment_received;
-        document.getElementById('notify-invoice-due').checked = notificationData.invoice_due;
-        document.getElementById('notify-invoice-overdue').checked = notificationData.invoice_overdue;
-        document.getElementById('notify-product-low-stock').checked = notificationData.product_low_stock;
-        document.getElementById('notify-system-updates').checked = notificationData.system_updates;
-        document.getElementById('notify-client-activity').checked = notificationData.client_activity;
-        document.getElementById('notify-login-attempts').checked = notificationData.login_attempts;
+        document.getElementById('notify-invoice-created').checked = notificationData.emailNotifications.invoiceCreated;
+        document.getElementById('notify-payment-received').checked = notificationData.emailNotifications.paymentReceived;
+        document.getElementById('notify-invoice-due').checked = notificationData.emailNotifications.invoiceDue;
+        document.getElementById('notify-invoice-overdue').checked = notificationData.emailNotifications.invoiceOverdue;
+        document.getElementById('notify-product-low-stock').checked = notificationData.systemNotifications.productLowStock;
+        document.getElementById('notify-system-updates').checked = notificationData.systemNotifications.systemUpdates;
+        document.getElementById('notify-client-activity').checked = notificationData.systemNotifications.clientActivity;
+        document.getElementById('notify-login-attempts').checked = notificationData.systemNotifications.loginAttempts;
       }
     } catch (error) {
       console.error('Error loading notification settings:', error);
@@ -2030,16 +2037,16 @@ document.addEventListener('DOMContentLoaded', async () => {
       // Update local settings
       notificationSettings = {
         emailNotifications: {
-          invoiceCreated: notificationData.invoice_created,
-          paymentReceived: notificationData.payment_received,
-          invoiceDue: notificationData.invoice_due,
-          invoiceOverdue: notificationData.invoice_overdue
+          invoiceCreated: notificationData.emailNotifications.invoiceCreated,
+          paymentReceived: notificationData.emailNotifications.paymentReceived,
+          invoiceDue: notificationData.emailNotifications.invoiceDue,
+          invoiceOverdue: notificationData.emailNotifications.invoiceOverdue
         },
         systemNotifications: {
-          productLowStock: notificationData.product_low_stock,
-          systemUpdates: notificationData.system_updates,
-          clientActivity: notificationData.client_activity,
-          loginAttempts: notificationData.login_attempts
+          productLowStock: notificationData.systemNotifications.productLowStock,
+          systemUpdates: notificationData.systemNotifications.systemUpdates,
+          clientActivity: notificationData.systemNotifications.clientActivity,
+          loginAttempts: notificationData.systemNotifications.loginAttempts
         }
       };
 

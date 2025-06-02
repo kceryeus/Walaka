@@ -5,7 +5,13 @@
 
 // Initialize onboarding data
 let onboardingData = {
-    organization: {},
+    organization: {
+        company_name: '',
+        tax_id: '',
+        address: '',
+        website: '',
+        email: ''
+    },
     invoice: {},
     subscription: {},
     modules: {}
@@ -134,7 +140,13 @@ async function saveAndContinue(step) {
     // Save form data to onboardingData
     switch(step) {
         case '1':
-            onboardingData.organization = Object.fromEntries(formData);
+            onboardingData.organization = {
+                company_name: formData.get('company-name'),
+                tax_id: formData.get('tax-id'),
+                address: formData.get('business-address'),
+                website: formData.get('business-website'),
+                email: formData.get('business-email')
+            };
             break;
         case '2':
             onboardingData.invoice = {
@@ -161,15 +173,33 @@ async function saveAndContinue(step) {
         const { data: { session } } = await supabase.auth.getSession();
         const userId = session.user.id;
 
-        await supabase
-            .from('settings')
-            .update({
-                organization: onboardingData.organization,
-                invoice: onboardingData.invoice,
-                subscription: onboardingData.subscription,
-                modules: onboardingData.modules
-            })
-            .eq('user_id', userId);
+        if (step === '1') {
+            // Save business profile
+            const { error: businessError } = await supabase
+                .from('business_profiles')
+                .upsert({
+                    user_id: userId,
+                    company_name: onboardingData.organization.company_name,
+                    tax_id: onboardingData.organization.tax_id,
+                    address: onboardingData.organization.address,
+                    website: onboardingData.organization.website,
+                    email: onboardingData.organization.email,
+                    created_at: new Date().toISOString(),
+                    updated_at: new Date().toISOString()
+                }, { onConflict: 'user_id' });
+
+            if (businessError) throw businessError;
+        } else {
+            // Save other settings
+            await supabase
+                .from('settings')
+                .update({
+                    invoice: onboardingData.invoice,
+                    subscription: onboardingData.subscription,
+                    modules: onboardingData.modules
+                })
+                .eq('user_id', userId);
+        }
 
         // Go to next step
         goToStep(parseInt(step) + 1);

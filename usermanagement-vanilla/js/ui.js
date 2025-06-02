@@ -1,3 +1,6 @@
+import { toast } from './toast.js';
+import { api } from './api.js';
+
 class UI {
     constructor() {
         this.userModal = document.getElementById('userModal');
@@ -86,6 +89,7 @@ class UI {
 
     async handleUserFormSubmit() {
         try {
+            console.log('Handling user form submit...');
             const formData = new FormData(this.userForm);
             const userData = {
                 username: formData.get('username'),
@@ -94,15 +98,21 @@ class UI {
                 is_active: true
             };
 
+            console.log('User data to submit:', userData);
+
             if (!this.currentUserId) {
+                console.log('Calling api.createUser...');
                 await api.createUser(userData);
+                console.log('api.createUser finished.');
                 toast.show({
                     title: 'Success',
                     description: 'User created successfully. They will receive an email to set up their password.',
                     type: 'success'
                 });
             } else {
+                console.log('Calling api.updateUser...', this.currentUserId);
                 await api.updateUser(this.currentUserId, userData);
+                console.log('api.updateUser finished.');
                 toast.show({
                     title: 'Success',
                     description: 'User updated successfully',
@@ -113,6 +123,7 @@ class UI {
             this.hideUserModal();
             app.loadUsers();
         } catch (error) {
+            console.error('Error in handleUserFormSubmit:', error);
             toast.show({
                 title: 'Error',
                 description: error.message,
@@ -213,4 +224,5 @@ class UI {
     }
 }
 
-const ui = new UI(); 
+const ui = new UI();
+export { ui }; 

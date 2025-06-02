@@ -52,7 +52,7 @@ async function loadExistingData() {
 
         // Load organization data
         const { data: orgData, error: orgError } = await window.supabase
-            .from('organizations')
+            .from('business_profiles')
             .select('*')
             .eq('user_id', user.id)
             .single();
@@ -70,8 +70,11 @@ async function loadExistingData() {
             .single();
 
         if (invoiceData) {
-            onboardingData.invoice = invoiceData;
-            populateInvoiceForm(invoiceData);
+            onboardingData.invoice = {
+                ...invoiceData.content,
+                template: invoiceData.template
+            };
+            populateInvoiceForm(onboardingData.invoice);
         }
 
     } catch (error) {
@@ -263,7 +266,7 @@ async function saveAndContinue(step) {
         switch(step) {
             case 1: // Organization
                 const { data: orgData, error: orgError } = await window.supabase
-                    .from('organizations')
+                    .from('business_profiles')
                     .upsert({
                         user_id: user.id,
                         ...formData
@@ -280,13 +283,25 @@ async function saveAndContinue(step) {
                     .from('invoice_settings')
                     .upsert({
                         user_id: user.id,
-                        ...formData
+                        template: formData.template || 'classic',
+                        content: {
+                            prefix: formData.prefix,
+                            next_number: formData.next_number,
+                            color: formData.color,
+                            currency: formData.currency,
+                            tax_rate: formData.tax_rate,
+                            payment_terms: formData.payment_terms,
+                            notes: formData.notes
+                        }
                     })
                     .select()
                     .single();
 
                 if (invoiceError) throw invoiceError;
-                onboardingData.invoice = invoiceData;
+                onboardingData.invoice = {
+                    ...invoiceData.content,
+                    template: invoiceData.template
+                };
                 break;
 
             case 3: // Subscription

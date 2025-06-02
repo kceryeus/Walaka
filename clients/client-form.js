@@ -62,7 +62,8 @@ async function initClientForm() {
         email: document.getElementById('email')?.value || '',
         website: document.getElementById('website')?.value || '',
         status: 'active', // Default status for new clients
-        client_type: document.querySelector('input[name="client-type"]:checked')?.value || 'business' // Default to business
+        client_type: document.querySelector('input[name="client-type"]:checked')?.value || 'business', // Default to business
+        user_id: (await window.supabase.auth.getUser()).data.user?.id // Add the current user's ID using the current method
       };
 
       // Convert string values to numbers where needed

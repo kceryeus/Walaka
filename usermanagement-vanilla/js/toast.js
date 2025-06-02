@@ -37,4 +37,5 @@ class Toast {
     }
 }
 
-const toast = new Toast(); 
+const toast = new Toast();
+export { toast }; 
