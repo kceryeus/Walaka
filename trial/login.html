@@ -8,7 +8,7 @@
         :root {
             --primary-color: #2563eb;
             --secondary-color: #1d4ed8;
-            --accent-color: #93c5fd;
+            --accent-color: #3b82f6;
             --text-color: #1e293b;
             --text-light: #64748b;
             --border-color: #e2e8f0;
@@ -300,24 +300,28 @@
                     });
                     if (error) throw error;
 
-                    // Get user from users table
-                    const { data: userRow, error: userError } = await supabase
-                        .from('users')
-                        .select('*')
-                        .eq('id', data.user.id)
-                        .single();
-                    if (userError) throw userError;
+                    // Get user and trial data in parallel
+                    const [
+                        { data: userRow, error: userError },
+                        { data: trialRow, error: trialError }
+                    ] = await Promise.all([
+                        supabase
+                            .from('users')
+                            .select('language, preferences')
+                            .eq('id', data.user.id)
+                            .single(),
+                        supabase
+                            .from('trial_users')
+                            .select('*')
+                            .eq('id', data.user.id)
+                            .single()
+                    ]);
 
-                    // Get trial from trial_users table
-                    const { data: trialRow, error: trialError } = await supabase
-                        .from('trial_users')
-                        .select('*')
-                        .eq('id', data.user.id)
-                        .single();
+                    if (userError) throw userError;
                     if (trialError) throw trialError;
 
-                    // If first login (e.g., no language or other onboarding field)
-                    if (!userRow.language) {
+                    // Check if this is first login by checking if language preference is set
+                    if (!userRow?.language) {
                         localStorage.setItem('needsOnboarding', 'true');
                         window.location.href = "gettingstarted/gettingstarted.html";
                     } else {

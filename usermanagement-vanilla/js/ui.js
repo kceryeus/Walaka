@@ -9,6 +9,8 @@ class UI {
         this.usersTableBody = document.getElementById('usersTableBody');
         this.roleInfoCard = document.getElementById('roleInfoCard');
         this.currentUserId = null;
+        this.currentAction = null;
+        this.isLoading = false;
 
         this.initializeEventListeners();
     }
@@ -40,22 +42,66 @@ class UI {
         });
     }
 
+    setLoading(loading) {
+        this.isLoading = loading;
+        const submitBtn = this.userForm.querySelector('button[type="submit"]');
+        const confirmBtn = document.getElementById('confirmBtn');
+        
+        if (submitBtn) {
+            submitBtn.disabled = loading;
+            submitBtn.innerHTML = loading ? 
+                '<i class="fas fa-spinner fa-spin mr-2"></i>Saving...' : 
+                'Save';
+        }
+        
+        if (confirmBtn) {
+            confirmBtn.disabled = loading;
+            confirmBtn.innerHTML = loading ? 
+                '<i class="fas fa-spinner fa-spin mr-2"></i>Processing...' : 
+                'Confirm';
+        }
+    }
+
     showUserModal(user = null) {
         this.currentUserId = user?.id || null;
         const modalTitle = document.getElementById('modalTitle');
         const form = this.userForm;
+        const roleSelect = form.role;
 
         modalTitle.textContent = user ? 'Edit User' : 'Add New User';
 
+        // Reset form and set values if editing
+        form.reset();
         if (user) {
-            form.username.value = user.username;
-            form.email.value = user.email;
-            form.role.value = user.role;
-        } else {
-            form.reset();
+            form.username.value = user.username || '';
+            form.email.value = user.email || '';
+            form.role.value = user.role || 'viewer';
         }
 
+        // Update role dropdown based on current user's role
+        this.updateRoleOptions(roleSelect, user);
+
         this.userModal.classList.remove('hidden');
+    }
+
+    updateRoleOptions(roleSelect, user) {
+        // Remove all existing options
+        while (roleSelect.firstChild) {
+            roleSelect.removeChild(roleSelect.firstChild);
+        }
+
+        // Add role options based on permissions
+        const roles = user?.role === 'admin' ? 
+            ['admin', 'editor', 'viewer'] : 
+            ['editor', 'viewer'];
+
+        roles.forEach(role => {
+            const option = document.createElement('option');
+            option.value = role;
+            option.textContent = role.charAt(0).toUpperCase() + role.slice(1);
+            if (user && user.role === role) option.selected = true;
+            roleSelect.appendChild(option);
+        });
     }
 
     hideUserModal() {
@@ -74,7 +120,7 @@ class UI {
                 message.textContent = `Are you sure you want to delete ${user.username}?`;
                 break;
             case 'toggle':
-                message.textContent = `Are you sure you want to ${user.is_active ? 'deactivate' : 'activate'} ${user.username}?`;
+                message.textContent = `Are you sure you want to ${user.status === 'active' ? 'deactivate' : 'activate'} ${user.username}?`;
                 break;
         }
 
@@ -89,30 +135,44 @@ class UI {
 
     async handleUserFormSubmit() {
         try {
-            console.log('Handling user form submit...');
             const formData = new FormData(this.userForm);
             const userData = {
-                username: formData.get('username'),
-                email: formData.get('email'),
+                username: formData.get('username')?.trim(),
+                email: formData.get('email')?.trim(),
                 role: formData.get('role'),
-                is_active: true
+                status: 'active'
             };
 
-            console.log('User data to submit:', userData);
+            // Validation
+            if (!userData.username || !userData.email) {
+                toast.show({
+                    title: 'Validation Error',
+                    description: 'Username and email are required',
+                    type: 'error'
+                });
+                return;
+            }
+
+            if (!this.validateEmail(userData.email)) {
+                toast.show({
+                    title: 'Validation Error',
+                    description: 'Please enter a valid email address',
+                    type: 'error'
+                });
+                return;
+            }
+
+            this.setLoading(true);
 
             if (!this.currentUserId) {
-                console.log('Calling api.createUser...');
                 await api.createUser(userData);
-                console.log('api.createUser finished.');
                 toast.show({
                     title: 'Success',
                     description: 'User created successfully. They will receive an email to set up their password.',
                     type: 'success'
                 });
             } else {
-                console.log('Calling api.updateUser...', this.currentUserId);
                 await api.updateUser(this.currentUserId, userData);
-                console.log('api.updateUser finished.');
                 toast.show({
                     title: 'Success',
                     description: 'User updated successfully',
@@ -129,7 +189,13 @@ class UI {
                 description: error.message,
                 type: 'error'
             });
+        } finally {
+            this.setLoading(false);
         }
+    }
+
+    validateEmail(email) {
+        return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
     }
 
     async handleConfirmation() {
@@ -144,80 +210,149 @@ class UI {
                     });
                     break;
                 case 'toggle':
-                    const user = await api.toggleUserStatus(this.currentUserId, true);
+                    const user = await api.toggleUserStatus(this.currentUserId);
                     toast.show({
                         title: 'Success',
-                        description: `User ${user.is_active ? 'activated' : 'deactivated'} successfully`,
+                        description: `User ${user.status === 'active' ? 'activated' : 'deactivated'} successfully`,
                         type: 'success'
                     });
                     break;
             }
-
             this.hideConfirmationModal();
             app.loadUsers();
         } catch (error) {
+            console.error('Error in handleConfirmation:', error);
             toast.show({
                 title: 'Error',
                 description: error.message,
                 type: 'error'
             });
+            this.hideConfirmationModal();
         }
     }
 
     renderUsers(users) {
         this.usersTableBody.innerHTML = '';
+
         users.forEach(user => {
-            const row = document.createElement('tr');
-            row.innerHTML = `
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
                 <td class="px-6 py-4 whitespace-nowrap">
                     <div class="flex items-center">
+                        <div class="flex-shrink-0 h-10 w-10">
+                            <div class="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center">
+                                <i class="fas fa-user text-gray-500"></i>
+                            </div>
+                        </div>
                         <div class="ml-4">
-                            <div class="text-sm font-medium text-gray-900">${user.username}</div>
+                            <div class="text-sm font-medium text-gray-900">
+                                ${user.username}
+                                ${user.created_by ? '' : '<span class="ml-2 px-2 py-0.5 text-xs rounded-full bg-purple-100 text-purple-800">Owner</span>'}
+                            </div>
                             <div class="text-sm text-gray-500">${user.email}</div>
                         </div>
                     </div>
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap">
-                    <div class="text-sm text-gray-900">${user.role}</div>
+                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
+                        ${user.role === 'admin' ? 'bg-red-100 text-red-800' : 
+                          user.role === 'editor' ? 'bg-blue-100 text-blue-800' : 
+                          'bg-green-100 text-green-800'}">
+                        ${user.role}
+                    </span>
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap">
-                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${user.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}">
-                        ${user.status === 'active' ? 'Active' : 'Inactive'}
+                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
+                        ${user.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}">
+                        ${user.status}
                     </span>
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                    <a href="#" class="text-indigo-600 hover:text-indigo-900 mr-4" onclick='ui.showUserModal(${JSON.stringify(user).replace(/'/g, "&apos;")})'>Edit</a>
-                    <a href="#" class="text-red-600 hover:text-red-900 mr-4" onclick='ui.showConfirmationModal(${JSON.stringify(user).replace(/'/g, "&apos;")}, "delete")'>Delete</a>
-                    <a href="#" class="text-blue-600 hover:text-blue-900" onclick='ui.showConfirmationModal(${JSON.stringify(user).replace(/'/g, "&apos;")}, "toggle")'>
-                        ${user.status === 'active' ? 'Deactivate' : 'Activate'}
-                    </a>
+                    <div class="flex justify-end space-x-2">
+                        <button 
+                            class="text-indigo-600 hover:text-indigo-900 edit-user"
+                            data-user='${JSON.stringify(user)}'
+                            title="Edit user"
+                        >
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        ${user.created_by ? `
+                            <button 
+                                class="text-yellow-600 hover:text-yellow-900 toggle-user"
+                                data-user='${JSON.stringify(user)}'
+                                title="${user.status === 'active' ? 'Deactivate' : 'Activate'} user"
+                            >
+                                <i class="fas fa-power-off"></i>
+                            </button>
+                            <button 
+                                class="text-red-600 hover:text-red-900 delete-user"
+                                data-user='${JSON.stringify(user)}'
+                                title="Delete user"
+                            >
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        ` : ''}
+                    </div>
                 </td>
             `;
-            this.usersTableBody.appendChild(row);
+
+            // Add event listeners
+            const editBtn = tr.querySelector('.edit-user');
+            const toggleBtn = tr.querySelector('.toggle-user');
+            const deleteBtn = tr.querySelector('.delete-user');
+
+            editBtn?.addEventListener('click', () => {
+                const userData = JSON.parse(editBtn.dataset.user);
+                this.showUserModal(userData);
+            });
+
+            toggleBtn?.addEventListener('click', () => {
+                const userData = JSON.parse(toggleBtn.dataset.user);
+                this.showConfirmationModal(userData, 'toggle');
+            });
+
+            deleteBtn?.addEventListener('click', () => {
+                const userData = JSON.parse(deleteBtn.dataset.user);
+                this.showConfirmationModal(userData, 'delete');
+            });
+
+            this.usersTableBody.appendChild(tr);
         });
     }
 
     renderRoleInfo(users) {
-        const adminCount = users.filter(user => user.role === 'admin').length;
-        const userCount = users.filter(user => user.role === 'user').length;
-        const activeCount = users.filter(user => user.is_active).length;
+        const roleStats = users.reduce((acc, user) => {
+            acc[user.role] = (acc[user.role] || 0) + 1;
+            return acc;
+        }, {});
+
+        const totalUsers = users.length;
+        const colors = {
+            admin: 'red',
+            editor: 'blue',
+            viewer: 'green'
+        };
 
         this.roleInfoCard.innerHTML = `
             <div class="p-6">
-                <h3 class="text-lg font-medium text-gray-900 mb-4">Role Information</h3>
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div class="bg-blue-50 p-4 rounded-lg">
-                        <p class="text-sm text-blue-600">Total Users</p>
-                        <p class="text-2xl font-semibold text-blue-700">${users.length}</p>
-                    </div>
-                    <div class="bg-green-50 p-4 rounded-lg">
-                        <p class="text-sm text-green-600">Active Users</p>
-                        <p class="text-2xl font-semibold text-green-700">${activeCount}</p>
-                    </div>
-                    <div class="bg-purple-50 p-4 rounded-lg">
-                        <p class="text-sm text-purple-600">Admin Users</p>
-                        <p class="text-2xl font-semibold text-purple-700">${adminCount}</p>
-                    </div>
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-lg font-medium text-gray-900">Role Distribution</h3>
+                    <span class="text-sm text-gray-500">${totalUsers} total users</span>
+                </div>
+                <div class="flex items-center space-x-8">
+                    ${Object.entries(roleStats).map(([role, count]) => `
+                        <div class="flex-1">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-${colors[role]}-100 text-${colors[role]}-800">
+                                    ${role}
+                                </span>
+                                <span class="text-sm font-medium text-gray-900">${count}</span>
+                            </div>
+                            <div class="w-full bg-gray-200 rounded-full h-2">
+                                <div class="bg-${colors[role]}-500 h-2 rounded-full" style="width: ${(count / totalUsers) * 100}%"></div>
+                            </div>
+                        </div>
+                    `).join('')}
                 </div>
             </div>
         `;
@@ -225,4 +360,4 @@ class UI {
 }
 
 const ui = new UI();
-export { ui }; 
+export { ui };

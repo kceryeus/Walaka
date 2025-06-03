@@ -112,10 +112,20 @@ html[data-theme="dark"] {
     animation: spin 1s linear infinite;
 }
 
+/* Loading cursor */
+.cursor-wait {
+    cursor: wait !important;
+}
+
+/* Spinner animation */
 @keyframes spin {
     to {
         transform: rotate(360deg);
     }
+}
+
+.fa-spin {
+    animation: spin 1s linear infinite;
 }
 
 /* Common button styles */
@@ -180,51 +190,104 @@ html[data-theme="dark"] {
     background-color: var(--gray-50);
 }
 
+/* Tooltip styles */
+[title] {
+    position: relative;
+}
+
+[title]:hover::after {
+    content: attr(title);
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 0.5rem;
+    background: rgba(0, 0, 0, 0.8);
+    color: white;
+    border-radius: 0.25rem;
+    font-size: 0.75rem;
+    white-space: nowrap;
+    z-index: 10;
+}
+
+/* Role badges */
+.role-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.25rem 0.5rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    line-height: 1;
+}
+
+.role-badge.admin {
+    background-color: var(--red-100, #FEE2E2);
+    color: var(--red-800, #991B1B);
+}
+
+.role-badge.editor {
+    background-color: var(--blue-100, #DBEAFE);
+    color: var(--blue-800, #1E40AF);
+}
+
+.role-badge.viewer {
+    background-color: var(--green-100, #D1FAE5);
+    color: var(--green-800, #065F46);
+}
+
 /* Status badges */
 .status-badge {
     display: inline-flex;
     align-items: center;
-    padding: 0.25rem 0.75rem;
+    padding: 0.25rem 0.5rem;
     border-radius: 9999px;
-    font-size: 0.875rem;
-    font-weight: 500;
+    font-size: 0.75rem;
+    font-weight: 600;
+    line-height: 1;
 }
 
 .status-badge.active {
-    background-color: var(--green-500);
-    color: white;
+    background-color: var(--green-100, #D1FAE5);
+    color: var(--green-800, #065F46);
 }
 
 .status-badge.inactive {
-    background-color: var(--gray-300);
-    color: var(--gray-700);
+    background-color: var(--red-100, #FEE2E2);
+    color: var(--red-800, #991B1B);
 }
 
-/* Form styles */
-.form-group {
-    margin-bottom: 1rem;
+/* Role distribution chart */
+.role-chart {
+    height: 2px;
+    border-radius: 9999px;
+    overflow: hidden;
+    background-color: var(--gray-200);
 }
 
-.form-label {
-    display: block;
-    margin-bottom: 0.5rem;
-    font-weight: 500;
-    color: var(--gray-700);
+.role-chart-bar {
+    height: 100%;
+    transition: width 0.3s ease;
 }
 
-.form-input {
-    width: 100%;
-    padding: 0.5rem;
-    border: 1px solid var(--border-color);
-    border-radius: var(--card-radius);
-    background-color: var(--card-bg);
-    color: var(--text-color);
+/* Role distribution legend */
+.role-legend {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-top: 1rem;
 }
 
-.form-input:focus {
-    outline: none;
-    border-color: var(--primary-color);
-    box-shadow: 0 0 0 2px var(--primary-100);
+.role-legend-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.role-legend-color {
+    width: 1rem;
+    height: 1rem;
+    border-radius: 9999px;
 }
 
 /* Dashboard Layout */
@@ -245,4 +308,9 @@ html[data-theme="dark"] {
     max-width: 1200px; /* Match container width from invoice page */
     margin: 0 auto;
     padding-top: 1.5rem;
-} 
+}
+
+/* Toast container */
+#toastContainer {
+    z-index: 9999;
+}

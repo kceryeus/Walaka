@@ -5,9 +5,29 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>User Management</title>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link rel="stylesheet" href="css/styles.css">
     <link rel="stylesheet" href="css/sidebar.css">
     <link rel="stylesheet" href="css/topbar-menu.css">
+    
+    <!-- Theme color for mobile browsers -->
+    <meta name="theme-color" content="#3b82f6">
+    
+    <!-- Prevent flash of unstyled content -->
+    <style>
+        .hidden {
+            display: none !important;
+        }
+        .page-loading {
+            position: fixed;
+            inset: 0;
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: rgba(255, 255, 255, 0.8);
+        }
+    </style>
 </head>
 <body class="bg-gray-100">
     <div class="dashboard-container">
@@ -168,9 +188,27 @@
                     </button>
                 </div>
 
-                <!-- Role Info Card -->
-                <div id="roleInfoCard" class="bg-white shadow rounded-lg mb-6">
-                    <!-- Role info content will be dynamically inserted here -->
+                <!-- User Stats and Role Info -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                    <!-- Quick Stats -->
+                    <div class="bg-white shadow rounded-lg p-6">
+                        <h3 class="text-lg font-medium text-gray-900 mb-4">Quick Stats</h3>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="bg-blue-50 p-4 rounded-lg">
+                                <div class="text-sm font-medium text-blue-800">Total Users</div>
+                                <div class="mt-1 text-2xl font-semibold text-blue-900" id="totalUsersCount">-</div>
+                            </div>
+                            <div class="bg-green-50 p-4 rounded-lg">
+                                <div class="text-sm font-medium text-green-800">Active Users</div>
+                                <div class="mt-1 text-2xl font-semibold text-green-900" id="activeUsersCount">-</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Role Distribution -->
+                    <div id="roleInfoCard" class="bg-white shadow rounded-lg">
+                        <!-- Role info content will be dynamically inserted here -->
+                    </div>
                 </div>
 
                 <!-- Users Table -->
@@ -181,16 +219,16 @@
                                 <thead class="bg-gray-50">
                                     <tr>
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                            User
+                                            User Information
                                         </th>
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                            Role
+                                            Access Level
                                         </th>
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                            Status
+                                            Account Status
                                         </th>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                            Actions
+                                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            Manage
                                         </th>
                                     </tr>
                                 </thead>
@@ -226,7 +264,7 @@
                         <label for="role" class="block text-sm font-medium text-gray-700">Role</label>
                         <select id="role" name="role" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
                             <option value="viewer">Viewer</option>
-                            <option value="basic">Basic</option>
+                            <option value="editor">Editor</option>
                             <option value="admin">Admin</option>
                         </select>
                     </div>
@@ -264,6 +302,16 @@
         </div>
     </div>
 
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="page-loading hidden">
+        <div class="flex flex-col items-center">
+            <div class="text-blue-600 mb-4">
+                <i class="fas fa-circle-notch fa-spin fa-3x"></i>
+            </div>
+            <div class="text-gray-700 font-medium">Loading...</div>
+        </div>
+    </div>
+
     <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="js/config.js" type="module"></script>
@@ -273,5 +321,18 @@
     <script src="js/api.js" type="module"></script>
     <script src="js/ui.js" type="module"></script>
     <script src="js/app.js" type="module"></script>
+
+    <!-- Prevent clicks during loading -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const overlay = document.getElementById('loadingOverlay');
+            if (overlay) overlay.classList.remove('hidden');
+            
+            // Hide overlay when app is ready
+            window.addEventListener('app:ready', () => {
+                if (overlay) overlay.classList.add('hidden');
+            });
+        });
+    </script>
 </body>
 </html> 
