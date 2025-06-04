@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>WALAKA - Notifications</title>
+    
+    <!-- External Libraries -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet" />
+    
+    <!-- Internal CSS -->
+    <link rel="stylesheet" href="banks/static/assets/css/banks.css">
+    <style>
+        .notifications-container {
+            padding: 20px;
+        }
+
+        .notification-card {
+            background: white;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 16px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            display: flex;
+            align-items: flex-start;
+            transition: background-color 0.2s;
+        }
+
+        .notification-card.unread {
+            background-color: #f0f7ff;
+        }
+
+        .notification-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #e9ecef;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 16px;
+            flex-shrink: 0;
+        }
+
+        .notification-content {
+            flex-grow: 1;
+        }
+
+        .notification-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 8px;
+        }
+
+        .notification-title {
+            font-weight: 600;
+            color: #2c3e50;
+            margin: 0;
+        }
+
+        .notification-time {
+            color: #6c757d;
+            font-size: 0.875rem;
+        }
+
+        .notification-message {
+            color: #4a5568;
+            margin: 0;
+            line-height: 1.5;
+        }
+
+        .notification-actions {
+            margin-top: 12px;
+            display: flex;
+            gap: 12px;
+        }
+
+        .notification-action-btn {
+            background: none;
+            border: none;
+            color: #3498db;
+            cursor: pointer;
+            font-size: 0.875rem;
+            padding: 0;
+        }
+
+        .notification-action-btn:hover {
+            text-decoration: underline;
+        }
+
+        .notification-filters {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .filter-button {
+            background: none;
+            border: 2px solid #e9ecef;
+            border-radius: 20px;
+            padding: 8px 16px;
+            cursor: pointer;
+            color: #4a5568;
+            transition: all 0.2s;
+        }
+
+        .filter-button.active {
+            background: #3498db;
+            color: white;
+            border-color: #3498db;
+        }
+
+        .empty-notifications {
+            text-align: center;
+            padding: 48px 0;
+            color: #6c757d;
+        }
+
+        .empty-notifications i {
+            font-size: 48px;
+            margin-bottom: 16px;
+            color: #e9ecef;
+        }
+
+        .clear-all-btn {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            float: right;
+            margin-bottom: 16px;
+        }
+
+        .clear-all-btn:hover {
+            background: #c82333;
+        }
+
+        .notification-type-icon {
+            font-size: 1.2em;
+        }
+
+        .type-invoice { background: #e3f2fd; }
+        .type-payment { background: #e8f5e9; }
+        .type-system { background: #fff3e0; }
+        .type-alert { background: #ffebee; }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- Sidebar -->
+        <nav class="sidebar">
+            <div class="logo">
+                <i class="fas fa-chart-line"></i>
+                <span>WALAKA</span>
+            </div>
+            
+            <div class="nav-menu">
+                <a href="dashboard.html" class="nav-item">
+                    <i class="fas fa-home"></i>
+                    <span>Dashboard</span>
+                </a>
+                
+                <div class="nav-section">
+                    <h3>Invoices & Sales</h3>
+                </div>
+                <a href="invoices.html" class="nav-item">
+                    <i class="fas fa-file-invoice-dollar"></i>
+                    <span>Invoices</span>
+                </a>
+                <a href="products.html" class="nav-item">
+                    <i class="fas fa-shopping-cart"></i>
+                    <span>Products</span>
+                </a>
+                <a href="clients/clients.html" class="nav-item">
+                    <i class="fas fa-users"></i>
+                    <span>Clients</span>
+                </a>
+                <a href="taxes.html" class="nav-item">
+                    <i class="fas fa-percentage"></i>
+                    <span>Taxes</span>
+                </a>
+                
+                <div class="nav-section">
+                    <h3>Finances</h3>
+                </div>
+                <a href="expenses.html" class="nav-item">
+                    <i class="fas fa-money-bill-wave"></i>
+                    <span>Expenses</span>
+                </a>
+                <a href="reports.html" class="nav-item">
+                    <i class="fas fa-chart-pie"></i>
+                    <span>Reports</span>
+                </a>
+                <a href="payments.html" class="nav-item">
+                    <i class="fas fa-hand-holding-usd"></i>
+                    <span>Payments</span>
+                </a>
+                <a href="banks/banks.html" class="nav-item">
+                    <i class="fas fa-university"></i>
+                    <span>Banks & Wallets</span>
+                </a>
+                
+                <div class="nav-section">
+                    <h3>Inventory</h3>
+                </div>
+                <a href="stock.html" class="nav-item">
+                    <i class="fas fa-boxes"></i>
+                    <span>Stock</span>
+                </a>
+                <a href="suppliers.html" class="nav-item">
+                    <i class="fas fa-truck"></i>
+                    <span>Suppliers</span>
+                </a>
+                <a href="movements.html" class="nav-item">
+                    <i class="fas fa-exchange-alt"></i>
+                    <span>Movements</span>
+                </a>
+                
+                <div class="nav-section">
+                    <h3>Settings</h3>
+                </div>
+                <a href="settings.html" class="nav-item">
+                    <i class="fas fa-cog"></i>
+                    <span>Settings</span>
+                </a>
+                <a href="profile.html" class="nav-item">
+                    <i class="fas fa-user-cog"></i>
+                    <span>Account</span>
+                </a>
+                <a href="help.html" class="nav-item">
+                    <i class="fas fa-question-circle"></i>
+                    <span>Help</span>
+                </a>
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Top Bar -->
+            <div class="top-bar">
+                <div class="search-bar">
+                    <input type="text" placeholder="Search notifications..." id="search-notifications">
+                </div>
+                <div class="user-menu">
+                    <div class="notification-bell active">
+                        <i class="fas fa-bell"></i>
+                        <span class="badge">0</span>
+                    </div>
+                    <div class="user-profile">
+                        <div class="avatar">
+                            <i class="fas fa-user"></i>
+                        </div>
+                        <span id="user-name">Loading...</span>
+                        <div class="dropdown">
+                            <button class="dropdown-toggle"><i class="fas fa-caret-down"></i></button>
+                            <div class="dropdown-menu">
+                                <a href="profile.html">Profile Management</a>
+                                <a href="settings.html">General Settings</a>
+                                <a href="#" id="sign-out-btn">Sign Out</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Notifications Page Header -->
+            <div class="page-header">
+                <div>
+                    <h1>Notifications</h1>
+                    <p>View and manage your system notifications</p>
+                </div>
+                <button id="mark-all-read" class="primary-btn">
+                    <i class="fas fa-check-double"></i> Mark All as Read
+                </button>
+            </div>
+
+            <!-- Main Content Area -->
+            <div class="notifications-container">
+                <!-- Notification Filters -->
+                <div class="notification-filters">
+                    <button class="filter-button active" data-filter="all">
+                        All Notifications
+                    </button>
+                    <button class="filter-button" data-filter="unread">
+                        Unread
+                    </button>
+                    <button class="filter-button" data-filter="invoice">
+                        Invoices
+                    </button>
+                    <button class="filter-button" data-filter="payment">
+                        Payments
+                    </button>
+                    <button class="filter-button" data-filter="system">
+                        System
+                    </button>
+                    <button class="clear-all-btn" id="clear-all">
+                        <i class="fas fa-trash"></i> Clear All
+                    </button>
+                </div>
+
+                <!-- Empty State -->
+                <div id="empty-notifications" class="empty-notifications" style="display: none;">
+                    <i class="fas fa-bell-slash"></i>
+                    <h3>No Notifications</h3>
+                    <p>You're all caught up! No new notifications to display.</p>
+                </div>
+
+                <!-- Notifications List -->
+                <div id="notifications-list">
+                    <!-- Notifications will be dynamically inserted here -->
+                </div>
+            </div>
+
+            <!-- Toast Notification -->
+            <div id="toast" class="toast">
+                <div class="toast-icon">
+                    <i id="toast-icon" class="fas fa-check-circle"></i>
+                </div>
+                <div class="toast-content">
+                    <span id="toast-message"></span>
+                </div>
+                <button id="toast-close" class="toast-close">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        </main>
+    </div>
+
+    <!-- JavaScript -->
+    <script type="module">
+        import { supabase } from './js/supabaseClient.js';
+
+        // DOM Elements
+        const notificationsList = document.getElementById('notifications-list');
+        const emptyState = document.getElementById('empty-notifications');
+        const filterButtons = document.querySelectorAll('.filter-button');
+        const searchInput = document.getElementById('search-notifications');
+        const clearAllBtn = document.getElementById('clear-all');
+        const markAllReadBtn = document.getElementById('mark-all-read');
+        const notificationBadge = document.querySelector('.notification-bell .badge');
+
+        let notifications = [];
+
+        // Initialize notifications
+        async function initializeNotifications() {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) return;
+
+            // Fetch notifications from Supabase
+            const { data, error } = await supabase
+                .from('notifications')
+                .select('*')
+                .eq('user_id', user.id)
+                .order('created_at', { ascending: false });
+
+            if (error) {
+                showToast('Error loading notifications', 'error');
+                return;
+            }
+
+            notifications = data || [];
+            updateNotificationsDisplay();
+            updateUnreadCount();
+        }
+
+        // Update notifications display
+        function updateNotificationsDisplay(filterType = 'all', searchQuery = '') {
+            const filteredNotifications = notifications.filter(notification => {
+                const matchesFilter = filterType === 'all' || 
+                    (filterType === 'unread' && !notification.read) ||
+                    notification.type === filterType;
+                
+                const matchesSearch = searchQuery === '' ||
+                    notification.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                    notification.message.toLowerCase().includes(searchQuery.toLowerCase());
+
+                return matchesFilter && matchesSearch;
+            });
+
+            notificationsList.innerHTML = '';
+            
+            if (filteredNotifications.length === 0) {
+                emptyState.style.display = 'block';
+                return;
+            }
+
+            emptyState.style.display = 'none';
+            
+            filteredNotifications.forEach(notification => {
+                const card = createNotificationCard(notification);
+                notificationsList.appendChild(card);
+            });
+        }
+
+        // Create notification card
+        function createNotificationCard(notification) {
+            const card = document.createElement('div');
+            card.className = `notification-card ${notification.read ? '' : 'unread'}`;
+            card.dataset.id = notification.id;
+
+            let iconClass = 'fa-bell';
+            switch (notification.type) {
+                case 'invoice': iconClass = 'fa-file-invoice-dollar'; break;
+                case 'payment': iconClass = 'fa-money-bill-wave'; break;
+                case 'system': iconClass = 'fa-cog'; break;
+                case 'alert': iconClass = 'fa-exclamation-circle'; break;
+            }
+
+            card.innerHTML = `
+                <div class="notification-icon type-${notification.type}">
+                    <i class="fas ${iconClass} notification-type-icon"></i>
+                </div>
+                <div class="notification-content">
+                    <div class="notification-header">
+                        <h4 class="notification-title">${notification.title}</h4>
+                        <span class="notification-time">${formatDate(notification.created_at)}</span>
+                    </div>
+                    <p class="notification-message">${notification.message}</p>
+                    <div class="notification-actions">
+                        ${notification.actionUrl ? 
+                            `<button class="notification-action-btn" onclick="window.location.href='${notification.actionUrl}'">
+                                View Details
+                            </button>` : ''
+                        }
+                        <button class="notification-action-btn" onclick="markAsRead('${notification.id}')">
+                            ${notification.read ? 'Mark as Unread' : 'Mark as Read'}
+                        </button>
+                        <button class="notification-action-btn" onclick="deleteNotification('${notification.id}')">
+                            Delete
+                        </button>
+                    </div>
+                </div>
+            `;
+
+            return card;
+        }
+
+        // Format date
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            const now = new Date();
+            const diff = now - date;
+            
+            if (diff < 60000) return 'Just now';
+            if (diff < 3600000) return `${Math.floor(diff/60000)}m ago`;
+            if (diff < 86400000) return `${Math.floor(diff/3600000)}h ago`;
+            if (diff < 604800000) return `${Math.floor(diff/86400000)}d ago`;
+            
+            return date.toLocaleDateString();
+        }
+
+        // Update unread count
+        function updateUnreadCount() {
+            const unreadCount = notifications.filter(n => !n.read).length;
+            notificationBadge.textContent = unreadCount;
+            notificationBadge.style.display = unreadCount > 0 ? 'block' : 'none';
+        }
+
+        // Mark notification as read/unread
+        async function markAsRead(id) {
+            const notification = notifications.find(n => n.id === id);
+            if (!notification) return;
+
+            const { error } = await supabase
+                .from('notifications')
+                .update({ read: !notification.read })
+                .eq('id', id);
+
+            if (error) {
+                showToast('Error updating notification', 'error');
+                return;
+            }
+
+            notification.read = !notification.read;
+            updateNotificationsDisplay();
+            updateUnreadCount();
+            showToast('Notification updated successfully');
+        }
+
+        // Delete notification
+        async function deleteNotification(id) {
+            const { error } = await supabase
+                .from('notifications')
+                .delete()
+                .eq('id', id);
+
+            if (error) {
+                showToast('Error deleting notification', 'error');
+                return;
+            }
+
+            notifications = notifications.filter(n => n.id !== id);
+            updateNotificationsDisplay();
+            updateUnreadCount();
+            showToast('Notification deleted successfully');
+        }
+
+        // Show toast message
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            const toastMessage = document.getElementById('toast-message');
+            const toastIcon = document.getElementById('toast-icon');
+            
+            toastMessage.textContent = message;
+            toastIcon.className = `fas ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'}`;
+            toast.className = `toast ${type}`;
+            toast.style.display = 'flex';
+            
+            setTimeout(() => {
+                toast.style.display = 'none';
+            }, 3000);
+        }
+
+        // Event Listeners
+        filterButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                filterButtons.forEach(btn => btn.classList.remove('active'));
+                button.classList.add('active');
+                updateNotificationsDisplay(button.dataset.filter, searchInput.value);
+            });
+        });
+
+        searchInput.addEventListener('input', (e) => {
+            const activeFilter = document.querySelector('.filter-button.active').dataset.filter;
+            updateNotificationsDisplay(activeFilter, e.target.value);
+        });
+
+        clearAllBtn.addEventListener('click', async () => {
+            if (!confirm('Are you sure you want to clear all notifications?')) return;
+
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) return;
+
+            const { error } = await supabase
+                .from('notifications')
+                .delete()
+                .eq('user_id', user.id);
+
+            if (error) {
+                showToast('Error clearing notifications', 'error');
+                return;
+            }
+
+            notifications = [];
+            updateNotificationsDisplay();
+            updateUnreadCount();
+            showToast('All notifications cleared');
+        });
+
+        markAllReadBtn.addEventListener('click', async () => {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) return;
+
+            const { error } = await supabase
+                .from('notifications')
+                .update({ read: true })
+                .eq('user_id', user.id);
+
+            if (error) {
+                showToast('Error updating notifications', 'error');
+                return;
+            }
+
+            notifications.forEach(n => n.read = true);
+            updateNotificationsDisplay();
+            updateUnreadCount();
+            showToast('All notifications marked as read');
+        });
+
+        // Authentication handler
+        document.addEventListener('DOMContentLoaded', async () => {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (user) {
+                const userSpan = document.getElementById('user-name');
+                if (userSpan) userSpan.textContent = user.email;
+                initializeNotifications();
+            }
+        });
+
+        // Sign out handler
+        document.getElementById('sign-out-btn')?.addEventListener('click', () => {
+            supabase.auth.signOut();
+        });
+
+        // Make functions available globally
+        window.markAsRead = markAsRead;
+        window.deleteNotification = deleteNotification;
+    </script>
+</body>
+</html>
