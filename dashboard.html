@@ -846,17 +846,16 @@
                     </div>
                 </div>
                 
-                <div class="metric-card" id="revenueCard">
+                <div class="metric-card" id="revenueCard" onclick="window.location.href='banks/banks.html'" style="cursor: pointer;">
                     <div class="metric-header">
                         <i class="fas fa-money-bill"></i>
                         <span data-lang="revenue" data-en="Revenue" data-pt="Receita">Revenue</span>
-                        <select id="currency-selector" class="currency-select" onchange="changeCurrency(this.value)">
+                        <select id="currency-selector" class="currency-select" onchange="changeCurrency(this.value); event.stopPropagation();">
                             <option value="MZN">MZN</option>
                             <option value="USD">USD</option>
                             <option value="EUR">EUR</option>
                             <option value="ZAR">ZAR</option>
                         </select>
-<!--                        <a href="Bankportal/banks.html" data-lang="bankPortal" data-en="Bank Portal" data-pt="Portal Bancário"></a>  -->
                     </div>
                     <div class="metric-value">MZN 0.00</div>
                     <div class="metric-footer">
