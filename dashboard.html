@@ -83,6 +83,64 @@
             right: 10px;
             z-index: 1;
         }
+
+        /* Pagination Styles */
+        .pagination {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 0;
+            font-size: 0.9rem;
+        }
+
+        .page-info {
+            color: #666;
+        }
+
+        .page-controls {
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+
+        .pagination-btn {
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid #e0e0e0;
+            background-color: white;
+            border-radius: 4px;
+            color: #555;
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: all 0.2s ease;
+        }
+
+        .pagination-btn:hover:not(:disabled) {
+            background-color: #f5f5f5;
+            border-color: #d0d0d0;
+        }
+
+        .pagination-btn.active {
+            background-color: #007ec7;
+            color: white;
+            border-color: #007ec7;
+        }
+
+        .pagination-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .pagination-ellipsis {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 32px;
+            color: #777;
+        }
     </style>
     
     <script>
@@ -515,6 +573,13 @@
 
                             // Setup action buttons
                             this.setupActionButtons();
+
+                            // Update page info
+                            if (pageInfo) {
+                                const start = (page - 1) * limit + 1;
+                                const end = Math.min(page * limit, totalCount);
+                                pageInfo.textContent = `Showing ${start}-${end} of ${totalCount} invoices`;
+                            }
 
                         } catch (error) {
                             console.error('Error in fetchAndDisplayInvoices:', error);
