@@ -673,6 +673,131 @@
     margin-bottom: 1rem;
 }
 
+/* Date Range Picker Styles */
+.date-range-group {
+    position: relative;
+}
+
+.custom-date-range {
+    position: absolute;
+    top: calc(100% + 5px);
+    left: 0;
+    background: white;
+    border: 1px solid var(--border-color, #ddd);
+    border-radius: var(--border-radius, 4px);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    padding: 1rem;
+    z-index: 1000;
+    width: 300px;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.2s ease, visibility 0.2s ease;
+}
+
+.custom-date-range[style*="display: block"] {
+    opacity: 1;
+    visibility: visible;
+}
+
+.date-range-group select:focus + .custom-date-range {
+    display: block;
+}
+
+/* Close button for custom date range */
+.custom-date-range::before {
+    content: '×';
+    position: absolute;
+    top: 5px;
+    right: 8px;
+    font-size: 18px;
+    color: #666;
+    cursor: pointer;
+    line-height: 1;
+}
+
+.custom-date-range::before:hover {
+    color: #333;
+}
+
+/* Date Range Filter Styles */
+.date-range-group {
+    position: relative;
+    margin-right: 1rem;
+}
+
+.date-range-group select {
+    min-width: 150px;
+}
+
+.custom-date-range {
+    position: absolute;
+    top: calc(100% + 5px);
+    left: 0;
+    background: white;
+    border: 1px solid var(--border-color, #ddd);
+    border-radius: var(--border-radius, 4px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    padding: 1rem;
+    z-index: 1000;
+    width: 300px;
+}
+
+.date-input-group {
+    margin-bottom: 1rem;
+}
+
+.date-input-group:last-of-type {
+    margin-bottom: 0.5rem;
+}
+
+.date-input-group label {
+    display: block;
+    margin-bottom: 0.25rem;
+    font-size: 0.875rem;
+    color: var(--text-muted, #666);
+}
+
+.date-input-group input[type="date"] {
+    width: 100%;
+    padding: 0.5rem;
+    border: 1px solid var(--border-color, #ddd);
+    border-radius: var(--border-radius, 4px);
+    font-size: 0.875rem;
+}
+
+#applyDateRange {
+    width: 100%;
+    padding: 0.5rem;
+    background-color: var(--primary-color, #007bff);
+    color: white;
+    border: none;
+    border-radius: var(--border-radius, 4px);
+    cursor: pointer;
+    font-size: 0.875rem;
+    transition: background-color 0.2s;
+}
+
+#applyDateRange:hover {
+    background-color: var(--primary-color-dark, #0056b3);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .date-range-group {
+        margin-right: 0;
+        margin-bottom: 1rem;
+    }
+
+    .custom-date-range {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 90%;
+        max-width: 300px;
+    }
+}
+
 /* Responsive Design */
 @media (max-width: 768px) {
     .form-grid {
@@ -891,283 +1016,6 @@
     margin-bottom: 1rem;
 }
 
-.export-buttons {
-    display: flex;
-    gap: 0.5rem;
-    margin-left: auto;
-}
-
-.export-buttons button {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.5rem 1rem;
-    border: none;
-    border-radius: 4px;
-    font-size: 0.9rem;
-    cursor: pointer;
-    transition: background-color 0.2s;
-}
-
-.export-buttons button i {
-    font-size: 1rem;
-}
-
-.export-buttons .btn-success {
-    background-color: #28a745;
-    color: white;
-}
-
-.export-buttons .btn-success:hover {
-    background-color: #218838;
-}
-
-.export-buttons .btn-primary {
-    background-color: #007bff;
-    color: white;
-}
-
-.export-buttons .btn-primary:hover {
-    background-color: #0056b3;
-}
-
-.filter-group {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    margin-bottom: 0;
-}
-
-@media (max-width: 768px) {
-    .sidebar {
-        width: 100%;
-        position: fixed;
-        transform: translateX(-100%);
-        transition: transform 0.3s ease;
-        z-index: 1000;
-        height: auto;
-    }
-
-    .sidebar.active {
-        transform: translateX(0);
-    }
-
-    .main-content {
-        margin-left: 0;
-        padding: 1rem;
-    }
-
-    .top-bar {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        z-index: 1001;
-    }
-
-    .page-header {
-        flex-direction: column;
-        align-items: flex-start;
-    }
-
-    .action-buttons {
-        margin-top: 1rem;
-    }
-
-    .metrics-grid {
-        grid-template-columns: 1fr;
-    }
-
-    .chart-grid {
-        grid-template-columns: 1fr;
-    }
-
-    .table-filters {
-        flex-direction: column;
-        align-items: flex-start;
-    }
-
-    .filter-group {
-        margin-bottom: 0.5rem;
-    }
-
-    .table-responsive {
-        overflow-x: auto;
-    }
-
-    .data-table {
-        width: 100%;
-    }
-
-    .pagination {
-        flex-direction: column;
-        align-items: center;
-    }
-
-    .page-controls {
-        margin-top: 0.5rem;
-    }
-
-    .form-grid {
-        grid-template-columns: 1fr;
-    }
-
-    .form-row {
-        flex-direction: column;
-    }
-
-    .form-group {
-        width: 100%;
-        margin-bottom: 0.5rem;
-    }
-
-    .items-table thead {
-        display: none;
-    }
-
-    .items-table tr {
-        display: block;
-        margin-bottom: 1rem;
-        border: 1px solid #ddd;
-        padding: 0.5rem;
-    }
-
-    .items-table td {
-        display: block;
-        text-align: left;
-    }
-
-    .items-table td:before {
-        content: attr(data-label);
-        font-weight: bold;
-        display: block;
-    }
-
-    .items-table th,
-    .items-table td {
-        border: none;
-        padding: 0.5rem;
-        text-align: left;
-    }
-
-    .invoice-totals {
-        text-align: left;
-    }
-
-    .totals-row {
-        display: flex;
-        justify-content: space-between;
-    }
-
-    .modal-content {
-        max-width: 95%;
-        margin: 1rem auto;
-    }
-
-    .invoice-view-header {
-        flex-direction: column;
-        align-items: flex-start;
-    }
-
-    .invoice-view-actions {
-        margin-top: 1rem;
-    }
-
-    .status-timeline {
-        flex-direction: column;
-    }
-
-    .timeline-item {
-        margin-bottom: 1rem;
-    }
-}
-
-/* Date Range Modal Styles 
-#dateRangeModal .modal-content {
-    border-radius: 8px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-}
-
-#dateRangeModal .modal-header {
-    background-color: #f8f9fa;
-    border-bottom: 1px solid #dee2e6;
-    padding: 1rem;
-    border-radius: 8px 8px 0 0;
-}
-
-#dateRangeModal .modal-title {
-    font-size: 1.25rem;
-    font-weight: 600;
-    color: #333;
-}
-
-#dateRangeModal .modal-body {
-    padding: 1.5rem;
-}
-
-#dateRangeModal .form-group {
-    margin-bottom: 1.25rem;
-}
-
-#dateRangeModal label {
-    display: block;
-    margin-bottom: 0.5rem;
-    font-weight: 500;
-    color: #495057;
-}
-
-#dateRangeModal input[type="date"] {
-    width: 100%;
-    padding: 0.75rem;
-    border: 1px solid #ced4da;
-    border-radius: 4px;
-    font-size: 1rem;
-    transition: border-color 0.15s ease-in-out;
-}
-
-#dateRangeModal input[type="date"]:focus {
-    border-color: #80bdff;
-    outline: 0;
-    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
-}
-
-#dateRangeModal .modal-footer {
-    padding: 1rem;
-    border-top: 1px solid #dee2e6;
-    background-color: #f8f9fa;
-    border-radius: 0 0 8px 8px;
-}
-
-#dateRangeModal .btn {
-    padding: 0.5rem 1rem;
-    font-size: 1rem;
-    border-radius: 4px;
-    transition: all 0.15s ease-in-out;
-}
-
-#dateRangeModal .btn-secondary {
-    background-color: #6c757d;
-    border-color: #6c757d;
-    color: #fff;
-}
-
-#dateRangeModal .btn-secondary:hover {
-    background-color: #5a6268;
-    border-color: #545b62;
-}
-
-#dateRangeModal .btn-primary {
-    background-color: #007bff;
-    border-color: #007bff;
-    color: #fff;
-}
-
-#dateRangeModal .btn-primary:hover {
-    background-color: #0069d9;
-    border-color: #0062cc;
-}
-*/
-/* Export Buttons Styles */
 .export-buttons {
     display: flex;
     gap: 0.5rem;

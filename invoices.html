@@ -18,80 +18,11 @@
     <!-- Custom CSS -->
     <link rel="stylesheet" href="css/styles.css">
     <link rel="stylesheet" href="css/invoice.css">
-<!--    <link rel="stylesheet" href="css/invoice-print.css"> -->
     <link rel="stylesheet" href="css/invoice-layout.css">
     <link rel="stylesheet" href="css/hints.css">
-<!-- 
-    <style>
-        .item-row td {
-            position: relative;
-        }
-        
-        .product-suggestions {
-            position: absolute;
-            top: 100%;
-            left: 0;
-            width: 100%;
-            background: white;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            z-index: 1000;
-            max-height: 200px;
-            overflow-y: auto;
-        }
-
-        .new-product-form {
-            position: absolute;
-            top: 100%;
-            left: 0;
-            width: 100%;
-            background: white;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            padding: 1rem;
-            z-index: 1000;
-        }
-
-        .new-product-form .form-row {
-            display: flex;
-            gap: 1rem;
-            align-items: flex-end;
-        }
-
-        .new-product-form .form-group {
-            flex: 1;
-        }
-
-        .new-product-form label {
-            display: block;
-            margin-bottom: 0.5rem;
-            font-size: 0.9rem;
-        }
-
-        .new-product-form input,
-        .new-product-form select {
-            width: 100%;
-            padding: 0.5rem;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-        }
-
-        .save-product-btn {
-            padding: 0.5rem 1rem;
-            background: var(--primary-color);
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-        }
-
-        .save-product-btn:hover {
-            background: var(--primary-color-dark);
-        }
-    </style>
--->
+    
+    <!-- Custom JS -->
+    <script src="js/invoicescripts/dateRangeFilter.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 </head>
 
@@ -382,7 +313,7 @@
                         </div>
      
                    <!--  Consolidated Date Range Filter -->
-                        <div class="filter-group">
+                        <div class="filter-group date-range-group">
                             <label for="dateRangeFilter">Date Range:</label>
                             <select id="dateRangeFilter" class="filter-select">
                                 <option value="all">All Time</option>
@@ -393,6 +324,18 @@
                                 <option value="year">This Year</option>
                                 <option value="custom">Custom Range</option>
                             </select>
+                            
+                            <div id="customDateRange" class="custom-date-range" style="display: none;">
+                                <div class="date-input-group">
+                                    <label for="startDate">From:</label>
+                                    <input type="date" id="startDate" class="date-input">
+                                </div>
+                                <div class="date-input-group">
+                                    <label for="endDate">To:</label>
+                                    <input type="date" id="endDate" class="date-input">
+                                </div>
+                                <button id="applyDateRange" class="btn btn-primary btn-sm">Apply</button>
+                            </div>
                         </div>
 
                         <div class="search-filter">
@@ -756,7 +699,11 @@
     <script src="scripts/templateManager.js"></script>
     <script src="js/topbar-menu.js"></script>
     <script src="js/invoicescripts/notifications.js"></script>
+    <!-- Core invoice modules -->
+    <script src="js/invoicescripts/invoiceTable.js"></script>
+    <script src="js/invoicescripts/dateRangeFilter.js"></script>
     <script src="js/invoicescripts/tableFilters.js"></script>
+    <!-- Supporting modules -->
     <script src="js/invoicescripts/export.js"></script>
     <script src="js/invoicescripts/modalManager.js"></script>
     <script src="js/invoicescripts/invoiceForm.js"></script>
@@ -766,7 +713,6 @@
     <script src="js/invoicescripts/metrics.js"></script>
     <script src="js/invoicescripts/charts.js"></script>
     <script src="js/invoicescripts/eventListeners.js"></script>
-    <script src="js/invoicescripts/invoiceTable.js"></script>
     <script src="js/invoicescripts/invoiceActions.js"></script>
     <script src="js/invoicescripts/pdf.js"></script>
     <script src="js/email-handler.js"></script>
@@ -971,15 +917,31 @@
                     console.log('Invoice actions initialized successfully');
                 } else {
                     console.error('InvoiceActions class or Supabase client not found during actions initialization');
-                }
+                }            // Initialize invoice table module first
+            if (window.InvoiceTableModule) {
+                window.invoiceTable = window.InvoiceTableModule;
+                window.invoiceTable.init();
+                console.log('Invoice table module initialized successfully');
+            } else {
+                console.error('InvoiceTableModule not found');
+                return;
+            }
 
-                // Initialize table filters first
-                if (typeof window.setupTableFilters === 'function') {
-                    window.setupTableFilters();
-                    console.log('Table filters initialized successfully');
-                } else {
-                    console.error('Table filters setup function not found');
-                }
+            // Initialize date range filter module
+            if (window.DateRangeFilterModule) {
+                window.DateRangeFilterModule.init();
+                console.log('Date range filter initialized successfully');
+            } else {
+                console.error('DateRangeFilterModule not found');
+            }
+
+            // Initialize table filters
+            if (typeof window.setupTableFilters === 'function') {
+                window.setupTableFilters();
+                console.log('Table filters initialized successfully');
+            } else {
+                console.error('Table filters setup function not found');
+            }
 
                 // Initialize invoice table
                 if (typeof window.fetchAndDisplayInvoices === 'function') {

@@ -2,6 +2,31 @@
 const InvoiceTableModule = {
     currentSortColumn: null,
     currentSortDirection: 'asc', // 'asc' or 'desc'
+    currentFilters: {},
+    isInitialized: false,
+
+    init() {
+        if (this.isInitialized) return;
+        
+        // Set default filters
+        this.currentFilters = {
+            status: 'all',
+            dateRange: 'all',
+            client: 'all',
+            search: ''
+        };
+
+        // Initialize sorting functionality
+        this.setupSorting();
+        
+        this.isInitialized = true;
+        console.log('Invoice table module initialized');
+    },
+
+    applyFilters() {
+        console.log('Applying filters:', this.currentFilters);
+        this.fetchAndDisplayInvoices(1, 10, this.currentFilters);
+    },
 
     async fetchAndDisplayInvoices(page = 1, limit = 10, filters = {}) {
         try {
@@ -29,10 +54,16 @@ const InvoiceTableModule = {
                 const searchTerm = filters.search;
                 query = query.or(`invoiceNumber.ilike.%${searchTerm}%`);
             }
+            // Apply date range filter
             if (filters.dateRange) {
-                const { startDate, endDate } = this.parseDateRange(filters.dateRange);
-                if (startDate && endDate) {
+                if (filters.dateRange === 'custom' && filters.customDateRange) {
+                    const { startDate, endDate } = filters.customDateRange;
                     query = query.gte('issue_date', startDate).lte('issue_date', endDate);
+                } else if (filters.dateRange !== 'all') {
+                    const { startDate, endDate } = this.parseDateRange(filters.dateRange);
+                    if (startDate && endDate) {
+                        query = query.gte('issue_date', startDate).lte('issue_date', endDate);
+                    }
                 }
             }
 
@@ -385,4 +416,4 @@ const InvoiceTableModule = {
 };
 
 // Export the module
-window.InvoiceTableModule = InvoiceTableModule; 
+window.InvoiceTableModule = InvoiceTableModule;
