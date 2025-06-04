@@ -21,17 +21,32 @@ async function signIn(email, password) {
 }
 
 // Example function to sign up a new user
-async function signUp(email, password) {
-    const { user, session, error } = await supabase.auth.signUp({
-        email: email,
-        password: password,
-    });
+async function signUp(email, password, username = '') {
+    try {
+        const response = await fetch('/functions/create-user', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer ' + supabaseKey
+            },
+            body: JSON.stringify({
+                email,
+                password,
+                username: username || email.split('@')[0],
+                role: 'user'
+            })
+        });
 
-    if (error) {
+        const result = await response.json();
+        if (!response.ok) {
+            throw new Error(result.error || 'Failed to create user');
+        }
+
+        console.log('User signed up:', result);
+        return result;
+    } catch (error) {
         console.error('Error signing up:', error);
-    } else {
-        console.log('User signed up:', user);
-        console.log('Session:', session);
+        throw error;
     }
 }
 

@@ -243,20 +243,27 @@
                 
                 try {
                     // 1. Create user in Supabase Auth
-                    const { data: { user }, error } = await supabase.auth.signUp({
-                        email,
-                        password
+                    const response = await fetch('/functions/create-user', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': 'Bearer ' + supabaseKey
+                        },
+                        body: JSON.stringify({
+                            email: email,
+                            password: password,
+                            username: email.split('@')[0], // Use email prefix as default username
+                            role: 'user',
+                            is_trial: true
+                        })
                     });
-                    if (error) throw error;
 
-                    // 2. Create record in users
-                    await supabase.from('users').insert([{
-                        id: user.id,
-                        email: user.email,
-                        role: 'user',
-                        created_at: new Date().toISOString(),
-                        status: 'active'
-                    }]);
+                    const result = await response.json();
+                    if (!response.ok) {
+                        throw new Error(result.error || 'Failed to create user');
+                    }
+
+                    const { user } = result;
 
                     // 3. Create record in trial_users
                     const now = new Date();
