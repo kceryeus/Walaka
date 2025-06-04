@@ -44,11 +44,16 @@
             background: white;
             border-radius: 8px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-top: 20px;
         }
 
         .daily-invoices-table h4 {
             margin: 0 0 15px 0;
             color: #333;
+            font-size: 1.1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
 
         .daily-invoices-table table {
@@ -62,26 +67,125 @@
             padding: 12px;
             text-align: left;
             border-bottom: 1px solid #eee;
+            font-size: 0.9rem;
         }
 
         .daily-invoices-table th {
             background-color: #f8f9fa;
             font-weight: 600;
+            color: #555;
         }
 
         .daily-invoices-table tr:hover {
             background-color: #f8f9fa;
+            cursor: pointer;
+        }
+
+        .daily-invoices-table .status-cell {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+
+        .daily-invoices-table .status-pending {
+            background-color: #fff7ed;
+            color: #ea580c;
+        }
+
+        .daily-invoices-table .status-paid {
+            background-color: #f0fdf4;
+            color: #16a34a;
+        }
+
+        .back-button {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            background-color: #007ec7;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+
+        .back-button i {
+            font-size: 12px;
+        }
+
+        .back-button:hover {
+            background-color: #0066a3;
+            transform: translateY(-1px);
         }
 
         .chart-container {
             position: relative;
+            min-height: 300px;
+            transition: all 0.3s ease;
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .chart-container.drilled-down {
+            margin-bottom: 30px;
         }
 
         .chart-container .back-button {
             position: absolute;
-            top: 10px;
-            right: 10px;
-            z-index: 1;
+            top: 20px;
+            right: 20px;
+            z-index: 10;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            background-color: #007ec7;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .chart-container.drilled-down .back-button {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .chart-container .daily-invoices-table {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: white;
+            margin: 0;
+            border-radius: 8px;
+            padding: 20px;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .chart-container.drilled-down .daily-invoices-table {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .chart-container.drilled-down canvas {
+            opacity: 0;
+            visibility: hidden;
         }
 
         /* Pagination Styles */
@@ -577,8 +681,8 @@
                             // Update page info
                             if (pageInfo) {
                                 const start = (page - 1) * limit + 1;
-                                const end = Math.min(page * limit, totalCount);
-                                pageInfo.textContent = `Showing ${start}-${end} of ${totalCount} invoices`;
+                                const end = Math.min(page * limit, count);
+                                pageInfo.textContent = `Showing ${start}-${end} of ${count} invoices`;
                             }
 
                         } catch (error) {
@@ -1254,45 +1358,24 @@
                 }
 
                 // Update drilldown data
-                updateInvoiceDrilldown(allInvoices);
+                const drilldownData = document.querySelector('#totalInvoicesDetail .drilldown-data');
+                if (drilldownData) {
+                    const newInvoices = currentMonthInvoices.length;
+                    const sentInvoices = invoices.filter(inv => inv.status === 'pending').length;
+                    const paidInvoices = invoices.filter(inv => inv.status === 'paid').length;
+                    const overdueInvoices = invoices.filter(inv => inv.status === 'overdue').length;
+
+                    const items = drilldownData.querySelectorAll('.drilldown-item');
+                    if (items.length >= 4) {
+                        items[0].querySelector('span:last-child').textContent = newInvoices;
+                        items[1].querySelector('span:last-child').textContent = sentInvoices;
+                        items[2].querySelector('span:last-child').textContent = paidInvoices;
+                        items[3].querySelector('span:last-child').textContent = overdueInvoices;
+                    }
+                }
 
             } catch (error) {
-                console.error('Error updating invoice metrics:', error);
-            }
-        }
-
-        // Function to update invoice drilldown data
-        function updateInvoiceDrilldown(invoices) {
-            const drilldownData = document.querySelector('#totalInvoicesDetail .drilldown-data');
-            if (!drilldownData) return;
-
-            const today = new Date();
-            const thirtyDaysAgo = new Date(today);
-            thirtyDaysAgo.setDate(today.getDate() - 30);
-
-            const newInvoices = invoices.filter(invoice => 
-                new Date(invoice.issue_date) >= thirtyDaysAgo
-            ).length;
-
-            const sentInvoices = invoices.filter(invoice => 
-                invoice.status === 'pending'
-            ).length;
-
-            const paidInvoices = invoices.filter(invoice => 
-                invoice.status === 'paid'
-            ).length;
-
-            const overdueInvoices = invoices.filter(invoice => 
-                invoice.status === 'overdue'
-            ).length;
-
-            // Update drilldown items
-            const items = drilldownData.querySelectorAll('.drilldown-item');
-            if (items.length >= 4) {
-                items[0].querySelector('span:last-child').textContent = newInvoices;
-                items[1].querySelector('span:last-child').textContent = sentInvoices;
-                items[2].querySelector('span:last-child').textContent = paidInvoices;
-                items[3].querySelector('span:last-child').textContent = overdueInvoices;
+                console.error('Error updating metrics:', error);
             }
         }
 
@@ -1808,6 +1891,103 @@
                 updateInvoiceStatusChart();
             }, 300000);
         });
+
+        // Update metrics function
+        async function updateMetrics() {
+            try {
+                const now = new Date();
+                const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+                const startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+                const endOfLastMonth = new Date(now.getFullYear(), now.getMonth(), 0);
+
+                const { data: invoices, error } = await window.supabase
+                    .from('invoices')
+                    .select('total_amount, issue_date, status')
+                    .gte('issue_date', startOfLastMonth.toISOString());
+
+                if (error) throw error;
+
+                // Calculate metrics
+                const currentMonthInvoices = invoices.filter(inv => 
+                    new Date(inv.issue_date) >= startOfMonth
+                );
+                const lastMonthInvoices = invoices.filter(inv => 
+                    new Date(inv.issue_date) >= startOfLastMonth &&
+                    new Date(inv.issue_date) <= endOfLastMonth
+                );
+
+                // Total Invoices Metrics
+                const totalInvoicesValue = currentMonthInvoices.length || 0;
+                const lastMonthTotalInvoices = lastMonthInvoices.length || 0;
+                const invoiceGrowth = lastMonthTotalInvoices ? 
+                    ((totalInvoicesValue - lastMonthTotalInvoices) / lastMonthTotalInvoices * 100).toFixed(1) : 
+                    0;
+
+                // Revenue Metrics
+                const currentMonthRevenue = currentMonthInvoices.reduce((sum, inv) => sum + (Number(inv.total_amount) || 0), 0);
+                const lastMonthRevenue = lastMonthInvoices.reduce((sum, inv) => sum + (Number(inv.total_amount) || 0), 0);
+                const revenueGrowth = lastMonthRevenue ? 
+                    ((currentMonthRevenue - lastMonthRevenue) / lastMonthRevenue * 100).toFixed(1) : 
+                    0;
+
+                // Direct DOM updates for Total Invoices Card
+                const totalInvoicesValueElement = document.querySelector('#totalInvoicesCard .metric-value');
+                const totalInvoicesGrowthElement = document.querySelector('#totalInvoicesCard .metric-change');
+                
+                if (totalInvoicesValueElement) {
+                    totalInvoicesValueElement.textContent = totalInvoicesValue;
+                }
+                if (totalInvoicesGrowthElement) {
+                    totalInvoicesGrowthElement.textContent = `${invoiceGrowth}%`;
+                    totalInvoicesGrowthElement.className = `metric-change ${Number(invoiceGrowth) >= 0 ? 'positive' : 'negative'}`;
+                }
+
+                // Direct DOM updates for Revenue Card
+                const revenueValueElement = document.querySelector('#revenueCard .metric-value');
+                const revenueGrowthElement = document.querySelector('#revenueCard .metric-change');
+                
+                if (revenueValueElement) {
+                    revenueValueElement.setAttribute('data-base-amount', currentMonthRevenue.toString());
+                    const currentCurrency = document.querySelector('#currency-selector')?.value || 'MZN';
+                    revenueValueElement.textContent = formatCurrencyByCode(currentMonthRevenue, currentCurrency);
+                }
+                if (revenueGrowthElement) {
+                    revenueGrowthElement.textContent = `${revenueGrowth}%`;
+                    revenueGrowthElement.className = `metric-change ${Number(revenueGrowth) >= 0 ? 'positive' : 'negative'}`;
+                }
+
+                // Update drilldown data
+                const drilldownData = document.querySelector('#totalInvoicesDetail .drilldown-data');
+                if (drilldownData) {
+                    const newInvoices = currentMonthInvoices.length;
+                    const sentInvoices = invoices.filter(inv => inv.status === 'pending').length;
+                    const paidInvoices = invoices.filter(inv => inv.status === 'paid').length;
+                    const overdueInvoices = invoices.filter(inv => inv.status === 'overdue').length;
+
+                    const items = drilldownData.querySelectorAll('.drilldown-item');
+                    if (items.length >= 4) {
+                        items[0].querySelector('span:last-child').textContent = newInvoices;
+                        items[1].querySelector('span:last-child').textContent = sentInvoices;
+                        items[2].querySelector('span:last-child').textContent = paidInvoices;
+                        items[3].querySelector('span:last-child').textContent = overdueInvoices;
+                    }
+                }
+
+            } catch (error) {
+                console.error('Error updating metrics:', error);
+            }
+        }
+
+        // Add to DOMContentLoaded event listener
+        document.addEventListener('DOMContentLoaded', () => {
+            // Initial metrics update
+            updateMetrics();
+            
+            // Update metrics every 5 minutes
+            setInterval(updateMetrics, 300000);
+        });
+
+        // ...existing code...
     </script>
   <script src="js/walaka-assistant.js"></script>
 </body>

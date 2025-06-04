@@ -18,8 +18,9 @@
   
   
   <style>
+/* ===== VARIABLES ===== */
 :root {
-  --primary-color: #007ec7; /* Corporate blue */
+  --primary-color: #007ec7;
   --primary-dark: #005fa3;
   --primary-light: #e6f4fb;
   --secondary-color: #4f46e5;
@@ -35,13 +36,11 @@
   --background-color: #f8fafc;
   --card-background: #ffffff;
   --border-color: #e2e8f0;
-  --sidebar-width: 250px;
-  --sidebar-collapsed-width: 80px;
-  --topbar-height: 60px;
-  --card-radius: 16px;
+  --box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06);
+  --box-shadow-hover: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --card-radius: 12px;
   --input-radius: 8px;
-  --transition-speed: 0.3s;
-  --box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --transition-speed: 0.2s;
 }
 
 /* ===== RESET & BASE STYLES ===== */
@@ -421,184 +420,493 @@ ul {
   text-decoration: underline;
 }
 
-    /* Additional styles for product management */
-    .product-management {
-      display: flex;
-      gap: 2rem;
-    }
+/* Update Product Management Styles */
+.product-management {
+  display: flex;
+  gap: 2rem;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 1.5rem;
+}
 
-    .frame {
-      flex: 1;
-      padding: 1rem;
-      border: 1px solid #e2e8f0;
-      border-radius: var(--card-radius);
-      background-color: white;
-    }
+.frame {
+  background: var(--card-background);
+  border-radius: var(--card-radius);
+  box-shadow: var(--box-shadow);
+  transition: box-shadow var(--transition-speed) ease;
+}
 
-    .frame-left {
-      width: 300px; /* Fixed width */
-      height: 600px; /* Fixed height */
-      overflow-y: auto;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      padding: 2rem;
-      border-radius: var(--card-radius);
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    }
+.frame:hover {
+  box-shadow: var(--box-shadow-hover);
+}
 
-    .frame-right {
-      max-height: 600px;
-      overflow-y: auto;
-      position: relative; /* Add relative positioning */
-    }
+.frame-left {
+  width: 400px;
+  height: fit-content;
+  position: sticky;
+  top: 80px;
+  padding: 1.5rem;
+}
 
-    .search-bar-frame {
-      position: sticky; /* Fix the search bar at the top */
-      top: 0;
-      background-color: white; /* Ensure background color matches */
-      z-index: 10; /* Ensure it stays above other elements */
-      padding: 0.5rem 0; /* Add padding for spacing */
-      border-bottom: 1px solid #e2e8f0; /* Add a separator below the search bar */
-    }
+.frame-right {
+  flex: 1;
+  min-height: 600px;
+  padding: 1.5rem;
+  overflow-y: auto;
+}
 
-    .search-bar-frame input {
-      width: 100%;
-      padding: 0.5rem;
-      border: 1px solid #e2e8f0;
-      border-radius: var(--card-radius);
-    }
+/* ===== FORM STYLES ===== */
+#product-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
 
-    .product-item {
-      display: grid;
-      grid-template-columns: 1fr auto; /* Separate text and buttons into their own "frames" */
-      align-items: center; /* Ensure vertical alignment */
-      padding: 0.75rem 1rem;
-      border: 1px solid #e2e8f0;
-      border-radius: var(--card-radius);
-      margin-bottom: 0.5rem;
-    }
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
 
-    .product-item button {
-      font-size: 0.7rem; /* Slightly smaller font size */
-      border: none;
-      cursor: pointer;
-      padding: 0.3rem 0.6rem; /* Adjust padding */
-      border-radius: var(--card-radius);
-      transition: background-color 0.3s ease;
-    }
+.form-group label {
+  font-weight: 600;
+  color: var(--text-primary);
+  font-size: 0.9rem;
+}
 
-    .product-item .edit-btn {
-      background-color: #fbbf24; /* Yellowish orange */
-      color: white;
-    }
+.form-group input,
+.form-group select {
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--border-color);
+  border-radius: var(--input-radius);
+  font-size: 0.95rem;
+  transition: all var(--transition-speed) ease;
+  color: var(--text-primary);
+}
 
-    .product-item .delete-btn {
-      background-color: #ef4444; /* Red */
-      color: white;
-    }
+.form-group input:focus,
+.form-group select:focus {
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px rgba(0, 126, 199, 0.1);
+  outline: none;
+}
 
-    .product-item .edit-btn:hover {
-      background-color: #f59e0b; /* Darker yellowish orange */
-    }
+.form-group input::placeholder {
+  color: var(--text-light);
+}
 
-    .product-item .delete-btn:hover {
-      background-color: #dc2626; /* Darker red */
-    }
+/* ===== BUTTON STYLES ===== */
+.btn-primary,
+.btn-secondary {
+  padding: 0.75rem 1.5rem;
+  border-radius: var(--input-radius);
+  font-weight: 500;
+  font-size: 0.95rem;
+  transition: all var(--transition-speed) ease;
+  cursor: pointer;
+}
 
-    #product-form {
-      display: flex;
-      flex-direction: column;
-      gap: 1rem;
-      width: 100%;
-    }
+.btn-primary {
+  background-color: var(--primary-color);
+  color: white;
+  border: none;
+}
 
-    #product-form label {
-      align-self: flex-start;
-      font-weight: 600;
-      color: var(--primary-color);
-    }
+.btn-primary:hover {
+  background-color: var(--primary-dark);
+  transform: translateY(-1px);
+}
 
-    #product-form input,
-    #product-form select,
-    #product-form button {
-      width: 100%;
-      padding: 0.75rem;
-      border: 1px solid #e2e8f0;
-      border-radius: var(--card-radius);
-      font-size: 0.9rem;
-    }
+.btn-secondary {
+  background-color: white;
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+}
 
-    #product-form input:focus,
-    #product-form select:focus,
-    #product-form button:focus {
-      outline: none;
-      border-color: var(--primary-color);
-      box-shadow: 0 0 0 3px rgba(0, 126, 199, 0.2);
-    }
+.btn-secondary:hover {
+  background-color: var(--background-color);
+  border-color: var(--text-secondary);
+}
 
-    #other-vat-container {
-      display: none;
-      width: 100%;
-    }
+/* ===== FILTERS AND VIEW TOGGLE ===== */
+.product-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
 
-    #other-vat-container label {
-      font-weight: 600;
-      color: var(--primary-color);
-    }
+.filter-group {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
 
-    #other-vat-container input {
-      width: 100%;
-      padding: 0.75rem;
-      border: 1px solid #e2e8f0;
-      border-radius: var(--card-radius);
-      font-size: 0.9rem;
-    }
+.filter-group select,
+.filter-group input {
+  min-width: 150px;
+  padding: 0.6rem 1rem;
+  border: 1px solid var(--border-color);
+  border-radius: var(--input-radius);
+  font-size: 0.9rem;
+  color: var(--text-primary);
+  background-color: white;
+}
 
-    #other-vat-container input:focus {
-      outline: none;
-      border-color: var(--primary-color);
-      box-shadow: 0 0 0 3px rgba(0, 126, 199, 0.2);
-    }
+.view-toggle {
+  display: flex;
+  gap: 0.5rem;
+}
 
-    #product-form button {
-      background-color: var(--primary-color); /* Blue */
-      color: white;
-      border: none;
-      padding: 0.75rem 1rem;
-      border-radius: var(--card-radius);
-      cursor: pointer;
-      transition: background-color 0.3s ease;
-    }
+.view-toggle button {
+  padding: 0.6rem;
+  border: 1px solid var(--border-color);
+  border-radius: var(--input-radius);
+  background: white;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all var(--transition-speed) ease;
+}
 
-    #product-form button:hover {
-      background-color: #005fa3; /* Darker blue */
-    }
+.view-toggle button.active {
+  background: var(--primary-color);
+  color: white;
+  border-color: var(--primary-color);
+}
 
-    .search-bar-frame,
-    #product-list h3 {
-      position: sticky; /* Fix both the search bar and header */
-      top: 0;
-      background-color: white;
-      z-index: 10;
-      padding: 0.5rem 0;
-    }
+/* ===== PRODUCT LIST STYLES ===== */
+.product-list {
+  display: grid;
+  gap: 1rem;
+}
 
-    #product-list h3 {
-      margin: 0; /* Remove default margin for better alignment */
-      border-bottom: 1px solid #e2e8f0; /* Add a separator */
-      position: sticky; /* Fix the header below the search bar */
-      top: 2.5rem; /* Adjust to account for the search bar height */
-      background-color: white;
-      z-index: 9; /* Ensure it stays below the search bar */
-      padding: 0.5rem 0;
-      border-bottom: 1px solid #e2e8f0; /* Add a separator below the header */
-    }
+.product-list.grid-view {
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+}
+
+.product-list.list-view {
+  grid-template-columns: 1fr;
+}
+
+.product-item {
+  background: white;
+  border-radius: var(--card-radius);
+  border: 1px solid var(--border-color);
+  padding: 1.5rem;
+  transition: all var(--transition-speed) ease;
+}
+
+.product-item:hover {
+  border-color: var(--primary-color);
+  box-shadow: var(--box-shadow-hover);
+  transform: translateY(-2px);
+}
+
+.product-item-content {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.product-info {
+  flex: 1;
+}
+
+.product-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 0.5rem;
+}
+
+.product-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.meta-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+}
+
+.product-actions {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: flex-end;
+}
+
+.action-btn {
+  padding: 0.5rem;
+  border: none;
+  border-radius: var(--input-radius);
+  color: white;
+  cursor: pointer;
+  transition: all var(--transition-speed) ease;
+}
+
+.edit-btn {
+  background-color: var(--warning-color);
+}
+
+.edit-btn:hover {
+  background-color: #f59e0b;
+}
+
+.delete-btn {
+  background-color: var(--danger-color);
+}
+
+.delete-btn:hover {
+  background-color: #dc2626;
+}
+
+/* ===== EMPTY STATE ===== */
+.empty-state {
+  text-align: center;
+  padding: 3rem 1.5rem;
+  color: var(--text-secondary);
+}
+
+.empty-state i {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+  color: var(--text-light);
+}
+
+.empty-state h3 {
+  font-size: 1.2rem;
+  margin-bottom: 0.5rem;
+  color: var(--text-primary);
+}
+
+.empty-state p {
+  color: var(--text-secondary);
+  margin-bottom: 1.5rem;
+}
+
+/* ===== ANIMATIONS AND TRANSITIONS ===== */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideIn {
+  from { transform: translateX(-10px); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+
+.product-item {
+  animation: fadeIn 0.3s ease-out;
+}
+
+.product-meta {
+  animation: slideIn 0.3s ease-out;
+}
+
+/* ===== ENHANCED FORM STYLES ===== */
+.form-group .required {
+  color: var(--danger-color);
+  margin-left: 2px;
+}
+
+.form-group input:focus::placeholder,
+.form-group select:focus::placeholder {
+  opacity: 0.5;
+}
+
+.form-actions {
+  display: flex;
+  gap: 1rem;
+  margin-top: 2rem;
+}
+
+.form-actions button {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.form-actions button i {
+  font-size: 0.9rem;
+}
+
+/* ===== IMPROVED FILTER STYLES ===== */
+.filter-group input,
+.filter-group select {
+  background-color: white;
+  transition: all var(--transition-speed) ease;
+}
+
+.filter-group input:hover,
+.filter-group select:hover {
+  border-color: var(--text-secondary);
+}
+
+.filter-group input:focus,
+.filter-group select:focus {
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px rgba(0, 126, 199, 0.1);
+  outline: none;
+}
+
+.search-input {
+  padding-left: 2.5rem !important;
+  background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%2364748b"><path d="M21.71 20.29l-5.01-5.01C17.54 13.68 18 11.91 18 10c0-4.41-3.59-8-8-8S2 5.59 2 10s3.59 8 8 8c1.91 0 3.68-.46 5.28-1.3l5.01 5.01c.39.39 1.02.39 1.41 0l1.41-1.41c.39-.39.39-1.02 0-1.41zM10 16c-3.31 0-6-2.69-6-6s2.69-6 6-6 6 2.69 6 6-2.69 6-6 6z"/></svg>');
+  background-position: 12px center;
+  background-repeat: no-repeat;
+  background-size: 16px;
+}
+
+/* ===== IMPROVED VIEW TOGGLE ===== */
+.view-toggle button {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+}
+
+.view-toggle button:hover {
+  background-color: var(--primary-light);
+  color: var(--primary-color);
+  border-color: var(--primary-color);
+}
+
+/* ===== LOADING STATE ===== */
+.loading-state {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 1.5rem;
+  color: var(--text-secondary);
+}
+
+.loading-spinner {
+  border: 3px solid var(--border-color);
+  border-radius: 50%;
+  border-top: 3px solid var(--primary-color);
+  width: 24px;
+  height: 24px;
+  animation: spin 1s linear infinite;
+  margin-right: 1rem;
+}
+
+/* ===== NOTIFICATION STYLES ===== */
+.notification {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  padding: 1rem 1.5rem;
+  border-radius: var(--card-radius);
+  background: white;
+  box-shadow: var(--box-shadow-hover);
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  transform: translateX(120%);
+  transition: transform var(--transition-speed) ease;
+  z-index: 1000;
+}
+
+.notification.show {
+  transform: translateX(0);
+}
+
+.notification.success {
+  border-left: 4px solid var(--success-color);
+}
+
+.notification.error {
+  border-left: 4px solid var(--danger-color);
+}
+
+.notification i {
+  font-size: 1.25rem;
+}
+
+.notification.success i {
+  color: var(--success-color);
+}
+
+.notification.error i {
+  color: var(--danger-color);
+}
+
+/* ===== DISABLED STATE STYLES ===== */
+button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+button:disabled:hover {
+  transform: none;
+}
+
+/* ===== CONFIRMATION DIALOG STYLES ===== */
+.dialog-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.dialog {
+  background: white;
+  border-radius: var(--card-radius);
+  padding: 1.5rem;
+  max-width: 400px;
+  width: 90%;
+}
+
+.dialog-header {
+  margin-bottom: 1rem;
+}
+
+.dialog-header h3 {
+  font-size: 1.2rem;
+  color: var(--text-primary);
+}
+
+.dialog-content {
+  margin-bottom: 1.5rem;
+  color: var(--text-secondary);
+}
+
+.dialog-actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: flex-end;
+}
+
+/* ===== ENHANCE FOCUS STYLES ===== */
+:focus {
+  outline: none;
+}
+
+:focus-visible {
+  outline: 2px solid var(--primary-color);
+  outline-offset: 2px;
+}
   </style>
 
 </head>
-<body onload="loadSidebar()">
+<body>
   <div class="dashboard-container">
     <!-- Sidebar Menu -->
     <nav class="sidebar">
@@ -731,74 +1039,75 @@ ul {
               <form id="product-form">
                 <div class="form-group">
                   <label for="description">Description <span class="required">*</span></label>
-                  <input type="text" id="description" name="description" required placeholder="Product description">
+                  <input type="text" id="description" required placeholder="Enter product description">
                 </div>
 
                 <div class="form-group">
                   <label for="price">Price <span class="required">*</span></label>
-                  <input type="number" id="price" name="price" step="0.01" required placeholder="0.00">
+                  <input type="number" id="price" step="0.01" required placeholder="0.00">
                 </div>
 
                 <div class="form-group">
                   <label for="tax-code">Tax Code (SAT) <span class="required">*</span></label>
-                  <input type="text" id="tax-code" name="tax-code" required placeholder="e.g. 10101">
+                  <input type="text" id="tax-code" required placeholder="e.g. 10101">
                 </div>
 
                 <div class="form-group">
-                  <label for="vat">Tax Rate (VAT) <span class="required">*</span></label>
-                  <select id="vat" name="vat" required>
+                  <label for="vat">VAT Rate <span class="required">*</span></label>
+                  <select id="vat" required>
+                    <option value="">Select VAT rate</option>
+                    <option value="0">0%</option>
                     <option value="0.16">16%</option>
-                    <option value="0.05">5%</option>
-                    <option value="0">Exempt</option>
                     <option value="other">Other</option>
                   </select>
                 </div>
 
-                <div class="form-group" id="other-vat-container" style="display: none;">
-                  <label for="other-vat">Other VAT Percentage</label>
-                  <input type="number" id="other-vat" name="other-vat" min="0" max="100" step="0.01" placeholder="Enter custom VAT rate">
+                <div id="other-vat-container" class="form-group" style="display: none;">
+                  <label for="other-vat">Custom VAT Rate (%)</label>
+                  <input type="number" id="other-vat" min="0" max="100" step="1">
                 </div>
 
                 <div class="form-group">
-                  <label for="industry">Industry (SAT) <span class="required">*</span></label>
-                  <input type="text" id="industry" name="industry" required placeholder="e.g. Retail">
+                  <label for="industry">Industry <span class="required">*</span></label>
+                  <select id="industry" required>
+                    <option value="">Select industry</option>
+                    <option value="retail">Retail</option>
+                    <option value="wholesale">Wholesale</option>
+                    <option value="manufacturing">Manufacturing</option>
+                    <option value="services">Services</option>
+                  </select>
                 </div>
 
-                <div class="form-footer">
-                  <button type="submit" id="save-product-btn" class="primary-btn">Save Product</button>
-                  <button type="button" id="cancel-btn" class="secondary-btn">Cancel</button>
+                <div class="form-actions">
+                  <button type="submit" class="btn-primary">Save Product</button>
+                  <button type="button" class="btn-secondary" id="cancel-btn">Cancel</button>
                 </div>
               </form>
             </section>
 
             <!-- Product List Section -->
             <section class="frame frame-right">
-              <div class="list-controls">
-                <div class="search-filter-container">
-                  <div class="search-box">
-                    <i class="fas fa-search"></i>
-                    <input type="text" id="product-search" placeholder="Search products...">
-                  </div>
-                  <div class="filter-group">
-                    <select id="industry-filter">
-                      <option value="all">All Industries</option>
-                      <option value="retail">Retail</option>
-                      <option value="manufacturing">Manufacturing</option>
-                      <option value="services">Services</option>
-                    </select>
-                    <select id="vat-filter">
-                      <option value="all">All VAT Rates</option>
-                      <option value="16">16%</option>
-                      <option value="5">5%</option>
-                      <option value="0">Exempt</option>
-                    </select>
-                  </div>
+              <div class="product-controls">
+                <div class="filter-group">
+                  <input type="text" id="product-search" placeholder="Search products..." class="search-input">
+                  <select id="industry-filter" class="filter-select">
+                    <option value="all">All Industries</option>
+                    <option value="retail">Retail</option>
+                    <option value="wholesale">Wholesale</option>
+                    <option value="manufacturing">Manufacturing</option>
+                    <option value="services">Services</option>
+                  </select>
+                  <select id="vat-filter" class="filter-select">
+                    <option value="all">All VAT Rates</option>
+                    <option value="16">16%</option>
+                    <option value="0">0%</option>
+                  </select>
                 </div>
                 <div class="view-toggle">
-                  <button id="grid-view-btn" class="active">
+                  <button id="grid-view-btn" class="active" title="Grid View">
                     <i class="fas fa-th-large"></i>
                   </button>
-                  <button id="list-view-btn">
+                  <button id="list-view-btn" title="List View">
                     <i class="fas fa-list"></i>
                   </button>
                 </div>
@@ -854,19 +1163,20 @@ ul {
         const { data: { session }, error } = await supabase.auth.getSession();
         if (error || !session) {
           console.error('Erro ao obter sessão:', error?.message);
-          document.getElementById('user-name').textContent = 'Não logado';
+          document.getElementById('user-displayname').textContent = 'Não logado';
           return;
         }
 
         const user = session.user;
         if (!user) {
-          document.getElementById('user-name').textContent = 'Não logado';
+          document.getElementById('user-displayname').textContent = 'Não logado';
           return;
         }
 
+        // Updated query to only select username since logo column doesn't exist
         const { data: profileData, error: profileError } = await supabase
           .from('users')
-          .select('username, logo')
+          .select('username')
           .eq('id', user.id)
           .single();
 
@@ -875,15 +1185,13 @@ ul {
           return;
         }
 
-        const userNameSpan = document.getElementById('user-name');
-        if (userNameSpan) {
-          userNameSpan.textContent = profileData.username || 'Usuário Desconhecido';
+        // Update display name
+        const userDisplayName = document.getElementById('user-displayname');
+        if (userDisplayName) {
+          userDisplayName.textContent = profileData.username || user.email || 'Usuário Desconhecido';
         }
 
-        const userAvatar = document.querySelector('.avatar');
-        if (userAvatar && profileData.logo) {
-          userAvatar.innerHTML = `<img src="${profileData.logo}" alt="User Logo" style="width: 100%; height: 100%; border-radius: 50%;">`;
-        }
+        // Remove logo-related code since the column doesn't exist
       } catch (err) {
         console.error('Erro inesperado:', err);
       }
@@ -901,6 +1209,7 @@ ul {
     }
 
     let products = [];
+    let currentProductId = null; // Track which product is being edited
 
     function formatCurrency(value) {
       return `MZN ${value.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ' ').replace('.', ',')}`;
@@ -915,269 +1224,345 @@ ul {
     }
 
     async function fetchProducts() {
-      // Obter o usuário logado
-      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-      if (sessionError || !session || !session.user) {
-        console.error('Erro ao obter sessão:', sessionError?.message);
-        return;
-      }
-      const userId = session.user.id;
-      // Buscar apenas produtos do usuário logado
-      const { data, count, error } = await supabase
-        .from('products')
-        .select('*', { count: 'exact' })
-        .eq('user_id', userId);
-
-      if (error) {
-        console.error('Error fetching products:', error);
-        return;
-      }
-
-      products = data;
-      displayProducts();
-
-      // Update product count in the header
-      const productListHeader = document.querySelector('#product-list h3');
-      if (productListHeader) {
-        productListHeader.textContent = `Product List (${count || 0})`;
-      }
-    }
-
-    async function saveProduct() {
-      // Obter o usuário logado
-      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-      if (sessionError || !session || !session.user) {
-        alert('Usuário não autenticado. Faça login novamente.');
-        return;
-      }
-      const userId = session.user.id;
-      const description = document.getElementById('description').value;
-      const price = parseFloat(document.getElementById('price').value);
-      const taxCode = document.getElementById('tax-code').value;
-      const taxRate = parseFloat(document.getElementById('vat').value);
-      const industry = document.getElementById('industry').value;
-
-      if (!description || isNaN(price) || !taxCode || isNaN(taxRate) || !industry) {
-        alert('Please fill in all required fields.');
-        return;
-      }
+      const productList = document.getElementById('product-list');
+      productList.innerHTML = `
+        <div class="loading-state">
+          <div class="loading-spinner"></div>
+          <span>Loading products...</span>
+        </div>
+      `;
 
       try {
-        const { data, error } = await supabase
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+        if (sessionError || !session || !session.user) {
+          console.error('Error getting session:', sessionError?.message);
+          return;
+        }
+        
+        const userId = session.user.id;
+        const { data, count, error } = await supabase
           .from('products')
-          .insert([{ description, price, tax_code: taxCode, tax_rate: taxRate, industry, user_id: userId }])
-          .select();
+          .select('*', { count: 'exact' })
+          .eq('user_id', userId);
 
         if (error) {
-          alert('Error saving product: ' + error.message);
+          console.error('Error fetching products:', error);
+          productList.innerHTML = `
+            <div class="empty-state">
+              <i class="fas fa-exclamation-circle"></i>
+              <h3>Error Loading Products</h3>
+              <p>There was an error loading your products. Please try again.</p>
+              <button class="btn-primary" onclick="fetchProducts()">
+                <i class="fas fa-sync"></i> Retry
+              </button>
+            </div>
+          `;
           return;
         }
 
-        products.push(data[0]);
+        products = data;
         displayProducts();
-        document.getElementById('product-form').reset();
+
+        // Update product count in the header
+        const productListHeader = document.querySelector('#product-list h3');
+        if (productListHeader) {
+          productListHeader.textContent = `Products (${count || 0})`;
+        }
       } catch (err) {
-        alert('Unexpected error: ' + err.message);
+        console.error('Unexpected error:', err);
       }
-    }
-
-    async function logProductUpdate(productId, oldData, newData, userId) {
-      await supabase.from('product_updates').insert([
-        {
-          product_id: productId,
-          old_data: JSON.stringify(oldData),
-          new_data: JSON.stringify(newData),
-          updated_by: userId
-        }
-      ]);
-    }
-
-    async function editProduct(index) {
-      const product = products[index];
-      document.getElementById('description').value = product.description;
-      document.getElementById('price').value = product.price;
-      document.getElementById('vat').value = product.vat === 0 ? '0' : formatVatForDisplay(product.vat);
-      if (document.getElementById('vat').value === 'other') {
-        document.getElementById('other-vat-container').style.display = 'block';
-        document.getElementById('other-vat').value = (product.vat * 100).toFixed(0); // Show as percentage
-      } else {
-        document.getElementById('other-vat-container').style.display = 'none';
-      }
-
-      const saveButton = document.querySelector('#product-form button[type="button"]');
-      saveButton.textContent = 'Update Product';
-      saveButton.onclick = async function () {
-        const updatedDescription = document.getElementById('description').value;
-        const updatedPrice = parseFloat(document.getElementById('price').value);
-        const updatedVatDisplay = document.getElementById('vat').value === 'other' 
-          ? `${document.getElementById('other-vat').value}%` 
-          : document.getElementById('vat').value;
-        const updatedVat = parseVatFromDisplay(updatedVatDisplay);
-        const updatedTaxCode = document.getElementById('tax-code').value;
-        const updatedTaxRate = parseFloat(document.getElementById('tax-rate').value);
-        const updatedIndustry = document.getElementById('industry').value;
-
-        // Obter usuário logado
-        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-        const userId = session?.user?.id || null;
-
-        const oldData = { ...product };
-        const newData = {
-          description: updatedDescription,
-          price: updatedPrice,
-          vat: updatedVat,
-          tax_code: updatedTaxCode,
-          tax_rate: updatedTaxRate,
-          industry: updatedIndustry
-        };
-
-        const { error } = await supabase
-          .from('products')
-          .update(newData)
-          .eq('id', product.id);
-
-        if (!error) {
-          await logProductUpdate(product.id, oldData, newData, userId);
-          products[index] = { ...product, ...newData };
-          displayProducts();
-          document.getElementById('product-form').reset();
-          document.getElementById('other-vat-container').style.display = 'none';
-          saveButton.textContent = 'Save';
-          saveButton.onclick = saveProduct;
-        } else {
-          console.error('Error updating product:', error);
-        }
-      };
-    }
-
-    async function deleteProduct(index) {
-      const product = products[index];
-      const { error } = await supabase.from('products').delete().eq('id', product.id);
-      if (error) {
-        console.error('Error deleting product:', error);
-        return;
-      }
-      products.splice(index, 1);
-      displayProducts();
     }
 
     function displayProducts() {
-      const productList = document.getElementById('product-list');
-      productList.innerHTML = '<h3>Product List</h3>';
-      products.forEach((product, index) => {
-        const productItem = document.createElement('div');
-        productItem.className = 'product-item';
-        productItem.innerHTML = `
-          <span>
-            ${product.description} - ${formatCurrency(product.price)}<br>
-            <strong>Tax Code:</strong> ${product.tax_code} | 
-            <strong>Tax Rate:</strong> ${product.tax_rate}% | 
-            <strong>Industry:</strong> ${product.industry}
-          </span>
-          <div>
-            <button class="edit-btn" onclick="editProduct(${index})">Update Product</button>
-          </div>
-        `;
-        productList.appendChild(productItem);
-      });
+        const productList = document.getElementById('product-list');
+        const isGridView = productList.classList.contains('grid-view');
+        
+        // Get filter values
+        const searchQuery = document.getElementById('product-search').value.toLowerCase();
+        const industryFilter = document.getElementById('industry-filter').value;
+        const vatFilter = document.getElementById('vat-filter').value;
+
+        // Apply filters
+        const filteredProducts = products.filter(product => {
+            const matchesSearch = product.description.toLowerCase().includes(searchQuery) ||
+                                product.tax_code.toLowerCase().includes(searchQuery);
+            const matchesIndustry = industryFilter === 'all' || product.industry === industryFilter;
+            const matchesVat = vatFilter === 'all' || 
+                             (product.tax_rate * 100).toFixed(0) === vatFilter;
+            
+            return matchesSearch && matchesIndustry && matchesVat;
+        });
+
+        if (filteredProducts.length === 0) {
+            productList.innerHTML = `
+                <div class="empty-state">
+                    <i class="fas fa-filter"></i>
+                    <h3>No Products Found</h3>
+                    <p>Try adjusting your filters or search criteria.</p>
+                    <button class="btn-secondary" onclick="clearFilters()">
+                        <i class="fas fa-times"></i> Clear Filters
+                    </button>
+                </div>
+            `;
+            return;
+        }
+
+        productList.innerHTML = filteredProducts.map((product, index) => `
+            <div class="product-item">
+                <div class="product-item-content">
+                    <div class="product-info">
+                        <h3 class="product-title">${product.description}</h3>
+                        <div class="product-meta">
+                            <span class="meta-item">
+                                <i class="fas fa-tag"></i> ${formatCurrency(product.price)}
+                            </span>
+                            <span class="meta-item">
+                                <i class="fas fa-percent"></i> ${formatVatForDisplay(product.tax_rate)}
+                            </span>
+                            <span class="meta-item">
+                                <i class="fas fa-industry"></i> ${product.industry}
+                            </span>
+                            <span class="meta-item">
+                                <i class="fas fa-barcode"></i> ${product.tax_code}
+                            </span>
+                        </div>
+                    </div>
+                    <div class="product-actions">
+                        <button class="action-btn edit-btn" onclick="editProduct(${index})">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="action-btn delete-btn" onclick="deleteProduct(${index})">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `).join('');
     }
 
-    function subscribeToProducts() {
-      supabase
-        .channel('products-changes')
-        .on(
-          'postgres_changes',
-          { event: '*', schema: 'public', table: 'products' },
-          (payload) => {
-            console.log('Change received:', payload);
-            fetchProducts(); // Refresh the product list on any change
-          }
-        )
-        .subscribe();
-    }
-
-    // Attach functions to the global window object
-    window.saveProduct = saveProduct;
-    window.editProduct = editProduct;
-    window.deleteProduct = deleteProduct;
-    window.filterProducts = filterProducts; // Attach filterProducts globally
-
-    window.addEventListener('DOMContentLoaded', () => {
-      fetchProducts();
-      subscribeToProducts(); // Start listening for real-time updates
+    // Add view toggle handlers
+    document.getElementById('grid-view-btn').addEventListener('click', function() {
+        const productList = document.getElementById('product-list');
+        productList.classList.add('grid-view');
+        productList.classList.remove('list-view');
+        this.classList.add('active');
+        document.getElementById('list-view-btn').classList.remove('active');
+        displayProducts();
     });
 
-    function filterProducts() {
-      const searchTerm = document.getElementById('search-bar').value.toLowerCase();
-      const productItems = document.querySelectorAll('.product-item');
+    document.getElementById('list-view-btn').addEventListener('click', function() {
+        const productList = document.getElementById('product-list');
+        productList.classList.add('list-view');
+        productList.classList.remove('grid-view');
+        this.classList.add('active');
+        document.getElementById('grid-view-btn').classList.remove('active');
+        displayProducts();
+    });
 
-      productItems.forEach((item) => {
-        const productText = item.querySelector('span').textContent.toLowerCase();
-        if (productText.includes(searchTerm)) {
-          item.style.display = 'grid';
-        } else {
-          item.style.display = 'none';
-        }
-      });
+    // Add notification function
+    function showNotification(type, message) {
+        // Remove any existing notifications
+        const existingNotifications = document.querySelectorAll('.notification');
+        existingNotifications.forEach(notification => notification.remove());
+        
+        // Create new notification
+        const notification = document.createElement('div');
+        notification.className = `notification ${type}`;
+        notification.innerHTML = `
+            <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'}"></i>
+            <span>${message}</span>
+        `;
+        
+        document.body.appendChild(notification);
+        
+        // Trigger animation
+        requestAnimationFrame(() => {
+            notification.classList.add('show');
+        });
+        
+        // Remove after 3 seconds
+        setTimeout(() => {
+            notification.classList.remove('show');
+            setTimeout(() => notification.remove(), 300);
+        }, 3000);
     }
 
-        //Display user name function
-        // This function will fetch the username from the Supabase database and display it
-        // in the user-displayname span element
-        document.addEventListener('DOMContentLoaded', async () => {
-            if (typeof supabase === 'undefined') return;
+    // Add form submission handler
+    document.getElementById('product-form').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        await saveProduct();
+    });
 
+    // Enhance save product with loading state
+    async function saveProduct() {
+        const saveButton = document.querySelector('#product-form button[type="submit"]');
+        const originalText = saveButton.innerHTML;
+        
+        try {
+            saveButton.disabled = true;
+            saveButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+            
             const { data: { session } } = await supabase.auth.getSession();
-            if (!session || !session.user) return;
+            if (!session?.user) {
+                showNotification('error', 'Please login to continue');
+                return;
+            }
 
-            let displayName = session.user.email;
+            const formData = {
+                description: document.getElementById('description').value.trim(),
+                price: parseFloat(document.getElementById('price').value),
+                tax_code: document.getElementById('tax-code').value.trim(),
+                industry: document.getElementById('industry').value,
+                tax_rate: document.getElementById('vat').value === 'other' 
+                    ? parseFloat(document.getElementById('other-vat').value) / 100 
+                    : parseFloat(document.getElementById('vat').value),
+                user_id: session.user.id
+            };
+
+            if (!formData.description || isNaN(formData.price) || !formData.tax_code || 
+                isNaN(formData.tax_rate) || !formData.industry) {
+                showNotification('error', 'Please fill in all required fields correctly');
+                return;
+            }
+
+            let response;
+            if (currentProductId) {
+                // Update existing product
+                response = await supabase
+                    .from('products')
+                    .update(formData)
+                    .eq('id', currentProductId)
+                    .eq('user_id', session.user.id);
+            } else {
+                // Create new product
+                response = await supabase
+                    .from('products')
+                    .insert([formData])
+                    .select();
+            }
+
+            if (response.error) throw response.error;
+
+            showNotification('success', `Product ${currentProductId ? 'updated' : 'created'} successfully!`);
+            resetForm();
+            await fetchProducts();
+            
+        } catch (err) {
+            console.error('Error saving product:', err);
+            showNotification('error', err.message || 'Error saving product');
+        } finally {
+            saveButton.disabled = false;
+            saveButton.innerHTML = originalText;
+        }
+    }
+
+    function resetForm() {
+        const form = document.getElementById('product-form');
+        form.reset();
+        document.getElementById('form-title').textContent = 'New Product';
+        document.querySelector('#product-form button[type="submit"]').textContent = 'Save Product';
+        currentProductId = null;
+        document.getElementById('other-vat-container').style.display = 'none';
+    }
+
+    // Delete product with modal confirmation
+    async function deleteProduct(index) {
+        const product = products[index];
+        const modal = document.getElementById('delete-modal');
+        
+        // Update modal content
+        modal.querySelector('.modal-body p').textContent = 
+            `Are you sure you want to delete "${product.description}"? This action cannot be undone.`;
+        
+        // Show modal
+        modal.style.display = 'flex';
+        
+        // Handle confirmation
+        const handleDelete = async () => {
             try {
-                const { data: userRecord, error } = await supabase
-                    .from('users')
-                    .select('username')
-                    .eq('id', session.user.id)
-                    .maybeSingle();
+                const { error } = await supabase
+                    .from('products')
+                    .delete()
+                    .eq('id', product.id)
+                    .eq('user_id', (await supabase.auth.getSession()).data.session.user.id);
 
-                if (userRecord && userRecord.username) {
-                    displayName = userRecord.username;
-                }
-            } catch (e) {
-                // fallback to email
+                if (error) throw error;
+                
+                products = products.filter(p => p.id !== product.id);
+                displayProducts();
+                showNotification('success', 'Product deleted successfully');
+            } catch (err) {
+                console.error('Error deleting product:', err);
+                showNotification('error', 'Error deleting product');
+            } finally {
+                modal.style.display = 'none';
             }
+        };
+        
+        // Set up modal button handlers
+        modal.querySelector('#confirm-delete-btn').onclick = handleDelete;
+        modal.querySelector('#cancel-delete-btn').onclick = () => modal.style.display = 'none';
+        modal.querySelector('.close-modal').onclick = () => modal.style.display = 'none';
+    }
 
-            const userSpan = document.getElementById('user-displayname');
-            if (userSpan) userSpan.textContent = displayName;
-
-        });
-
-        // Dropdown open/close logic for user menu
-        const userProfile = document.getElementById('userProfile');
-        const userDropdown = document.getElementById('userDropdown');
-
-        let dropdownTimeout;
-
-        function openDropdown() {
-            clearTimeout(dropdownTimeout);
-            userProfile.classList.add('open');
+    function editProduct(index) {
+        const product = products[index];
+        currentProductId = product.id;
+        const form = document.getElementById('product-form');
+        
+        // Populate form fields
+        document.getElementById('description').value = product.description;
+        document.getElementById('price').value = product.price;
+        document.getElementById('tax-code').value = product.tax_code;
+        document.getElementById('industry').value = product.industry;
+        
+        // Handle VAT rate
+        const vatSelect = document.getElementById('vat');
+        const standardRates = ['0', '0.16'];
+        const taxRate = product.tax_rate.toString();
+        
+        if (standardRates.includes(taxRate)) {
+            vatSelect.value = taxRate;
+            document.getElementById('other-vat-container').style.display = 'none';
+        } else {
+            vatSelect.value = 'other';
+            document.getElementById('other-vat-container').style.display = 'block';
+            document.getElementById('other-vat').value = (product.tax_rate * 100).toString();
         }
-        function closeDropdown() {
-            dropdownTimeout = setTimeout(() => {
-                userProfile.classList.remove('open');
-            }, 150);
-        }
+        
+        // Update form UI
+        document.getElementById('form-title').textContent = 'Edit Product';
+        document.querySelector('#product-form button[type="submit"]').textContent = 'Update Product';
+        
+        // Scroll form into view
+        form.scrollIntoView({ behavior: 'smooth' });
+    }
 
-        userProfile.addEventListener('mouseenter', openDropdown);
-        userProfile.addEventListener('mouseleave', closeDropdown);
-        userDropdown.addEventListener('mouseenter', openDropdown);
-        userDropdown.addEventListener('mouseleave', closeDropdown);
+    // Add form cancel handler
+    document.getElementById('cancel-btn').addEventListener('click', resetForm);
 
-        // Optional: close on click outside
-        document.addEventListener('click', function(e) {
-            if (!userProfile.contains(e.target)) {
-                userProfile.classList.remove('open');
-            }
-        });
+    // Make functions globally available
+    window.editProduct = editProduct;
+    window.deleteProduct = deleteProduct;
 
+    // Add filter event listeners
+    document.getElementById('product-search').addEventListener('input', displayProducts);
+    document.getElementById('industry-filter').addEventListener('change', displayProducts);
+    document.getElementById('vat-filter').addEventListener('change', displayProducts);
+
+    // Add clear filters function
+    function clearFilters() {
+        document.getElementById('product-search').value = '';
+        document.getElementById('industry-filter').value = 'all';
+        document.getElementById('vat-filter').value = 'all';
+        displayProducts();
+    }
+
+    // Make clearFilters available globally
+    window.clearFilters = clearFilters;
+
+    // Initial fetch
+    fetchProducts();
   </script>
 </body>
 </html>
