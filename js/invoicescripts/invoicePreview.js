@@ -8,28 +8,53 @@ async function previewInvoice(invoiceData) {
     try {
         console.log('Preview Invoice - Received Data:', invoiceData);
         
+        // Format the items with proper calculations
+        const formattedItems = invoiceData.items?.map(item => {
+            const quantity = parseFloat(item.quantity) || 0;
+            const price = parseFloat(item.price) || 0;
+            const subtotal = quantity * price;
+            const vatAmount = subtotal * 0.16; // 16% VAT
+            
+            return {
+                description: item.description || '',
+                quantity: quantity,
+                price: price,
+                vat: vatAmount, // Store actual amount, not percentage
+                total: subtotal + vatAmount
+            };
+        }) || [];
+
+        // Calculate totals
+        const subtotal = formattedItems.reduce((sum, item) => sum + (item.quantity * item.price), 0);
+        const totalVat = formattedItems.reduce((sum, item) => sum + item.vat, 0);
+        const total = subtotal + totalVat;
+
+        // Get business profile
+        const businessProfile = await getBusinessProfile();
+        
         // Format the data for the template
         const formattedData = {
             // Company info
             company: {
-                name: window.companySettings?.name || 'Your Company Name',
-                address: window.companySettings?.address || 'Your Company Address',
-                email: window.companySettings?.email || 'info@yourcompany.com',
+                name: businessProfile.company_name || 'Your Company Name',
+                address: businessProfile.address || 'Your Company Address',
+                email: businessProfile.email || 'info@yourcompany.com',
                 phone: window.companySettings?.phone || '+258 XX XXX XXXX',
-                nuit: Number(window.companySettings?.nuit) || 0,
-                logo: window.companySettings?.logo || ''
+                nuit: businessProfile.tax_id || '0',
+                logo: window.companySettings?.logo || '',
+                website: businessProfile.website || ''
             },
-            // Invoice details
+            // Invoice details - ensure these fields are populated
             invoice: {
                 id: invoiceData.id || invoiceData.invoice_id,
-                number: invoiceData.invoiceNumber || 'Draft Invoice',
+                number: invoiceData.invoiceNumber || await getNextInvoiceNumber(),
                 issueDate: invoiceData.issueDate || new Date().toISOString().split('T')[0],
                 dueDate: invoiceData.dueDate || new Date(Date.now() + 30*24*60*60*1000).toISOString().split('T')[0],
                 status: invoiceData.status || 'draft',
                 projectName: invoiceData.projectName || '',
-                subtotal: invoiceData.subtotal || 0,
-                vat: invoiceData.totalVat || 0,
-                total: invoiceData.total || 0,
+                subtotal: subtotal,
+                vat: totalVat, // Use calculated VAT amount
+                total: total,
                 discount: invoiceData.discount || 0,
                 notes: invoiceData.notes || '',
                 paymentTerms: invoiceData.paymentTerms || 'net30'
@@ -48,13 +73,7 @@ async function previewInvoice(invoiceData) {
                 country: invoiceData.client?.country || ''
             },
             // Items
-            items: invoiceData.items?.map(item => ({
-                description: item.description || '',
-                quantity: item.quantity || 0,
-                price: item.price || 0,
-                vat: item.vat || 0,
-                total: item.total || 0
-            })) || [],
+            items: formattedItems,
             // Currency
             currency: invoiceData.currency || 'MZN'
         };
@@ -151,10 +170,74 @@ async function previewInvoice(invoiceData) {
                 });
             }
         }
+
+        // After populating the preview content
+        const invoiceDetailsSection = document.querySelector("#invoicePreviewContent > div > div.invoice-header > div.invoice-details");
+        if (invoiceDetailsSection) {
+            // Update invoice number, issue date, and due date in the preview
+            const detailsHtml = `
+                <div class="detail-item">
+                    <span class="label">Invoice Number:</span>
+                    <span class="value">${formattedData.invoice.number}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="label">Issue Date:</span>
+                    <span class="value">${new Date(formattedData.invoice.issueDate).toLocaleDateString()}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="label">Due Date:</span>
+                    <span class="value">${new Date(formattedData.invoice.dueDate).toLocaleDateString()}</span>
+                </div>
+            `;
+            invoiceDetailsSection.innerHTML = detailsHtml;
+        }
+
+        // Update the invoice totals in the preview
+        const totalsSection = document.querySelector("#invoicePreviewContent .invoice-totals");
+        if (totalsSection) {
+            totalsSection.innerHTML = `
+                <div class="totals-row">
+                    <span>Subtotal:</span>
+                    <span>${formattedData.currency} ${formatNumber(formattedData.invoice.subtotal)}</span>
+                </div>
+                <div class="totals-row">
+                    <span>VAT (16%):</span>
+                    <span>${formattedData.currency} ${formatNumber(formattedData.invoice.vat)}</span>
+                </div>
+                <div class="totals-row total">
+                    <span>Total:</span>
+                    <span>${formattedData.currency} ${formatNumber(formattedData.invoice.total)}</span>
+                </div>
+            `;
+        }
+
+        // Update items table with proper formatting
+        const itemsTable = document.querySelector("#invoicePreviewContent table tbody");
+        if (itemsTable) {
+            itemsTable.innerHTML = formattedItems.map(item => `
+                <tr>
+                    <td>${item.description}</td>
+                    <td>${item.quantity}</td>
+                    <td>${formattedData.currency} ${formatNumber(item.price)}</td>
+                    <td>${formattedData.currency} ${formatNumber(item.vat)}</td>
+                    <td>${formattedData.currency} ${formatNumber(item.total)}</td>
+                </tr>
+            `).join('');
+        }
+
+        // Store the current invoice data for PDF generation
+        previewContainer.dataset.currentInvoice = JSON.stringify(formattedData);
     } catch (error) {
         console.error('Error in previewInvoice:', error);
         showNotification('Error generating preview: ' + error.message, 'error');
     }
+}
+
+function formatNumber(number) {
+    return new Intl.NumberFormat('pt-MZ', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+    }).format(number);
 }
 
 /**
@@ -163,31 +246,8 @@ async function previewInvoice(invoiceData) {
  */
 async function downloadInvoicePdf(invoiceData) {
     try {
-        // Ensure we have valid invoice data
-        if (!invoiceData || !invoiceData.invoice) {
-            throw new Error('Invalid invoice data');
-        }
-
-        // Generate HTML using the template manager
-        const html = await window.invoiceTemplateManager.generateInvoiceHTML(invoiceData);
-        
-        // Create a temporary container
-        const container = document.createElement('div');
-        container.innerHTML = html;
-        document.body.appendChild(container);
-        
-        // Generate PDF using html2pdf
-        const opt = {
-            margin: 10,
-            filename: `${invoiceData.invoiceNumber || 'invoice'}.pdf`,
-            image: { type: 'jpeg', quality: 0.98 },
-            html2canvas: { scale: 2 },
-            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-        };
-
-        // Generate PDF from the preview content
-        await html2pdf().from(previewContent).set(opt).save();
-        
+        // Use the same PDF generation function that uses the preview content
+        await generateInvoicePDF(invoiceData);
         showNotification('PDF downloaded successfully', 'success');
     } catch (error) {
         console.error('Error generating PDF:', error);
@@ -219,7 +279,77 @@ function openEmailModal(invoiceData) {
     document.body.classList.add('modal-open');
 }
 
+/**
+ * Get business profile from Supabase
+ */
+async function getBusinessProfile() {
+    try {
+        const { data: { user } } = await window.supabase.auth.getUser();
+        if (!user) throw new Error('No authenticated user');
+
+        const { data: profile, error } = await window.supabase
+            .from('business_profiles')
+            .select('*')
+            .eq('user_id', user.id)
+            .single();
+
+        if (error) throw error;
+        return profile || {};
+    } catch (error) {
+        console.error('Error fetching business profile:', error);
+        return {};
+    }
+}
+
+/**
+ * Get the next invoice number from the sequence
+ */
+async function getNextInvoiceNumber() {
+    try {
+        // Get the current year
+        const currentYear = new Date().getFullYear();
+        
+        // Query the latest invoice for this year
+        const { data, error } = await window.supabase
+            .from('invoices')
+            .select('invoice_number')
+            .ilike('invoice_number', `INV-${currentYear}-%`)
+            .order('invoice_number', { ascending: false })
+            .limit(1);
+
+        if (error) throw error;
+
+        if (data && data.length > 0) {
+            // Extract the sequence number from the last invoice
+            const lastNumber = parseInt(data[0].invoice_number.split('-')[2]);
+            // Generate next number with padding
+            return `INV-${currentYear}-${String(lastNumber + 1).padStart(4, '0')}`;
+        } else {
+            // First invoice of the year
+            return `INV-${currentYear}-0001`;
+        }
+    } catch (error) {
+        console.error('Error generating invoice number:', error);
+        return `INV-${new Date().getFullYear()}-0001`;
+    }
+}
+
 // Attach to window for global access
 window.previewInvoice = previewInvoice;
 window.downloadInvoicePdf = downloadInvoicePdf;
-window.openEmailModal = openEmailModal; 
+window.openEmailModal = openEmailModal;
+
+// Event listeners for preview and send buttons
+document.getElementById('previewInvoiceBtn')?.addEventListener('click', function(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    const invoiceModal = document.getElementById('invoiceModal');
+    window.modalManager.openModal('viewInvoiceModal', invoiceModal);
+});
+
+document.getElementById('sendInvoiceBtn')?.addEventListener('click', function(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    const viewModal = document.getElementById('viewInvoiceModal');
+    window.modalManager.openModal('emailInvoiceModal', viewModal);
+});

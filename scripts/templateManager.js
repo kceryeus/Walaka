@@ -368,108 +368,16 @@ const TEMPLATES = {
  * @returns {Promise<string>} The template HTML content
  */
 function loadTemplate(templateName) {
-    const templateFile = TEMPLATE_PATHS[templateName] || 'template01.html'; // Default to classic
+    // First try to get the requested template
+    const template = TEMPLATES[templateName];
     
-    // Load from root directory
-    return fetch(templateFile)
-        .then(response => {
-            if (!response.ok) throw new Error('Template not found');
-            return response.text();
-        })
-        .catch(error => {
-            console.error('Error loading template:', error);
-            return fallbackTemplate();
-        });
-}
+    // If template not found, fallback to classic template
+    if (!template) {
+        console.warn(`Template ${templateName} not found, using classic template`);
+        return Promise.resolve(TEMPLATES['classic']);
+    }
 
-/**
- * Fallback template in case loading fails
- * @returns {string} The fallback template HTML
- */
-function fallbackTemplate() {
-    return `
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <meta charset="UTF-8">
-            <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <title>Invoice</title>
-            <style>
-                body { font-family: 'Inter', sans-serif; line-height: 1.6; }
-                .invoice-container { max-width: 800px; margin: 20px auto; padding: 20px; }
-                .invoice-header { display: flex; justify-content: space-between; margin-bottom: 40px; }
-                .company-info { flex: 1; }
-                .invoice-details { text-align: right; }
-                .client-info { margin-bottom: 30px; }
-                .invoice-items { width: 100%; border-collapse: collapse; margin: 20px 0; }
-                .invoice-items th, .invoice-items td { padding: 10px; text-align: left; border-bottom: 1px solid #ddd; }
-                .invoice-totals { text-align: right; margin-top: 30px; }
-                .total-row { margin: 5px 0; }
-                .grand-total { font-weight: bold; font-size: 1.2em; }
-            </style>
-        </head>
-        <body>
-            <div class="invoice-container">
-                <div class="invoice-header">
-                    <div class="company-info">
-                        <h1 id="company-name">Company Name</h1>
-                        <p id="company-address">Company Address</p>
-                        <p id="company-contact">Email: <span id="company-email"></span> | Phone: <span id="company-phone"></span></p>
-                        <p>NUIT: <span id="company-nuit"></span></p>
-                    </div>
-                    <div class="invoice-details">
-                        <h2>INVOICE</h2>
-                        <p>Invoice #: <span id="invoice-number"></span></p>
-                        <p>Date: <span id="issue-date"></span></p>
-                        <p>Due Date: <span id="due-date"></span></p>
-                    </div>
-                </div>
-                
-                <div class="client-info">
-                    <h3>Bill To:</h3>
-                    <p id="client-name">Client Name</p>
-                    <p id="client-address">Client Address</p>
-                    <p>NUIT: <span id="client-nuit"></span></p>
-                    <p>Email: <span id="client-email"></span></p>
-                    <p>Contact: <span id="client-contact"></span></p>
-                </div>
-                
-                <table class="invoice-items">
-                    <thead>
-                        <tr>
-                            <th>Description</th>
-                            <th>Quantity</th>
-                            <th>Unit Price</th>
-                            <th>VAT (16%)</th>
-                            <th>Total</th>
-                        </tr>
-                    </thead>
-                    <tbody id="invoice-items-body">
-                        <!-- Items will be inserted here -->
-                    </tbody>
-                </table>
-                
-                <div class="invoice-totals">
-                    <div class="total-row">Subtotal: <span id="subtotal"></span></div>
-                    <div class="total-row">VAT: <span id="total-vat"></span></div>
-                    <div class="total-row">Discount: <span id="discount"></span></div>
-                    <div class="total-row grand-total">Total: <span id="total"></span></div>
-                </div>
-                
-                <div class="notes">
-                    <h4>Notes:</h4>
-                    <p id="notes"></p>
-                </div>
-                
-                <div class="invoice-footer" style="margin-top: 40px; font-size: 0.9em; color: #666;">
-                    <p>This invoice was generated using WALAKA Invoice Generator</p>
-                    <p>Software Certification Number: <span id="software-cert-no"></span></p>
-                    <p>Document Control Hash: <span id="invoice-hash"></span></p>
-                </div>
-            </div>
-        </body>
-        </html>
-    `;
+    return Promise.resolve(template);
 }
 
 /**
@@ -780,3 +688,80 @@ window.invoiceTemplateManager = {
         }
     }
 };
+
+// Template Manager class for handling template loading and processing
+class TemplateManager {
+    constructor() {
+        this.templates = new Map();
+        this.defaultTemplate = `
+            <div class="invoice-template">
+                <div class="invoice-header">
+                    <div class="company-info">
+                        <h2>\${company_name}</h2>
+                        <p>\${company_address}</p>
+                    </div>
+                    <div class="invoice-info">
+                        <h1>INVOICE</h1>
+                        <p>Invoice #: \${invoice_number}</p>
+                        <p>Date: \${issue_date}</p>
+                        <p>Due Date: \${due_date}</p>
+                    </div>
+                </div>
+                <div class="client-info">
+                    <h3>Bill To:</h3>
+                    <p>\${client_name}</p>
+                    <p>\${client_address}</p>
+                    <p>Tax ID: \${client_tax_id}</p>
+                </div>
+                <div class="invoice-items">
+                    \${items_table}
+                </div>
+                <div class="invoice-summary">
+                    <div class="summary-row">
+                        <span>Subtotal:</span>
+                        <span>\${subtotal}</span>
+                    </div>
+                    <div class="summary-row">
+                        <span>VAT (16%):</span>
+                        <span>\${vat}</span>
+                    </div>
+                    <div class="summary-row total">
+                        <span>Total:</span>
+                        <span>\${total}</span>
+                    </div>
+                </div>
+                <div class="invoice-notes">
+                    <p>\${notes}</p>
+                </div>
+            </div>`;
+    }
+
+    async getTemplate(name) {
+        try {
+            if (this.templates.has(name)) {
+                return this.templates.get(name);
+            }
+
+            const response = await fetch(`templates/${name}.html`);
+            if (!response.ok) {
+                console.warn(`Template ${name} not found, using default template`);
+                return this.defaultTemplate;
+            }
+
+            const template = await response.text();
+            this.templates.set(name, template);
+            return template;
+        } catch (error) {
+            console.error('Error loading template:', error);
+            return this.defaultTemplate;
+        }
+    }
+
+    processTemplate(template, data) {
+        return template.replace(/\${(.*?)}/g, (match, key) => {
+            return data[key.trim()] ?? '';
+        });
+    }
+}
+
+window.templateManager = new TemplateManager();

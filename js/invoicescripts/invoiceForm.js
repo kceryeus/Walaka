@@ -301,4 +301,96 @@ class InvoiceForm {
 
 // Initialize and attach to window
 const invoiceForm = new InvoiceForm();
-window.invoiceForm = invoiceForm; 
+window.invoiceForm = invoiceForm;
+
+async function handleInvoiceSubmission(event) {
+    event.preventDefault();
+    const submitButton = document.querySelector("#invoiceForm > div.modal-footer > button.btn.primary-btn");
+    if (!submitButton || submitButton.disabled) return;
+
+    try {
+        submitButton.disabled = true;
+        // Get current form data
+        const invoiceData = await getCurrentFormData();
+        
+        // First generate HTML using template manager
+        const selectedTemplate = await window.invoiceTemplateManager.getSelectedTemplate();
+        const template = window.invoiceTemplateManager.TEMPLATES[selectedTemplate] || window.invoiceTemplateManager.TEMPLATES['classic'];
+        
+        // Format data for template
+        const businessProfile = await window.getBusinessProfile();
+        const formattedData = {
+            company: {
+                name: businessProfile.company_name || 'Your Company Name',
+                address: businessProfile.address || 'Your Company Address',
+                email: businessProfile.email || 'info@yourcompany.com',
+                phone: window.companySettings?.phone || '+258 XX XXX XXXX',
+                nuit: businessProfile.tax_id || '0',
+                logo: window.companySettings?.logo || '',
+                website: businessProfile.website || ''
+            },
+            invoice: {
+                number: invoiceData.invoiceNumber,
+                issueDate: invoiceData.issueDate,
+                dueDate: invoiceData.dueDate,
+                status: 'draft',
+                subtotal: invoiceData.subtotal,
+                vat: invoiceData.totalVat,
+                total: invoiceData.total,
+                notes: invoiceData.notes,
+                paymentTerms: invoiceData.paymentTerms
+            },
+            client: invoiceData.client,
+            items: invoiceData.items,
+            currency: invoiceData.currency
+        };
+
+        // Generate HTML content
+        const html = await window.invoiceTemplateManager.generateInvoiceHTML(formattedData);
+
+        // Save to Supabase with HTML content
+        const { data, error } = await window.supabase
+            .from('invoices')
+            .insert([{
+                invoice_number: formattedData.invoice.number,
+                issue_date: formattedData.invoice.issueDate,
+                due_date: formattedData.invoice.dueDate,
+                client_id: invoiceData.client.id,
+                total_amount: formattedData.invoice.total,
+                vat_amount: formattedData.invoice.vat,
+                subtotal: formattedData.invoice.subtotal,
+                status: 'draft',
+                currency: formattedData.currency,
+                notes: formattedData.invoice.notes,
+                payment_terms: formattedData.invoice.paymentTerms,
+                items: formattedData.items,
+                html_content: html
+            }])
+            .select()
+            .single();
+
+        if (error) throw error;
+
+        showNotification('Invoice saved successfully!', 'success');
+        window.modalManager.closeModal('invoiceModal');
+        
+        // Refresh the invoice table
+        if (window.invoiceTable) {
+            await window.invoiceTable.refreshData();
+        }
+
+    } catch (error) {
+        console.error('Error saving invoice:', error);
+        showNotification('Error saving invoice: ' + error.message, 'error');
+    } finally {
+        if (submitButton) submitButton.disabled = false;
+    }
+}
+
+// Update event listener for form submission
+document.addEventListener('DOMContentLoaded', () => {
+    const invoiceForm = document.getElementById('invoiceForm');
+    if (invoiceForm) {
+        invoiceForm.addEventListener('submit', handleInvoiceSubmission);
+    }
+});

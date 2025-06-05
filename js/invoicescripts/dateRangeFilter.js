@@ -120,5 +120,12 @@ const DateRangeFilterModule = {    init() {
     }
 };
 
-// Attach to window for global access
-window.DateRangeFilterModule = DateRangeFilterModule;
+// Remove the declaration if it exists
+if (!window.DateRangeFilterModule) {
+    window.DateRangeFilterModule = {
+        init() {
+            // ...existing code...
+        },
+        // ...existing code...
+    };
+}

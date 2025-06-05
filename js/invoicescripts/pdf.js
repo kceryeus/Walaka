@@ -216,8 +216,172 @@ async function generateInvoiceHTML(invoiceData) {
     }
 }
 
+async function generateInvoicePDF(invoiceData) {
+    try {
+        // Get the current preview container structure
+        const previewContainer = document.querySelector('.invoice-preview-container');
+        if (!previewContainer) {
+            throw new Error('Preview container not found');
+        }
+
+        // Get selected template and styles
+        const selectedTemplate = await window.invoiceTemplateManager.getSelectedTemplate();
+        const template = window.invoiceTemplateManager.TEMPLATES[selectedTemplate] || window.invoiceTemplateManager.TEMPLATES['classic'];
+
+        // Format the data structure
+        const formattedData = {
+            invoice: {
+            number: invoiceData.invoice?.number || '',
+            issueDate: invoiceData.invoice?.issueDate || '',
+            dueDate: invoiceData.invoice?.dueDate || '',
+            notes: invoiceData.invoice?.notes || '',
+            paymentTerms: invoiceData.invoice?.paymentTerms || '',
+            subtotal: invoiceData.invoice?.subtotal || 0,
+            vat: invoiceData.invoice?.vat || 0,
+            total: invoiceData.invoice?.total || 0
+            },
+            company: invoiceData.company || {},
+            client: invoiceData.client || {},
+            items: invoiceData.items || [],
+            currency: invoiceData.currency || 'MZN'
+        };
+
+        // Create the full HTML document with styles
+        const html = `
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <meta charset="UTF-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <title>Invoice ${formattedData.invoice.number}</title>
+                <style>
+                    ${template.styles}
+                </style>
+            </head>
+            <body>
+                ${template.layout}
+            </body>
+            </html>
+        `;
+
+        // Create PDF container and set content
+        const pdfContainer = document.createElement('div');
+        pdfContainer.innerHTML = html;
+        document.body.appendChild(pdfContainer);
+
+        // PDF Options
+        const opt = {
+            margin: 10,
+            filename: `Invoice-${invoiceData.invoice?.number || 'draft'}.pdf`,
+            image: { type: 'jpeg', quality: 0.98 },
+            html2canvas: { 
+                scale: 2,
+                useCORS: true,
+                letterRendering: true
+            },
+            jsPDF: { 
+                unit: 'mm', 
+                format: 'a4', 
+                orientation: 'portrait'
+            }
+        };
+
+        // Generate PDF
+        await html2pdf().from(pdfContainer).set(opt).save();
+
+        return true;
+    } catch (error) {
+        console.error('Error generating PDF:', error);
+        throw error;
+    }
+}
+
+function formatNumber(number) {
+    return new Intl.NumberFormat('pt-MZ', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+    }).format(number || 0);
+}
+
+// PDF Generator class
+class PDFGenerator {
+    constructor() {
+        this.templateManager = window.templateManager;
+    }
+
+    async generatePDF(invoiceData) {
+        try {
+            // Create a container for PDF content
+            const container = document.createElement('div');
+            container.style.position = 'absolute';
+            container.style.left = '-9999px';
+            document.body.appendChild(container);
+
+            // Get and process template
+            const template = await this.templateManager.getTemplate('invoice');
+            const processedHTML = this.templateManager.processTemplate(template, invoiceData);
+            
+            // Add the processed HTML to container
+            container.innerHTML = processedHTML;
+
+            // Wait for images and fonts to load
+            await this.waitForResources(container);
+
+            // Configure PDF options
+            const opt = {
+                margin: 10,
+                filename: `invoice-${invoiceData.invoice_number}.pdf`,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { 
+                    scale: 2,
+                    useCORS: true,
+                    letterRendering: true,
+                    logging: false
+                },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
+
+            // Generate PDF
+            await html2pdf().set(opt).from(container).save();
+
+            // Cleanup
+            document.body.removeChild(container);
+
+        } catch (error) {
+            console.error('PDF Generation Error:', error);
+            throw new Error('Failed to generate PDF');
+        }
+    }
+
+    async waitForResources(container) {
+        const images = Array.from(container.getElementsByTagName('img'));
+        const fonts = document.fonts;
+
+        const imagePromises = images.map(img => {
+            return new Promise((resolve) => {
+                if (img.complete) {
+                    resolve();
+                } else {
+                    img.onload = resolve;
+                    img.onerror = resolve;
+                }
+            });
+        });
+
+        await Promise.all([
+            ...imagePromises,
+            fonts.ready,
+            new Promise(resolve => setTimeout(resolve, 1000)) // Safety timeout
+        ]);
+    }
+}
+
+// Initialize PDF Generator
+window.pdfGenerator = new PDFGenerator();
+
 // Attach to window for global access
 if (typeof window !== 'undefined') {
     // window.generatePDF = generatePDF; // Keep this if generatePDF is only in this file
     // window.generateInvoiceHTML = generateInvoiceHTML; // Remove if now in templateManager
+    window.generateInvoicePDF = generateInvoicePDF;
 }
