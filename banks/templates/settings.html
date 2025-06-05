@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>WALAKA - Settings</title>
+  
+  <!-- External Libraries -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.9.2/html2pdf.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet" />
+  
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='assets/css/banks.css') }}">
+</head>
+<body>
+  <div class="dashboard-container">
+    <!-- Sidebar -->
+    <nav class="sidebar">
+      <div class="logo">
+        <i class="fas fa-chart-line"></i>
+        <span>WALAKA</span>
+      </div>
+      
+      <div class="nav-menu">
+        <a href="/dashboard.html" class="nav-item">
+          <i class="fas fa-home"></i>
+          <span>Dashboard</span>
+        </a>
+        
+        <div class="nav-section">
+          <h3>Invoices & Sales</h3>
+        </div>
+        <a href="/invoices.html" class="nav-item">
+          <i class="fas fa-file-invoice-dollar"></i>
+          <span>Invoices</span>
+        </a>
+        <a href="/products.html" class="nav-item">
+          <i class="fas fa-shopping-cart"></i>
+          <span>Products</span>
+        </a>
+        <a href="/clients/clients.html" class="nav-item">
+          <i class="fas fa-users"></i>
+          <span>Clients</span>
+        </a>
+        <a href="/taxes.html" class="nav-item">
+          <i class="fas fa-percentage"></i>
+          <span>Taxes</span>
+        </a>
+        
+        <div class="nav-section">
+          <h3>Finances</h3>
+        </div>
+        <a href="/expenses.html" class="nav-item">
+          <i class="fas fa-money-bill-wave"></i>
+          <span>Expenses</span>
+        </a>
+        <a href="/reports.html" class="nav-item">
+          <i class="fas fa-chart-pie"></i>
+          <span>Reports</span>
+        </a>
+        <a href="/payments.html" class="nav-item">
+          <i class="fas fa-hand-holding-usd"></i>
+          <span>Payments</span>
+        </a>
+        <a href="/banks.html" class="nav-item">
+          <i class="fas fa-university"></i>
+          <span>Banks & Wallets</span>
+        </a>
+        
+        <div class="nav-section">
+          <h3>Inventory</h3>
+        </div>
+        <a href="/stock.html" class="nav-item">
+          <i class="fas fa-boxes"></i>
+          <span>Stock</span>
+        </a>
+        <a href="/suppliers.html" class="nav-item">
+          <i class="fas fa-truck"></i>
+          <span>Suppliers</span>
+        </a>
+        <a href="/movements.html" class="nav-item">
+          <i class="fas fa-exchange-alt"></i>
+          <span>Movements</span>
+        </a>
+        
+        <div class="nav-section">
+          <h3>Settings</h3>
+        </div>
+        <a href="/settings.html" class="nav-item active">
+          <i class="fas fa-cog"></i>
+          <span>Settings</span>
+        </a>
+        <a href="/profile.html" class="nav-item">
+          <i class="fas fa-user-cog"></i>
+          <span>Account</span>
+        </a>
+        <a href="/help.html" class="nav-item">
+          <i class="fas fa-question-circle"></i>
+          <span>Help</span>
+        </a>
+      </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <!-- Top Bar -->
+      <div class="top-bar">
+        <div class="search-bar">
+          <input type="text" placeholder="Pesquisar...">
+        </div>
+        <div class="user-menu">
+          <div class="notification-bell">
+            <i class="fas fa-bell"></i>
+            <span class="badge">0</span>
+          </div>
+          <div class="user-profile">
+            <div class="avatar">
+              <i class="fas fa-user"></i>
+            </div>
+            <span id="user-name">Demo User</span>
+            <div class="dropdown">
+              <button class="dropdown-toggle"><i class="fas fa-caret-down"></i></button>
+              <div class="dropdown-menu">
+                <a href="/profile.html">Profile Management</a>
+                <a href="/settings.html">General Settings</a>
+                <a href="#">Sign Out</a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Settings Section Header -->
+      <div class="page-header">
+        <div>
+          <h1>Settings & Configuration</h1>
+          <p>Manage your application preferences and configuration settings</p>
+        </div>
+      </div>
+
+      <!-- Settings Content Area -->
+      <div class="settings-container">
+        <h2>Application Settings</h2>
+        <p>This is a placeholder for the settings page content. Access your Banks & Wallets page using the sidebar navigation.</p>
+        <a href="/banks.html" class="primary-btn">
+          <i class="fas fa-university"></i> Go to Banks & Wallets
+        </a>
+      </div>
+    </main>
+  </div>
+</body>
+</html>

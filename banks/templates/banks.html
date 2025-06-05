@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>WALAKA - Banks & Mobile Wallets</title>
+    
+    <!-- External Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.9.2/html2pdf.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet" />
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='assets/css/banks.css') }}">
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- Sidebar -->
+        <nav class="sidebar">
+            <div class="logo">
+                <i class="fas fa-chart-line"></i>
+                <span>WALAKA</span>
+            </div>
+            
+            <div class="nav-menu">
+                <a href="/dashboard.html" class="nav-item">
+                    <i class="fas fa-home"></i>
+                    <span>Dashboard</span>
+                </a>
+                
+                <div class="nav-section">
+                    <h3>Invoices & Sales</h3>
+                </div>
+                <a href="/invoices.html" class="nav-item">
+                    <i class="fas fa-file-invoice-dollar"></i>
+                    <span>Invoices</span>
+                </a>
+                <a href="/products.html" class="nav-item">
+                    <i class="fas fa-shopping-cart"></i>
+                    <span>Products</span>
+                </a>
+                <a href="/clients/clients.html" class="nav-item">
+                    <i class="fas fa-users"></i>
+                    <span>Clients</span>
+                </a>
+                <a href="/taxes.html" class="nav-item">
+                    <i class="fas fa-percentage"></i>
+                    <span>Taxes</span>
+                </a>
+                
+                <div class="nav-section">
+                    <h3>Finances</h3>
+                </div>
+                <a href="/expenses.html" class="nav-item">
+                    <i class="fas fa-money-bill-wave"></i>
+                    <span>Expenses</span>
+                </a>
+                <a href="/reports.html" class="nav-item">
+                    <i class="fas fa-chart-pie"></i>
+                    <span>Reports</span>
+                </a>
+                <a href="/payments.html" class="nav-item">
+                    <i class="fas fa-hand-holding-usd"></i>
+                    <span>Payments</span>
+                </a>
+                <a href="/banks.html" class="nav-item active">
+                    <i class="fas fa-university"></i>
+                    <span>Banks & Wallets</span>
+                </a>
+                
+                <div class="nav-section">
+                    <h3>Inventory</h3>
+                </div>
+                <a href="/stock.html" class="nav-item">
+                    <i class="fas fa-boxes"></i>
+                    <span>Stock</span>
+                </a>
+                <a href="/suppliers.html" class="nav-item">
+                    <i class="fas fa-truck"></i>
+                    <span>Suppliers</span>
+                </a>
+                <a href="/movements.html" class="nav-item">
+                    <i class="fas fa-exchange-alt"></i>
+                    <span>Movements</span>
+                </a>
+                
+                <div class="nav-section">
+                    <h3>Settings</h3>
+                </div>
+                <a href="/settings.html" class="nav-item">
+                    <i class="fas fa-cog"></i>
+                    <span>Settings</span>
+                </a>
+                <a href="/profile.html" class="nav-item">
+                    <i class="fas fa-user-cog"></i>
+                    <span>Account</span>
+                </a>
+                <a href="/help.html" class="nav-item">
+                    <i class="fas fa-question-circle"></i>
+                    <span>Help</span>
+                </a>
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Top Bar -->
+            <div class="top-bar">
+                <div class="search-bar">
+                    <input type="text" placeholder="Pesquisar..." data-translate-placeholder="search_placeholder">
+                </div>
+                <div class="user-menu">
+                    <div class="notification-bell">
+                        <i class="fas fa-bell"></i>
+                        <span class="badge">0</span>
+                    </div>
+                    <div class="user-profile">
+                        <div class="avatar">
+                            <i class="fas fa-user"></i>
+                        </div>
+                        <span id="user-name">Demo User</span>
+                        <div class="dropdown">
+                            <button class="dropdown-toggle"><i class="fas fa-caret-down"></i></button>
+                            <div class="dropdown-menu">
+                                <a href="/profile.html">Profile Management</a>
+                                <a href="/settings.html">General Settings</a>
+                                <a href="#" id="sign-out-btn">Sign Out</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Banks Page Header -->
+            <div class="page-header">
+                <div>
+                    <h1>Banks & Mobile Wallets</h1>
+                    <p>Manage your payment accounts for receiving client payments</p>
+                </div>
+                <button id="add-account-btn" class="primary-btn">
+                    <i class="fas fa-plus"></i> Add New Account
+                </button>
+            </div>
+
+            <!-- Main Content Area -->
+            <div class="banks-container">
+                <!-- Banks Summary Cards -->
+                <div class="metrics-grid">
+                    <div class="metric-card">
+                        <div class="metric-icon bank-icon">
+                            <i class="fas fa-university"></i>
+                        </div>
+                        <div>
+                            <div class="metric-value" id="bank-count">0</div>
+                            <div class="metric-label">Bank Accounts</div>
+                        </div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-icon wallet-icon">
+                            <i class="fas fa-wallet"></i>
+                        </div>
+                        <div>
+                            <div class="metric-value" id="wallet-count">0</div>
+                            <div class="metric-label">Mobile Wallets</div>
+                        </div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-icon currency-icon">
+                            <i class="fas fa-money-bill-wave"></i>
+                        </div>
+                        <div>
+                            <div class="metric-value" id="currency-count">0</div>
+                            <div class="metric-label">Currencies</div>
+                        </div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-icon primary-icon">
+                            <i class="fas fa-star"></i>
+                        </div>
+                        <div>
+                            <div class="metric-value" id="primary-account">None</div>
+                            <div class="metric-label">Primary Account</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Filter & Controls -->
+                <div class="controls-container">
+                    <div class="filters">
+                        <div class="filter-group">
+                            <label for="filter-type">Account Type:</label>
+                            <select id="filter-type">
+                                <option value="all">All Types</option>
+                                <option value="bank">Bank Accounts</option>
+                                <option value="wallet">Mobile Wallets</option>
+                            </select>
+                        </div>
+                        <div class="filter-group">
+                            <label for="filter-currency">Currency:</label>
+                            <select id="filter-currency">
+                                <option value="all">All Currencies</option>
+                                <option value="MZN">MZN</option>
+                                <option value="USD">USD</option>
+                                <option value="ZAR">ZAR</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="view-options">
+                        <button class="view-option-btn active" data-view="table">
+                            <i class="fas fa-table"></i>
+                        </button>
+                        <button class="view-option-btn" data-view="cards">
+                            <i class="fas fa-th-large"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Empty State -->
+                <div id="empty-state" class="empty-state">
+                    <div class="empty-icon">
+                        <i class="fas fa-university"></i>
+                    </div>
+                    <h3>No Bank Accounts or Wallets Found</h3>
+                    <p>Add your first bank account or mobile wallet to start receiving payments from clients.</p>
+                    <button class="primary-btn" id="empty-add-btn">
+                        <i class="fas fa-plus"></i> Add New Account
+                    </button>
+                </div>
+
+                <!-- Table View -->
+                <div id="table-view" class="table-view" style="display: none;">
+                    <div class="table-container">
+                        <table class="accounts-table">
+                            <thead>
+                                <tr>
+                                    <th class="type-col">Type</th>
+                                    <th class="name-col">Name</th>
+                                    <th class="holder-col">Account Holder</th>
+                                    <th class="number-col">Account Number</th>
+                                    <th class="currency-col">Currency</th>
+                                    <th class="action-col">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="accounts-table-body">
+                                <!-- Table rows will be inserted here dynamically -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Cards View -->
+                <div id="cards-view" class="cards-view" style="display: none;">
+                    <div id="accounts-cards-container" class="accounts-cards">
+                        <!-- Account cards will be inserted here dynamically -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modals -->
+            <!-- Add/Edit Account Modal -->
+            <div id="account-modal" class="modal">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h2 id="modal-title">Add New Account</h2>
+                        <button class="close-modal">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="account-form">
+                            <input type="hidden" id="account-id">
+                            <div class="form-group">
+                                <label for="account-type">Account Type <span class="required">*</span></label>
+                                <select id="account-type" required>
+                                    <option value="bank">Bank Account</option>
+                                    <option value="wallet">Mobile Wallet</option>
+                                </select>
+                            </div>
+
+                            <!-- Bank Fields - Only visible when type is 'bank' -->
+                            <div id="bank-fields">
+                                <div class="form-group">
+                                    <label for="bank-name">Bank Name <span class="required">*</span></label>
+                                    <select id="bank-name" required>
+                                        <option value="">Select Bank</option>
+                                        <option value="Millennium BIM">Millennium BIM</option>
+                                        <option value="BCI">BCI</option>
+                                        <option value="Moza Banco">Moza Banco</option>
+                                        <option value="Standard Bank">Standard Bank</option>
+                                        <option value="Absa">Absa</option>
+                                        <option value="First Capital Bank">First Capital Bank</option>
+                                        <option value="Ecobank">Ecobank</option>
+                                        <option value="Letshego">Letshego</option>
+                                        <option value="United Bank for Africa">United Bank for Africa</option>
+                                        <option value="other">Other</option>
+                                    </select>
+                                    <input type="text" id="bank-name-other" placeholder="Enter Bank Name" style="display: none;">
+                                </div>
+                            </div>
+
+                            <!-- Wallet Fields - Only visible when type is 'wallet' -->
+                            <div id="wallet-fields" style="display: none;">
+                                <div class="form-group">
+                                    <label for="operator-name">Operator Name <span class="required">*</span></label>
+                                    <select id="operator-name" required>
+                                        <option value="">Select Operator</option>
+                                        <option value="M-PESA">M-PESA</option>
+                                        <option value="EMOLA">EMOLA</option>
+                                        <option value="mKesh">mKesh</option>
+                                        <option value="e-Mola">e-Mola</option>
+                                        <option value="other">Other</option>
+                                    </select>
+                                    <input type="text" id="operator-name-other" placeholder="Enter Operator Name" style="display: none;">
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="account-holder">Account Holder Name <span class="required">*</span></label>
+                                <input type="text" id="account-holder" placeholder="Your full name or business name" required>
+                            </div>
+
+                            <div class="form-row">
+                                <div class="form-group flex-grow">
+                                    <label for="account-number" id="account-number-label">Account Number <span class="required">*</span></label>
+                                    <input type="text" id="account-number" placeholder="Enter account number" required>
+                                    <div id="account-number-hint" class="form-hint"></div>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="currency">Currency <span class="required">*</span></label>
+                                    <select id="currency" required>
+                                        <option value="MZN">MZN</option>
+                                        <option value="USD">USD</option>
+                                        <option value="ZAR">ZAR</option>
+                                        <option value="EUR">EUR</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- Additional Bank Fields -->
+                            <div id="additional-bank-fields">
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label for="branch">Branch</label>
+                                        <input type="text" id="branch" placeholder="Branch name (optional)">
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label for="swift-code">SWIFT Code</label>
+                                        <input type="text" id="swift-code" placeholder="Enter SWIFT code (optional)">
+                                    </div>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="bank-address">Bank Address</label>
+                                    <textarea id="bank-address" placeholder="Enter bank address (optional)" rows="2"></textarea>
+                                </div>
+                            </div>
+
+                            <!-- Wallet Instructions - Only visible when type is 'wallet' -->
+                            <div id="wallet-instructions" class="form-group info-box" style="display: none;">
+                                <div class="info-icon">
+                                    <i class="fas fa-info-circle"></i>
+                                </div>
+                                <div class="info-content">
+                                    <h4>Payment Instructions</h4>
+                                    <p id="wallet-instruction-text">Instructions will appear based on selected mobile wallet operator.</p>
+                                </div>
+                            </div>
+
+                            <div class="form-group checkbox-group">
+                                <input type="checkbox" id="is-primary">
+                                <label for="is-primary">Set as primary account</label>
+                                <div class="form-hint">Primary accounts will be shown first on invoices.</div>
+                            </div>
+
+                            <div class="form-actions">
+                                <button type="button" id="cancel-account" class="secondary-btn">Cancel</button>
+                                <button type="submit" id="save-account" class="primary-btn">Save Account</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Delete Confirmation Modal -->
+            <div id="delete-modal" class="modal">
+                <div class="modal-content delete-modal-content">
+                    <div class="modal-header">
+                        <h2>Delete Account</h2>
+                        <button class="close-modal">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="delete-warning">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            <p>Are you sure you want to delete this account? This action cannot be undone.</p>
+                        </div>
+                        
+                        <div class="account-summary">
+                            <div class="summary-item">
+                                <span>Account Type:</span>
+                                <strong id="delete-account-type">Bank Account</strong>
+                            </div>
+                            <div class="summary-item">
+                                <span>Name:</span>
+                                <strong id="delete-account-name">Millennium BIM</strong>
+                            </div>
+                            <div class="summary-item">
+                                <span>Account Number:</span>
+                                <strong id="delete-account-number">123456789</strong>
+                            </div>
+                        </div>
+                        
+                        <div class="form-actions">
+                            <button type="button" id="cancel-delete" class="secondary-btn">Cancel</button>
+                            <button type="button" id="confirm-delete" class="danger-btn">Delete Account</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Toast Notification -->
+            <div id="toast" class="toast">
+                <div class="toast-content">
+                    <i id="toast-icon" class="fas fa-check-circle"></i>
+                    <span id="toast-message">Account saved successfully</span>
+                </div>
+                <button id="toast-close">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        </main>
+    </div>
+
+    <!-- JavaScript -->
+    <script src="{{ url_for('static', filename='assets/js/banks.js') }}" type="module"></script>
+</body>
+</html>

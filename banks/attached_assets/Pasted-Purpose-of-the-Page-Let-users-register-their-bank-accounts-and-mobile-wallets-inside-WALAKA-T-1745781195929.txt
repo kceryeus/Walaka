@@ -1,0 +1,135 @@
+Purpose of the Page:
+✅ Let users register their bank accounts and mobile wallets inside WALAKA.
+
+✅ These accounts will be used for:
+
+Invoices (showing clients how to pay you).
+
+Payment links in invoices (future feature).
+
+Internal reports (know where payments are received).
+
+🧩 Page Sections:
+1. Add New Bank Account
+Form Fields:
+
+Account Type:
+
+Dropdown: Bank Account / Mobile Wallet
+
+Bank Name (Dropdown if Bank Account):
+
+Examples: Millennium BIM, BCI, Moza Banco, Standard Bank, Absa
+
+Mobile Operator Name (Dropdown if Mobile Wallet):
+
+Examples: M-PESA, EMOLA, mKesh
+
+Account Holder Name
+
+Account Number / Mobile Number
+
+Branch (Optional for banks)
+
+SWIFT Code (Optional for banks)
+
+Bank Address (Optional)
+
+Currency (Dropdown: MZN, USD, ZAR)
+
+Button: [Save Account]
+
+2. List of Saved Bank Accounts and Wallets
+Show a table:
+
+
+Type	Name	Number	Currency	Actions
+Bank	Millennium BIM	123456789	MZN	Edit / Delete
+Wallet	M-PESA	841234567	MZN	Edit / Delete
+3. Use in Invoices
+In the invoice settings:
+
+User can choose which bank/wallet to display on each invoice.
+
+Example:
+
+"Payable to: M-PESA (841234567)"
+
+Or "Deposit to: Millennium BIM (Account: 123456789)"
+
+📱 Special Features for Mobile Wallets (Like M-PESA, EMOLA)
+✅ Mobile Number Field: Enforce correct format (84xxxxxxx, 85xxxxxxx).
+
+✅ Operator-Specific Instructions: (optional)
+
+If M-PESA, show:
+"Clients can pay via the M-PESA 'Pagar Conta' option."
+
+If EMOLA, show:
+"Clients can send to your EMOLA account via the app."
+
+✅ Future Feature Idea:
+Allow generating a QR Code with the mobile payment number for fast scanning.
+
+🎨 Example Page Layout (Simple)
+pgsql
+Copy
+Edit
++---------------------------------------+
+| Add New Bank or Mobile Wallet         |
+|---------------------------------------|
+| [Account Type: Bank Account ⏷]        |
+| [Bank Name: Millennium BIM ⏷]         |
+| [Account Holder Name: João Silva]     |
+| [Account Number: 123456789]           |
+| [Currency: MZN ⏷]                     |
+| [Save Account]                        |
++---------------------------------------+
+
++---------------------------------------+
+| Your Bank Accounts & Wallets          |
+|---------------------------------------|
+| Type     | Name         | Number    |  Actions |
+| Bank     | BIM          | 123456789 | Edit/Delete |
+| Wallet   | M-PESA       | 841234567 | Edit/Delete |
+| Wallet   | EMOLA        | 861234567 | Edit/Delete |
++---------------------------------------+
+📚 Database Table (suggestion)
+Table: user_payment_methods
+
+
+Column	Type	Notes
+id	UUID	Primary Key
+user_id	UUID	Link to user
+account_type	Text	"Bank" or "Wallet"
+name	Text	Bank or Mobile Operator Name
+account_holder	Text	Name of user or business
+account_number	Text	Bank account number or phone
+branch	Text (nullable)	Bank branch
+swift_code	Text (nullable)	Bank SWIFT Code
+currency	Text	MZN, USD, etc
+created_at	Timestamp	Auto-generated
+updated_at	Timestamp	Auto-updated
+🛡️ Security Note
+Always encrypt account numbers and sensitive data in the database!
+
+Never display full account number in public places (only on user's secure screen).
+
+🧠 Example User Flow
+text
+Copy
+Edit
+User logs into WALAKA → Goes to Settings → Banks & Mobile Payments →
+Adds Millennium BIM account + M-PESA wallet →
+Selects which payment option to show on invoices →
+Clients see M-PESA number on invoice and can pay easily.
+📈 Future Enhancements (After MVP)
+✅ Link payments directly (ex: automatic confirmation if payment is received by M-PESA API).
+
+✅ Allow users to mark a payment method as "Primary".
+
+✅ Allow export of bank info (for backup).
+
+🏁 FINAL IDEA
+This "Banks & Mobile Payments" page will make WALAKA feel modern, local, and business-ready for Mozambique 🇲🇿,
+far better than any generic invoice system!
