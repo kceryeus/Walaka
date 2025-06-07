@@ -145,16 +145,24 @@ class InvoiceEventListeners {
     setupDownloadEvents() {
         document.addEventListener('click', async (e) => {
             if (e.target.matches('#downloadPdfBtn')) {
-                const invoiceId = e.target.closest('.modal').dataset.invoiceId;
                 try {
-                    const invoiceData = await this.fetchInvoiceData(invoiceId);
-                    if (invoiceData) {
-                        showNotification('Generating PDF...', 'info');
-                        await window.pdfGenerator.generatePDF(invoiceData);
+                    // Get the current invoice data from the preview container
+                    const previewContainer = document.getElementById('invoicePreviewContent');
+                    if (!previewContainer) {
+                        throw new Error('Preview container not found');
                     }
+
+                    const invoiceData = JSON.parse(previewContainer.dataset.currentInvoice);
+                    if (!invoiceData) {
+                        throw new Error('No invoice data found');
+                    }
+
+                    showNotification('Generating PDF...', 'info');
+                    await window.generatePDF(invoiceData);
+                    showNotification('PDF downloaded successfully', 'success');
                 } catch (error) {
                     console.error('Error downloading PDF:', error);
-                    showNotification('Error generating PDF', 'error');
+                    showNotification('Error generating PDF: ' + error.message, 'error');
                 }
             }
         });

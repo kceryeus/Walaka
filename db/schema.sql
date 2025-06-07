@@ -32,6 +32,19 @@ CREATE TABLE IF NOT EXISTS public.invoices (
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
+-- Create invoice_items table
+CREATE TABLE IF NOT EXISTS public.invoice_items (
+    id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    invoice_id BIGINT REFERENCES public.invoices(id) ON DELETE CASCADE,
+    description TEXT NOT NULL,
+    quantity NUMERIC(10, 2) NOT NULL,
+    unit_price NUMERIC(10, 2) NOT NULL,
+    vat_amount NUMERIC(10, 2) NOT NULL,
+    total NUMERIC(10, 2) NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
 -- Create storage bucket for invoice PDFs
 INSERT INTO storage.buckets (id, name) 
 VALUES ('invoice_pdfs', 'invoice_pdfs');

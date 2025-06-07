@@ -97,155 +97,80 @@ function formatCurrency(amount) {
  */
 async function generatePDF(invoiceData) {
     try {
-        // If we have an invoice number, fetch the full data from Supabase
-        if (invoiceData.invoiceNumber) {
-            const { data: fullInvoiceData, error } = await window.supabase
-                .from('invoices')
-                .select('*, clients(*)')
-                .eq('invoiceNumber', invoiceData.invoiceNumber);
+        // Format the items with proper calculations
+        const formattedItems = invoiceData.items?.map(item => {
+            const quantity = parseFloat(item.quantity) || 0;
+            const price = parseFloat(item.price) || 0;
+            const subtotal = quantity * price;
+            const vatAmount = subtotal * 0.16; // 16% VAT
+            
+            return {
+                description: item.description || '',
+                quantity: quantity,
+                price: price,
+                vat: vatAmount, // Store actual amount, not percentage
+                total: subtotal + vatAmount
+            };
+        }) || [];
 
-            if (error) throw error;
-            if (fullInvoiceData && fullInvoiceData.length > 0) {
-                // Use the fetched data, which includes client details
-                invoiceData = fullInvoiceData[0];
-            } else {
-                // If fetching by invoiceNumber didn't return data,
-                // assume invoiceData already contains the necessary details from the form
-                console.warn("Invoice data not found by invoiceNumber, using provided data.");
-            }
-        }
+        // Calculate totals
+        const subtotal = formattedItems.reduce((sum, item) => sum + (item.quantity * item.price), 0);
+        const totalVat = formattedItems.reduce((sum, item) => sum + item.vat, 0);
+        const total = subtotal + totalVat;
 
+        // Get business profile
+        const businessProfile = await getBusinessProfile();
+        
         // Format the data for the template
-        // Ensure client data is correctly accessed whether fetched from DB or from form
         const formattedData = {
-            invoiceNumber: invoiceData.invoice_number || invoiceData.invoiceNumber,
-            issueDate: invoiceData.issue_date || invoiceData.issueDate,
-            dueDate: invoiceData.due_date || invoiceData.dueDate,
-            status: invoiceData.status || 'pending',
-            currency: invoiceData.currency || 'MZN',
-            // Prioritize fetched client data if available, otherwise use form data structure
-            client: invoiceData.clients || invoiceData.client || invoiceData.client_data || {},
-            company: invoiceData.company || {},
-            items: invoiceData.items || [],
-            // Accessing totals might vary based on source, cover common structures
-            subtotal: invoiceData.totals?.subtotal || invoiceData.subtotal || 0,
-            totalVat: invoiceData.totals?.vat || invoiceData.totalVat || 0,
-            total: invoiceData.totals?.total || invoiceData.total || 0,
-            notes: invoiceData.notes || '',
-            paymentTerms: invoiceData.payment_terms || invoiceData.paymentTerms || 'net30'
-        };
-
-        // Get the default template
-        const { data: templates, error: templateError } = await window.supabase
-            .from('invoice_templates')
-            .select('content') // Only select the content column
-            .eq('is_default', true)
-            .limit(1);
-
-        if (templateError) throw templateError;
-        if (!templates || templates.length === 0 || !templates[0].content) {
-            throw new Error('No default invoice template found or template content is empty');
-        }
-
-        const templateContent = templates[0].content;
-
-        // Generate HTML using the template content and formatted data
-        const html = await populateTemplate(templateContent, formattedData);
-
-        // Create a temporary container for the PDF generation
-        const container = document.createElement('div');
-        container.innerHTML = html;
-        document.body.appendChild(container);
-
-        // Configure PDF options
-        const opt = {
-            margin: 1,
-            filename: `Invoice-${formattedData.invoiceNumber || 'Draft'}.pdf`,
-            image: { type: 'jpeg', quality: 0.98 },
-            html2canvas: { scale: 2 },
-            jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
-        };
-
-        // Generate PDF
-        const pdf = await html2pdf().set(opt).from(container).outputPdf('blob');
-
-        // Clean up
-        document.body.removeChild(container);
-
-        return pdf;
-    } catch (error) {
-        console.error('Error generating PDF:', error);
-        throw error;
-    }
-}
-
-/**
- * Generate invoice HTML from data
- * @param {Object} invoiceData - The invoice data
- * @returns {Promise<string>} The generated HTML
- */
-async function generateInvoiceHTML(invoiceData) {
-    try {
-        // Get selected template
-        const selectedTemplate = await window.invoiceTemplateManager.getSelectedTemplate();
-        const template = await window.invoiceTemplateManager.getTemplate(selectedTemplate);
-        
-        // Create the full HTML document with styles
-        const html = `
-            <!DOCTYPE html>
-            <html>
-            <head>
-                <meta charset="UTF-8">
-                <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                <title>Invoice</title>
-                <style>
-                    ${template.styles}
-                </style>
-            </head>
-            <body>
-                ${template.layout}
-            </body>
-            </html>
-        `;
-        
-        // Populate template with data
-        return await populateTemplate(template.content, invoiceData);
-    } catch (error) {
-        console.error('Error generating invoice HTML:', error);
-        throw error;
-    }
-}
-
-async function generateInvoicePDF(invoiceData) {
-    try {
-        // Get the current preview container structure
-        const previewContainer = document.querySelector('.invoice-preview-container');
-        if (!previewContainer) {
-            throw new Error('Preview container not found');
-        }
-
-        // Get selected template and styles
-        const selectedTemplate = await window.invoiceTemplateManager.getSelectedTemplate();
-        const template = window.invoiceTemplateManager.TEMPLATES[selectedTemplate] || window.invoiceTemplateManager.TEMPLATES['classic'];
-
-        // Format the data structure
-        const formattedData = {
-            invoice: {
-            number: invoiceData.invoice?.number || '',
-            issueDate: invoiceData.invoice?.issueDate || '',
-            dueDate: invoiceData.invoice?.dueDate || '',
-            notes: invoiceData.invoice?.notes || '',
-            paymentTerms: invoiceData.invoice?.paymentTerms || '',
-            subtotal: invoiceData.invoice?.subtotal || 0,
-            vat: invoiceData.invoice?.vat || 0,
-            total: invoiceData.invoice?.total || 0
+            // Company info
+            company: {
+                name: businessProfile.company_name || 'Your Company Name',
+                address: businessProfile.address || 'Your Company Address',
+                email: businessProfile.email || 'info@yourcompany.com',
+                phone: window.companySettings?.phone || '+258 XX XXX XXXX',
+                nuit: businessProfile.tax_id || '0',
+                logo: window.companySettings?.logo || '',
+                website: businessProfile.website || ''
             },
-            company: invoiceData.company || {},
-            client: invoiceData.client || {},
-            items: invoiceData.items || [],
+            // Invoice details
+            invoice: {
+                id: invoiceData.id || invoiceData.invoice_id,
+                number: invoiceData.invoiceNumber || await getNextInvoiceNumber(),
+                issueDate: invoiceData.issueDate || new Date().toISOString().split('T')[0],
+                dueDate: invoiceData.dueDate || new Date(Date.now() + 30*24*60*60*1000).toISOString().split('T')[0],
+                status: invoiceData.status || 'draft',
+                projectName: invoiceData.projectName || '',
+                subtotal: subtotal,
+                vat: totalVat,
+                total: total,
+                discount: invoiceData.discount || 0,
+                notes: invoiceData.notes || '',
+                paymentTerms: invoiceData.paymentTerms || 'net30'
+            },
+            // Client info
+            client: {
+                name: invoiceData.client?.customer_name || 'Client Name',
+                address: invoiceData.client?.billing_address || '',
+                nuit: Number(invoiceData.client?.customer_tax_id) || 0,
+                email: invoiceData.client?.email || '',
+                contact: invoiceData.client?.contact || '',
+                phone: invoiceData.client?.telephone || '',
+                city: invoiceData.client?.city || '',
+                postal_code: invoiceData.client?.postal_code || '',
+                province: invoiceData.client?.province || '',
+                country: invoiceData.client?.country || ''
+            },
+            // Items
+            items: formattedItems,
+            // Currency
             currency: invoiceData.currency || 'MZN'
         };
 
+        // Get selected template
+        const selectedTemplate = await window.invoiceTemplateManager.getSelectedTemplate();
+        const template = window.invoiceTemplateManager.TEMPLATES[selectedTemplate] || window.invoiceTemplateManager.TEMPLATES['classic'];
+        
         // Create the full HTML document with styles
         const html = `
             <!DOCTYPE html>
@@ -263,16 +188,19 @@ async function generateInvoicePDF(invoiceData) {
             </body>
             </html>
         `;
-
-        // Create PDF container and set content
+        
+        // Populate template with data
+        const populatedHtml = await window.invoiceTemplateManager.populateTemplate(html, formattedData);
+        
+        // Create PDF container
         const pdfContainer = document.createElement('div');
-        pdfContainer.innerHTML = html;
+        pdfContainer.innerHTML = populatedHtml;
         document.body.appendChild(pdfContainer);
 
         // PDF Options
         const opt = {
             margin: 10,
-            filename: `Invoice-${invoiceData.invoice?.number || 'draft'}.pdf`,
+            filename: `Invoice-${formattedData.invoice.number}.pdf`,
             image: { type: 'jpeg', quality: 0.98 },
             html2canvas: { 
                 scale: 2,
@@ -289,6 +217,9 @@ async function generateInvoicePDF(invoiceData) {
         // Generate PDF
         await html2pdf().from(pdfContainer).set(opt).save();
 
+        // Cleanup
+        document.body.removeChild(pdfContainer);
+
         return true;
     } catch (error) {
         console.error('Error generating PDF:', error);
@@ -296,92 +227,60 @@ async function generateInvoicePDF(invoiceData) {
     }
 }
 
-function formatNumber(number) {
-    return new Intl.NumberFormat('pt-MZ', {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2
-    }).format(number || 0);
+/**
+ * Get business profile from Supabase
+ */
+async function getBusinessProfile() {
+    try {
+        const { data: { user } } = await window.supabase.auth.getUser();
+        if (!user) throw new Error('No authenticated user');
+
+        const { data: profile, error } = await window.supabase
+            .from('business_profiles')
+            .select('*')
+            .eq('user_id', user.id)
+            .single();
+
+        if (error) throw error;
+        return profile || {};
+    } catch (error) {
+        console.error('Error fetching business profile:', error);
+        return {};
+    }
 }
 
-// PDF Generator class
-class PDFGenerator {
-    constructor() {
-        this.templateManager = window.templateManager;
-    }
+/**
+ * Get the next invoice number from the sequence
+ */
+async function getNextInvoiceNumber() {
+    try {
+        // Get the current year
+        const currentYear = new Date().getFullYear();
+        
+        // Query the latest invoice for this year
+        const { data, error } = await window.supabase
+            .from('invoices')
+            .select('invoiceNumber')
+            .ilike('invoiceNumber', `INV-${currentYear}-%`)
+            .order('invoiceNumber', { ascending: false })
+            .limit(1);
 
-    async generatePDF(invoiceData) {
-        try {
-            // Create a container for PDF content
-            const container = document.createElement('div');
-            container.style.position = 'absolute';
-            container.style.left = '-9999px';
-            document.body.appendChild(container);
+        if (error) throw error;
 
-            // Get and process template
-            const template = await this.templateManager.getTemplate('invoice');
-            const processedHTML = this.templateManager.processTemplate(template, invoiceData);
-            
-            // Add the processed HTML to container
-            container.innerHTML = processedHTML;
-
-            // Wait for images and fonts to load
-            await this.waitForResources(container);
-
-            // Configure PDF options
-            const opt = {
-                margin: 10,
-                filename: `invoice-${invoiceData.invoice_number}.pdf`,
-                image: { type: 'jpeg', quality: 0.98 },
-                html2canvas: { 
-                    scale: 2,
-                    useCORS: true,
-                    letterRendering: true,
-                    logging: false
-                },
-                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-            };
-
-            // Generate PDF
-            await html2pdf().set(opt).from(container).save();
-
-            // Cleanup
-            document.body.removeChild(container);
-
-        } catch (error) {
-            console.error('PDF Generation Error:', error);
-            throw new Error('Failed to generate PDF');
+        if (data && data.length > 0) {
+            // Extract the sequence number from the last invoice
+            const lastNumber = parseInt(data[0].invoice_number.split('-')[2]);
+            // Generate next number with padding
+            return `INV-${currentYear}-${String(lastNumber + 1).padStart(4, '0')}`;
+        } else {
+            // First invoice of the year
+            return `INV-${currentYear}-0001`;
         }
-    }
-
-    async waitForResources(container) {
-        const images = Array.from(container.getElementsByTagName('img'));
-        const fonts = document.fonts;
-
-        const imagePromises = images.map(img => {
-            return new Promise((resolve) => {
-                if (img.complete) {
-                    resolve();
-                } else {
-                    img.onload = resolve;
-                    img.onerror = resolve;
-                }
-            });
-        });
-
-        await Promise.all([
-            ...imagePromises,
-            fonts.ready,
-            new Promise(resolve => setTimeout(resolve, 1000)) // Safety timeout
-        ]);
+    } catch (error) {
+        console.error('Error generating invoice number:', error);
+        return `INV-${new Date().getFullYear()}-0001`;
     }
 }
-
-// Initialize PDF Generator
-window.pdfGenerator = new PDFGenerator();
 
 // Attach to window for global access
-if (typeof window !== 'undefined') {
-    // window.generatePDF = generatePDF; // Keep this if generatePDF is only in this file
-    // window.generateInvoiceHTML = generateInvoiceHTML; // Remove if now in templateManager
-    window.generateInvoicePDF = generateInvoicePDF;
-}
+window.generatePDF = generatePDF;

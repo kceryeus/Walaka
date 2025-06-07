@@ -253,44 +253,55 @@ class InvoiceForm {
             
             // Format data for Supabase storage
             const formattedData = {
-                invoice_number: invoiceData.invoiceNumber,
+                "invoiceNumber": invoiceData.invoiceNumber,
                 issue_date: invoiceData.issueDate,
                 due_date: invoiceData.dueDate,
                 status: invoiceData.status || 'pending',
                 currency: invoiceData.currency || 'MZN',
-                client_data: {
-                    name: invoiceData.client.name,
-                    email: invoiceData.client.email,
-                    address: invoiceData.client.address,
-                    taxId: invoiceData.client.taxId,
-                    contact: invoiceData.client.contact
-                },
-                company: invoiceData.company,
-                items: invoiceData.items.map(item => ({
-                    description: item.description,
-                    quantity: item.quantity,
-                    price: item.price,
-                    vat: item.vat,
-                    total: item.total
-                })),
-                totals: {
-                    subtotal: invoiceData.subtotal,
-                    vat: invoiceData.totalVat,
-                    total: invoiceData.total
-                },
+                client_name: invoiceData.client.name,
+                subtotal: invoiceData.subtotal,
+                vat_amount: invoiceData.totalVat,
+                total_amount: invoiceData.total,
                 notes: invoiceData.notes || '',
                 payment_terms: invoiceData.paymentTerms || 'net30'
             };
 
-            const { data, error } = await this.supabase
+            // Insert the invoice
+            const { data: invoice, error: invoiceError } = await window.supabase
                 .from('invoices')
                 .insert([formattedData])
-                .select();
+                .select()
+                .single();
 
-            if (error) throw error;
+            if (invoiceError) throw invoiceError;
+
+            // For each item, first check if it exists in products table
+            for (const item of invoiceData.items) {
+                // Check if product exists
+                const { data: existingProduct } = await window.supabase
+                    .from('products')
+                    .select('id')
+                    .eq('description', item.description)
+                    .single();
+
+                if (!existingProduct) {
+                    // If product doesn't exist, create it
+                    const { error: productError } = await window.supabase
+                        .from('products')
+                        .insert([{
+                            description: item.description,
+                            price: item.price,
+                            tax_code: 'VAT',
+                            tax_rate: 16.00, // Default VAT rate
+                            industry: 'General' // Default industry
+                        }]);
+
+                    if (productError) throw productError;
+                }
+            }
 
             showNotification('Invoice saved successfully', 'success');
-            return data[0];
+            return invoice;
         } catch (error) {
             console.error('Error saving invoice:', error);
             showNotification('Error saving invoice: ' + error.message, 'error');
@@ -303,94 +314,64 @@ class InvoiceForm {
 const invoiceForm = new InvoiceForm();
 window.invoiceForm = invoiceForm;
 
+function getCurrentFormData() {
+    const form = document.getElementById('invoiceForm');
+    if (!form) return null;
+
+    const items = [];
+    document.querySelectorAll('#itemsTable .item-row').forEach(row => {
+        items.push({
+            description: row.querySelector('.item-description').value,
+            quantity: parseFloat(row.querySelector('.item-quantity').value) || 0,
+            unit_price: parseFloat(row.querySelector('.item-price').value) || 0,
+            vat_amount: parseFloat(row.querySelector('.item-vat').textContent) || 0,
+            total: parseFloat(row.querySelector('.item-total').textContent) || 0
+        });
+    });
+
+    // Format dates to UTC ISO strings for PostgreSQL timestamptz
+    const issueDate = new Date(document.getElementById('issueDate').value);
+    const dueDate = new Date(document.getElementById('dueDate').value);
+
+    return {
+        "invoiceNumber": document.getElementById('invoiceNumber').value, // Note the exact casing
+        issue_date: issueDate.toISOString(),
+        due_date: dueDate.toISOString(),
+        client_name: document.getElementById('client-list').value,
+        status: 'pending',
+        subtotal: parseFloat(document.getElementById('subtotal').textContent) || 0,
+        vat_amount: parseFloat(document.getElementById('totalVat').textContent) || 0,
+        total_amount: parseFloat(document.getElementById('invoiceTotal').textContent) || 0,
+        currency: document.getElementById('currency').value,
+        payment_terms: document.getElementById('paymentTerms').value,
+        notes: document.getElementById('notes').value,
+        items: items // This will be handled separately if you have an invoice_items table
+    };
+}
+
 async function handleInvoiceSubmission(event) {
     event.preventDefault();
-    const submitButton = document.querySelector("#invoiceForm > div.modal-footer > button.btn.primary-btn");
-    if (!submitButton || submitButton.disabled) return;
-
+    
     try {
-        submitButton.disabled = true;
-        // Get current form data
-        const invoiceData = await getCurrentFormData();
-        
-        // First generate HTML using template manager
-        const selectedTemplate = await window.invoiceTemplateManager.getSelectedTemplate();
-        const template = window.invoiceTemplateManager.TEMPLATES[selectedTemplate] || window.invoiceTemplateManager.TEMPLATES['classic'];
-        
-        // Format data for template
-        const businessProfile = await window.getBusinessProfile();
-        const formattedData = {
-            company: {
-                name: businessProfile.company_name || 'Your Company Name',
-                address: businessProfile.address || 'Your Company Address',
-                email: businessProfile.email || 'info@yourcompany.com',
-                phone: window.companySettings?.phone || '+258 XX XXX XXXX',
-                nuit: businessProfile.tax_id || '0',
-                logo: window.companySettings?.logo || '',
-                website: businessProfile.website || ''
-            },
-            invoice: {
-                number: invoiceData.invoiceNumber,
-                issueDate: invoiceData.issueDate,
-                dueDate: invoiceData.dueDate,
-                status: 'draft',
-                subtotal: invoiceData.subtotal,
-                vat: invoiceData.totalVat,
-                total: invoiceData.total,
-                notes: invoiceData.notes,
-                paymentTerms: invoiceData.paymentTerms
-            },
-            client: invoiceData.client,
-            items: invoiceData.items,
-            currency: invoiceData.currency
-        };
+        // Use the InvoiceForm's saveInvoice method
+        const invoice = await window.invoiceForm.saveInvoice();
 
-        // Generate HTML content
-        const html = await window.invoiceTemplateManager.generateInvoiceHTML(formattedData);
-
-        // Save to Supabase with HTML content
-        const { data, error } = await window.supabase
-            .from('invoices')
-            .insert([{
-                invoice_number: formattedData.invoice.number,
-                issue_date: formattedData.invoice.issueDate,
-                due_date: formattedData.invoice.dueDate,
-                client_id: invoiceData.client.id,
-                total_amount: formattedData.invoice.total,
-                vat_amount: formattedData.invoice.vat,
-                subtotal: formattedData.invoice.subtotal,
-                status: 'draft',
-                currency: formattedData.currency,
-                notes: formattedData.invoice.notes,
-                payment_terms: formattedData.invoice.paymentTerms,
-                items: formattedData.items,
-                html_content: html
-            }])
-            .select()
-            .single();
-
-        if (error) throw error;
+        // Store for PDF generation
+        window.lastSavedInvoice = invoice;
 
         showNotification('Invoice saved successfully!', 'success');
-        window.modalManager.closeModal('invoiceModal');
         
-        // Refresh the invoice table
+        // Close modal and refresh table
+        window.modalManager.closeModal('invoiceModal');
         if (window.invoiceTable) {
-            await window.invoiceTable.refreshData();
+            window.invoiceTable.refresh();
         }
 
     } catch (error) {
         console.error('Error saving invoice:', error);
-        showNotification('Error saving invoice: ' + error.message, 'error');
-    } finally {
-        if (submitButton) submitButton.disabled = false;
+        showNotification(`Error saving invoice: ${error.message}`, 'error');
     }
 }
 
-// Update event listener for form submission
-document.addEventListener('DOMContentLoaded', () => {
-    const invoiceForm = document.getElementById('invoiceForm');
-    if (invoiceForm) {
-        invoiceForm.addEventListener('submit', handleInvoiceSubmission);
-    }
-});
+// Event Listeners
+document.getElementById('invoiceForm')?.addEventListener('submit', handleInvoiceSubmission);

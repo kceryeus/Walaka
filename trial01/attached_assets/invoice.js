@@ -1,6 +1,6 @@
 // Supabase initialization (ensure this is done only once)
-const SUPABASE_URL = 'YOUR_SUPABASE_URL';
-const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY';
+const SUPABASE_URL = 'https://qvmtozjvjflygbkjecyj.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF2bXRvemp2amZseWdia2plY3lqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDYxMjc2MjMsImV4cCI6MjA2MTcwMzYyM30.DJMC1eM5_EouM1oc07JaoXsMX_bSLn2AVCozAcdfHmo';
 
 const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
@@ -180,7 +180,7 @@ async function handleInvoiceFormSubmit(event) {
   // 6. Close the modal
   closeModal();
 }
-
+/*
 // Function to insert invoice into Supabase
 async function insertInvoiceToSupabase(invoice) {
         const { data, error } = await supabase
@@ -214,7 +214,7 @@ async function insertInvoiceToSupabase(invoice) {
             alert('Invoice created successfully!');
         }
     }
-
+*/
 // Add event listener to the form
 document.getElementById('invoiceForm').addEventListener('submit', handleInvoiceFormSubmit);
 

@@ -155,14 +155,8 @@ async function previewInvoice(invoiceData) {
             `;
 
             // Add event listeners for the action buttons
-            const downloadPdfBtn = document.getElementById('downloadPdfBtn');
             const sendInvoiceBtn = document.getElementById('sendInvoiceBtn');
 
-            if (downloadPdfBtn) {
-                downloadPdfBtn.addEventListener('click', () => {
-                    downloadInvoicePdf(invoiceData);
-                });
-            }
 
             if (sendInvoiceBtn) {
                 sendInvoiceBtn.addEventListener('click', () => {
@@ -312,9 +306,9 @@ async function getNextInvoiceNumber() {
         // Query the latest invoice for this year
         const { data, error } = await window.supabase
             .from('invoices')
-            .select('invoice_number')
-            .ilike('invoice_number', `INV-${currentYear}-%`)
-            .order('invoice_number', { ascending: false })
+            .select('invoiceNumber')
+            .ilike('invoiceNumber', `INV-${currentYear}-%`)
+            .order('invoiceNumber', { ascending: false })
             .limit(1);
 
         if (error) throw error;
@@ -340,11 +334,8 @@ window.downloadInvoicePdf = downloadInvoicePdf;
 window.openEmailModal = openEmailModal;
 
 // Event listeners for preview and send buttons
-document.getElementById('previewInvoiceBtn')?.addEventListener('click', function(e) {
-    e.preventDefault();
-    e.stopPropagation();
-    const invoiceModal = document.getElementById('invoiceModal');
-    window.modalManager.openModal('viewInvoiceModal', invoiceModal);
+document.getElementById('previewInvoiceBtn')?.addEventListener('click', () => {
+    window.modalManager.openModal('viewInvoiceModal');
 });
 
 document.getElementById('sendInvoiceBtn')?.addEventListener('click', function(e) {

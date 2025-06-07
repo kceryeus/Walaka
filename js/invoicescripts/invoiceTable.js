@@ -113,23 +113,25 @@ const InvoiceTableModule = {
                 const row = `
                     <tr>
                         <td>${invoice.invoiceNumber || ''}</td>
-                        <td>${invoice.customer_name || ''}</td>
+                        <td>${invoice.client_name || 'N/A'}</td>
                         <td>${this.formatDate(invoice.issue_date)}</td>
                         <td>${this.formatDate(invoice.due_date)}</td>
-                        <td>${this.formatCurrency(invoice.total_amount)}</td>
+                        <td>${this.formatCurrency(invoice.total_amount, invoice.currency)}</td>
                         <td>
-                            <span class="status ${statusConfig.color}">
-                                <i class="fas ${statusConfig.icon}"></i>
-                                ${statusConfig.label}
-                            </span>
+                            <span class="status-badge ${invoice.status}">${invoice.status}</span>
                         </td>
-                        <td class="actions">
-                            <button class="action-btn view-btn" data-invoice="${invoice.invoiceNumber}" title="View">
-                                <i class="fas fa-eye"></i>
-                            </button>
-                            <button class="action-btn more-btn" title="More">
-                                <i class="fas fa-ellipsis-v"></i>
-                            </button>
+                        <td>
+                            <div class="action-buttons">
+                                <button class="btn btn-sm btn-info view-invoice" data-invoice="${invoice.invoiceNumber}">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                                <button class="btn btn-sm btn-primary edit-invoice" data-invoice="${invoice.invoiceNumber}">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="btn btn-sm btn-danger delete-invoice" data-invoice="${invoice.invoiceNumber}">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
                         </td>
                     </tr>
                 `;
@@ -221,7 +223,7 @@ const InvoiceTableModule = {
 
     setupActionButtons() {
         // View button
-        document.querySelectorAll('.view-btn').forEach(btn => {
+        document.querySelectorAll('.view-invoice').forEach(btn => {
             btn.addEventListener('click', () => {
                 const invoiceNumber = btn.getAttribute('data-invoice');
                 if (window.openViewInvoiceModal) {

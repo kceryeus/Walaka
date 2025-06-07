@@ -1,25 +1,55 @@
 // Modal Management Module
 
-const ModalManager = {
+class ModalManager {
+    constructor() {
+        this.activeModal = null;
+        this.overlay = document.querySelector('.modal-overlay');
+    }
+
     openModal(modalId) {
         const modal = document.getElementById(modalId);
-        if (modal) {
-            modal.style.display = 'block';
-            document.querySelector('.modal-overlay').style.display = 'block';
-            document.body.style.overflow = 'hidden';
+        if (!modal) return;
+
+        if (this.overlay) {
+            this.overlay.style.display = 'block';
         }
-    },
+
+        modal.style.display = 'block';
+        this.activeModal = modal;
+
+        // Add event listeners for closing
+        const closeButtons = modal.querySelectorAll('.close-modal');
+        closeButtons.forEach(button => {
+            button.addEventListener('click', () => this.closeModal(modalId));
+        });
+
+        // Close on overlay click
+        if (this.overlay) {
+            this.overlay.addEventListener('click', () => this.closeModal(modalId));
+        }
+
+        // Close on escape key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') this.closeModal(modalId);
+        });
+    }
 
     closeModal(modalId) {
         const modal = document.getElementById(modalId);
-        if (modal) {
-            modal.style.display = 'none';
-            document.querySelector('.modal-overlay').style.display = 'none';
-            document.body.style.overflow = 'auto';
-        }
-    }
-};
+        if (!modal) return;
 
-// Make functions globally available
-window.openModal = ModalManager.openModal;
-window.closeModal = ModalManager.closeModal;
+        if (this.overlay) {
+            this.overlay.style.display = 'none';
+        }
+
+        modal.style.display = 'none';
+        this.activeModal = null;
+    }
+}
+
+// Create global instance
+window.modalManager = new ModalManager();
+
+// Export helper functions
+window.openModal = (modalId) => window.modalManager.openModal(modalId);
+window.closeModal = (modalId) => window.modalManager.closeModal(modalId);
