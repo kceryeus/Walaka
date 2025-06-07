@@ -39,7 +39,7 @@ async function previewInvoice(invoiceData) {
                 name: businessProfile.company_name || 'Your Company Name',
                 address: businessProfile.address || 'Your Company Address',
                 email: businessProfile.email || 'info@yourcompany.com',
-                phone: window.companySettings?.phone || '+258 XX XXX XXXX',
+                phone: businessProfile.phone || '+258 XX XXX XXXX',
                 nuit: businessProfile.tax_id || '0',
                 logo: window.companySettings?.logo || '',
                 website: businessProfile.website || ''

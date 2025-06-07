@@ -90,6 +90,59 @@ function formatCurrency(amount) {
     }).format(amount || 0);
 }
 
+// Add this helper for consistent number formatting
+function formatNumber(amount) {
+    if (typeof amount !== 'number') amount = parseFloat(amount) || 0;
+    return amount.toLocaleString('pt-MZ', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+// Helper: Calculate invoice totals (copied from invoicePreview.js)
+function calculateInvoiceTotals(items, discount = 0) {
+    let subtotal = 0;
+    let totalVat = 0;
+    items.forEach(item => {
+        const qty = parseFloat(item.quantity) || 0;
+        const price = parseFloat(item.unit_price) || 0;
+        const vat = parseFloat(item.vat_rate || 0.16); // Default 16%
+        const lineTotal = qty * price;
+        subtotal += lineTotal;
+        totalVat += lineTotal * vat;
+    });
+    subtotal = parseFloat(subtotal.toFixed(2));
+    totalVat = parseFloat(totalVat.toFixed(2));
+    let total = subtotal + totalVat;
+    let discountAmount = 0;
+    if (discount) {
+        discountAmount = subtotal * (parseFloat(discount) / 100);
+        total -= discountAmount;
+    }
+    return {
+        subtotal,
+        totalVat,
+        discountAmount: parseFloat(discountAmount.toFixed(2)),
+        total: parseFloat(total.toFixed(2))
+    };
+}
+
+// Helper: Format client info (copied from invoicePreview.js)
+function formatClientInfo(client) {
+    if (!client) return {};
+    return {
+        name: client.customer_name || '',
+        email: client.email || '',
+        taxId: client.customer_tax_id || client.nuit || '',
+        address: [
+            client.building_number,
+            client.street_name,
+            client.address_detail,
+            client.city,
+            client.province,
+            client.postal_code,
+            client.country
+        ].filter(Boolean).join(', ')
+    };
+}
+
 /**
  * Generate PDF from invoice data
  * @param {Object} invoiceData - The invoice data
@@ -130,7 +183,7 @@ async function generatePDF(invoiceData) {
                 email: businessProfile.email || 'info@yourcompany.com',
                 phone: window.companySettings?.phone || '+258 XX XXX XXXX',
                 nuit: businessProfile.tax_id || '0',
-                logo: window.companySettings?.logo || '',
+                logo: businessProfile.logo || '',
                 website: businessProfile.website || ''
             },
             // Invoice details
@@ -190,8 +243,30 @@ async function generatePDF(invoiceData) {
         `;
         
         // Populate template with data
-        const populatedHtml = await window.invoiceTemplateManager.populateTemplate(html, formattedData);
-        
+        // Use a custom function to replace totals section with formatted currency and numbers
+        let populatedHtml = await window.invoiceTemplateManager.populateTemplate(html, formattedData);
+
+        // Replace the totals section if present
+        populatedHtml = populatedHtml.replace(
+            /<div class="invoice-totals">[\s\S]*?<\/div>/,
+            `
+            <div class="invoice-totals">
+                <div class="totals-row">
+                    <span>Subtotal:</span>
+                    <span>${formattedData.currency} ${formatNumber(formattedData.invoice.subtotal)}</span>
+                </div>
+                <div class="totals-row">
+                    <span>VAT (16%):</span>
+                    <span>${formattedData.currency} ${formatNumber(formattedData.invoice.vat)}</span>
+                </div>
+                <div class="totals-row total">
+                    <span>Total:</span>
+                    <span>${formattedData.currency} ${formatNumber(formattedData.invoice.total)}</span>
+                </div>
+            </div>
+            `
+        );
+
         // Create PDF container
         const pdfContainer = document.createElement('div');
         pdfContainer.innerHTML = populatedHtml;

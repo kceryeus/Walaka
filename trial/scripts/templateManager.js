@@ -93,10 +93,12 @@ function fallbackTemplate() {
                 </table>
                 
                 <div class="invoice-totals">
+<!--
                     <div class="total-row">Subtotal: <span id="subtotal"></span></div>
                     <div class="total-row">VAT: <span id="total-vat"></span></div>
                     <div class="total-row">Discount: <span id="discount"></span></div>
                     <div class="total-row grand-total">Total: <span id="total"></span></div>
+-->            
                 </div>
                 
                 <div class="notes">

@@ -104,7 +104,8 @@ class InvoiceEventListeners {
                     // Update download button handler
                     const downloadPdfBtn = document.getElementById('downloadPdfBtn');
                     if (downloadPdfBtn) {
-                        downloadPdfBtn.onclick = () => window.downloadInvoicePdf(invoiceData);
+                        // Use the correct PDF generation function
+                        downloadPdfBtn.onclick = () => window.generatePDF(invoiceData);
                     }
                 } catch (error) {
                     console.error('Error in preview:', error);
@@ -225,13 +226,16 @@ class InvoiceEventListeners {
             if (error) throw error;
             if (!invoice) throw new Error('Invoice not found');
 
+            // Get business profile
+            const businessProfile = await getBusinessProfile();
+
             // Format the data
             return {
-                invoice_number: invoice.invoice_number,
+                invoiceNumber: invoice.invoiceNumber,
                 issue_date: invoice.issue_date,
                 due_date: invoice.due_date,
-                company_name: 'Your Company Name', // Replace with actual company details
-                company_address: 'Your Company Address',
+                company_name: businessProfile.company_name || 'Your Company Name',
+                company_address: businessProfile.address || 'Your Company Address',
                 client_name: invoice.clients.customer_name,
                 client_address: invoice.clients.address,
                 client_tax_id: invoice.clients.nuit,
@@ -243,7 +247,7 @@ class InvoiceEventListeners {
                     total: item.total
                 })),
                 subtotal: invoice.subtotal,
-                vat: invoice.vat_total,
+                vat: invoice.vat,
                 total: invoice.total,
                 notes: invoice.notes || ''
             };

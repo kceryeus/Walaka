@@ -209,12 +209,8 @@ const TEMPLATES = {
                         <!-- Items will be inserted here -->
                     </tbody>
                 </table>
-                
+               
                 <div class="invoice-totals">
-                    <div class="total-row">Subtotal: <span id="subtotal"></span></div>
-                    <div class="total-row">VAT: <span id="total-vat"></span></div>
-                    <div class="total-row">Discount: <span id="discount"></span></div>
-                    <div class="total-row grand-total">Total: <span id="total"></span></div>
                 </div>
                 
                 <div class="notes">
@@ -347,10 +343,6 @@ const TEMPLATES = {
                 </table>
                 
                 <div class="invoice-totals">
-                    <div class="total-row">Subtotal: <span id="subtotal"></span></div>
-                    <div class="total-row">VAT: <span id="total-vat"></span></div>
-                    <div class="total-row">Discount: <span id="discount"></span></div>
-                    <div class="total-row grand-total">Total: <span id="total"></span></div>
                 </div>
                 
                 <div class="notes">
@@ -417,10 +409,10 @@ async function populateTemplate(templateContent, invoiceData) {
     setDataField(doc, 'company-nuit', invoiceData.company?.nuit || '');
     setDataField(doc, 'company-website', invoiceData.company?.website || '');
 
-    // Invoice Details
-    setDataField(doc, 'invoice-number', invoiceData.invoice_number || '');
-    setDataField(doc, 'issue-date', formatDate(invoiceData.issue_date));
-    setDataField(doc, 'due-date', formatDate(invoiceData.due_date));
+    // Invoice Details (fetch from invoice object for consistency)
+    setDataField(doc, 'invoice-number', invoiceData.invoice?.number || '');
+    setDataField(doc, 'issue-date', formatDate(invoiceData.invoice?.issueDate));
+    setDataField(doc, 'due-date', formatDate(invoiceData.invoice?.dueDate));
 
     // Client Information
     setDataField(doc, 'client-name', invoiceData.client?.name || '');
@@ -442,18 +434,27 @@ async function populateTemplate(templateContent, invoiceData) {
     // Notes
     setDataField(doc, 'notes', invoiceData.notes || '');
 
-    // Populate Items
+    // Populate Items (correct VAT and total calculations per row)
     const itemsContainer = doc.getElementById('invoice-items-body');
     if (itemsContainer && invoiceData.items && Array.isArray(invoiceData.items)) {
-        itemsContainer.innerHTML = invoiceData.items.map(item => `
-            <tr>
-                <td>${item.description || ''}</td>
-                <td>${item.quantity || 1}</td>
-                <td>${formatCurrency(item.price, invoiceData.currency)}</td>
-                <td>${item.vat}%</td>
-                <td>${formatCurrency(item.total, invoiceData.currency)}</td>
-            </tr>
-        `).join('');
+        itemsContainer.innerHTML = invoiceData.items.map(item => {
+            const unitPrice = Number(item.price ?? item.unit_price ?? 0);
+            const quantity = Number(item.quantity ?? 1);
+            const vatRate = Number(item.vat ?? item.vat_rate ?? 0);
+            // VAT per row = unitPrice * vatRate / 100
+            const vatAmount = unitPrice * vatRate / 100;
+            // Total per row = unitPrice * quantity
+            const rowTotal = unitPrice * quantity;
+            return `
+                <tr>
+                    <td>${item.description || ''}</td>
+                    <td>${quantity}</td>
+                    <td>${formatCurrency(unitPrice, invoiceData.currency)}</td>
+                    <td>${formatCurrency(vatAmount, invoiceData.currency)}</td>
+                    <td>${formatCurrency(rowTotal, invoiceData.currency)}</td>
+                </tr>
+            `;
+        }).join('');
     }
 
     return doc.documentElement.outerHTML;

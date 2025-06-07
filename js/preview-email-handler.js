@@ -44,7 +44,7 @@ class PreviewEmailHandler {
             // Simplified query - first get the invoice
             const { data: invoice, error: invoiceError } = await window.supabase
                 .from('invoices')
-                .select('client_id, client_name')
+                .select('client_id, customer_name')
                 .eq('number', invoiceNumber)
                 .maybeSingle();
 
@@ -58,7 +58,7 @@ class PreviewEmailHandler {
             // Then get the client details
             const { data: client, error: clientError } = await window.supabase
                 .from('clients')
-                .select('name, email')
+                .select('customer_name, email')
                 .eq('id', invoice.client_id)
                 .maybeSingle();
 
