@@ -153,14 +153,41 @@ class InvoiceEventListeners {
                         throw new Error('Preview container not found');
                     }
 
-                    const invoiceData = JSON.parse(previewContainer.dataset.currentInvoice);
-                    if (!invoiceData) {
-                        throw new Error('No invoice data found');
+                    // Get the invoice data from the data attribute
+                    const invoiceData = JSON.parse(previewContainer.dataset.currentInvoice || '{}');
+                    if (!invoiceData || !invoiceData.invoiceNumber) {
+                        throw new Error('No valid invoice data found');
                     }
 
                     showNotification('Generating PDF...', 'info');
-                    await window.generatePDF(invoiceData);
-                    showNotification('PDF downloaded successfully', 'success');
+                    
+                    // Disable the download button while generating
+                    const downloadBtn = document.getElementById('downloadPdfBtn');
+                    if (downloadBtn) {
+                        downloadBtn.disabled = true;
+                        downloadBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generating...';
+                    }
+                    
+                    try {
+                        // Generate and download the PDF
+                        const pdfBlob = await window.generatePDF(invoiceData);
+                        
+                        // Create download link
+                        const downloadLink = document.createElement('a');
+                        downloadLink.href = URL.createObjectURL(pdfBlob);
+                        downloadLink.download = `Invoice-${invoiceData.invoiceNumber}.pdf`;
+                        document.body.appendChild(downloadLink);
+                        downloadLink.click();
+                        document.body.removeChild(downloadLink);
+                        
+                        showNotification('PDF downloaded successfully', 'success');
+                    } finally {
+                        // Re-enable the download button
+                        if (downloadBtn) {
+                            downloadBtn.disabled = false;
+                            downloadBtn.innerHTML = '<i class="fas fa-download"></i> Download PDF';
+                        }
+                    }
                 } catch (error) {
                     console.error('Error downloading PDF:', error);
                     showNotification('Error generating PDF: ' + error.message, 'error');

@@ -150,6 +150,8 @@ function formatClientInfo(client) {
  */
 async function generatePDF(invoiceData) {
     try {
+        console.log('Generating PDF with data:', invoiceData);
+        
         // Format the items with proper calculations
         const formattedItems = invoiceData.items?.map(item => {
             const quantity = parseFloat(item.quantity) || 0;
@@ -191,8 +193,8 @@ async function generatePDF(invoiceData) {
             invoice: {
                 id: invoiceData.id || invoiceData.invoice_id,
                 number: invoiceData.invoiceNumber || await getNextInvoiceNumber(),
-                issueDate: invoiceData.issueDate || new Date().toISOString().split('T')[0],
-                dueDate: invoiceData.dueDate || new Date(Date.now() + 30*24*60*60*1000).toISOString().split('T')[0],
+                issueDate: invoiceData.issueDate || invoiceData.issue_date || new Date().toISOString().split('T')[0],
+                dueDate: invoiceData.dueDate || invoiceData.due_date || new Date(Date.now() + 30*24*60*60*1000).toISOString().split('T')[0],
                 status: invoiceData.status || 'draft',
                 projectName: invoiceData.projectName || '',
                 subtotal: subtotal,
@@ -204,9 +206,9 @@ async function generatePDF(invoiceData) {
             },
             // Client info
             client: {
-                name: invoiceData.client?.customer_name || 'Client Name',
-                address: invoiceData.client?.billing_address || '',
-                nuit: Number(invoiceData.client?.customer_tax_id) || 0,
+                name: invoiceData.client?.customer_name || invoiceData.client_name || 'Client Name',
+                address: invoiceData.client?.billing_address || invoiceData.client_address || '',
+                nuit: Number(invoiceData.client?.customer_tax_id || invoiceData.client_tax_id) || 0,
                 email: invoiceData.client?.email || '',
                 contact: invoiceData.client?.contact || '',
                 phone: invoiceData.client?.telephone || '',
@@ -220,6 +222,8 @@ async function generatePDF(invoiceData) {
             // Currency
             currency: invoiceData.currency || 'MZN'
         };
+
+        console.log('Formatted data for PDF:', formattedData);
 
         // Get selected template
         const selectedTemplate = await window.invoiceTemplateManager.getSelectedTemplate();
@@ -244,7 +248,6 @@ async function generatePDF(invoiceData) {
         `;
         
         // Populate template with data
-        // Use a custom function to replace totals section with formatted currency and numbers
         let populatedHtml = await window.invoiceTemplateManager.populateTemplate(html, formattedData);
 
         // Replace the totals section if present
@@ -281,7 +284,10 @@ async function generatePDF(invoiceData) {
             html2canvas: { 
                 scale: 2,
                 useCORS: true,
-                letterRendering: true
+                letterRendering: true,
+                willReadFrequently: true,
+                logging: true,
+                allowTaint: true
             },
             jsPDF: { 
                 unit: 'mm', 
@@ -290,13 +296,28 @@ async function generatePDF(invoiceData) {
             }
         };
 
+        console.log('Generating PDF with options:', opt);
+
         // Generate PDF
-        const pdfBlob = await html2pdf().from(pdfContainer).set(opt).outputPdf('blob');
-
-        // Cleanup
-        document.body.removeChild(pdfContainer);
-
-        return pdfBlob;
+        try {
+            const pdfBlob = await html2pdf()
+                .set(opt)
+                .from(pdfContainer)
+                .outputPdf('blob');
+            
+            console.log('PDF generated successfully');
+            
+            // Cleanup
+            document.body.removeChild(pdfContainer);
+            
+            return pdfBlob;
+        } catch (error) {
+            // Cleanup in case of error
+            if (document.body.contains(pdfContainer)) {
+                document.body.removeChild(pdfContainer);
+            }
+            throw error;
+        }
     } catch (error) {
         console.error('Error generating PDF:', error);
         throw error;
