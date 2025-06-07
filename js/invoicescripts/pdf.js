@@ -154,19 +154,20 @@ async function generatePDF(invoiceData) {
         const formattedItems = invoiceData.items?.map(item => {
             const quantity = parseFloat(item.quantity) || 0;
             const price = parseFloat(item.price) || 0;
+            const vatRate = parseFloat(item.vat_rate || 16) / 100; // Convert percentage to decimal (16% -> 0.16)
             const subtotal = quantity * price;
-            const vatAmount = subtotal * 0.16; // 16% VAT
+            const vatAmount = subtotal * vatRate; // Calculate VAT based on item's VAT rate
             
             return {
                 description: item.description || '',
                 quantity: quantity,
                 price: price,
-                vat: vatAmount, // Store actual amount, not percentage
+                vat: vatAmount,
                 total: subtotal + vatAmount
             };
         }) || [];
 
-        // Calculate totals
+        // Calculate totals using the same logic
         const subtotal = formattedItems.reduce((sum, item) => sum + (item.quantity * item.price), 0);
         const totalVat = formattedItems.reduce((sum, item) => sum + item.vat, 0);
         const total = subtotal + totalVat;
@@ -290,12 +291,12 @@ async function generatePDF(invoiceData) {
         };
 
         // Generate PDF
-        await html2pdf().from(pdfContainer).set(opt).save();
+        const pdfBlob = await html2pdf().from(pdfContainer).set(opt).outputPdf('blob');
 
         // Cleanup
         document.body.removeChild(pdfContainer);
 
-        return true;
+        return pdfBlob;
     } catch (error) {
         console.error('Error generating PDF:', error);
         throw error;

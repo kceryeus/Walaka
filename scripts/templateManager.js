@@ -438,20 +438,19 @@ async function populateTemplate(templateContent, invoiceData) {
     const itemsContainer = doc.getElementById('invoice-items-body');
     if (itemsContainer && invoiceData.items && Array.isArray(invoiceData.items)) {
         itemsContainer.innerHTML = invoiceData.items.map(item => {
-            const unitPrice = Number(item.price ?? item.unit_price ?? 0);
             const quantity = Number(item.quantity ?? 1);
-            const vatRate = Number(item.vat ?? item.vat_rate ?? 0);
-            // VAT per row = unitPrice * vatRate / 100
-            const vatAmount = unitPrice * vatRate / 100;
-            // Total per row = unitPrice * quantity
-            const rowTotal = unitPrice * quantity;
+            const unitPrice = Number(item.price ?? item.unit_price ?? 0);
+            const vatRate = 0.16; // Always use 16% VAT for display
+            const lineSubtotal = quantity * unitPrice;
+            const vatAmount = lineSubtotal * vatRate;
+            const lineTotal = lineSubtotal + vatAmount;
             return `
                 <tr>
                     <td>${item.description || ''}</td>
                     <td>${quantity}</td>
                     <td>${formatCurrency(unitPrice, invoiceData.currency)}</td>
                     <td>${formatCurrency(vatAmount, invoiceData.currency)}</td>
-                    <td>${formatCurrency(rowTotal, invoiceData.currency)}</td>
+                    <td>${formatCurrency(lineTotal, invoiceData.currency)}</td>
                 </tr>
             `;
         }).join('');
