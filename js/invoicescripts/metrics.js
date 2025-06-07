@@ -70,31 +70,32 @@ const MetricsModule = {
     },
 
     async updateCharts() {
-    try {
-        // Fetch all invoices
-        const { data: invoices, error: invoiceError } = await window.supabase
-            .from('invoices')
-            .select('*');
+        try {
+            // Fetch all invoices
+            const { data: invoices, error: invoiceError } = await window.supabase
+                .from('invoices')
+                .select('*');
 
-        if (invoiceError) throw invoiceError;
+            if (invoiceError) throw invoiceError;
 
-        // Update both charts with the invoice data
-        if (Array.isArray(invoices)) {
+            // --- Ensure overdue status is up to date before charting ---
+            if (Array.isArray(invoices)) {
+                if (typeof window.autoUpdateInvoiceStatuses === 'function') {
+                    window.autoUpdateInvoiceStatuses(invoices);
+                }
                 // Calculate weekly distribution
                 const weeklyData = this.calculateWeeklyDistribution(invoices);
                 if (typeof window.updateInvoiceDistributionChart === 'function') {
                     window.updateInvoiceDistributionChart('weekly', weeklyData);
                 }
-
-                // Calculate revenue by status
-                const revenueData = this.calculateRevenueByStatus(invoices);
+                // Calculate revenue by status (now with overdue updated)
+                const counts = window.getInvoiceStatusCounts ? window.getInvoiceStatusCounts(invoices) : this.calculateRevenueByStatus(invoices);
                 if (typeof window.updateRevenueByStatusChart === 'function') {
-                    window.updateRevenueByStatusChart('monthly', revenueData);
+                    window.updateRevenueByStatusChart('monthly', counts);
                 }
-        }
-
-    } catch (error) {
-        console.error('Error updating charts:', error);
+            }
+        } catch (error) {
+            console.error('Error updating charts:', error);
             this.resetCharts();
         }
     },

@@ -51,14 +51,13 @@ function setupCharts() {
         window.revenueByStatusChart = new Chart(revenueByStatusCtx, {
             type: 'doughnut',
             data: {
-                labels: ['Paid', 'Pending', 'Overdue', 'Draft'],
+                labels: ['Paid', 'Pending', 'Overdue'], // Exclude 'Draft'
                 datasets: [{
-                    data: Array(4).fill(0),
+                    data: Array(3).fill(0), // Only 3 statuses
                     backgroundColor: [
                         '#3bb077',
                         '#f0ad4e',
-                        '#e55353',
-                        '#6c757d'
+                        '#e55353'
                     ],
                     borderWidth: 0,
                     hoverOffset: 4
@@ -159,19 +158,73 @@ function updateRevenueByStatusChart(period, data = null) {
             chart.data.datasets[0].data = [
                 data.paid || 0,
                 data.pending || 0,
-                data.overdue || 0,
-                data.draft || 0
+                data.overdue || 0
+                // Exclude draft
             ];
         } else if (typeof period === 'string') {
             chart.data.datasets[0].data = period.toLowerCase() === 'monthly' 
-                ? [65, 15, 12, 8] 
-                : [78, 10, 8, 4];
+                ? [65, 15, 12] // Only 3 values
+                : [78, 10, 8];
         }
         chart.update();
     } catch (error) {
         console.error('Error updating revenue chart:', error);
     }
 }
+
+/**
+ * Classifies invoices and returns counts for Paid, Pending, Overdue.
+ * @param {Array} invoices - Array of invoice objects with status and dueDate.
+ * @returns {Object} { paid, pending, overdue }
+ */
+function getInvoiceStatusCounts(invoices) {
+    const now = new Date();
+    let paid = 0, pending = 0, overdue = 0;
+    invoices.forEach(inv => {
+        if (inv.status === 'paid') {
+            paid++;
+        } else if (inv.status === 'overdue') {
+            overdue++;
+        } else if (inv.status === 'pending') {
+            if (inv.dueDate && new Date(inv.dueDate) < now) {
+                overdue++;
+            } else {
+                pending++;
+            }
+        }
+        // Drafts are ignored
+    });
+    return { paid, pending, overdue };
+}
+
+/**
+ * Updates invoice statuses: sets status to 'overdue' if pending and dueDate has passed.
+ * @param {Array} invoices - Array of invoice objects with status and dueDate.
+ */
+function autoUpdateInvoiceStatuses(invoices) {
+    const now = new Date();
+    invoices.forEach(inv => {
+        // Accept both dueDate and due_date, and handle string/Date
+        const due = inv.dueDate || inv.due_date;
+        if (
+            inv.status === 'pending' &&
+            due &&
+            !isNaN(new Date(due).getTime()) &&
+            new Date(due) < now
+        ) {
+            inv.status = 'overdue';
+        }
+    });
+}
+
+// Example usage when updating the chart:
+// const counts = getInvoiceStatusCounts(invoiceArray);
+// updateRevenueByStatusChart(null, counts);
+
+// Example usage before updating charts:
+// autoUpdateInvoiceStatuses(invoiceArray);
+// const counts = getInvoiceStatusCounts(invoiceArray);
+// updateRevenueByStatusChart(null, counts);
 
 // Attach chart functions to window for global access
 if (typeof window !== 'undefined') {

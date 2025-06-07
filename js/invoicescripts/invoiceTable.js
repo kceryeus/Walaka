@@ -122,6 +122,11 @@ const InvoiceTableModule = {
                         </td>
                         <td>
                             <div class="action-buttons">
+                                ${invoice.pdf_url ? `
+                                    <button class="btn btn-sm btn-info view-pdf" data-pdf-url="${invoice.pdf_url}">
+                                        <i class="fas fa-file-pdf"></i>
+                                    </button>
+                                ` : ''}
                                 <button class="btn btn-sm btn-info view-invoice" data-invoice="${invoice.invoiceNumber}">
                                     <i class="fas fa-eye"></i>
                                 </button>
@@ -224,10 +229,36 @@ const InvoiceTableModule = {
     setupActionButtons() {
         // View button
         document.querySelectorAll('.view-invoice').forEach(btn => {
-            btn.addEventListener('click', () => {
+            btn.addEventListener('click', async () => {
                 const invoiceNumber = btn.getAttribute('data-invoice');
-                if (window.openViewInvoiceModal) {
-                    window.openViewInvoiceModal(invoiceNumber);
+                try {
+                    // Fetch invoice data including PDF URL
+                    const { data: invoice, error } = await window.supabase
+                        .from('invoices')
+                        .select('*, clients(*)')
+                        .eq('invoiceNumber', invoiceNumber)
+                        .single();
+
+                    if (error) throw error;
+                    if (!invoice) throw new Error('Invoice not found');
+
+                    // Open view modal
+                    if (window.openViewInvoiceModal) {
+                        window.openViewInvoiceModal(invoice);
+                    }
+
+                    // If PDF URL exists, show it in an iframe
+                    if (invoice.pdf_url) {
+                        const previewContainer = document.getElementById('invoicePreviewContent');
+                        if (previewContainer) {
+                            previewContainer.innerHTML = `
+                                <iframe src="${invoice.pdf_url}" width="100%" height="600px" frameborder="0"></iframe>
+                            `;
+                        }
+                    }
+                } catch (error) {
+                    console.error('Error viewing invoice:', error);
+                    showNotification('Error opening invoice: ' + error.message, 'error');
                 }
             });
         });

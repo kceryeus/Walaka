@@ -298,44 +298,30 @@ class InvoiceActions {
         }
     }
 
-    async downloadPDF(invoice) {
+    async downloadPdf(invoiceNumber) {
         try {
             // Show loading indicator
-            this.showLoading('Generating PDF...');
+            this.showLoading('Downloading PDF...');
 
-            // Ensure we have the complete invoice data
-            const fullInvoice = await this.getInvoiceWithDetails(invoice.id);
-            
-            // Format data for PDF
-            const pdfData = this.formatInvoiceForPDF(fullInvoice);
+            // Fetch invoice data from Supabase
+            const { data: invoice, error } = await this.supabase
+                .from('invoices')
+                .select('pdf_url')
+                .eq('invoiceNumber', invoiceNumber)
+                .single();
 
-            // Generate and download PDF
-            await window.pdfGenerator.generatePDF(pdfData);
+            if (error) throw error;
+            if (!invoice?.pdf_url) throw new Error('PDF not found');
+
+            // Open PDF in new tab
+            window.open(invoice.pdf_url, '_blank');
 
             this.hideLoading();
-            this.showNotification('PDF generated successfully', 'success');
+            this.showNotification('PDF opened successfully', 'success');
         } catch (error) {
             this.hideLoading();
-            this.showNotification('Failed to generate PDF: ' + error.message, 'error');
+            this.showNotification('Failed to open PDF: ' + error.message, 'error');
         }
-    }
-
-    formatInvoiceForPDF(invoice) {
-        return {
-            company_name: invoice.company_name || 'Your Company Name',
-            company_address: invoice.company_address || 'Your Company Address',
-            invoice_number: invoice.invoice_number,
-            issue_date: new Date(invoice.issue_date).toLocaleDateString(),
-            due_date: new Date(invoice.due_date).toLocaleDateString(),
-            client_name: invoice.client_name,
-            client_address: invoice.client_address,
-            client_tax_id: invoice.client_tax_id,
-            items_table: this.generateItemsTable(invoice.items),
-            subtotal: this.formatCurrency(invoice.subtotal),
-            vat: this.formatCurrency(invoice.vat),
-            total: this.formatCurrency(invoice.total),
-            notes: invoice.notes || ''
-        };
     }
 
     async emailInvoice(invoiceNumber, emailAddress) {
