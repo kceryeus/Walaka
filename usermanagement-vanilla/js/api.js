@@ -27,16 +27,49 @@ class API {
 
     async createUser(userData) {
         try {
-            const { data, error } = await this.supabase
-                .from('users')
-                .insert([userData])
+            // 1. Insert metadata into user_management
+            const { data: mgmtData, error: mgmtError } = await this.supabase
+                .from('user_management')
+                .insert([
+                    {
+                        username: userData.username,
+                        email: userData.email,
+                        role: userData.role,
+                        status: 'pending'
+                    }
+                ])
                 .select()
                 .single();
+            if (mgmtError) {
+                // Improved error logging
+                console.error('Supabase user_management insert error:', mgmtError, JSON.stringify(mgmtError));
+                throw mgmtError;
+            }
 
-            if (error) throw error;
-            return data;
+            // 2. Register user in Supabase Auth (send invite email)
+            // Generate a random password (user will set their own after confirmation)
+            const randomPassword = Math.random().toString(36).slice(-10) + 'A1!';
+            const { data: authData, error: authError } = await this.supabase.auth.signUp({
+                email: userData.email,
+                password: randomPassword,
+                options: {
+                    emailRedirectTo: 'http://localhost:5505/usermanagement-vanilla/setup-password.html',
+                    data: {
+                        username: userData.username,
+                        role: userData.role
+                    }
+                }
+            });
+            if (authError) {
+                // Improved error logging
+                console.error('Supabase Auth signUp error:', authError, JSON.stringify(authError));
+                throw authError;
+            }
+
+            return { user_management: mgmtData, auth: authData };
         } catch (error) {
-            console.error('Error creating user:', error);
+            // Improved error logging
+            console.error('Error creating user:', error, JSON.stringify(error));
             throw error;
         }
     }
@@ -73,6 +106,8 @@ class API {
         }
     }
 }
+
+// Note: If you see a GoTrueClient warning, ensure you only create the Supabase client once and reuse it across your app.
 
 const api = new API();
 export { api };
