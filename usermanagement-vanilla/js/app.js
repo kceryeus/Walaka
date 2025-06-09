@@ -42,6 +42,21 @@ class App {
         }
     }
 
+    async loadUsers() {
+        try {
+            this.users = await api.fetchUsers();
+            ui.renderUsers(this.users);
+            ui.renderRoleInfo(this.users);
+        } catch (error) {
+            console.error('Error loading users:', error);
+            toast.show({
+                title: 'Error',
+                description: 'Failed to load users',
+                type: 'error'
+            });
+        }
+    }
+
     async updateStats() {
         const totalUsers = this.users.length;
         const activeUsers = this.users.filter(user => user.status === 'active').length;

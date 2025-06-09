@@ -27,7 +27,20 @@ class API {
 
     async createUser(userData) {
         try {
-            // 1. Insert metadata into user_management
+            // 1. Check if email already exists in user_management (NOT public.users)
+            const { data: existingMeta, error: metaError } = await this.supabase
+                .from('user_management')
+                .select('id')
+                .eq('email', userData.email)
+                .maybeSingle();
+            if (metaError) throw metaError;
+            if (existingMeta) {
+                throw new Error('A user with this email already exists in the system.');
+            }
+
+            // 2. Insert metadata into user_management
+            const { data: userSession } = await this.supabase.auth.getUser();
+            const creatorId = userSession?.user?.id || null;
             const { data: mgmtData, error: mgmtError } = await this.supabase
                 .from('user_management')
                 .insert([
@@ -35,19 +48,18 @@ class API {
                         username: userData.username,
                         email: userData.email,
                         role: userData.role,
-                        status: 'pending'
+                        status: 'pending',
+                        created_by: creatorId
                     }
                 ])
                 .select()
                 .single();
             if (mgmtError) {
-                // Improved error logging
                 console.error('Supabase user_management insert error:', mgmtError, JSON.stringify(mgmtError));
                 throw mgmtError;
             }
 
-            // 2. Register user in Supabase Auth (send invite email)
-            // Generate a random password (user will set their own after confirmation)
+            // 3. Register user in Supabase Auth (send invite email)
             const randomPassword = Math.random().toString(36).slice(-10) + 'A1!';
             const { data: authData, error: authError } = await this.supabase.auth.signUp({
                 email: userData.email,
@@ -61,7 +73,6 @@ class API {
                 }
             });
             if (authError) {
-                // Improved error logging
                 console.error('Supabase Auth signUp error:', authError, JSON.stringify(authError));
                 throw authError;
             }
@@ -70,6 +81,36 @@ class API {
         } catch (error) {
             // Improved error logging
             console.error('Error creating user:', error, JSON.stringify(error));
+            throw error;
+        }
+    }
+
+    async createUserInUsersTable(userData) {
+        try {
+            // Get the current authenticated user
+            const { data: userSession } = await this.supabase.auth.getUser();
+            const creatorId = userSession?.user?.id || null;
+
+            // Insert into public.users table
+            const { data, error } = await this.supabase
+                .from('users')
+                .insert([
+                    {
+                        username: userData.username,
+                        email: userData.email,
+                        role: userData.role,
+                        created_by: creatorId // Set the creator's user id
+                    }
+                ])
+                .select()
+                .single();
+            if (error) {
+                console.error('Supabase users insert error:', error, JSON.stringify(error));
+                throw error;
+            }
+            return data;
+        } catch (error) {
+            console.error('Error creating user in users table:', error, JSON.stringify(error));
             throw error;
         }
     }

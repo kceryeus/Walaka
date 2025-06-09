@@ -1,5 +1,6 @@
 import { toast } from './toast.js';
 import { api } from './api.js';
+import { app } from './app.js';
 
 class UI {
     constructor() {
