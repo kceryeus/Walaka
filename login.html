@@ -386,7 +386,7 @@
             }
         }
 
-        // Handle password reset request
+        // Update the handlePasswordReset function
         async function handlePasswordReset(event) {
             event.preventDefault();
             const email = document.getElementById('resetEmail').value;
@@ -396,21 +396,18 @@
 
             try {
                 const { error } = await supabase.auth.resetPasswordForEmail(email, {
-                    redirectTo: `${window.location.origin}/reset-password.html`,
+                    redirectTo: 'http://localhost:5505/reset-password.html'  // Match exactly with Supabase URL
                 });
 
                 if (error) throw error;
 
-                // Show success message
                 messageDiv.textContent = 'Password reset link has been sent to your email.';
                 messageDiv.className = 'message-box success';
                 messageDiv.style.display = 'block';
                 
-                // Clear the form
                 document.getElementById('resetEmail').value = '';
-
             } catch (error) {
-                console.error('Error requesting password reset:', error.message);
+                console.error('Error:', error);
                 messageDiv.textContent = error.message || 'Failed to send reset link';
                 messageDiv.className = 'message-box error';
                 messageDiv.style.display = 'block';

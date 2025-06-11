@@ -1,4 +1,16 @@
-const supabaseClient = supabase.createClient(config.supabaseUrl, config.supabaseAnonKey);
+import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+
+// Initialize Supabase client with consistent configuration
+const supabaseUrl = 'https://qvmtozjvjflygbkjecyj.supabase.co';
+const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF2bXRvemp2amZseWdia2plY3lqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDYxMjc2MjMsImV4cCI6MjA2MTcwMzYyM30.DJMC1eM5_EouM1oc07JaoXsMX_bSLn2AVCozAcdfHmo';
+
+const supabase = createClient(supabaseUrl, supabaseKey, {
+    auth: {
+        autoRefreshToken: true,
+        persistSession: true,
+        detectSessionInUrl: true
+    }
+});
 
 document.addEventListener('DOMContentLoaded', async () => {
     const form = document.getElementById('passwordSetupForm');
@@ -29,29 +41,46 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (password !== confirmPassword) {
             showError('Passwords do not match');
             return;
-        }
-
-        try {
-            // Set the session using the tokens from the URL
-            const { error: sessionError } = await supabaseClient.auth.setSession({
+        }        try {
+            // Initialize session with the reset token
+            const { error: sessionError } = await supabase.auth.setSession({
                 access_token: accessToken,
                 refresh_token: refreshToken
             });
 
             if (sessionError) throw sessionError;
 
-            // Update the user's password
-            const { error: updateError } = await supabaseClient.auth.updateUser({
+            // Get current session to verify user
+            const { data: { session } } = await supabase.auth.getSession();
+            if (!session) throw new Error('No active session found');
+
+            // Update the user's password in auth
+            const { error: updateError } = await supabase.auth.updateUser({
                 password: password
             });
 
             if (updateError) throw updateError;
 
-            // Redirect to the login page or dashboard
+            // Record password change in database
+            const { error: dbError } = await supabase
+                .from('user_security_events')
+                .insert([{
+                    user_id: session.user.id,
+                    event_type: 'password_reset',
+                    created_at: new Date().toISOString(),
+                    ip_address: null, // Could be implemented with a server-side function
+                    user_agent: navigator.userAgent
+                }]);
+
+            if (dbError && dbError.code !== '42P01') { // Ignore if table doesn't exist
+                console.error('Error logging security event:', dbError);
+            }
+
+            // Redirect to login page with success message
             window.location.href = '/login.html?message=password-set-success';
         } catch (error) {
             console.error('Error setting password:', error);
-            showError(error.message);
+            showError(error.message || 'An error occurred while setting your password');
         }
     });
 
