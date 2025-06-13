@@ -328,6 +328,9 @@
                     <label for="confirmPassword">Confirm Password</label>
                     <input type="password" id="confirmPassword" required placeholder="Confirm your password">
                 </div>
+                <p class="form-description" style="text-align: left; margin-bottom: 1rem;">
+                    Após criar a conta, será automaticamente descarregado um ficheiro a submeter à autoridade tributária para autorização de documentos comerciais como facturas, notas de crédito, debito etc, para que sejam válidos fiscalmente.
+                </p>
                 <div class="form-group checkbox-group">
                     <input type="checkbox" id="terms" required>
                     <label for="terms">Li e concordo com os <span class="terms-link" onclick="openTerms()">Termos & Condições</span> do WALAKA</label>
@@ -459,7 +462,18 @@
 
                 console.log('User created successfully:', user);
                 alert('Account created successfully! Please check your email to confirm.');
-                toggleForms(); // Switch to login form after successful signup
+                
+                // Trigger the download of the file
+                const pdfUrl = 'Memoria_Descritiva_WALAKA.pdf';
+                const link = document.createElement('a');
+                link.href = pdfUrl;
+                link.download = 'WALAKA_Documentacao_Fiscal.pdf';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                
+                // Redirect to success page or show success message
+                window.location.href = "dashboard.html";
             } catch (error) {
                 console.error('Unexpected error:', error.message);
                 errorDiv.textContent = error.message || 'Signup failed';
