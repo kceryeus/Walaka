@@ -323,7 +323,16 @@
     <!-- JavaScript Dependencies -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="js/topbar-menu.js"></script>
+    <script type="module">
+        import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.0.0/+esm';
+
+        const supabaseUrl = 'https://qvmtozjvjflygbkjecyj.supabase.co';
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF2bXRvemp2amZseWdia2plY3lqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDYxMjc2MjMsImV4cCI6MjA2MTcwMzYyM30.DJMC1eM5_EouM1oc07JaoXsMX_bSLn2AVCozAcdfHmo';
+        const supabase = createClient(supabaseUrl, supabaseKey);
+        window.supabase = supabase; // Make supabase available globally for auth.js
+    </script>
     <script src="js/creditnotescripts/credit-note.js"></script>
     <script src="js/displayname.js"></script>
+    <script src="js/auth.js"></script>
 </body>
 </html>

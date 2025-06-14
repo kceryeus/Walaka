@@ -1356,7 +1356,7 @@
                     revenueGrowthElement.textContent = `${revenueGrowthPercentage}%`;
                     revenueGrowthElement.className = `metric-change ${revenueGrowthPercentage >= 0 ? 'positive' : 'negative'}`;
                 }
-
+/*
                 // Update drilldown data
                 const drilldownData = document.querySelector('#totalInvoicesDetail .drilldown-data');
                 if (drilldownData) {
@@ -1373,7 +1373,7 @@
                         items[3].querySelector('span:last-child').textContent = overdueInvoices;
                     }
                 }
-
+*/
             } catch (error) {
                 console.error('Error updating metrics:', error);
             }
@@ -1990,5 +1990,6 @@
         // ...existing code...
     </script>
   <script src="js/walaka-assistant.js"></script>
+  <script src="js/auth.js"></script>
 </body>
 </html>
