@@ -116,9 +116,9 @@ window.walakaAssistant = new WalakaAssistant({
 (function injectWalakaChat() {
   if (document.getElementById('walaka-chatbot')) return;
   const chatHtml = `
-    <div id="walaka-chatbot" style="position:fixed;bottom:24px;right:24px;z-index:9999;width:340px;max-width:95vw;font-family:Inter,sans-serif;box-shadow:0 4px 24px rgba(0,0,0,0.18);border-radius:16px 16px 0 0;background:#fff;overflow:hidden;">
+    <div id="walaka-chatbot" style="position:fixed;bottom:21px;right:21px;z-index:9999;width:340px;max-width:85vw;font-family:Inter,sans-serif;box-shadow:0 4px 22px rgba(0,0,0,0.18);border-radius:16px 16px 0 0;background:#fff;overflow:hidden;">
       <div style="background:#2b4a6f;color:#fff;padding:12px 16px;font-weight:600;display:flex;align-items:center;gap:8px;">
-        <i class="fas fa-robot"></i> WALAKA Assistant
+        <img src="assets/images/walaka-assistant.PNG" alt="Assistant" style="height:23px;width:23px;border-radius:50%;background:#fff;object-fit:cover;" /> WALAKA Assistant
         <span style="flex:1"></span>
         <button id="walaka-chatbot-close" style="background:none;border:none;color:#fff;font-size:18px;cursor:pointer;">&times;</button>
       </div>
@@ -128,8 +128,8 @@ window.walakaAssistant = new WalakaAssistant({
         <button type="submit" style="background:#2b4a6f;color:#fff;border:none;border-radius:8px;padding:0 16px;font-size:15px;cursor:pointer;">Enviar</button>
       </form>
     </div>
-    <button id="walaka-chatbot-toggle" style="position:fixed;bottom:24px;right:24px;z-index:9998;background:#2b4a6f;color:#fff;border:none;border-radius:50%;width:56px;height:56px;box-shadow:0 2px 8px rgba(0,0,0,0.18);font-size:28px;display:flex;align-items:center;justify-content:center;cursor:pointer;">
-      <i class="fas fa-robot"></i>
+    <button id="walaka-chatbot-toggle" style="position:fixed;bottom:40px;right:32px;z-index:9998;background:#2b4a6f;color:#fff;border:none;border-radius:50%;width:40px;height:40px;box-shadow:0 2px 8px rgba(0,0,0,0.18);font-size:28px;display:flex;align-items:center;justify-content:center;cursor:pointer;">
+      <img src="assets/images/walaka-assistant.PNG" alt="Assistant" style="height:21px;width:21px;border-radius:50%;background:#fff;object-fit:cover;" />
     </button>
   `;
   const div = document.createElement('div');

@@ -22,6 +22,7 @@
     --input-radius: 8px;
     --transition-speed: 0.3s;
     --box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    --paragraph-font-size: 0.90rem;
   }
 
 .sidebar {
@@ -40,9 +41,9 @@
 
 .sidebar .logo {
     padding: 0 20px;
-    margin-bottom: 30px;
+    margin-bottom: 5px;
     display: flex;
-    align-items: center;
+    align-items: center;;
 }
 
 .sidebar .logo i {
@@ -91,12 +92,14 @@
     font-size: var(--paragraph-font-size);
     font-weight: var(--paragraph-font-weight);
     margin: 0;
+    text-transform: uppercase;
 }
 
 .nav-item,
 .nav-item:visited {
     background: none;
     color: rgba(255, 255, 255, 0.7);
+    
 }
 
 .nav-item:hover,
@@ -109,6 +112,7 @@
     margin-right: 10px;
     width: 20px;
     color: (255, 255, 255, 0.7);
+    align-items: center;
 }
 
 /* Adjust main content area */
@@ -137,7 +141,7 @@
 /* Sidebar submenu expand/collapse - with smooth animation */
 .submenu {
     margin: 0;
-    padding-left: 18px;
+    padding-left: 24px; /* match .nav-header.has-submenu left spacing */
     border-left: none;
     overflow: hidden;
     max-height: 0;
@@ -158,6 +162,7 @@
     opacity: 1;
     padding-top: 8px;
     padding-bottom: 8px;
+    margin-bottom: 8px;
     transition:
         max-height 0.5s cubic-bezier(0.4, 0, 0.2, 1),
         opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1),
@@ -171,6 +176,20 @@
     padding-right: 24px;
     user-select: none;
     transition: color 0.8s;
+    /* Add left spacing and vertical spacing */
+    padding-left: 18px;
+    margin-top: 12px;
+    margin-bottom: 4px;
+    /* Match submenu font-size (0.9rem from styles.css .nav-item) */
+    font-size: var(--paragraph-font-size);
+    font-weight: 600;
+    color: rgba(255,255,255,0.85);
+}
+
+.nav-header.has-submenu + .submenu {
+    /* Add vertical spacing between submenus */
+    margin-top: 4px;
+    margin-bottom: 8px;
 }
 
 .nav-header.has-submenu:hover,
