@@ -1576,7 +1576,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         // In a real app, this would make an API call to logout
         showToast('info', 'Signed Out', 'You have been signed out successfully.');
         setTimeout(() => {
-          window.location.href = 'login.html';
+          window.location.href = '/login.html';
         }, 1500);
       }
     );

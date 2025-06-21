@@ -1,4 +1,5 @@
-import { supabase } from '../../../js/supabaseClient.js';
+//import { supabase } from '../../../../js/supabaseClient.js';
+//import { auth } from '../../../../js/auth.js';
 
 // DOM Elements
 const tableView = document.getElementById('table-view');
@@ -65,19 +66,41 @@ let currentAccountId = null;
 // Initialize the app when DOM is ready
 document.addEventListener('DOMContentLoaded', async () => {
     try {
-        // Let auth handler manage authentication
-        const { data: { user }, error: authError } = await supabase.auth.getUser();
-        if (!user) {
-            // Redirect will be handled by supabaseClient.js auth state listener
+/*       // Check if supabase is available globally
+        if (typeof window.supabase === 'undefined') {
+            console.error('Supabase client not found');
+            window.location.href = '/login.html';
+            return;
+        }
+*/
+        // Check authentication status
+        const { data: { session }, error: sessionError } = await window.supabase.auth.getSession();
+        console.log('Supabase session:', session, 'Error:', sessionError);
+        const debugDiv = document.getElementById('debug-session');
+        if (sessionError || !session) {
+            if (debugDiv) {
+                debugDiv.style.display = 'block';
+                debugDiv.textContent = 'Supabase session: ' + JSON.stringify(session) + ' | Error: ' + JSON.stringify(sessionError);
+                setTimeout(() => { window.location.href = '/login.html'; }, 4000);
+                return;
+            }
+            window.location.href = '/login.html';
             return;
         }
         
-        userId = user.id;
+        userId = session.user.id;
         
         // Initialize the application
         await displayUserName();
         await loadAccounts();
         initEventListeners();
+
+        // Set up auth state change listener
+        window.supabase.auth.onAuthStateChange((event, session) => {
+            if (event === 'SIGNED_OUT' || !session) {
+                window.location.href = '/login.html';
+            }
+        });
     } catch (error) {
         console.error('Error initializing app:', error);
         showToast('Error initializing application', 'error');
@@ -148,7 +171,7 @@ function initEventListeners() {
  */
 async function loadAccounts() {
     try {
-        const { data, error } = await supabase
+        const { data, error } = await window.supabase
             .from('bank_accounts')
             .select('*')
             .eq('user_id', userId)
@@ -822,11 +845,11 @@ function showToast(message, type = 'success') {
 }
 
 /**
- * Handle sign out - redirect will be handled by auth state listener
+ * Handle sign out
  */
 async function handleSignOut() {
     try {
-        await supabase.auth.signOut();
+        await auth.logout();
     } catch (error) {
         console.error('Error signing out:', error);
         showToast('Error signing out: ' + error.message, 'error');

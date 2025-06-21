@@ -8,101 +8,52 @@
     <!-- External Libraries -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.9.2/html2pdf.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="../js/auth.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet" />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet" />
     
     <!-- Internal CSS -->
+    <link rel="stylesheet" href="../components/sidebar.css">
     <link rel="stylesheet" href="assets/css/banks.css">
+
+
+    <!-- Initialize Supabase -->
+    <script type="module">
+/*        import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm'
+        
+        const supabaseUrl = 'https://qvmtozjvjflygbkjecyj.supabase.co'
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF2bXRvemp2amZseWdia2plY3lqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDYxMjc2MjMsImV4cCI6MjA2MTcwMzYyM30.DJMC1eM5_EouM1oc07JaoXsMX_bSLn2AVCozAcdfHmo';
+        window.supabase = createClient(supabaseUrl, supabaseKey, {
+            auth: {
+                autoRefreshToken: true,
+                persistSession: true,
+                detectSessionInUrl: true,
+                storage: window.localStorage,
+                storageKey: 'supabase-auth-token'
+            }
+        });*/
+    </script>
 </head>
 <body>
     <div class="dashboard-container">
-        <!-- Sidebar -->
-        <nav class="sidebar">
-            <div class="logo">
-                <i class="fas fa-chart-line"></i>
-                <span>WALAKA</span>
-            </div>
-            
-            <div class="nav-menu">
-                <a href="../dashboard.html" class="nav-item">
-                    <i class="fas fa-home"></i>
-                    <span>Dashboard</span>
-                </a>
-                
-                <div class="nav-section">
-                    <h3>Invoices & Sales</h3>
-                </div>
-                <a href="../invoices.html" class="nav-item">
-                    <i class="fas fa-file-invoice-dollar"></i>
-                    <span>Invoices</span>
-                </a>
-                <a href="../products.html" class="nav-item">
-                    <i class="fas fa-shopping-cart"></i>
-                    <span>Products</span>
-                </a>
-                <a href="../clients/clients.html" class="nav-item">
-                    <i class="fas fa-users"></i>
-                    <span>Clients</span>
-                </a>
-                <a href="taxes.html" class="nav-item">
-                    <i class="fas fa-percentage"></i>
-                    <span>Taxes</span>
-                </a>
-                
-                <div class="nav-section">
-                    <h3>Finances</h3>
-                </div>
-                <a href="expenses.html" class="nav-item">
-                    <i class="fas fa-money-bill-wave"></i>
-                    <span>Expenses</span>
-                </a>
-                <a href="reports.html" class="nav-item">
-                    <i class="fas fa-chart-pie"></i>
-                    <span>Reports</span>
-                </a>
-                <a href="payments.html" class="nav-item">
-                    <i class="fas fa-hand-holding-usd"></i>
-                    <span>Payments</span>
-                </a>
-                <a href="banks.html" class="nav-item active">
-                    <i class="fas fa-university"></i>
-                    <span>Banks & Wallets</span>
-                </a>
-                
-                <div class="nav-section">
-                    <h3>Inventory</h3>
-                </div>
-                <a href="stock.html" class="nav-item">
-                    <i class="fas fa-boxes"></i>
-                    <span>Stock</span>
-                </a>
-                <a href="suppliers.html" class="nav-item">
-                    <i class="fas fa-truck"></i>
-                    <span>Suppliers</span>
-                </a>
-                <a href="movements.html" class="nav-item">
-                    <i class="fas fa-exchange-alt"></i>
-                    <span>Movements</span>
-                </a>
-                
-                <div class="nav-section">
-                    <h3>Settings</h3>
-                </div>
-                <a href="../settings.html" class="nav-item">
-                    <i class="fas fa-cog"></i>
-                    <span>Settings</span>
-                </a>
-                <a href="../profile.html" class="nav-item">
-                    <i class="fas fa-user-cog"></i>
-                    <span>Account</span>
-                </a>
-                <a href="help.html" class="nav-item">
-                    <i class="fas fa-question-circle"></i>
-                    <span>Help</span>
-                </a>
-            </div>
-        </nav>
+        <!-- Sidebar Menu -->
+        <div id="sidebar-container"></div>
+        <script>
+        // Dynamically load the sidebar from components/sidebar.html
+        document.addEventListener('DOMContentLoaded', function() {
+            fetch('../components/sidebar.html')
+                .then(response => response.text())
+                .then(html => {
+                    document.getElementById('sidebar-container').innerHTML = html;
+                    // Dynamically load the sidebar-actions.js script after sidebar is injected
+                    var script = document.createElement('script');
+                    script.src = '../components/sidebar-actions.js';
+                    document.body.appendChild(script);
+                })
+                .catch(err => {
+                    console.error('Failed to load sidebar:', err);
+                });
+        });
+        </script>
 
         <!-- Main Content -->
         <main class="main-content">
@@ -424,26 +375,41 @@
         </main>
     </div>
 
-    <!-- Import Supabase -->
-    <script type="module" src="assets/js/banks.js"></script>
-
     <!-- JavaScript -->
     <script type="module">
-        import { supabase } from '../js/supabaseClient.js';
 
-        // Only update user display on page load
+
+        // Initialize auth and check session
         document.addEventListener('DOMContentLoaded', async () => {
+            // Check if user is authenticated
+/*            const isAuthenticated = await auth.checkAuth();
+            if (!isAuthenticated) {
+                window.location.href = '/login.html';
+                return;
+            }
+*/
+            // Get user info
             const { data: { user }, error } = await supabase.auth.getUser();
             if (user) {
                 const userSpan = document.getElementById('user-name');
                 if (userSpan) userSpan.textContent = user.email;
             }
+
+            // Set up auth state change listener
+            supabase.auth.onAuthStateChange((event, session) => {
+                if (event === 'SIGNED_OUT' || !session) {
+                    window.location.href = '/login.html';
+                }
+            });
         });
 
-        // Simple sign out - auth state change will handle redirect
-        document.getElementById('sign-out-btn')?.addEventListener('click', () => {
-            supabase.auth.signOut();
+        // Handle sign out
+        document.getElementById('sign-out-btn')?.addEventListener('click', async (e) => {
+            e.preventDefault();
+            await auth.logout();
         });
     </script>
+    <script type="module" src="assets/js/banks.js"></script>
+    <div id="debug-session" style="background:#fee;color:#900;padding:8px;font-size:14px;display:none;"></div>
 </body>
 </html>

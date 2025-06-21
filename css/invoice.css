@@ -11,7 +11,7 @@
 .page-header h2 {
     font-size: 1.5rem;
     font-weight: 600;
-    color: #ffffff;
+    color: #000000;
     margin-bottom: 0.25rem;
 }
 
@@ -1068,107 +1068,4 @@
 @keyframes spin {
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
-}
-
-/* Sidebar Submenu Styles */
-.nav-section {
-    margin: 10px 0 5px; /* Reduced from 20px 0 10px */
-    padding: 0 20px;
-}
-
-.nav-section .nav-header.has-submenu {
-    color: rgba(255, 255, 255, 0.7);
-    font-size: 0.75rem;
-    text-transform: uppercase;
-    letter-spacing: 0.05rem;
-    padding: 0.5rem 1rem; /* Reduced from 0.75rem */
-    cursor: pointer;
-    font-weight: 600;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    transition: all 0.2s ease;
-}
-
-.nav-section .nav-header.has-submenu:hover {
-    color: rgba(255, 255, 255, 1); /* Slightly brighter on hover */
-    background: rgba(255, 255, 255, 0.1); /* Add subtle background on hover */
-}
-
-/* Add submenu icon */
-.nav-section .nav-header.has-submenu::after {
-    content: '\f107'; /* Font Awesome chevron-down icon */
-    font-family: 'Font Awesome 5 Free';
-    font-weight: 900;
-    font-size: 0.8rem;
-    transition: transform 0.2s ease;
-}
-
-.nav-section.active > .nav-header.has-submenu::after {
-    transform: rotate(180deg);
-}
-
-.submenu {
-    max-height: 0;
-    overflow: hidden;
-    transition: max-height 0.3s ease;
-    background-color: rgba(0, 0, 0, 0.02); /* Slightly different background for submenu */
-}
-
-.nav-section.active > .submenu {
-    max-height: 1000px; /* Increased to accommodate nested submenus */
-}
-
-/* Nested submenu styles */
-.submenu .nav-section {
-    margin: 0;
-    padding: 0;
-}
-
-.submenu .nav-section .nav-header.has-submenu {
-    padding-left: 2rem; /* Indent nested headers */
-    font-size: 0.8rem; /* Slightly larger than parent */
-}
-
-.submenu .submenu .nav-item {
-    padding-left: 3rem; /* Indent nested items */
-}
-
-/* Ensure proper spacing for nested items */
-.submenu .nav-item {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    padding: 0.75rem 1rem 0.75rem 2rem; /* Adjusted left padding for indentation */
-    color: #b8c2cc;
-    text-decoration: none;
-    transition: all var(--transition-speed) ease;
-    border-radius: var(--card-radius);
-    font-size: 0.9rem;
-    font-weight: 500;
-}
-
-.submenu .nav-item i {
-    width: 20px;
-    text-align: center;
-    font-size: 1rem;
-    margin-right: 0;
-}
-
-.submenu .nav-item:hover {
-    background: rgba(255, 255, 255, 0.1);
-    color: white;
-}
-
-.submenu .nav-item:hover i {
-    color: white;
-}
-
-.submenu .nav-item.active {
-    background: var(--primary-color);
-    color: white;
-}
-
-.submenu .nav-item.active i {
-    color: white;
 }

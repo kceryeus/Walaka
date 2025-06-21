@@ -1,9 +1,11 @@
 // Authentication utilities
-const auth = {
+import { supabase } from './supabaseClient.js';
+
+export const auth = {
     // Check if user is authenticated
     async checkAuth() {
         try {
-            const { data: { session } } = await window.supabase.auth.getSession();
+            const { data: { session } } = await supabase.auth.getSession();
             return !!session;
         } catch (error) {
             console.error('Error checking authentication:', error);
@@ -14,9 +16,9 @@ const auth = {
     // Handle logout
     async logout() {
         try {
-            const { error } = await window.supabase.auth.signOut();
+            const { error } = await supabase.auth.signOut();
             if (error) throw error;
-            window.location.href = 'login.html';
+            window.location.href = '/login.html';
         } catch (error) {
             console.error('Error signing out:', error);
             alert('Failed to sign out. Please try again.');
@@ -27,7 +29,7 @@ const auth = {
     async protectPage() {
         const isAuthenticated = await this.checkAuth();
         if (!isAuthenticated) {
-            window.location.href = 'login.html';
+            window.location.href = '/login.html';
             return false;
         }
         return true;
@@ -39,9 +41,9 @@ const auth = {
         await this.protectPage();
 
         // Set up auth state change listener
-        window.supabase.auth.onAuthStateChange((event, session) => {
-            if (event === 'SIGNED_OUT') {
-                window.location.href = 'login.html';
+        supabase.auth.onAuthStateChange((event, session) => {
+            if (event === 'SIGNED_OUT' || !session) {
+                window.location.href = '/login.html';
             }
         });
 

@@ -4,6 +4,8 @@
  * for receiving payments from clients.
  */
 
+//import { supabase } from '../../../js/supabaseClient.js';
+
 // DOM Elements
 const tableView = document.getElementById('table-view');
 const cardsView = document.getElementById('cards-view');
@@ -65,6 +67,7 @@ const toastCloseBtn = document.getElementById('toast-close');
 // Global state
 let accounts = [];
 let filteredAccounts = [];
+let userId = null;
 let currentAccountId = null;
 
 // Sample data (for demo purposes)
@@ -111,25 +114,51 @@ const sampleAccounts = [
 ];
 
 // Initialize the app when DOM is ready
-document.addEventListener('DOMContentLoaded', () => {
-    // Load initial data
-    loadInitialData();
-    
-    // Initialize event listeners
-    initEventListeners();
+document.addEventListener('DOMContentLoaded', async () => {
+    try {
+ /*       // Check authentication status
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+        if (sessionError || !session) {
+            window.location.href = '/login.html';
+            return;
+        }
+        
+        userId = session.user.id;
+*/        
+        // Initialize the application
+        await displayUserName();
+        await loadAccounts();
+        initEventListeners();
+    } catch (error) {
+        console.error('Error initializing app:', error);
+        showToast('Error initializing application', 'error');
+    }
 });
 
 /**
- * Load initial data for the page
+ * Load accounts from database
  */
-function loadInitialData() {
-    // In a real app, this would fetch data from a server
-    // For demo purposes, we'll use sample data
-    accounts = [...sampleAccounts];
-    filteredAccounts = [...accounts];
-    
-    updateAccountsUI();
-    updateMetrics();
+async function loadAccounts() {
+    try {
+        const { data, error } = await supabase
+            .from('bank_accounts')
+            .select('*')
+            .eq('user_id', userId)
+            .order('created_at', { ascending: false });
+        
+        if (error) {
+            throw new Error(error.message);
+        }
+        
+        accounts = data || [];
+        filteredAccounts = [...accounts];
+        
+        updateAccountsUI();
+        updateMetrics();
+    } catch (error) {
+        console.error('Error loading accounts:', error);
+        showToast('Failed to load accounts', 'error');
+    }
 }
 
 /**
@@ -197,7 +226,7 @@ function initEventListeners() {
             // In a real app, this would handle sign out logic
             showToast('Signed out successfully', 'success');
             // Redirect to login page
-            // window.location.href = '/login.html';
+            window.location.href = '/login.html';
         });
     }
     

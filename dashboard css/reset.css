@@ -1,4 +1,4 @@
-/* Reset CSS */
+/* Reset CSS 
 @import url("https://cdnjs.cloudflare.com/ajax/libs/meyer-reset/2.0/reset.min.css");
 
 * {
@@ -31,12 +31,12 @@ select {
   color: inherit;
 }
 
-/* Remove default focus styles for mouse users */
+/* Remove default focus styles for mouse users 
 :focus:not(:focus-visible) {
   outline: none;
 }
 
-/* Accessibility - visually hidden but available to screen readers */
+/* Accessibility - visually hidden but available to screen readers
 .visually-hidden {
   position: absolute;
   width: 1px;

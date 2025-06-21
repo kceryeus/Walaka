@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Client Management | WALAKA</title>
-  <link rel="stylesheet" href="styles.css">
+
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.9.2/html2pdf.bundle.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
@@ -12,102 +12,33 @@
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap">
 </head>
 
-
-  <link rel="stylesheet" href="../css/hints.css">
-    
+<link rel="stylesheet" href="../components/sidebar.css">
+<link rel="stylesheet" href="../css/styles.css">
+<link rel="stylesheet" href="../css/hints.css">
+<link rel="stylesheet" href="clients.css">    
 
 <body>
   <div class="dashboard-container">
     <!-- Sidebar Menu -->
-    <nav class="sidebar">
-      <div class="logo">
-        <i class="fas fa-chart-line"></i>
-        <span>WALAKA</span>
-      </div>
-      <div class="nav-menu">
-        <a href="../dashboard.html" class="nav-item">
-          <i class="fas fa-home"></i>
-          <span>Dashboard</span>
-        </a>
-        <div class="nav-section">
-          <h3>Facturação</h3>
-        </div>
-        <a href="../invoices.html" class="nav-item">
-          <i class="fas fa-file-invoice-dollar"></i>
-          <span>Facturas</span>
-        </a>
-        <a href="../clients/clients.html" class="nav-item active">
-          <i class="fas fa-users"></i>
-          <span>Clientes</span>
-        </a>
-        <a href="../products.html" class="nav-item">
-          <i class="fas fa-shopping-cart"></i>
-          <span>Produtos</span>
-        </a>
-        <!--
-        <div class="nav-section">
-          <h3>Comercial</h3>
-        </div>
-        <a href="#" class="nav-item">
-          <i class="fas fa-boxes"></i>
-          <span>Inventário</span>
-        </a>
-        <a href="#" class="nav-item">
-          <i class="fas fa-truck"></i>
-          <span>Fornecedores</span>
-        </a>
-        <a href="#" class="nav-item">
-          <i class="fas fa-exchange-alt"></i>
-          <span>Movimentos</span>
-        </a>
-        <a href="#" class="nav-item">
-          <i class="fas fa-money-bill-wave"></i>
-          <span>Despesas</span>
-        </a>
-        <div class="nav-section">
-          <h3>Contabilidade</h3>
-        </div>
-        <a href="#" class="nav-item">
-          <i class="fas fa-book"></i>
-          <span>Lançamentos</span>
-        </a>
-        <a href="#" class="nav-item">
-          <i class="fas fa-list-alt"></i>
-          <span>Plano de contas</span>
-        </a>
-        <a href="#" class="nav-item">
-          <i class="fas fa-percent"></i>
-          <span>Impostos</span>
-        </a>
-        <div class="nav-section">
-          <h3>Finanças</h3>
-        </div>
-        <a href="#" class="nav-item">
-          <i class="fas fa-chart-pie"></i>
-          <span>Relatórios</span>
-        </a>
-        <a href="#" class="nav-item">
-          <i class="fas fa-chart-line"></i>
-          <span>Indicadores-chave</span>
-        </a>
-        -->
-        <div class="nav-section">
-          <h3>Settings</h3>
-        </div>
-        <a href="../settings.html" class="nav-item">
-          <i class="fas fa-cog"></i>
-          <span>Settings</span>
-        </a>
-        <a href="../usermanagement/public/index.html" class="nav-item">
-          <i class="fas fa-user-cog"></i>
-          <span>Gestão de Utilizadores</span>
-        </a>
-        <a href="#" class="nav-item">
-          <i class="fas fa-question-circle"></i>
-          <span>Ajuda</span>
-        </a>
-      </div>
-    </nav>
+    <div id="sidebar-container"></div>
+    <script>
+    // Dynamically load the sidebar from components/sidebar.html
+    document.addEventListener('DOMContentLoaded', function() {
+        fetch('../components/sidebar.html')
+            .then(response => response.text())
+            .then(html => {
+                document.getElementById('sidebar-container').innerHTML = html;
+                // Dynamically load the sidebar-actions.js script after sidebar is injected
+                var script = document.createElement('script');
+                script.src = '../components/sidebar-actions.js';
+                document.body.appendChild(script);
+            })
+            .catch(err => {
+                console.error('Failed to load sidebar:', err);
+            });
+    });
+    </script>
+
     <!-- Main Content Area -->
     <main class="main-container">
       <header class="top-bar">

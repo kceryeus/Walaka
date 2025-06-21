@@ -1,4 +1,4 @@
-/* Main layout styles */
+/* Main layout styles *
 body {
   font-family: "Inter", sans-serif;
   background-color: var(--greybackground);
@@ -14,7 +14,7 @@ body {
   overflow: hidden;
 }
 
-/* Sidebar */
+ Sidebar 
 .sidebar {
   width: 260px;
   height: 100%;
@@ -94,7 +94,7 @@ body {
   text-align: center;
 }
 
-/* Main Content */
+ Main Content 
 .main-content {
   flex: 1;
   margin-left: 260px;
@@ -105,7 +105,7 @@ body {
   overflow-y: auto;
 }
 
-/* Top Bar */
+Top Bar 
 .top-bar {
   background-color: var(--white);
   border-bottom: 1px solid var(--greyborder);
@@ -181,7 +181,7 @@ body {
   margin-left: auto;
 }
 
-/* Dashboard Content */
+ Dashboard Content 
 .dashboard-content {
   padding: 20px;
   flex: 1;
@@ -206,7 +206,7 @@ body {
   font-size: var(--paragraph-font-size);
 }
 
-/* Grid layouts */
+ Grid layouts 
 .metrics-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
@@ -236,7 +236,7 @@ body {
   margin-bottom: 30px;
 }
 
-/* Section headers */
+Section headers 
 .section-header {
   display: flex;
   justify-content: space-between;
@@ -263,3 +263,4 @@ body {
   color: var(--primary-700);
   text-decoration: underline;
 }
+*/
