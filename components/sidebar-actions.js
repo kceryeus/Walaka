@@ -19,6 +19,10 @@
                 siblingSections.forEach(sibling => sibling.classList.remove('active'));
             });
         });
+        // Apply translations to sidebar after actions are initialized
+        if (window.languageManager && typeof window.languageManager.applyTranslations === 'function') {
+            window.languageManager.applyTranslations();
+        }
     }
     // Run on DOMContentLoaded or immediately if already loaded
     if (document.readyState === 'loading') {
@@ -26,4 +30,10 @@
     } else {
         initSidebarActions();
     }
+    // Listen for languageChanged event to re-apply translations
+    window.addEventListener('languageChanged', function() {
+        if (window.languageManager && typeof window.languageManager.applyTranslations === 'function') {
+            window.languageManager.applyTranslations();
+        }
+    });
 })(); 

@@ -185,14 +185,15 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   async function fetchBusinessSettings() {
-    if (typeof window.supabase === 'undefined') return;
-
-    const { data: { session } } = await window.supabase.auth.getSession();
-    if (!session || !session.user) return;
-
-    const userId = session.user.id;
-
     try {
+      const { data: { session } } = await window.supabase.auth.getSession();
+      if (!session || !session.user) {
+        console.error('No active session found');
+        return;
+      }
+
+      const userId = session.user.id;
+
       const { data: businessRecord, error } = await window.supabase
         .from('business_profiles')
         .select('*')
@@ -201,20 +202,35 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       if (error) {
         console.error('Error fetching business settings:', error);
+        showToast('error', 'Error', 'Failed to fetch business settings');
         return;
       }
 
       if (businessRecord) {
         businessSettings = {
-          name: businessRecord.name || '',
+          name: businessRecord.company_name || '',
           taxId: businessRecord.tax_id || '',
           address: businessRecord.address || '',
           website: businessRecord.website || '',
           email: businessRecord.email || ''
         };
+
+        // Update UI with fetched data
+        const businessNameInput = document.getElementById('business-name');
+        const taxIdInput = document.getElementById('tax-id');
+        const businessAddressInput = document.getElementById('business-address');
+        const businessWebsiteInput = document.getElementById('business-website');
+        const businessEmailInput = document.getElementById('business-email');
+
+        if (businessNameInput) businessNameInput.value = businessSettings.name;
+        if (taxIdInput) taxIdInput.value = businessSettings.taxId;
+        if (businessAddressInput) businessAddressInput.value = businessSettings.address;
+        if (businessWebsiteInput) businessWebsiteInput.value = businessSettings.website;
+        if (businessEmailInput) businessEmailInput.value = businessSettings.email;
       }
     } catch (e) {
-      console.error('Error fetching business settings:', e);
+      console.error('Error in fetchBusinessSettings:', e);
+      showToast('error', 'Error', 'Failed to fetch business settings');
     }
   }
 
@@ -511,7 +527,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   function setupBusinessSettings() {
     saveBusinessSettingsBtn.addEventListener('click', async function() {
       showLoadingOverlay();
-      
       try {
         const { data: { session } } = await window.supabase.auth.getSession();
         if (!session || !session.user) {
@@ -559,15 +574,8 @@ document.addEventListener('DOMContentLoaded', async () => {
           throw result.error;
         }
 
-        // Update local businessSettings object after successful save
-        businessSettings = {
-          name: businessProfile.company_name,
-          taxId: businessProfile.tax_id,
-          address: businessProfile.address,
-          website: businessProfile.website,
-          email: businessProfile.email
-        };
-        
+        // Always reload from Supabase to get the latest values
+        await loadBusinessProfileSettings();
         hideLoadingOverlay();
         showToast('success', 'Success', 'Business settings updated successfully.');
       } catch (error) {
@@ -583,37 +591,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         'Are you sure you want to reset the business settings to their default values?',
         async function() {
           try {
-            const { data: { session } } = await window.supabase.auth.getSession();
-            if (!session || !session.user) {
-              throw new Error('No active session found');
-            }
-
-            // Fetch the original business profile
-            const { data: businessProfile, error } = await window.supabase
-              .from('business_profiles')
-              .select('*')
-              .eq('user_id', session.user.id)
-              .single();
-
-            if (error && error.code !== 'PGRST116') {
-              throw error;
-            }
-
-            if (businessProfile) {
-              businessNameInput.value = businessProfile.company_name || '';
-              taxIdInput.value = businessProfile.tax_id || '';
-              businessAddressInput.value = businessProfile.address || '';
-              businessWebsiteInput.value = businessProfile.website || '';
-              businessEmailInput.value = businessProfile.email || '';
-            } else {
-              // If no profile exists, reset to empty values
-              businessNameInput.value = '';
-              taxIdInput.value = '';
-              businessAddressInput.value = '';
-              businessWebsiteInput.value = '';
-              businessEmailInput.value = '';
-            }
-
+            await loadBusinessProfileSettings();
             showToast('info', 'Reset Complete', 'Business settings have been reset.');
           } catch (error) {
             console.error('Error resetting business settings:', error);
@@ -1068,24 +1046,36 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
 
             if (notificationData) {
-              notifyInvoiceCreated.checked = notificationData.invoice_created;
-              notifyPaymentReceived.checked = notificationData.payment_received;
-              notifyInvoiceDue.checked = notificationData.invoice_due;
-              notifyInvoiceOverdue.checked = notificationData.invoice_overdue;
-              notifyProductLowStock.checked = notificationData.product_low_stock;
-              notifySystemUpdates.checked = notificationData.system_updates;
-              notifyClientActivity.checked = notificationData.client_activity;
-              notifyLoginAttempts.checked = notificationData.login_attempts;
+              notificationSettings = {
+                emailNotifications: {
+                  invoiceCreated: notificationData.invoice_created,
+                  paymentReceived: notificationData.payment_received,
+                  invoiceDue: notificationData.invoice_due,
+                  invoiceOverdue: notificationData.invoice_overdue
+                },
+                systemNotifications: {
+                  productLowStock: notificationData.product_low_stock,
+                  systemUpdates: notificationData.system_updates,
+                  clientActivity: notificationData.client_activity,
+                  loginAttempts: notificationData.login_attempts
+                }
+              };
             } else {
               // Reset to default values if no settings exist
-              notifyInvoiceCreated.checked = true;
-              notifyPaymentReceived.checked = true;
-              notifyInvoiceDue.checked = true;
-              notifyInvoiceOverdue.checked = true;
-              notifyProductLowStock.checked = true;
-              notifySystemUpdates.checked = true;
-              notifyClientActivity.checked = false;
-              notifyLoginAttempts.checked = true;
+              notificationSettings = {
+                emailNotifications: {
+                  invoiceCreated: true,
+                  paymentReceived: true,
+                  invoiceDue: true,
+                  invoiceOverdue: true
+                },
+                systemNotifications: {
+                  productLowStock: true,
+                  systemUpdates: true,
+                  clientActivity: false,
+                  loginAttempts: true
+                }
+              };
             }
 
             showToast('info', 'Reset Complete', 'Notification settings have been reset');
@@ -1499,16 +1489,16 @@ document.addEventListener('DOMContentLoaded', async () => {
       if (notificationData) {
         notificationSettings = {
           emailNotifications: {
-            invoiceCreated: notificationData.emailNotifications.invoiceCreated,
-            paymentReceived: notificationData.emailNotifications.paymentReceived,
-            invoiceDue: notificationData.emailNotifications.invoiceDue,
-            invoiceOverdue: notificationData.emailNotifications.invoiceOverdue
+            invoiceCreated: notificationData.invoice_created,
+            paymentReceived: notificationData.payment_received,
+            invoiceDue: notificationData.invoice_due,
+            invoiceOverdue: notificationData.invoice_overdue
           },
           systemNotifications: {
-            productLowStock: notificationData.systemNotifications.productLowStock,
-            systemUpdates: notificationData.systemNotifications.systemUpdates,
-            clientActivity: notificationData.systemNotifications.clientActivity,
-            loginAttempts: notificationData.systemNotifications.loginAttempts
+            productLowStock: notificationData.product_low_stock,
+            systemUpdates: notificationData.system_updates,
+            clientActivity: notificationData.client_activity,
+            loginAttempts: notificationData.login_attempts
           }
         };
       }
@@ -1538,7 +1528,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     try {
       // First fetch user settings
       await fetchUserSettings();
-      
+
+      // Fetch business profile and update input fields
+      await loadBusinessProfileSettings();
+
       // Then initialize the rest
       await loadSettingsFromStorage();
       initializeSettings();
@@ -1804,11 +1797,28 @@ document.addEventListener('DOMContentLoaded', async () => {
       if (error) throw error;
 
       if (businessProfile) {
-        document.getElementById('business-name').value = businessProfile.company_name || '';
-        document.getElementById('tax-id').value = businessProfile.tax_id || '';
-        document.getElementById('business-address').value = businessProfile.address || '';
-        document.getElementById('business-website').value = businessProfile.website || '';
-        document.getElementById('business-email').value = businessProfile.email || '';
+        businessSettings = {
+          name: businessProfile.company_name || '',
+          taxId: businessProfile.tax_id || '',
+          address: businessProfile.address || '',
+          website: businessProfile.website || '',
+          email: businessProfile.email || ''
+        };
+        const businessNameInput = document.getElementById('business-name');
+        if (!businessNameInput) console.warn('business-name input not found!');
+        const taxIdInput = document.getElementById('tax-id');
+        if (!taxIdInput) console.warn('tax-id input not found!');
+        const businessAddressInput = document.getElementById('business-address');
+        if (!businessAddressInput) console.warn('business-address input not found!');
+        const businessWebsiteInput = document.getElementById('business-website');
+        if (!businessWebsiteInput) console.warn('business-website input not found!');
+        const businessEmailInput = document.getElementById('business-email');
+        if (!businessEmailInput) console.warn('business-email input not found!');
+        if (businessNameInput) businessNameInput.value = businessSettings.name;
+        if (taxIdInput) taxIdInput.value = businessSettings.taxId;
+        if (businessAddressInput) businessAddressInput.value = businessSettings.address;
+        if (businessWebsiteInput) businessWebsiteInput.value = businessSettings.website;
+        if (businessEmailInput) businessEmailInput.value = businessSettings.email;
       }
     } catch (error) {
       console.error('Error loading business profile:', error);
@@ -2279,4 +2289,41 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('reset-notification-settings').addEventListener('click', loadNotificationSettings);
     document.getElementById('reset-security-settings').addEventListener('click', resetSecuritySettings);
   });
+
+  // Language switching logic
+  // Ensure languageManager is initialized and available
+  if (window.languageManager) {
+    document.addEventListener('DOMContentLoaded', async () => {
+      await window.languageManager.loadTranslations(window.languageManager.currentLang);
+      window.languageManager.applyTranslations();
+
+      const langSelect = document.getElementById('user-language');
+      if (langSelect) {
+        langSelect.value = window.languageManager.currentLang;
+        langSelect.addEventListener('change', async (e) => {
+          await window.languageManager.setLanguage(e.target.value);
+          // Optionally, reload settings or update other UI as needed
+        });
+      }
+    });
+  }
+
+  // Listen for language change in the settings page
+  var langSelect = document.getElementById('user-language');
+  if (langSelect) {
+    // Always enable the language select
+    langSelect.disabled = false;
+    // Set the select value to the current language (pt or en)
+    if (window.languageManager) {
+      langSelect.value = window.languageManager.currentLang;
+    } else {
+      langSelect.value = localStorage.getItem('preferredLanguage') || 'pt';
+    }
+    langSelect.addEventListener('change', function(e) {
+      var lang = e.target.value;
+      if (window.languageManager) {
+        window.languageManager.setLanguage(lang);
+      }
+    });
+  }
 });
