@@ -3,6 +3,10 @@
  * Main JavaScript file for the getting started experience
  */
 
+console.log('[Onboarding] getting-started.js loaded');
+
+import { supabase } from '../../auth.js';
+
 // Initialize onboarding data
 let onboardingData = {
     organization: {
@@ -19,20 +23,28 @@ let onboardingData = {
 
 // Check if user needs onboarding
 document.addEventListener('DOMContentLoaded', async function() {
-    const needsOnboarding = localStorage.getItem('needsOnboarding');
-    if (!needsOnboarding) {
-        window.location.href = '../dashboard.html';
-        return;
-    }
-
-    // Initialize Supabase client
+    // Check authentication first
     const { data: { session }, error } = await supabase.auth.getSession();
     if (error || !session) {
         window.location.href = '../login.html';
         return;
     }
 
-    // Initialize form validation and event listeners
+    // Check onboarding status from Supabase
+    const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('onboarding_completed')
+        .eq('user_id', session.user.id)
+        .single();
+    if (profileError) {
+        console.error('Error fetching profile:', profileError);
+    }
+    if (profile && profile.onboarding_completed) {
+        window.location.href = '../dashboard.html';
+        return;
+    }
+
+    // Continue onboarding
     initializeFormValidation();
     setupEventListeners();
 });
@@ -44,7 +56,26 @@ function initializeFormValidation() {
         form.addEventListener('submit', (e) => {
             e.preventDefault();
             if (validateForm(form)) {
-                saveAndContinue(form.id);
+                // Use the data-step attribute from the .btn-next button inside this form
+                const nextBtn = form.querySelector('.btn-next');
+                let step = null;
+                if (nextBtn) {
+                    step = nextBtn.dataset.step;
+                } else {
+                    // fallback: try to infer step from form id
+                    const formIds = {
+                        '1': 'organization-form',
+                        '2': 'invoice-form',
+                        '3': 'payment-form',
+                        '4': 'modules-form'
+                    };
+                    step = Object.keys(formIds).find(key => formIds[key] === form.id);
+                }
+                if (isValidStep(step)) {
+                    saveAndContinue(step);
+                } else {
+                    console.error('[Onboarding] Invalid step value in form submit:', step);
+                }
             }
         });
     });
@@ -52,15 +83,29 @@ function initializeFormValidation() {
 
 // Setup event listeners
 function setupEventListeners() {
-    // Next buttons
-    document.querySelectorAll('.btn-next').forEach(button => {
-        button.addEventListener('click', () => {
+    // Log all .btn-next buttons
+    const nextButtons = document.querySelectorAll('.btn-next');
+    console.log('[Onboarding] .btn-next buttons found:', nextButtons);
+    // Remove individual listeners for .btn-next
+    // Use event delegation instead
+    document.addEventListener('click', function(e) {
+        if (e.target.classList && e.target.classList.contains('btn-next')) {
+            const button = e.target;
             const currentStep = button.dataset.step;
-            const form = document.getElementById(getFormId(currentStep));
-            if (validateForm(form)) {
-                saveAndContinue(currentStep);
+            if (isValidStep(currentStep)) {
+                console.log('[Onboarding] Delegated Next button clicked. Step:', currentStep);
+                const form = document.getElementById(getFormId(currentStep));
+                console.log('[Onboarding] Found form:', form);
+                if (validateForm(form)) {
+                    console.log('[Onboarding] Form is valid. Proceeding to saveAndContinue.');
+                    saveAndContinue(currentStep);
+                } else {
+                    console.log('[Onboarding] Form is invalid.');
+                }
+            } else {
+                console.error('[Onboarding] Invalid step value in .btn-next click:', currentStep);
             }
-        });
+        }
     });
 
     // Previous buttons
@@ -134,19 +179,28 @@ function validateForm(form) {
 
 // Save and continue to next step
 async function saveAndContinue(step) {
+    if (!isValidStep(step)) {
+        console.error('[Onboarding] saveAndContinue called with invalid step:', step);
+        return;
+    }
     const form = document.getElementById(getFormId(step));
     const formData = new FormData(form);
-    
+    console.log('[Onboarding] saveAndContinue called for step:', step);
+    console.log('[Onboarding] Form:', form);
+    console.log('[Onboarding] FormData entries:', Array.from(formData.entries()));
     // Save form data to onboardingData
     switch(step) {
         case '1':
             onboardingData.organization = {
-                company_name: formData.get('company-name'),
-                tax_id: formData.get('tax-id'),
-                address: formData.get('business-address'),
-                website: formData.get('business-website'),
-                email: formData.get('business-email')
+                company_name: formData.get('org-name'),
+                industry: formData.get('org-industry'),
+                location: formData.get('org-location'),
+                address: formData.get('org-address'),
+                tax_id: formData.get('org-tax-id'),
+                currency: formData.get('org-currency')
+                // Optionally handle logo upload if needed
             };
+            console.log('[Onboarding] onboardingData.organization:', onboardingData.organization);
             break;
         case '2':
             onboardingData.invoice = {
@@ -201,8 +255,14 @@ async function saveAndContinue(step) {
                 .eq('user_id', userId);
         }
 
-        // Go to next step
-        goToStep(parseInt(step) + 1);
+        // Go to next step or complete setup
+        const nextStep = parseInt(step) + 1;
+        if (nextStep > 4) {
+            // If there are only 4 steps, complete the setup
+            completeSetup();
+        } else {
+            goToStep(nextStep);
+        }
     } catch (error) {
         console.error('Error saving onboarding data:', error);
         showNotification('Error saving data. Please try again.', 'error');
@@ -245,9 +305,13 @@ function getFormId(step) {
 }
 
 function goToStep(step) {
+    const stepEl = document.getElementById(`step-${step}`);
+    if (!stepEl) {
+        console.error(`Step ${step} not found`);
+        return;
+    }
     document.querySelectorAll('.onboarding-step').forEach(s => s.style.display = 'none');
-    document.getElementById(`step-${step}`).style.display = 'block';
-    
+    stepEl.style.display = 'block';
     // Update progress steps
     document.querySelectorAll('.progress-step').forEach((s, index) => {
         s.classList.toggle('active', index + 1 <= step);
@@ -265,3 +329,8 @@ function showNotification(message, type = 'success') {
         notification.remove();
     }, 3000);
 }
+
+function isValidStep(step) {
+    return ['1', '2', '3', '4'].includes(String(step));
+}
+

@@ -116,18 +116,22 @@ p {
 }
 
 .logo {
-    margin-bottom: 3rem;
+    margin-bottom: 2rem;
     text-align: center;
 }
 
 .logo img {
-    max-width: 150px;
-    height: auto;
+    max-width: 120px;
+    height: 60px;
+    object-fit: contain;
+    display: block;
+    margin: 0 auto;
 }
 
 /* Progress Steps */
 .progress-steps {
     margin-bottom: 3rem;
+    margin-top: 2rem;
 }
 
 .progress-step {
