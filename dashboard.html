@@ -10,7 +10,14 @@
     <link rel="stylesheet" href="vendors/style.css">
     <link rel="stylesheet" href="trial/css/upgrade-modal.css">
     <link rel="stylesheet" href="components/trial-banner.css">
+<<<<<<< HEAD
     <link rel="stylesheet" href="components/trial-restrictions.css">
+=======
+<<<<<<< HEAD
+    <link rel="stylesheet" href="components/trial-restrictions.css">
+=======
+>>>>>>> cb1b423ed96505b9fd847f9068fe42f3f881f553
+>>>>>>> 86a8ad1e44a22239283ce45067097b52d5438a42
     
     <!-- Google Fonts - Inter -->
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap">
@@ -94,6 +101,10 @@
                     .then(html => {
                         document.getElementById('trial-banner-container').innerHTML = html;
                         
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+>>>>>>> 86a8ad1e44a22239283ce45067097b52d5438a42
                         // Load the banner script
                         const bannerScript = document.createElement('script');
                         bannerScript.type = 'module';
@@ -104,6 +115,16 @@
                         const restrictionsScript = document.createElement('script');
                         restrictionsScript.src = 'components/trial-restrictions.js';
                         document.body.appendChild(restrictionsScript);
+<<<<<<< HEAD
+=======
+=======
+                        // Now that the HTML is loaded, load the script
+                        const script = document.createElement('script');
+                        script.type = 'module';
+                        script.src = 'components/trial-banner.js';
+                        document.body.appendChild(script);
+>>>>>>> cb1b423ed96505b9fd847f9068fe42f3f881f553
+>>>>>>> 86a8ad1e44a22239283ce45067097b52d5438a42
                     })
                     .catch(error => {
                         console.error('Failed to load trial banner component:', error);
