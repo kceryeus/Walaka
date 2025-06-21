@@ -9,11 +9,36 @@ const MetricsModule = {
 
         if (invoiceError) throw invoiceError;
 
-        // Calculate metrics
+        // --- Ensure overdue status is up to date before calculating metrics ---
+        if (Array.isArray(invoices)) {
+            if (typeof window.autoUpdateInvoiceStatuses === 'function') {
+                window.autoUpdateInvoiceStatuses(invoices);
+            }
+        }
+
+        // Calculate metrics using the same logic as the chart
         const totalInvoices = invoices.length;
         const totalPaid = invoices.filter(inv => inv.status === 'paid').length;
-        const totalPending = invoices.filter(inv => inv.status === 'pending').length;
-        const totalOverdue = invoices.filter(inv => inv.status === 'overdue').length;
+        
+        // Use the same logic as getInvoiceStatusCounts for pending and overdue
+        const now = new Date();
+        let totalPending = 0;
+        let totalOverdue = 0;
+        
+        invoices.forEach(inv => {
+            if (inv.status === 'paid') {
+                // Already counted above
+            } else if (inv.status === 'overdue') {
+                totalOverdue++;
+            } else if (inv.status === 'pending') {
+                if (inv.dueDate && new Date(inv.dueDate) < now) {
+                    totalOverdue++;
+                } else {
+                    totalPending++;
+                }
+            }
+            // Drafts are ignored
+        });
 
         // Calculate percentages
             const paidPercentage = totalInvoices > 0 ? ((totalPaid / totalInvoices) * 100).toFixed(1) : '0.0';

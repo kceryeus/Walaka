@@ -38,7 +38,7 @@ const InvoiceTableModule = {
                 return;
             }
 
-            // Build query
+            // Build query, mirroring the working implementation from dashboard.html
             let query = window.supabase
                 .from('invoices')
                 .select('*, clients(customer_name)', { count: 'exact' });
@@ -51,8 +51,8 @@ const InvoiceTableModule = {
                 query = query.eq('client_id', filters.client);
             }
             if (filters.search) {
-                const searchTerm = filters.search;
-                query = query.or(`invoiceNumber.ilike.%${searchTerm}%`);
+                // Temporarily limit search to invoiceNumber to avoid complexity with joined tables.
+                query = query.ilike('invoiceNumber', `%${filters.search}%`);
             }
             // Apply date range filter
             if (filters.dateRange) {
@@ -69,9 +69,9 @@ const InvoiceTableModule = {
 
             // Add sorting
             if (this.currentSortColumn) {
-                // Determine the database column name based on the sort data attribute
                 let dbColumn = this.currentSortColumn;
-                if (dbColumn === 'client') dbColumn = 'customer_name'; // Assuming 'customer_name' in clients table
+                // Sorting by client name on a join is complex; sort by ID for now.
+                if (dbColumn === 'client') dbColumn = 'client_id';
                 if (dbColumn === 'date') dbColumn = 'issue_date';
                 if (dbColumn === 'dueDate') dbColumn = 'due_date';
                 if (dbColumn === 'amount') dbColumn = 'total_amount';
@@ -93,14 +93,10 @@ const InvoiceTableModule = {
             }
 
             // Clear existing rows
-            if (tbody) {
-                tbody.innerHTML = '';
-            }
+            tbody.innerHTML = '';
 
             if (!invoices || invoices.length === 0) {
-                if (tbody) {
-                    tbody.innerHTML = '<tr><td colspan="7" class="text-center">No invoices found</td></tr>';
-                }
+                tbody.innerHTML = '<tr><td colspan="7" class="text-center">No invoices found</td></tr>';
                 if (pageInfo) {
                     pageInfo.textContent = 'No invoices found';
                 }
@@ -109,11 +105,11 @@ const InvoiceTableModule = {
 
             // Add invoice rows
             invoices.forEach(invoice => {
-                const statusConfig = window.STATUS_CONFIG[invoice.status] || window.STATUS_CONFIG[window.INVOICE_STATUS.DRAFT];
+                const clientName = invoice.clients?.customer_name || invoice.customer_name || 'N/A';
                 const row = `
                     <tr>
                         <td>${invoice.invoiceNumber || ''}</td>
-                        <td>${invoice.client_name || 'N/A'}</td>
+                        <td>${clientName}</td>
                         <td>${this.formatDate(invoice.issue_date)}</td>
                         <td>${this.formatDate(invoice.due_date)}</td>
                         <td>${this.formatCurrency(invoice.total_amount, invoice.currency)}</td>
@@ -121,20 +117,9 @@ const InvoiceTableModule = {
                             <span class="status-badge ${invoice.status}">${invoice.status}</span>
                         </td>
                         <td>
-                            <div class="action-buttons">
-                                ${invoice.pdf_url ? `
-                                    <button class="btn btn-sm btn-info view-pdf" data-pdf-url="${invoice.pdf_url}">
-                                        <i class="fas fa-file-pdf"></i>
-                                    </button>
-                                ` : ''}
-                                <button class="btn btn-sm btn-info view-invoice" data-invoice="${invoice.invoiceNumber}">
-                                    <i class="fas fa-eye"></i>
-                                </button>
-                                <button class="btn btn-sm btn-primary edit-invoice" data-invoice="${invoice.invoiceNumber}">
-                                    <i class="fas fa-edit"></i>
-                                </button>
-                                <button class="btn btn-sm btn-danger delete-invoice" data-invoice="${invoice.invoiceNumber}">
-                                    <i class="fas fa-trash"></i>
+                            <div class="action-menu">
+                                <button class="action-menu-btn" data-invoice="${invoice.invoiceNumber}" title="Actions">
+                                    <i class="fas fa-ellipsis-v"></i>
                                 </button>
                             </div>
                         </td>
@@ -155,6 +140,10 @@ const InvoiceTableModule = {
 
         } catch (error) {
             console.error('Error in fetchAndDisplayInvoices:', error);
+            const tbody = document.querySelector('#invoicesTable tbody');
+            if (tbody) {
+                tbody.innerHTML = `<tr><td colspan="7" class="text-center text-danger">Error loading invoices: ${error.message}</td></tr>`;
+            }
             showNotification(error.message || 'Failed to fetch invoices', 'error');
         }
     },
@@ -227,82 +216,77 @@ const InvoiceTableModule = {
     },
 
     setupActionButtons() {
-        // View button
-        document.querySelectorAll('.view-invoice').forEach(btn => {
-            btn.addEventListener('click', async () => {
-                const invoiceNumber = btn.getAttribute('data-invoice');
-                try {
-                    // Fetch invoice data including PDF URL
-                    const { data: invoice, error } = await window.supabase
-                        .from('invoices')
-                        .select('*, clients(*)')
-                        .eq('invoiceNumber', invoiceNumber)
-                        .single();
-
-                    if (error) throw error;
-                    if (!invoice) throw new Error('Invoice not found');
-
-                    // Open view modal
-                    if (window.openViewInvoiceModal) {
-                        window.openViewInvoiceModal(invoice);
-                    }
-
-                    // If PDF URL exists, show it in an iframe
-                    if (invoice.pdf_url) {
-                        const previewContainer = document.getElementById('invoicePreviewContent');
-                        if (previewContainer) {
-                            previewContainer.innerHTML = `
-                                <iframe src="${invoice.pdf_url}" width="100%" height="600px" frameborder="0"></iframe>
-                            `;
-                        }
-                    }
-                } catch (error) {
-                    console.error('Error viewing invoice:', error);
-                    showNotification('Error opening invoice: ' + error.message, 'error');
-                }
-            });
-        });
-
-        // More button
-        console.log('Setting up More button listeners');
-        document.querySelectorAll('.more-btn').forEach(btn => {
-            console.log('Found a More button, adding listener');
+        // Action menu button
+        document.querySelectorAll('.action-menu-btn').forEach(btn => {
             btn.addEventListener('click', (e) => {
-                console.log('More button clicked', e.target);
-                const invoiceNumber = btn.closest('tr').querySelector('.view-btn').getAttribute('data-invoice');
-                this.showMoreOptions(e, invoiceNumber);
+                e.stopPropagation();
+                const invoiceNumber = btn.getAttribute('data-invoice');
+                this.showActionMenu(e, invoiceNumber);
             });
         });
     },
 
-    showMoreOptions(event, invoiceNumber) {
-        console.log('showMoreOptions called for invoice', invoiceNumber);
+    showActionMenu(event, invoiceNumber) {
+        // Remove any existing dropdowns
+        const existingDropdown = document.querySelector('.action-dropdown');
+        if (existingDropdown) {
+            existingDropdown.remove();
+        }
+
         // Create dropdown menu
         const dropdown = document.createElement('div');
-        dropdown.className = 'dropdown-menu';
+        dropdown.className = 'action-dropdown';
         dropdown.innerHTML = `
-            <button class="dropdown-item" data-action="mark-paid">
-                <i class="fas fa-check-circle"></i> Mark as Paid
-            </button>
-            <button class="dropdown-item" data-action="download">
-                <i class="fas fa-download"></i> Download PDF
-            </button>
-            <button class="dropdown-item" data-action="email">
-                <i class="fas fa-envelope"></i> Send Email
-            </button>
-            <button class="dropdown-item" data-action="create-credit-note">
-                <i class="fas fa-file-invoice"></i> Create Credit Note
-            </button>
+            <div class="dropdown-header">
+                <span>Invoice Actions</span>
+            </div>
+            <div class="dropdown-content">
+                <button class="dropdown-item" data-action="view">
+                    <i class="fas fa-eye"></i>
+                    <span>View Invoice</span>
+                </button>
+                <button class="dropdown-item" data-action="edit">
+                    <i class="fas fa-edit"></i>
+                    <span>Edit Invoice</span>
+                </button>
+                <button class="dropdown-item" data-action="download">
+                    <i class="fas fa-download"></i>
+                    <span>Download PDF</span>
+                </button>
+                <button class="dropdown-item" data-action="email">
+                    <i class="fas fa-envelope"></i>
+                    <span>Send Email</span>
+                </button>
+                <button class="dropdown-item" data-action="duplicate">
+                    <i class="fas fa-copy"></i>
+                    <span>Duplicate</span>
+                </button>
+                <button class="dropdown-item" data-action="mark-paid">
+                    <i class="fas fa-check-circle"></i>
+                    <span>Mark as Paid</span>
+                </button>
+                <button class="dropdown-item" data-action="create-credit-note">
+                    <i class="fas fa-file-invoice"></i>
+                    <span>Create Credit Note</span>
+                </button>
+                <div class="dropdown-divider"></div>
+                <button class="dropdown-item dropdown-item-danger" data-action="delete">
+                    <i class="fas fa-trash"></i>
+                    <span>Delete Invoice</span>
+                </button>
+            </div>
         `;
+
+        // Append to body to measure
+        document.body.appendChild(dropdown);
+        const dropdownWidth = dropdown.offsetWidth;
 
         // Position dropdown
         const rect = event.target.getBoundingClientRect();
-        console.log('Button rect:', rect);
-        console.log('Window scroll:', { x: window.scrollX, y: window.scrollY });
         dropdown.style.position = 'fixed';
-        dropdown.style.top = `${rect.bottom}px`;
-        dropdown.style.left = `${rect.left + window.scrollX}px`;
-        console.log('Dropdown position set to:', { top: dropdown.style.top, left: dropdown.style.left });
+        dropdown.style.top = `${rect.bottom + 5}px`;
+        dropdown.style.left = `${rect.right - dropdownWidth}px`;
+        dropdown.style.zIndex = '1000';
 
         // Add click handlers
         dropdown.querySelectorAll('.dropdown-item').forEach(item => {
@@ -312,19 +296,29 @@ const InvoiceTableModule = {
 
                 if (window.invoiceActions) {
                     switch (action) {
-                        case 'email':
-                            await window.invoiceActions.sendInvoice(invoiceNumber);
+                        case 'view':
+                            await this.viewInvoice(invoiceNumber);
+                            break;
+                        case 'edit':
+                            await this.editInvoice(invoiceNumber);
                             break;
                         case 'download':
                             await window.invoiceActions.downloadPdf(invoiceNumber);
+                            break;
+                        case 'email':
+                            await window.invoiceActions.sendInvoice(invoiceNumber);
+                            break;
+                        case 'duplicate':
+                            await this.duplicateInvoice(invoiceNumber);
                             break;
                         case 'mark-paid':
                             await window.invoiceActions.updateInvoiceStatus(invoiceNumber, 'paid');
                             break;
                         case 'create-credit-note':
-                            // TODO: Implement create credit note functionality
-                            console.log('Create Credit Note action clicked for', invoiceNumber);
-                            showNotification('Create Credit Note functionality not yet implemented', 'info');
+                            await this.createCreditNote(invoiceNumber);
+                            break;
+                        case 'delete':
+                            await this.deleteInvoice(invoiceNumber);
                             break;
                         default:
                             console.warn('Unknown action:', action);
@@ -341,10 +335,133 @@ const InvoiceTableModule = {
             }
         };
         document.addEventListener('click', clickOutsideHandler);
+    },
 
-        // Append dropdown to body and show it
-        document.body.appendChild(dropdown);
-        dropdown.style.display = 'block';
+    async viewInvoice(invoiceNumber) {
+        try {
+            // Fetch invoice data including PDF URL
+            const { data: invoice, error } = await window.supabase
+                .from('invoices')
+                .select('*, clients(*)')
+                .eq('invoiceNumber', invoiceNumber)
+                .single();
+
+            if (error) throw error;
+            if (!invoice) throw new Error('Invoice not found');
+
+            // Open view modal
+            if (window.openViewInvoiceModal) {
+                window.openViewInvoiceModal(invoice);
+            }
+
+            // If PDF URL exists, show it in an iframe
+            if (invoice.pdf_url) {
+                const previewContainer = document.getElementById('invoicePreviewContent');
+                if (previewContainer) {
+                    previewContainer.innerHTML = `
+                        <iframe src="${invoice.pdf_url}" width="100%" height="600px" frameborder="0"></iframe>
+                    `;
+                }
+            }
+        } catch (error) {
+            console.error('Error viewing invoice:', error);
+            showNotification('Error opening invoice: ' + error.message, 'error');
+        }
+    },
+
+    async editInvoice(invoiceNumber) {
+        try {
+            // Fetch invoice data
+            const { data: invoice, error } = await window.supabase
+                .from('invoices')
+                .select('*, clients(*)')
+                .eq('invoiceNumber', invoiceNumber)
+                .single();
+
+            if (error) throw error;
+            if (!invoice) throw new Error('Invoice not found');
+
+            // Open edit modal
+            if (window.openEditInvoiceModal) {
+                window.openEditInvoiceModal(invoice);
+            } else {
+                showNotification('Edit functionality not yet implemented', 'info');
+            }
+        } catch (error) {
+            console.error('Error editing invoice:', error);
+            showNotification('Error editing invoice: ' + error.message, 'error');
+        }
+    },
+
+    async duplicateInvoice(invoiceNumber) {
+        try {
+            // Fetch invoice data
+            const { data: invoice, error } = await window.supabase
+                .from('invoices')
+                .select('*, clients(*)')
+                .eq('invoiceNumber', invoiceNumber)
+                .single();
+
+            if (error) throw error;
+            if (!invoice) throw new Error('Invoice not found');
+
+            // Open create modal with duplicated data
+            if (window.openCreateInvoiceModal) {
+                window.openCreateInvoiceModal(invoice, true); // true for duplicate mode
+            } else {
+                showNotification('Duplicate functionality not yet implemented', 'info');
+            }
+        } catch (error) {
+            console.error('Error duplicating invoice:', error);
+            showNotification('Error duplicating invoice: ' + error.message, 'error');
+        }
+    },
+
+    async createCreditNote(invoiceNumber) {
+        try {
+            // Fetch invoice data
+            const { data: invoice, error } = await window.supabase
+                .from('invoices')
+                .select('*, clients(*)')
+                .eq('invoiceNumber', invoiceNumber)
+                .single();
+
+            if (error) throw error;
+            if (!invoice) throw new Error('Invoice not found');
+
+            // Open credit note modal
+            if (window.openCreditNoteModal) {
+                window.openCreditNoteModal(invoice);
+            } else {
+                showNotification('Credit Note functionality not yet implemented', 'info');
+            }
+        } catch (error) {
+            console.error('Error creating credit note:', error);
+            showNotification('Error creating credit note: ' + error.message, 'error');
+        }
+    },
+
+    async deleteInvoice(invoiceNumber) {
+        if (confirm('Are you sure you want to delete this invoice? This action cannot be undone.')) {
+            try {
+                const { error } = await window.supabase
+                    .from('invoices')
+                    .delete()
+                    .eq('invoiceNumber', invoiceNumber);
+
+                if (error) throw error;
+
+                showNotification('Invoice deleted successfully', 'success');
+                
+                // Refresh the invoice list
+                if (window.invoiceTable && typeof window.invoiceTable.fetchAndDisplayInvoices === 'function') {
+                    await window.invoiceTable.fetchAndDisplayInvoices(1, 10, {});
+                }
+            } catch (error) {
+                console.error('Error deleting invoice:', error);
+                showNotification('Error deleting invoice: ' + error.message, 'error');
+            }
+        }
     },
 
     formatDate(dateString) {
@@ -357,11 +474,15 @@ const InvoiceTableModule = {
         });
     },
 
-    formatCurrency(amount) {
+    formatCurrency(amount, currency = 'MZN') {
         if (amount === null || amount === undefined) return '';
-        return new Intl.NumberFormat('en-US', {
+        
+        // Default to MZN if no currency specified
+        const currencyCode = currency || 'MZN';
+        
+        return new Intl.NumberFormat('pt-MZ', {
             style: 'currency',
-            currency: 'USD'
+            currency: currencyCode
         }).format(amount);
     },
 

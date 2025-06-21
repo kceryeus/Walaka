@@ -264,8 +264,8 @@ class InvoiceEventListeners {
                 company_name: businessProfile.company_name || 'Your Company Name',
                 company_address: businessProfile.address || 'Your Company Address',
                 client_name: invoice.clients.customer_name,
-                client_address: invoice.clients.address,
-                client_tax_id: invoice.clients.nuit,
+                client_address: invoice.clients.billing_address,
+                client_tax_id: invoice.clients.customer_tax_id,
                 items: invoice.invoice_items.map(item => ({
                     description: item.description,
                     quantity: item.quantity,

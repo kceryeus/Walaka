@@ -233,4 +233,6 @@ if (typeof window !== 'undefined') {
     window.updateChartPeriodButtons = updateChartPeriodButtons;
     window.updateInvoiceDistributionChart = updateInvoiceDistributionChart;
     window.updateRevenueByStatusChart = updateRevenueByStatusChart;
+    window.autoUpdateInvoiceStatuses = autoUpdateInvoiceStatuses;
+    window.getInvoiceStatusCounts = getInvoiceStatusCounts;
 }

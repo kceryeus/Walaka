@@ -881,11 +881,11 @@ function getInvoiceData() {
 
 // Add fetchAndDisplayInvoices to global scope
 window.fetchAndDisplayInvoices = async function(page = 1, limit = 10, filters = {}) {
-    if (window.InvoiceTableModule) {
-        await window.InvoiceTableModule.fetchAndDisplayInvoices(page, limit, filters);
-        window.InvoiceTableModule.setupSorting(); // Setup sorting after table is displayed
+    if (window.invoiceTable && typeof window.invoiceTable.fetchAndDisplayInvoices === 'function') {
+        await window.invoiceTable.fetchAndDisplayInvoices(page, limit, filters);
+        window.invoiceTable.setupSorting(); // Setup sorting after table is displayed
     } else {
-        console.error('InvoiceTableModule not found');
+        console.error('invoiceTable not found');
     }
 };
 
@@ -899,11 +899,11 @@ document.addEventListener('DOMContentLoaded', async function() {
         }
 
         // Initialize invoice table
-        if (typeof window.fetchAndDisplayInvoices === 'function' && window.InvoiceTableModule) {
+        if (typeof window.fetchAndDisplayInvoices === 'function' && window.invoiceTable) {
             await window.fetchAndDisplayInvoices(1, 10, {});
             console.log('Invoice table initialized successfully');
         } else {
-            console.error('Invoice table functions not found or InvoiceTableModule not available');
+            console.error('Invoice table functions not found or invoiceTable not available');
         }
 
         // Initialize other components
