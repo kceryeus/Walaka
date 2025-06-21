@@ -20,6 +20,7 @@
     <link rel="stylesheet" href="css/styles.css">
     <link rel="stylesheet" href="css/invoice.css">
     <link rel="stylesheet" href="css/hints.css">
+    <link rel="stylesheet" href="components/trial-restrictions.css">
     
     <!-- Custom JS -->
 
@@ -83,6 +84,37 @@
                     </div>
                 </div>
             </div>
+            
+            <!-- Add trial banner and restrictions system -->
+            <div id="trial-banner-container"></div>
+            <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                fetch('components/trial-banner.html')
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('Network response was not ok');
+                        }
+                        return response.text();
+                    })
+                    .then(html => {
+                        document.getElementById('trial-banner-container').innerHTML = html;
+                        
+                        // Load the banner script
+                        const bannerScript = document.createElement('script');
+                        bannerScript.type = 'module';
+                        bannerScript.src = 'components/trial-banner.js';
+                        document.body.appendChild(bannerScript);
+                        
+                        // Load the restrictions script immediately after
+                        const restrictionsScript = document.createElement('script');
+                        restrictionsScript.src = 'components/trial-restrictions.js';
+                        document.body.appendChild(restrictionsScript);
+                    })
+                    .catch(error => {
+                        console.error('Failed to load trial banner component:', error);
+                    });
+            });
+            </script>
             
             <!-- Invoice Dashboard Content -->
             <div class="page-header">

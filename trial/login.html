@@ -502,7 +502,8 @@
                 link.click();
                 document.body.removeChild(link);
 
-                window.location.href = "dashboard.html";
+                // Redirect back to login page instead of dashboard
+                window.location.href = "login.html";
             } catch (error) {
                 console.error('Error during signup:', error);
                 errorDiv.textContent = error.message || 'Signup failed';
