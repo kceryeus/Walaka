@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard - Walaka</title>
+    <title data-translate="profile_page_title">Dashboard - Walaka</title>
     
     <script>
         // Set base path for assets to handle GitHub Pages sub-directory
@@ -438,61 +438,61 @@
             });
             </script>
             <!-- Page Title and Filters -->
-            <h1 class="page-title">Subscription Management</h1>
-            <p class="subtitle">View and manage your subscription, billing, and plan details.</p>
+            <h1 class="page-title" data-translate="subscription_management_header">Subscription Management</h1>
+            <p class="subtitle" data-translate="subscription_management_subtitle">View and manage your subscription, billing, and plan details.</p>
             <div class="subscription-filters">
-                <button class="filter-btn active" data-section="overview">Overview</button>
-                <button class="filter-btn" data-section="billing">Billing</button>
-                <button class="filter-btn" data-section="plan">Plan</button>
-                <button class="filter-btn" data-section="history">History</button>
-                <button class="filter-btn danger" data-section="cancel"><i class="fas fa-trash"></i> Cancel Subscription</button>
+                <button class="filter-btn active" data-section="overview" data-translate="overview_tab">Overview</button>
+                <button class="filter-btn" data-section="billing" data-translate="billing_tab">Billing</button>
+                <button class="filter-btn" data-section="plan" data-translate="plan_tab">Plan</button>
+                <button class="filter-btn" data-section="history" data-translate="history_tab">History</button>
+                <button class="filter-btn danger" data-section="cancel"><i class="fas fa-trash"></i> <span data-translate="cancel_subscription_button">Cancel Subscription</span></button>
             </div>
             <div class="subscription-content">
                 <!-- Overview Section -->
                 <div class="section active" id="section-overview">
                     <ul class="subscription-list">
-                        <li><span class="label">Current Plan</span><span class="value" id="overview-current-plan">-</span></li>
-                        <li><span class="label">Status</span><span class="value" id="overview-status">-</span></li>
-                        <li><span class="label">Next Billing Date</span><span class="value" id="overview-next-billing">-</span></li>
-                        <li><span class="label">Preferred Billing Date</span><span class="value" id="overview-preferred-billing">-</span></li>
-                        <li><span class="label">Warning Date</span><span class="value" id="overview-warning-date">-</span></li>
-                        <li><span class="label">Billing Number / Card</span><span class="value" id="overview-billing-number">-</span></li>
-                        <li><span class="label">Payment Method</span><span class="value" id="overview-payment-method">-</span></li>
+                        <li><span class="label" data-translate="current_plan_label">Current Plan</span><span class="value" id="overview-current-plan">-</span></li>
+                        <li><span class="label" data-translate="status_label">Status</span><span class="value" id="overview-status">-</span></li>
+                        <li><span class="label" data-translate="next_billing_date_label">Next Billing Date</span><span class="value" id="overview-next-billing">-</span></li>
+                        <li><span class="label" data-translate="preferred_billing_date_label">Preferred Billing Date</span><span class="value" id="overview-preferred-billing">-</span></li>
+                        <li><span class="label" data-translate="warning_date_label">Warning Date</span><span class="value" id="overview-warning-date">-</span></li>
+                        <li><span class="label" data-translate="billing_number_card_label">Billing Number / Card</span><span class="value" id="overview-billing-number">-</span></li>
+                        <li><span class="label" data-translate="payment_method_label">Payment Method</span><span class="value" id="overview-payment-method">-</span></li>
                     </ul>
                 </div>
                 <!-- Billing Section -->
                 <div class="section" id="section-billing">
                     <form class="billing-form" id="billing-form">
-                        <label for="billing-date">Preferred Billing Date</label>
+                        <label for="billing-date" data-translate="preferred_billing_date_label">Preferred Billing Date</label>
                         <input type="date" id="billing-date" name="billing-date" />
-                        <label for="warning-date">Warning Date (before expiry)</label>
+                        <label for="warning-date" data-translate="warning_date_before_expiry_label">Warning Date (before expiry)</label>
                         <input type="date" id="warning-date" name="warning-date" />
-                        <label for="billing-number">Billing Number / Card</label>
-                        <input type="text" id="billing-number" name="billing-number" placeholder="Card or Billing Number" />
-                        <label for="payment-method">Payment Method</label>
+                        <label for="billing-number" data-translate="billing_number_card_label">Billing Number / Card</label>
+                        <input type="text" id="billing-number" name="billing-number" data-translate-placeholder="billing_number_placeholder" placeholder="Card or Billing Number" />
+                        <label for="payment-method" data-translate="payment_method_label">Payment Method</label>
                         <select id="payment-method" name="payment-method">
-                            <option value="">Select a method</option>
-                            <option value="mpesa">M-Pesa</option>
-                            <option value="emola">E-mola</option>
-                            <option value="bank">Bank Transfer</option>
-                            <option value="card">Credit/Debit Card</option>
+                            <option value="" data-translate="select_method_option">Select a method</option>
+                            <option value="mpesa" data-translate="mpesa_option">M-Pesa</option>
+                            <option value="emola" data-translate="emola_option">E-mola</option>
+                            <option value="bank" data-translate="bank_option">Bank Transfer</option>
+                            <option value="card" data-translate="card_option">Credit/Debit Card</option>
                         </select>
                         <div class="form-actions">
-                            <button type="submit" class="filter-btn active">Save Changes</button>
+                            <button type="submit" class="filter-btn active" data-translate="save_changes_button">Save Changes</button>
                         </div>
                     </form>
                 </div>
                 <!-- Plan Section -->
                 <div class="section" id="section-plan">
                     <div style="margin-bottom:1.5rem;">
-                        <strong>Current Plan:</strong> <span id="plan-current">-</span><br>
-                        <strong>Status:</strong> <span id="plan-status">-</span>
+                        <strong data-translate="current_plan_label_strong">Current Plan:</strong> <span id="plan-current">-</span><br>
+                        <strong data-translate="status_label_strong">Status:</strong> <span id="plan-status">-</span>
                     </div>
                     <div>
                         <button class="filter-btn" id="upgrade-pay-btn" style="margin-right:1rem;">
-                            <i class="fas fa-arrow-up"></i> Upgrade / Pay
+                            <i class="fas fa-arrow-up"></i> <span data-translate="upgrade_pay_button">Upgrade / Pay</span>
                         </button>
-                        <button class="filter-btn" id="downgrade-btn">Downgrade Plan</button>
+                        <button class="filter-btn" id="downgrade-btn" data-translate="downgrade_plan_button">Downgrade Plan</button>
                     </div>
                 </div>
                 <!-- History Section -->
@@ -500,43 +500,44 @@
                     <table class="history-table">
                         <thead>
                             <tr>
-                                <th>Plan</th>
-                                <th>Status</th>
-                                <th>Start Date</th>
-                                <th>End Date</th>
-                                <th>Payment Method</th>
+                                <th data-translate="plan_col_header">Plan</th>
+                                <th data-translate="status_col_header">Status</th>
+                                <th data-translate="start_date_col_header">Start Date</th>
+                                <th data-translate="end_date_col_header">End Date</th>
+                                <th data-translate="payment_method_col_header">Payment Method</th>
                             </tr>
                         </thead>
                         <tbody id="history-table-body">
-                            <tr><td colspan="5" style="text-align:center; color:#64748b;">No history found.</td></tr>
+                            <tr><td colspan="5" style="text-align:center; color:#64748b;" data-translate="no_history_found_text">No history found.</td></tr>
                         </tbody>
                     </table>
                 </div>
                 <!-- Cancel Section -->
                 <div class="section cancel-section" id="section-cancel">
-                    <h3>Cancel Subscription</h3>
-                    <p>Are you sure you want to cancel your subscription? This action cannot be undone.</p>
-                    <button class="danger" id="cancel-subscription-btn"><i class="fas fa-trash"></i> Confirm Cancel</button>
+                    <h3 data-translate="cancel_subscription_header">Cancel Subscription</h3>
+                    <p data-translate="cancel_subscription_warning">Are you sure you want to cancel your subscription? This action cannot be undone.</p>
+                    <button class="danger" id="cancel-subscription-btn"><i class="fas fa-trash"></i> <span data-translate="confirm_cancel_button">Confirm Cancel</span></button>
                 </div>
                 <!-- Cancel Confirmation Modal -->
                 <div id="cancel-modal" class="modal" style="display:none;">
                     <div class="modal-content" style="max-width:400px;">
                         <div class="modal-header">
-                            <h2>Confirm Cancellation</h2>
+                            <h2 data-translate="confirm_cancellation_modal_title">Confirm Cancellation</h2>
                             <button class="close-modal" id="close-cancel-modal">&times;</button>
                         </div>
                         <div class="modal-body">
-                            <p>Are you sure you want to cancel your subscription? This action cannot be undone.</p>
+                            <p data-translate="cancel_subscription_warning">Are you sure you want to cancel your subscription? This action cannot be undone.</p>
                         </div>
                         <div class="modal-footer">
-                            <button class="secondary-btn" id="cancel-modal-no">No</button>
-                            <button class="danger" id="cancel-modal-yes">Yes, Cancel</button>
+                            <button class="secondary-btn" id="cancel-modal-no" data-translate="no_button">No</button>
+                            <button class="danger" id="cancel-modal-yes" data-translate="yes_cancel_button">Yes, Cancel</button>
                         </div>
                     </div>
                 </div>
             </div>
         </main>
     </div>
+    <script src="services/languageManager.js"></script>
     <script type="module">
         import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.0.0/+esm';
         const supabaseUrl = 'https://qvmtozjvjflygbkjecyj.supabase.co';
@@ -698,5 +699,17 @@
             }
         });
     </script>
+     <script>
+        // Initialize the language manager with the correct base path
+        window.languageManager = new LanguageManager('./');
+  
+        // Initialize the language manager
+        document.addEventListener('DOMContentLoaded', async function() {
+          if (window.languageManager) {
+            const preferredLanguage = localStorage.getItem('preferredLanguage') || 'pt';
+            await window.languageManager.setLanguage(preferredLanguage);
+          }
+        });
+      </script>
 </body>
 </html>

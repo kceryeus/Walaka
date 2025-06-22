@@ -45,7 +45,10 @@ const InvoiceTableModule = {
 
             // Apply filters
             if (filters.status && filters.status !== 'all') {
-                query = query.eq('status', filters.status);
+                // Special handling for overdue: fetch all, filter in-memory after overdue logic
+                if (filters.status !== 'overdue') {
+                    query = query.eq('status', filters.status);
+                }
             }
             if (filters.client && filters.client !== 'all') {
                 query = query.eq('client_id', filters.client);
@@ -90,6 +93,30 @@ const InvoiceTableModule = {
             if (error) {
                 console.error('Supabase query error:', error);
                 throw new Error(`Failed to fetch invoices: ${error.message}`);
+            }
+
+            // --- Update overdue status in-memory before rendering ---
+            if (Array.isArray(invoices)) {
+                const now = new Date();
+                invoices.forEach(inv => {
+                    const due = inv.dueDate || inv.due_date;
+                    if (
+                        inv.status === 'pending' &&
+                        due &&
+                        !isNaN(new Date(due).getTime()) &&
+                        new Date(due) < now
+                    ) {
+                        inv.status = 'overdue';
+                    }
+                });
+                // If filtering for overdue, filter the array in-memory
+                if (filters.status === 'overdue') {
+                    for (let i = invoices.length - 1; i >= 0; i--) {
+                        if (invoices[i].status !== 'overdue') {
+                            invoices.splice(i, 1);
+                        }
+                    }
+                }
             }
 
             // Clear existing rows

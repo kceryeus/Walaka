@@ -1,9 +1,40 @@
 // Sidebar dynamic expand/collapse for components/sidebar.html
 (function() {
+    function getBasePath() {
+        const repoName = 'Walaka';
+        const isGitHubPages = window.location.hostname.includes('github.io');
+        return isGitHubPages ? `/${repoName}/` : '/';
+    }
+
+    function updateSidebarLinks() {
+        const basePath = getBasePath();
+        // The sidebar is inside #sidebar-container, but the main element has .sidebar class
+        const sidebar = document.querySelector('.sidebar');
+        if (!sidebar) return;
+
+        const links = sidebar.querySelectorAll('a');
+        links.forEach(link => {
+            const href = link.getAttribute('href');
+            // Ensure href exists, is not an absolute URL, not just a '#' anchor, and not already correct.
+            if (href && !href.startsWith('http') && href !== '#' && !href.startsWith(basePath)) {
+                // Avoid modifying mailto links or javascript calls
+                if (href.startsWith('mailto:') || href.startsWith('javascript:')) {
+                    return;
+                }
+                // Prepend basePath. Remove any leading slashes to prevent `//`
+                const cleanHref = href.replace(/^\//, '');
+                link.href = basePath + cleanHref;
+            }
+        });
+    }
+
     function initSidebarActions() {
         // Only target the sidebar in this component
         const sidebar = document.querySelector('.sidebar');
         if (!sidebar) return;
+
+        updateSidebarLinks(); // Update links as soon as sidebar is present
+
         // Find all nav headers with submenus (these are <h3> elements)
         const navHeaders = sidebar.querySelectorAll('.nav-header.has-submenu');
         navHeaders.forEach(header => {

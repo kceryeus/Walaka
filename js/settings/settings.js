@@ -74,6 +74,18 @@ class SettingsManager {
                 this.handleSignOut();
             });
         }
+
+        // Language change handler
+        const userLanguageSelect = document.getElementById('user-language');
+        if (userLanguageSelect) {
+            userLanguageSelect.addEventListener('change', function(e) {
+                const lang = e.target.value;
+                localStorage.setItem('preferredLanguage', lang);
+                if (window.languageManager) {
+                    window.languageManager.setLanguage(lang);
+                }
+            });
+        }
     }
 
     async handleSignOut() {
@@ -475,7 +487,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       showLoadingOverlay();
       
-      // Simulate API call
       setTimeout(() => {
         userSettings.name = userNameInput.value;
         userSettings.email = userEmailInput.value;
@@ -493,11 +504,17 @@ document.addEventListener('DOMContentLoaded', async () => {
         saveUserSettingsBtn.style.display = 'none';
         cancelUserSettingsBtn.style.display = 'none';
         
-        hideLoadingOverlay();
-        showToast('success', 'Success', 'User settings updated successfully.');
-        
         // Save to localStorage
         saveSettingsToStorage();
+
+        // --- NEW: Save language to localStorage and update languageManager ---
+        localStorage.setItem('preferredLanguage', userSettings.language);
+        if (window.languageManager) {
+          window.languageManager.setLanguage(userSettings.language);
+        }
+
+        hideLoadingOverlay();
+        showToast('success', 'Success', 'User settings updated successfully.');
       }, 1000);
     });
   }

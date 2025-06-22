@@ -499,6 +499,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         userSettings.phone = userPhoneInput.value;
         userSettings.language = userLanguageSelect.value;
         
+        // Update language manager if language changed
+        if (window.languageManager && window.languageManager.currentLang !== userLanguageSelect.value) {
+          await window.languageManager.setLanguage(userLanguageSelect.value);
+        }
+        
         // Update UI
         userNameDisplay.textContent = userSettings.name;
         
@@ -2290,40 +2295,28 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('reset-security-settings').addEventListener('click', resetSecuritySettings);
   });
 
-  // Language switching logic
-  // Ensure languageManager is initialized and available
-  if (window.languageManager) {
-    document.addEventListener('DOMContentLoaded', async () => {
-      await window.languageManager.loadTranslations(window.languageManager.currentLang);
-      window.languageManager.applyTranslations();
-
+  // Language switching logic - Updated to work with improved language manager
+  document.addEventListener('DOMContentLoaded', async () => {
+    // Wait for language manager to be initialized
+    if (window.languageManager) {
+      // The language manager is already initialized in settings.html
+      // Just ensure the UI reflects the current language
       const langSelect = document.getElementById('user-language');
       if (langSelect) {
         langSelect.value = window.languageManager.currentLang;
+        
+        // Add change listener that works with the language manager
         langSelect.addEventListener('change', async (e) => {
-          await window.languageManager.setLanguage(e.target.value);
-          // Optionally, reload settings or update other UI as needed
+          const newLang = e.target.value;
+          await window.languageManager.setLanguage(newLang);
+          
+          // Update the select value to reflect the current language
+          langSelect.value = window.languageManager.currentLang;
         });
       }
-    });
-  }
-
-  // Listen for language change in the settings page
-  var langSelect = document.getElementById('user-language');
-  if (langSelect) {
-    // Always enable the language select
-    langSelect.disabled = false;
-    // Set the select value to the current language (pt or en)
-    if (window.languageManager) {
-      langSelect.value = window.languageManager.currentLang;
-    } else {
-      langSelect.value = localStorage.getItem('preferredLanguage') || 'pt';
     }
-    langSelect.addEventListener('change', function(e) {
-      var lang = e.target.value;
-      if (window.languageManager) {
-        window.languageManager.setLanguage(lang);
-      }
-    });
-  }
+  });
+
+  // Remove the duplicate language handling code at the end
+  // The language manager now handles all language synchronization
 });

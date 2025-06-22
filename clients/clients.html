@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Client Management | WALAKA</title>
+  <title data-translate="client_management_title">Client Management | WALAKA</title>
 
   <script>
       // Set base path for assets to handle GitHub Pages sub-directory
@@ -131,98 +131,98 @@
       <div class="content-wrapper">
         <div class="container">
           <div class="page-header">
-            <h1>Client Management</h1>
+            <h1 data-translate="client_management">Client Management</h1>
             <button id="add-new-client-btn" class="primary-btn">
-              <i class="fas fa-plus"></i> Add New Client
+              <i class="fas fa-plus"></i> <span data-translate="add_new_client">Add New Client</span>
             </button>
           </div>
 
           <div class="client-management">
             <!-- Client Form Section -->
             <section class="frame frame-left" id="client-form-container">
-              <h2 id="form-title">Novo Cliente</h2>
+              <h2 id="form-title" data-translate="new_client_form_title">New Client</h2>
               <form id="client-form">
                 <div class="form-group">
-                  <label>Client Type</label>
+                  <label data-translate="client_type">Client Type</label>
                   <div class="radio-group">
                     <label class="radio-label">
                       <input type="radio" name="client-type" value="business" checked>
-                      Business
+                      <span data-translate="business">Business</span>
                     </label>
                     <label class="radio-label">
                       <input type="radio" name="client-type" value="individual">
-                      Individual
+                      <span data-translate="individual">Individual</span>
                     </label>
                   </div>
                 </div>
 
                 <div class="form-group">
-                  <label for="company-name">Nome da Empresa <span class="required">*</span></label>
-                  <input type="text" id="company-name" name="company_name" required placeholder="Nome da Empresa">
+                  <label for="company-name" data-translate="company_name_label">Company Name <span class="required">*</span></label>
+                  <input type="text" id="company-name" name="company_name" required data-translate-placeholder="company_name_placeholder" placeholder="Company Name">
                 </div>
                 <div class="form-group">
-                  <label for="customer-tax-id">NIF/NUIT <span class="required">*</span></label>
-                  <input type="text" id="customer-tax-id" name="customer_tax_id" required placeholder="NIF/NUIT" maxlength="9">
+                  <label for="customer-tax-id" data-translate="tax_id_nuit">NIF/NUIT <span class="required">*</span></label>
+                  <input type="text" id="customer-tax-id" name="customer_tax_id" required data-translate-placeholder="tax_id_placeholder" placeholder="NIF/NUIT" maxlength="9">
                 </div>
                 <div class="form-group">
-                  <label for="contact">Contato <span class="required">*</span></label>
-                  <input type="text" id="contact" name="contact" required placeholder="Contato">
+                  <label for="contact" data-translate="contact">Contact <span class="required">*</span></label>
+                  <input type="text" id="contact" name="contact" required data-translate-placeholder="contact_placeholder" placeholder="Contact">
                 </div>
                 <div class="form-group">
-                  <label for="billing-address">Endereço de Faturação <span class="required">*</span></label>
-                  <input type="text" id="billing-address" name="billing_address" required placeholder="Endereço de Faturação">
+                  <label for="billing-address" data-translate="billing_address">Billing Address <span class="required">*</span></label>
+                  <input type="text" id="billing-address" name="billing_address" required data-translate-placeholder="billing_address_placeholder" placeholder="Billing Address">
                 </div>
                 <div class="form-group">
-                  <label for="street-name">Rua <span class="required">*</span></label>
-                  <input type="text" id="street-name" name="street_name" required placeholder="Rua">
+                  <label for="street-name" data-translate="street_name">Street <span class="required">*</span></label>
+                  <input type="text" id="street-name" name="street_name" required data-translate-placeholder="street_name_placeholder" placeholder="Street">
                 </div>
                 <div class="form-group">
-                  <label for="address-detail">Detalhe do Endereço</label>
-                  <input type="text" id="address-detail" name="address_detail" placeholder="Detalhe do Endereço">
+                  <label for="address-detail" data-translate="address_detail">Address Detail</label>
+                  <input type="text" id="address-detail" name="address_detail" data-translate-placeholder="address_detail_placeholder" placeholder="Address Detail">
                 </div>
                 <div class="form-group">
-                  <label for="city">Cidade <span class="required">*</span></label>
-                  <input type="text" id="city" name="city" required placeholder="Cidade">
+                  <label for="city" data-translate="city">City <span class="required">*</span></label>
+                  <input type="text" id="city" name="city" required data-translate-placeholder="city_placeholder" placeholder="City">
                 </div>
                 <div class="form-group">
-                  <label for="postal-code">Código Postal</label>
-                  <input type="text" id="postal-code" name="postal_code" placeholder="Código Postal">
+                  <label for="postal-code" data-translate="postal_code">Postal Code</label>
+                  <input type="text" id="postal-code" name="postal_code" data-translate-placeholder="postal_code_placeholder" placeholder="Postal Code">
                 </div>
                 <div class="form-group">
-                  <label for="province">Província <span class="required">*</span></label>
-                  <input type="text" id="province" name="province" required placeholder="Província">
+                  <label for="province" data-translate="province">Province <span class="required">*</span></label>
+                  <input type="text" id="province" name="province" required data-translate-placeholder="province_placeholder" placeholder="Province">
                 </div>
                 <div class="form-group">
-                  <label for="country">País <span class="required">*</span></label>
-                  <input type="text" id="country" name="country" required placeholder="País">
+                  <label for="country" data-translate="country">Country <span class="required">*</span></label>
+                  <input type="text" id="country" name="country" required data-translate-placeholder="country_placeholder" placeholder="Country">
                 </div>
                 <div class="form-group">
-                  <label for="ship-to-address">Endereço de Entrega</label>
-                  <input type="text" id="ship-to-address" name="ship_to_address" placeholder="Endereço de Entrega">
+                  <label for="ship-to-address" data-translate="shipping_address">Shipping Address</label>
+                  <input type="text" id="ship-to-address" name="ship_to_address" data-translate-placeholder="shipping_address_placeholder" placeholder="Shipping Address">
                 </div>
                 <div class="form-group">
-                  <label for="building-number">Número do Prédio</label>
-                  <input type="text" id="building-number" name="building_number" placeholder="Número do Prédio">
+                  <label for="building-number" data-translate="building_number">Building Number</label>
+                  <input type="text" id="building-number" name="building_number" data-translate-placeholder="building_number_placeholder" placeholder="Building Number">
                 </div>
                 <div class="form-group">
-                  <label for="telephone">Telefone <span class="required">*</span></label>
-                  <input type="text" id="telephone" name="telephone" required placeholder="Telefone">
+                  <label for="telephone" data-translate="telephone">Telephone <span class="required">*</span></label>
+                  <input type="text" id="telephone" name="telephone" required data-translate-placeholder="telephone_placeholder" placeholder="Telephone">
                 </div>
                 <div class="form-group">
-                  <label for="fax">Fax</label>
-                  <input type="text" id="fax" name="fax" placeholder="Fax">
+                  <label for="fax" data-translate="fax">Fax</label>
+                  <input type="text" id="fax" name="fax" data-translate-placeholder="fax_placeholder" placeholder="Fax">
                 </div>
                 <div class="form-group">
-                  <label for="email">Email <span class="required">*</span></label>
-                  <input type="email" id="email" name="email" required placeholder="Email">
+                  <label for="email" data-translate="email">Email <span class="required">*</span></label>
+                  <input type="email" id="email" name="email" required data-translate-placeholder="email_placeholder" placeholder="Email">
                 </div>
                 <div class="form-group">
-                  <label for="website">Website</label>
-                  <input type="text" id="website" name="website" placeholder="Website">
+                  <label for="website" data-translate="website">Website</label>
+                  <input type="text" id="website" name="website" data-translate-placeholder="website_placeholder" placeholder="Website">
                 </div>
                 <div class="form-footer">
-                  <button type="submit" id="save-client-btn" class="primary-btn">Salvar Cliente</button>
-                  <button type="button" id="cancel-btn" class="secondary-btn">Cancelar</button>
+                  <button type="submit" id="save-client-btn" class="primary-btn" data-translate="save_client">Save Client</button>
+                  <button type="button" id="cancel-btn" class="secondary-btn" data-translate="cancel">Cancel</button>
                 </div>
               </form>
             </section>
@@ -232,29 +232,29 @@
               <div class="search-bar-frame">
                 <div class="search-input-wrapper">
                   <i class="fas fa-search"></i>
-                  <input type="text" id="client-search" placeholder="Search clients...">
+                  <input type="text" id="client-search" data-translate-placeholder="search_clients_placeholder" placeholder="Search clients...">
                 </div>
                 <div class="filter-options">
                   <select id="status-filter">
-                    <option value="all">All Statuses</option>
-                    <option value="active">Active</option>
-                    <option value="inactive">Inactive</option>
+                    <option value="all" data-translate="all_statuses">All Statuses</option>
+                    <option value="active" data-translate="active">Active</option>
+                    <option value="inactive" data-translate="inactive">Inactive</option>
                   </select>
                   <select id="type-filter">
-                    <option value="all">All Types</option>
-                    <option value="business">Business</option>
-                    <option value="individual">Individual</option>
+                    <option value="all" data-translate="all_types">All Types</option>
+                    <option value="business" data-translate="business">Business</option>
+                    <option value="individual" data-translate="individual">Individual</option>
                   </select>
                 </div>
               </div>
               
               <div class="client-list-header">
-                <h3>Client List</h3>
+                <h3 data-translate="client_list">Client List</h3>
                 <div class="view-options">
-                  <button id="grid-view-btn" class="view-btn active" aria-label="Grid view">
+                  <button id="grid-view-btn" class="view-btn active" aria-label="Grid view" data-translate-aria-label="grid_view_aria">
                     <i class="fas fa-th-large"></i>
                   </button>
-                  <button id="list-view-btn" class="view-btn" aria-label="List view">
+                  <button id="list-view-btn" class="view-btn" aria-label="List view" data-translate-aria-label="list_view_aria">
                     <i class="fas fa-list"></i>
                   </button>
                 </div>
@@ -264,17 +264,17 @@
                 <!-- Client items will be populated by JavaScript -->
                 <div class="loading-indicator">
                   <i class="fas fa-spinner fa-spin"></i>
-                  <span>Loading clients...</span>
+                  <span data-translate="loading_clients">Loading clients...</span>
                 </div>
               </div>
               
               <div class="pagination-controls">
                 <button id="prev-page" class="pagination-btn" disabled>
-                  <i class="fas fa-chevron-left"></i> Previous
+                  <i class="fas fa-chevron-left"></i> <span data-translate="previous">Previous</span>
                 </button>
                 <span id="page-info">Page 1 of 1</span>
                 <button id="next-page" class="pagination-btn" disabled>
-                  Next <i class="fas fa-chevron-right"></i>
+                  <span data-translate="next">Next</span> <i class="fas fa-chevron-right"></i>
                 </button>
               </div>
             </section>
@@ -288,7 +288,7 @@
   <div id="contact-modal" class="modal">
     <div class="modal-content">
       <div class="modal-header">
-        <h3>Add Contact Person</h3>
+        <h3 data-translate="add_contact_person">Add Contact Person</h3>
         <button type="button" class="close-modal" aria-label="Close modal">
           <i class="fas fa-times"></i>
         </button>
@@ -297,9 +297,9 @@
         <form id="contact-form">
           <div class="form-row">
             <div class="form-group select-wrapper">
-              <label for="contact-salutation">Salutation</label>
+              <label for="contact-salutation" data-translate="salutation">Salutation</label>
               <select id="contact-salutation" name="contact-salutation">
-                <option value="">Select...</option>
+                <option value="" data-translate="select_placeholder">Select...</option>
                 <option value="Mr.">Mr.</option>
                 <option value="Ms.">Ms.</option>
                 <option value="Mrs.">Mrs.</option>
@@ -308,59 +308,59 @@
             </div>
             
             <div class="form-group">
-              <label for="contact-first-name">First Name</label>
-              <input type="text" id="contact-first-name" name="contact-first-name" required placeholder="First Name">
+              <label for="contact-first-name" data-translate="first_name">First Name</label>
+              <input type="text" id="contact-first-name" name="contact-first-name" required data-translate-placeholder="first_name_placeholder" placeholder="First Name">
             </div>
             
             <div class="form-group">
-              <label for="contact-last-name">Last Name</label>
-              <input type="text" id="contact-last-name" name="contact-last-name" required placeholder="Last Name">
+              <label for="contact-last-name" data-translate="last_name">Last Name</label>
+              <input type="text" id="contact-last-name" name="contact-last-name" required data-translate-placeholder="last_name_placeholder" placeholder="Last Name">
             </div>
           </div>
           
           <div class="form-group">
-            <label for="contact-email">Email Address</label>
+            <label for="contact-email" data-translate="email_address">Email Address</label>
             <div class="email-input-wrapper">
               <i class="fas fa-envelope"></i>
-              <input type="email" id="contact-email" name="contact-email" required placeholder="contact@example.com">
+              <input type="email" id="contact-email" name="contact-email" required data-translate-placeholder="email_placeholder" placeholder="contact@example.com">
             </div>
           </div>
           
           <div class="form-row">
             <div class="form-group">
-              <label for="contact-work-phone">Work Phone</label>
+              <label for="contact-work-phone" data-translate="work_phone">Work Phone</label>
               <div class="phone-input-wrapper">
                 <i class="fas fa-phone"></i>
-                <input type="tel" id="contact-work-phone" name="contact-work-phone" placeholder="Work Phone">
+                <input type="tel" id="contact-work-phone" name="contact-work-phone" data-translate-placeholder="work_phone_placeholder" placeholder="Work Phone">
               </div>
             </div>
             
             <div class="form-group">
-              <label for="contact-mobile">Mobile</label>
+              <label for="contact-mobile" data-translate="mobile">Mobile</label>
               <div class="phone-input-wrapper">
                 <i class="fas fa-mobile-alt"></i>
-                <input type="tel" id="contact-mobile" name="contact-mobile" placeholder="Mobile">
+                <input type="tel" id="contact-mobile" name="contact-mobile" data-translate-placeholder="mobile_placeholder" placeholder="Mobile">
               </div>
             </div>
           </div>
           
           <div class="form-group">
-            <label for="contact-designation">Designation/Role</label>
-            <input type="text" id="contact-designation" name="contact-designation" placeholder="e.g. Accountant, Manager">
+            <label for="contact-designation" data-translate="designation_role">Designation/Role</label>
+            <input type="text" id="contact-designation" name="contact-designation" data-translate-placeholder="designation_role_placeholder" placeholder="e.g. Accountant, Manager">
           </div>
           
           <div class="form-group">
-            <label for="is-primary-contact">Primary Contact?</label>
+            <label for="is-primary-contact" data-translate="primary_contact_question">Primary Contact?</label>
             <div class="checkbox-wrapper">
               <input type="checkbox" id="is-primary-contact" name="is-primary-contact">
-              <label for="is-primary-contact">Set as primary contact for this client</label>
+              <label for="is-primary-contact" data-translate="set_as_primary_contact">Set as primary contact for this client</label>
             </div>
           </div>
         </form>
       </div>
       <div class="modal-footer">
-        <button type="button" id="save-contact-btn" class="primary-btn">Save Contact</button>
-        <button type="button" id="cancel-contact-btn" class="secondary-btn">Cancel</button>
+        <button type="button" id="save-contact-btn" class="primary-btn" data-translate="save_contact">Save Contact</button>
+        <button type="button" id="cancel-contact-btn" class="secondary-btn" data-translate="cancel">Cancel</button>
       </div>
     </div>
   </div>
@@ -369,17 +369,17 @@
   <div id="delete-modal" class="modal">
     <div class="modal-content">
       <div class="modal-header">
-        <h3>Confirm Deletion</h3>
+        <h3 data-translate="confirm_deletion">Confirm Deletion</h3>
         <button type="button" class="close-modal" aria-label="Close modal">
           <i class="fas fa-times"></i>
         </button>
       </div>
       <div class="modal-body">
-        <p>Are you sure you want to delete this client? This action cannot be undone.</p>
+        <p data-translate="confirm_delete_client_message">Are you sure you want to delete this client? This action cannot be undone.</p>
       </div>
       <div class="modal-footer">
-        <button type="button" id="confirm-delete-btn" class="danger-btn">Delete</button>
-        <button type="button" id="cancel-delete-btn" class="secondary-btn">Cancel</button>
+        <button type="button" id="confirm-delete-btn" class="danger-btn" data-translate="delete">Delete</button>
+        <button type="button" id="cancel-delete-btn" class="secondary-btn" data-translate="cancel">Cancel</button>
       </div>
     </div>
   </div>
@@ -402,6 +402,11 @@
   <script src="../js/hints/walaka-hints.js"></script>
   <script src="../js/hints/page-hints.js"></script>
   <script src="../js/auth.js"></script>
+  <script src="../services/languageManager.js"></script>
+  <script>
+    // Initialize the language manager with the correct base path
+    window.languageManager = new LanguageManager('../');
+  </script>
   <script type="module">
     import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.0.0/+esm';
 
@@ -448,6 +453,10 @@
       await displayUserName();
       if (typeof window.initClientList === 'function') {
         window.initClientList();
+      }
+      // Initialize the language manager with database sync
+      if (window.languageManager) {
+        await window.languageManager.initialize();
       }
     });
   </script>

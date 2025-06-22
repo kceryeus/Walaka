@@ -45,12 +45,6 @@ class InvoiceEventListeners {
             });
         });
 
-        // Add item button
-        const addItemBtn = document.getElementById('addItemBtn');
-        if (addItemBtn && window.invoiceItems) {
-            addItemBtn.addEventListener('click', () => window.invoiceItems.addInvoiceItem());
-        }
-
         // Payment terms dropdown
         const paymentTermsSelect = document.getElementById('paymentTerms');
         if (paymentTermsSelect) {

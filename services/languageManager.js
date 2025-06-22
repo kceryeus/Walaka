@@ -1,5 +1,6 @@
 class LanguageManager {
-    constructor() {
+    constructor(basePath = '/') {
+        this.basePath = basePath;
         this.currentLang = localStorage.getItem('preferredLanguage') || 'pt';
         this.translations = {};
         this.locales = {
@@ -26,20 +27,99 @@ class LanguageManager {
 
     async loadTranslations(lang) {
         try {
-            const response = await fetch(`assets/translations/${lang}.json`); // Use the selected language
+            const path = `${this.basePath}assets/translations/${lang}.json`;
+            console.log(`[languageManager] Loading translations for:`, lang, `from ${path}`);
+            const response = await fetch(path);
             this.translations = await response.json();
             this.currentLang = lang;
             localStorage.setItem('preferredLanguage', lang);
+            console.log(`[languageManager] Translations loaded for:`, lang, this.translations);
         } catch (error) {
-            console.error('Error loading translations:', error);
+            console.error('[languageManager] Error loading translations:', error);
         }
     }
 
     async setLanguage(lang) {
+        console.log(`[languageManager] Setting language to:`, lang);
         await this.loadTranslations(lang);
         this.applyTranslations();
         document.documentElement.setAttribute('lang', lang);
+        
+        // Save to database if user is authenticated
+        await this.saveLanguageToDatabase(lang);
+        
         window.dispatchEvent(new Event('languageChanged'));
+        console.log(`[languageManager] Language set and translations applied:`, lang);
+    }
+
+    async saveLanguageToDatabase(lang) {
+        try {
+            if (window.supabase) {
+                const { data: { session } } = await window.supabase.auth.getSession();
+                if (session && session.user) {
+                    const { error } = await window.supabase
+                        .from('users')
+                        .update({ 
+                            language: lang,
+                            updated_at: new Date().toISOString()
+                        })
+                        .eq('id', session.user.id);
+
+                    if (error) {
+                        console.error('[languageManager] Error saving language to database:', error);
+                    } else {
+                        console.log('[languageManager] Language saved to database:', lang);
+                    }
+                }
+            }
+        } catch (error) {
+            console.error('[languageManager] Error in saveLanguageToDatabase:', error);
+        }
+    }
+
+    async loadLanguageFromDatabase() {
+        try {
+            if (window.supabase) {
+                const { data: { session } } = await window.supabase.auth.getSession();
+                if (session && session.user) {
+                    const { data: userData, error } = await window.supabase
+                        .from('users')
+                        .select('language')
+                        .eq('id', session.user.id)
+                        .single();
+
+                    if (error) {
+                        console.error('[languageManager] Error loading language from database:', error);
+                        return this.currentLang;
+                    }
+
+                    if (userData && userData.language) {
+                        console.log('[languageManager] Language loaded from database:', userData.language);
+                        return userData.language;
+                    }
+                }
+            }
+        } catch (error) {
+            console.error('[languageManager] Error in loadLanguageFromDatabase:', error);
+        }
+        return this.currentLang;
+    }
+
+    async initialize() {
+        console.log('[languageManager] Initializing language manager...');
+        
+        // First try to load from database (if user is authenticated)
+        const dbLanguage = await this.loadLanguageFromDatabase();
+        
+        // Use database language if available, otherwise use localStorage
+        const preferredLanguage = dbLanguage || localStorage.getItem('preferredLanguage') || 'pt';
+        
+        console.log('[languageManager] Preferred language:', preferredLanguage);
+        
+        // Set the language
+        await this.setLanguage(preferredLanguage);
+        
+        console.log('[languageManager] Language manager initialized');
     }
 
     translate(key) {
@@ -47,7 +127,7 @@ class LanguageManager {
     }
 
     applyTranslations() {
-        console.log('Applying translations for:', this.currentLang, this.translations);
+        console.log('[languageManager] Applying translations for:', this.currentLang, this.translations);
         document.querySelectorAll('[data-translate]').forEach(element => {
             const key = element.getAttribute('data-translate');
             element.textContent = this.translate(key);
@@ -56,6 +136,7 @@ class LanguageManager {
             const key = element.getAttribute('data-translate-placeholder');
             element.placeholder = this.translate(key);
         });
+        console.log('[languageManager] Translations applied for:', this.currentLang);
     }
 
     getLocale() {
@@ -83,5 +164,7 @@ class LanguageManager {
     }
 }
 
-window.languageManager = new LanguageManager();
-export default window.languageManager;
+// Export for use in other modules
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = LanguageManager;
+}

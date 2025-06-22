@@ -15,7 +15,7 @@
     <!-- Font Awesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script>
-        document.write(`<link rel="stylesheet" href="${basePath}vendors/style.css">`);
+        // document.write(`<link rel="stylesheet" href="${basePath}vendors/style.css">`); // Removed due to MIME type error
         document.write(`<link rel="stylesheet" href="${basePath}trial/css/upgrade-modal.css">`);
         document.write(`<link rel="stylesheet" href="${basePath}components/trial-banner.css">`);
         document.write(`<link rel="stylesheet" href="${basePath}components/trial-restrictions.css">`);
@@ -121,43 +121,40 @@
             </script>
 
              <!-- Dashboard Content -->
-            <h2 data-lang="title" data-en="Dashboard Overview" data-pt="Visão Geral do Painel">Dashboard Overview</h2>
-            <p class="subtitle" id="dashboard-subtitle"
-               data-lang="subtitle"
-               data-en="Welcome back, User! Here's what's happening with your business today."
-               data-pt="Bem-vindo de volta, User! Aqui está o que está acontecendo com o seu negócio hoje.">
+            <h2 data-translate="dashboard_overview">Dashboard Overview</h2>
+            <p class="subtitle" id="dashboard-subtitle" data-translate="dashboard_welcome">
                Welcome back, User! Here's what's happening with your business today.
             </p>            
             
             <!-- Quick Actions Section -->
-            <h3 data-lang="quickActions" data-en="Quick Actions" data-pt="Ações Rápidas">Quick Actions</h3>
+            <h3 data-translate="quick_actions">Quick Actions</h3>
             <div class="quick-actions-grid">
                 <div class="action-card">
                     <a href="invoices.html" style="text-decoration: none; color: inherit;">
                         <i class="fas fa-file-invoice"></i>
-                        <h4 data-lang="newInvoice" data-en="New Invoice" data-pt="Nova Fatura">New Invoice</h4>
-                        <p data-lang="createANewInvoice" data-en="Create a new invoice" data-pt="Criar uma nova fatura">Create a new invoice</p>
+                        <h4 data-translate="new_invoice">New Invoice</h4>
+                        <p data-translate="create_new_invoice">Create a new invoice</p>
                     </a>
                 </div>
                 <div class="action-card">
                     <a href="clients/clients.html" style="text-decoration: none; color: inherit;">
                         <i class="fas fa-user-plus"></i>
-                        <h4 data-lang="addClient" data-en="Add Client" data-pt="Adicionar Cliente">Add Client</h4>
-                        <p data-lang="registerANewClient" data-en="Register a new client" data-pt="Registar um novo cliente">Register a new client</p>
+                        <h4 data-translate="add_client">Add Client</h4>
+                        <p data-translate="register_new_client">Register a new client</p>
                     </a>
                 </div>
                 <div class="action-card">
                     <a href="products.html" style="text-decoration: none; color: inherit;">
                         <i class="fas fa-box"></i>
-                        <h4 data-lang="addProduct" data-en="Add Product" data-pt="Adicionar Produto">Add Product</h4>
-                        <p data-lang="addProductToInventory" data-en="Add product to inventory" data-pt="Adicionar produto ao inventário">Add product to inventory</p>
+                        <h4 data-translate="add_product">Add Product</h4>
+                        <p data-translate="add_product_to_inventory">Add product to inventory</p>
                     </a>
                 </div>
                 <div class="action-card">
                     <a href="banks/banks.html" style="text-decoration: none; color: inherit; display: block; width: 100%; height: 100%;">
                         <i class="fas fa-university"></i>
-                        <h4 data-lang="banks" data-en="Banks & Wallets" data-pt="Bancos e Carteiras">Banks & Wallets</h4>
-                        <p data-lang="manageBankAccounts" data-en="Manage your bank accounts and wallets" data-pt="Gerencie suas contas bancárias e carteiras">Manage your bank accounts and wallets</p>
+                        <h4 data-translate="banks_wallets">Banks & Wallets</h4>
+                        <p data-translate="manage_bank_accounts">Manage your bank accounts and wallets</p>
                     </a>
                 </div>
             </div>
@@ -166,10 +163,10 @@
             <div class="chart-grid">
                 <div class="chart-card">
                     <h3>
-                        Monthly Revenue
+                        <span data-translate="monthly_revenue">Monthly Revenue</span>
                         <div class="chart-actions">
-                            <button id="monthlyBtn" class="active">Monthly</button>
-                            <button id="quarterlyBtn">Quarterly</button>
+                            <button id="monthlyBtn" class="active" data-translate="monthly">Monthly</button>
+                            <button id="quarterlyBtn" data-translate="quarterly">Quarterly</button>
                         </div>
                     </h3>
                     <div class="chart-container">
@@ -179,10 +176,10 @@
                 
                 <div class="chart-card">
                     <h3>
-                        Invoice Status
+                        <span data-translate="invoice_status">Invoice Status</span>
                         <div class="chart-actions">
-                            <button id="allTimeBtn" class="active">All Time</button>
-                            <button id="thisYearBtn">This Year</button>
+                            <button id="allTimeBtn" class="active" data-translate="all_time">All Time</button>
+                            <button id="thisYearBtn" data-translate="this_year">This Year</button>
                         </div>
                     </h3>
                     <div class="chart-container">
@@ -194,43 +191,40 @@
             <!-- Recent Invoices Table -->
             <div class="recent-transactions">
                 <h3>
-                    Recent Invoices
-                    <a href="invoices.html" class="view-all" data-lang="viewAllInvoices" data-en="View All" data-pt="Ver Todos">View All</a>
+                    <span data-translate="recent_invoices">Recent Invoices</span>
+                    <a href="invoices.html" class="view-all" data-translate="view_all">View All</a>
                 </h3>
                 <div class="table-filters">
                     <div class="filter-group">
-                        <label for="statusFilter" data-lang="statusLabel" data-en="Status:" data-pt="Estado:">Status:</label>
+                        <label for="statusFilter" data-translate="status_label">Status:</label>
                         <select id="statusFilter" class="filter-select">
-                            <option value="all" data-lang="allStatuses" data-en="All Statuses" data-pt="Todos os Status">All Statuses</option>
-                            <option value="paid" data-lang="paid" data-en="Paid" data-pt="Pago">Paid</option>
-                            <option value="pending" data-lang="pending" data-en="Pending" data-pt="Pendente">Pending</option>
-                            <option value="overdue" data-lang="overdue" data-en="Overdue" data-pt="Atrasado">Overdue</option>
+                            <option value="all" data-translate="all_statuses">All Statuses</option>
+                            <option value="paid" data-translate="paid">Paid</option>
+                            <option value="pending" data-translate="pending">Pending</option>
+                            <option value="overdue" data-translate="overdue">Overdue</option>
                         </select>
                     </div>
                     <div class="filter-group">
-                        <label for="dateFilter" data-lang="dateRangeLabel" data-en="Date Range:" data-pt="Período:">Date Range:</label>
+                        <label for="dateFilter" data-translate="date_range_label">Date Range:</label>
                         <select id="dateFilter" class="filter-select">
-                            <option value="all" data-lang="allTime" data-en="All Time" data-pt="Todo o Tempo">All Time</option>
-                            <option value="today" data-lang="today" data-en="Today" data-pt="Hoje">Today</option>
-                            <option value="week" data-lang="thisWeek" data-en="This Week" data-pt="Esta Semana">This Week</option>
-                            <option value="month" selected data-lang="thisMonth" data-en="This Month" data-pt="Este Mês">This Month</option>
-                            <option value="quarter" data-lang="thisQuarter" data-en="This Quarter" data-pt="Este Trimestre">This Quarter</option>
+                            <option value="all" data-translate="all_time">All Time</option>
+                            <option value="today" data-translate="today">Today</option>
+                            <option value="week" data-translate="this_week">This Week</option>
+                            <option value="month" data-translate="this_month" selected>This Month</option>
+                            <option value="quarter" data-translate="this_quarter">This Quarter</option>
                         </select>
                     </div>
                     <div class="filter-group">
-                        <label for="amountFilter" data-lang="amountLabel" data-en="Amount:" data-pt="Valor:">Amount:</label>
+                        <label for="amountFilter" data-translate="amount_label">Amount:</label>
                         <select id="amountFilter" class="filter-select">
-                            <option value="all">All Amounts</option>
-                            <option value="under1000">Under MZN 1,000</option>
-                            <option value="1000to5000">MZN 1,000 - MZN 5,000</option>
-                            <option value="over5000">Over MZN 5,000</option>
+                            <option value="all" data-translate="all_amounts">All Amounts</option>
+                            <option value="under1000" data-translate="under_1000">Under MZN 1,000</option>
+                            <option value="1000to5000" data-translate="1000_to_5000">MZN 1,000 - MZN 5,000</option>
+                            <option value="over5000" data-translate="over_5000">Over MZN 5,000</option>
                         </select>
                     </div>
                     <div class="filter-group search-filter">
-                        <input type="text" id="searchInvoices" placeholder="Search invoices..." 
-                               data-lang="searchInvoicesPlaceholder" 
-                               data-en="Search invoices..." 
-                               data-pt="Pesquisar faturas...">
+                        <input type="text" id="searchInvoices" placeholder="Search invoices..." data-translate-placeholder="search_invoices_placeholder">
                     </div>
                 </div>
                 
@@ -238,12 +232,12 @@
                     <table id="invoicesTable">
                         <thead>
                             <tr>
-                                <th data-sort="invoice_number">Invoice # <i class="fas fa-sort sort-icon"></i></th>
-                                <th data-sort="client_name">Client <i class="fas fa-sort sort-icon"></i></th>
-                                <th data-sort="issue_date">Date <i class="fas fa-sort sort-icon"></i></th>
-                                <th data-sort="total">Amount <i class="fas fa-sort sort-icon"></i></th>
-                                <th>Status</th>
-                                <th>Actions</th>
+                                <th data-sort="invoice_number" data-translate="invoice_number">Invoice # <i class="fas fa-sort sort-icon"></i></th>
+                                <th data-sort="client_name" data-translate="client">Client <i class="fas fa-sort sort-icon"></i></th>
+                                <th data-sort="issue_date" data-translate="date">Date <i class="fas fa-sort sort-icon"></i></th>
+                                <th data-sort="total" data-translate="amount">Amount <i class="fas fa-sort sort-icon"></i></th>
+                                <th data-translate="status">Status</th>
+                                <th data-translate="actions">Actions</th>
                             </tr>
                         </thead>
                         <tbody id="invoicesTableBody">
@@ -256,7 +250,7 @@
                     <div class="page-controls"></div>
                 </div>
                 <div id="noResultsMessage" class="no-results" style="display: none;">
-                    <p data-lang="noInvoicesFound">No invoices match your filter criteria. <a href="#" id="resetFiltersLink">Reset filters</a></p>
+                    <p data-translate="no_invoices_found">No invoices match your filter criteria. <a href="#" id="resetFiltersLink" data-translate="reset_filters">Reset filters</a></p>
                 </div>
             </div>
 
@@ -676,11 +670,11 @@
                 <div class="metric-card" id="totalInvoicesCard">
                     <div class="metric-header">
                         <i class="fas fa-file-invoice"></i>
-                        <span data-lang="totalInvoices" data-en="Total Invoices" data-pt="Total de Faturas">Total Invoices</span>
+                        <span data-translate="total_invoices">Total Invoices</span>
                     </div>
                     <div class="metric-value">0</div>
                     <div class="metric-footer">
-                        <span class="metric-label" data-lang="thisMonth" data-en="This Month" data-pt="Este Mês">This Month</span>
+                        <span class="metric-label" data-translate="this_month">This Month</span>
                         <span class="metric-change positive">0%</span>
                     </div>
                     <button class="drilldown-btn" data-target="totalInvoicesDetail" aria-expanded="false" aria-label="Show invoice details">
@@ -688,33 +682,33 @@
                     </button>
                     <div class="drilldown-content" id="totalInvoicesDetail">
                         <div class="drilldown-header">
-                            <h4 data-lang="invoiceBreakdown" data-en="Invoice Breakdown" data-pt="Detalhes da Fatura">Invoice Breakdown</h4>
+                            <h4 data-translate="invoice_breakdown">Invoice Breakdown</h4>
                             <div class="drilldown-actions">
-                                <button class="drilldown-tab active" data-view="daily" data-lang="daily" data-en="Daily" data-pt="Diário">Daily</button>
-                                <button class="drilldown-tab" data-view="weekly" data-lang="weekly" data-en="Weekly" data-pt="Semanal">Weekly</button>
-                                <button class="drilldown-tab" data-view="monthly" data-lang="monthly" data-en="Monthly" data-pt="Mensal">Monthly</button>
+                                <button class="drilldown-tab active" data-view="daily" data-translate="daily">Daily</button>
+                                <button class="drilldown-tab" data-view="weekly" data-translate="weekly">Weekly</button>
+                                <button class="drilldown-tab" data-view="monthly" data-translate="monthly">Monthly</button>
                             </div>
                         </div>
                         <div class="drilldown-data">
                             <div class="drilldown-item">
-                                <span data-lang="newInvoices" data-en="New Invoices" data-pt="Novas Faturas">New Invoices</span>
+                                <span data-translate="new_invoices">New Invoices</span>
                                 <span>42</span>
                             </div>
                             <div class="drilldown-item">
-                                <span data-lang="sentInvoices" data-en="Sent Invoices" data-pt="Faturas Enviadas">Sent Invoices</span>
+                                <span data-translate="sent_invoices">Sent Invoices</span>
                                 <span>128</span>
                             </div>
                             <div class="drilldown-item">
-                                <span data-lang="paidInvoices" data-en="Paid Invoices" data-pt="Faturas Pagas">Paid Invoices</span>
+                                <span data-translate="paid_invoices">Paid Invoices</span>
                                 <span>156</span>
                             </div>
                             <div class="drilldown-item">
-                                <span data-lang="overdueInvoices" data-en="Overdue Invoices" data-pt="Faturas Atrasadas">Overdue Invoices</span>
+                                <span data-translate="overdue_invoices">Overdue Invoices</span>
                                 <span>32</span>
                             </div>
                         </div>
                         <div class="drilldown-footer">
-                            <a href="#" class="drilldown-link" data-lang="viewAllInvoices" data-en="View All Invoices" data-pt="Ver Todas as Faturas">View All Invoices <i class="fas fa-arrow-right"></i></a>
+                            <a href="#" class="drilldown-link" data-translate="view_all_invoices">View All Invoices <i class="fas fa-arrow-right"></i></a>
                         </div>
                     </div>
                 </div>
@@ -722,7 +716,7 @@
                 <div class="metric-card" id="revenueCard" onclick="window.location.href='banks/banks.html'" style="cursor: pointer;">
                     <div class="metric-header">
                         <i class="fas fa-money-bill"></i>
-                        <span data-lang="revenue" data-en="Revenue" data-pt="Receita">Revenue</span>
+                        <span data-translate="revenue">Revenue</span>
                         <select id="currency-selector" class="currency-select" onchange="changeCurrency(this.value); event.stopPropagation();">
                             <option value="MZN">MZN</option>
                             <option value="USD">USD</option>
@@ -732,7 +726,7 @@
                     </div>
                     <div class="metric-value">MZN 0.00</div>
                     <div class="metric-footer">
-                        <span class="metric-label" data-lang="thisMonth" data-en="This Month" data-pt="Este Mês">This Month</span>
+                        <span class="metric-label" data-translate="this_month">This Month</span>
                         <span class="metric-change positive">0%</span>
                     </div>
                     <button class="drilldown-btn" data-target="revenueDetail" aria-expanded="false" aria-label="Show revenue details">
@@ -740,28 +734,28 @@
                     </button>
                     <div class="drilldown-content" id="revenueDetail">
                         <div class="drilldown-header">
-                            <h4 data-lang="revenueBreakdown" data-en="Revenue Breakdown" data-pt="Detalhes da Receita">Revenue Breakdown</h4>
+                            <h4 data-translate="revenue_breakdown">Revenue Breakdown</h4>
                             <div class="drilldown-actions">
-                                <button class="drilldown-tab active" data-view="category" data-lang="byCategory" data-en="By Category" data-pt="Por Categoria">By Category</button>
-                                <button class="drilldown-tab" data-view="client" data-lang="byClient" data-en="By Client" data-pt="Por Cliente">By Client</button>
+                                <button class="drilldown-tab active" data-view="category" data-translate="by_category">By Category</button>
+                                <button class="drilldown-tab" data-view="client" data-translate="by_client">By Client</button>
                             </div>
                         </div>
                         <div class="drilldown-data">
                             <div class="drilldown-item">
-                                <span data-lang="products" data-en="Products" data-pt="Produtos">Products</span>
+                                <span data-translate="products">Products</span>
                                 <span>MZN 18,250</span>
                             </div>
                             <div class="drilldown-item">
-                                <span data-lang="services" data-en="Services" data-pt="Serviços">Services</span>
+                                <span data-translate="services">Services</span>
                                 <span>MZN 15,330</span>
                             </div>
                             <div class="drilldown-item">
-                                <span data-lang="subscriptions" data-en="Subscriptions" data-pt="Assinaturas">Subscriptions</span>
+                                <span data-translate="subscriptions">Subscriptions</span>
                                 <span>MZN 9,000</span>
                             </div>
                         </div>
                         <div class="drilldown-footer">
-                            <a href="#" class="drilldown-link" data-lang="viewFinancialReport" data-en="View Financial Report" data-pt="Ver Relatório Financeiro">View Financial Report <i class="fas fa-arrow-right"></i></a>
+                            <a href="#" class="drilldown-link" data-translate="view_financial_report">View Financial Report <i class="fas fa-arrow-right"></i></a>
                         </div>
                     </div>
                 </div>
@@ -769,11 +763,11 @@
                 <div class="metric-card" id="expensesCard">
                     <div class="metric-header">
                         <i class="fas fa-credit-card"></i>
-                        <span data-lang="expenses" data-en="Expenses" data-pt="Despesas">Expenses</span>
+                        <span data-translate="expenses">Expenses</span>
                     </div>
                     <div class="metric-value">MZN 0.00</div>
                     <div class="metric-footer">
-                        <span class="metric-label" data-lang="thisMonth" data-en="This Month" data-pt="Este Mês">This Month</span>
+                        <span class="metric-label" data-translate="this_month">This Month</span>
                         <span class="metric-change negative">0%</span>
                     </div>
                     <button class="drilldown-btn" data-target="expensesDetail" aria-expanded="false" aria-label="Show expenses details">
@@ -781,32 +775,32 @@
                     </button>
                     <div class="drilldown-content" id="expensesDetail">
                         <div class="drilldown-header">
-                            <h4 data-lang="expensesBreakdown" data-en="Expenses Breakdown" data-pt="Detalhes das Despesas">Expenses Breakdown</h4>
+                            <h4 data-translate="expenses_breakdown">Expenses Breakdown</h4>
                             <div class="drilldown-actions">
-                                <button class="drilldown-tab active" data-view="category" data-lang="byCategory" data-en="By Category" data-pt="Por Categoria">By Category</button>
-                                <button class="drilldown-tab" data-view="vendor" data-lang="byVendor" data-en="By Vendor" data-pt="Por Fornecedor">By Vendor</button>
+                                <button class="drilldown-tab active" data-view="category" data-translate="by_category">By Category</button>
+                                <button class="drilldown-tab" data-view="vendor" data-translate="by_vendor">By Vendor</button>
                             </div>
                         </div>
                         <div class="drilldown-data">
                             <div class="drilldown-item">
-                                <span data-lang="operations" data-en="Operations" data-pt="Operações">Operations</span>
+                                <span data-translate="operations">Operations</span>
                                 <span>MZN 5,240</span>
                             </div>
                             <div class="drilldown-item">
-                                <span data-lang="marketing" data-en="Marketing" data-pt="Marketing">Marketing</span>
+                                <span data-translate="marketing">Marketing</span>
                                 <span>MZN 3,150</span>
                             </div>
                             <div class="drilldown-item">
-                                <span data-lang="payroll" data-en="Payroll" data-pt="Folha de Pagamento">Payroll</span>
+                                <span data-translate="payroll">Payroll</span>
                                 <span>MZN 2,800</span>
                             </div>
                             <div class="drilldown-item">
-                                <span data-lang="other" data-en="Other" data-pt="Outros">Other</span>
+                                <span data-translate="other">Other</span>
                                 <span>MZN 1,290</span>
                             </div>
                         </div>
                         <div class="drilldown-footer">
-                            <a href="#" class="drilldown-link" data-lang="viewAllExpenses" data-en="View All Expenses" data-pt="Ver Todas as Despesas">View All Expenses <i class="fas fa-arrow-right"></i></a>
+                            <a href="#" class="drilldown-link" data-translate="view_all_expenses">View All Expenses <i class="fas fa-arrow-right"></i></a>
                         </div>
                     </div>
                 </div>
@@ -814,11 +808,11 @@
                 <div class="metric-card" id="clientsCard">
                     <div class="metric-header">
                         <i class="fas fa-users"></i>
-                        <span data-lang="clients" data-en="Clients" data-pt="Clientes">Clients</span>
+                        <span data-translate="clients">Clients</span>
                     </div>
                     <div class="metric-value" id="totalClientsValue">0</div>
                     <div class="metric-footer">
-                        <span class="metric-label" data-lang="totalActive" data-en="Total Active" data-pt="Total Ativo">Total Active</span>
+                        <span class="metric-label" data-translate="total_active">Total Active</span>
                         <span class="metric-change positive" id="clientsGrowth">0%</span>
                     </div>
                     <button class="drilldown-btn" data-target="clientsDetail" aria-expanded="false" aria-label="Show client details">
@@ -826,28 +820,28 @@
                     </button>
                     <div class="drilldown-content" id="clientsDetail">
                         <div class="drilldown-header">
-                            <h4 data-lang="clientsBreakdown" data-en="Clients Breakdown" data-pt="Detalhes dos Clientes">Clients Breakdown</h4>
+                            <h4 data-translate="clients_breakdown">Clients Breakdown</h4>
                             <div class="drilldown-actions">
-                                <button class="drilldown-tab active" data-view="status" data-lang="byStatus" data-en="By Status" data-pt="Por Status">By Status</button>
-                                <button class="drilldown-tab" data-view="type" data-lang="byType" data-en="By Type" data-pt="Por Tipo">By Type</button>
+                                <button class="drilldown-tab active" data-view="status" data-translate="by_status">By Status</button>
+                                <button class="drilldown-tab" data-view="type" data-translate="by_type">By Type</button>
                             </div>
                         </div>
                         <div class="drilldown-data">
                             <div class="drilldown-item">
-                                <span data-lang="newClients" data-en="New Clients" data-pt="Novos Clientes">New Clients</span>
+                                <span data-translate="new_clients">New Clients</span>
                                 <span id="newClientsCount">0</span>
                             </div>
                             <div class="drilldown-item">
-                                <span data-lang="activeClients" data-en="Active Clients" data-pt="Clientes Ativos">Active Clients</span>
+                                <span data-translate="active_clients">Active Clients</span>
                                 <span id="activeClientsCount">0</span>
                             </div>
                             <div class="drilldown-item">
-                                <span data-lang="inactiveClients" data-en="Inactive Clients" data-pt="Clientes Inativos">Inactive Clients</span>
+                                <span data-translate="inactive_clients">Inactive Clients</span>
                                 <span id="inactiveClientsCount">0</span>
                             </div>
                         </div>
                         <div class="drilldown-footer">
-                            <a href="clients/clients.html" class="drilldown-link" data-lang="viewAllClients" data-en="View All Clients" data-pt="Ver Todos os Clientes">View All Clients <i class="fas fa-arrow-right"></i></a>
+                            <a href="clients/clients.html" class="drilldown-link" data-translate="view_all_clients">View All Clients <i class="fas fa-arrow-right"></i></a>
                         </div>
                     </div>
                 </div>
@@ -1701,5 +1695,14 @@
   <script src="js/auth.js"></script>
   <script src="js/topbar-menu.js"></script>
   <script src="js/displayname.js"></script>
+  <script src="services/languageManager.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', async () => {
+      // Initialize language manager with database sync
+      const languageManager = new LanguageManager('./');
+      window.languageManager = languageManager; // Make it globally available for other scripts
+      await languageManager.initialize();
+    });
+  </script>
 </body>
 </html>

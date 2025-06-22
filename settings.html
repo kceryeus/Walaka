@@ -42,17 +42,6 @@
                 var script = document.createElement('script');
                 script.src = 'components/sidebar-actions.js';
                 document.body.appendChild(script);
-
-                // Ensure translations are loaded before applying
-                if (window.languageManager) {
-                    if (!window.languageManager.translations || Object.keys(window.languageManager.translations).length === 0) {
-                        window.languageManager.loadTranslations(window.languageManager.currentLang).then(() => {
-                            window.languageManager.applyTranslations();
-                        });
-                    } else {
-                        window.languageManager.applyTranslations();
-                    }
-                }
             })
             .catch(err => {
                 console.error('Failed to load sidebar:', err);
@@ -699,6 +688,26 @@
   
   <!-- Load Language Manager BEFORE settings.js -->
   <script src="services/languageManager.js"></script>
+  <script>
+    window.languageManager = new LanguageManager('./');
+    document.addEventListener('DOMContentLoaded', async () => {
+      // Initialize language manager with database sync
+      await window.languageManager.initialize();
+      
+      // Set up language change listener for the settings page
+      const langSelect = document.getElementById('user-language');
+      if (langSelect) {
+        langSelect.value = window.languageManager.currentLang;
+        langSelect.addEventListener('change', async (e) => {
+          const newLang = e.target.value;
+          await window.languageManager.setLanguage(newLang);
+          
+          // Update the select value to reflect the current language
+          langSelect.value = window.languageManager.currentLang;
+        });
+      }
+    });
+  </script>
   <!-- Load your settings.js -->
   <script src="assets/js/settings.js"></script>
   
