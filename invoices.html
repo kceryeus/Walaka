@@ -129,13 +129,12 @@
             <!-- Invoice Dashboard Content -->
             <div class="page-header">
                 <div>
-                    <h2>Invoice Management</h2>
-                    <p class="subtitle">Create, manage, and track all your invoices</p>
+                    <h2 data-translate="invoice_management">Invoice Management</h2>
+                    <p class="subtitle" data-translate="invoice_management_subtitle">Create, manage, and track all your invoices</p>
                 </div>
                 <div class="action-buttons">
-
                     <button class="btn primary-btn" id="createInvoiceBtn">
-                        <i class="fas fa-plus"></i> Create Invoice
+                        <i class="fas fa-plus"></i> <span data-translate="create_invoice">Create Invoice</span>
                     </button>
                 </div>
             </div>
@@ -145,44 +144,44 @@
                 <div class="metric-card" id="totalInvoicesCard">
                     <div class="metric-header">
                         <i class="fas fa-file-invoice"></i>
-                        <span>Total Invoices</span>
+                        <span data-translate="total_invoices">Total Invoices</span>
                     </div>
                     <div class="metric-value">0</div>
                     <div class="metric-footer">
-                        <span class="metric-label">All Time</span>
+                        <span class="metric-label" data-translate="all_time">All Time</span>
                     </div>
                 </div>
                 
                 <div class="metric-card" id="paidInvoicesCard">
                     <div class="metric-header">
                         <i class="fas fa-check-circle"></i>
-                        <span>Paid Invoices</span>
+                        <span data-translate="paid_invoices">Paid Invoices</span>
                     </div>
                     <div class="metric-value">0</div>
                     <div class="metric-footer">
-                        <span class="metric-label">0% of Total</span>
+                        <span class="metric-label" data-translate="percent_of_total">% of Total</span>
                     </div>
                 </div>
                 
                 <div class="metric-card" id="pendingInvoicesCard">
                     <div class="metric-header">
                         <i class="fas fa-clock"></i>
-                        <span>Pending Payments</span>
+                        <span data-translate="pending_payments">Pending Payments</span>
                     </div>
                     <div class="metric-value">0</div>
                     <div class="metric-footer">
-                        <span class="metric-label">0% of Total</span>
+                        <span class="metric-label" data-translate="percent_of_total">% of Total</span>
                     </div>
                 </div>
                 
                 <div class="metric-card" id="overdueInvoicesCard">
                     <div class="metric-header">
                         <i class="fas fa-exclamation-circle"></i>
-                        <span>Overdue Invoices</span>
+                        <span data-translate="overdue_invoices">Overdue Invoices</span>
                     </div>
                     <div class="metric-value">0</div>
                     <div class="metric-footer">
-                        <span class="metric-label">0% of Total</span>
+                        <span class="metric-label" data-translate="percent_of_total">% of Total</span>
                     </div>
                 </div>
             </div>
@@ -191,11 +190,11 @@
             <div class="chart-grid">
                 <div class="chart-card">
                     <h3>
-                        Invoice Distribution
+                        <span data-translate="invoice_distribution">Invoice Distribution</span>
                         <div class="chart-actions">
-                            <button id="weeklyBtn" class="chart-period-btn active">Weekly</button>
-                            <button id="monthlyBtn" class="chart-period-btn">Monthly</button>
-                            <button id="quarterlyBtn" class="chart-period-btn">Quarterly</button>
+                            <button id="weeklyBtn" class="chart-period-btn active" data-translate="weekly">Weekly</button>
+                            <button id="monthlyBtn" class="chart-period-btn" data-translate="monthly">Monthly</button>
+                            <button id="quarterlyBtn" class="chart-period-btn" data-translate="quarterly">Quarterly</button>
                         </div>
                     </h3>
                     <div class="chart-container">
@@ -205,10 +204,10 @@
                 
                 <div class="chart-card">
                     <h3>
-                        Revenue by Status
+                        <span data-translate="revenue_by_status">Revenue by Status</span>
                         <div class="chart-actions">
-                            <button id="revenueMonthlyBtn" class="chart-period-btn active">Monthly</button>
-                            <button id="revenueYearlyBtn" class="chart-period-btn">Yearly</button>
+                            <button id="revenueMonthlyBtn" class="chart-period-btn active" data-translate="monthly">Monthly</button>
+                            <button id="revenueYearlyBtn" class="chart-period-btn" data-translate="yearly">Yearly</button>
                         </div>
                     </h3>
                     <div class="chart-container">
@@ -220,36 +219,36 @@
             <!-- Invoice Table Filter Section -->
             <div class="invoice-table-container">
                 <div class="table-header">
-                    <h3>Recent Invoices</h3>
+                    <h3 data-translate="recent_invoices">Recent Invoices</h3>
                     <div class="table-filters">
                         <div class="filter-group">
-                            <label for="statusFilter">Status:</label>
+                            <label for="statusFilter" data-translate="status_label">Status:</label>
                             <select id="statusFilter" class="filter-select">
-                                <option value="all">All Statuses</option>
-                                <option value="paid">Paid</option>
-                                <option value="pending">Pending</option>
-                                <option value="overdue">Overdue</option>
-                                <option value="draft">Unfinished</option>
+                                <option value="all" data-translate="all_statuses">All Statuses</option>
+                                <option value="paid" data-translate="paid">Paid</option>
+                                <option value="pending" data-translate="pending">Pending</option>
+                                <option value="overdue" data-translate="overdue">Overdue</option>
+                                <option value="draft" data-translate="unfinished">Unfinished</option>
                             </select>
                         </div>
                         <div class="filter-group">
-                            <label for="clientFilter">Client:</label>
+                            <label for="clientFilter" data-translate="client">Client:</label>
                             <select id="clientFilter" class="filter-select">
-                                <option value="all">All Clients</option>
+                                <option value="all" data-translate="all_clients">All Clients</option>
                             </select>
                         </div>
      
                    <!--  Consolidated Date Range Filter -->
                         <div class="filter-group date-range-group">
-                            <label for="dateRangeFilter">Date Range:</label>
+                            <label for="dateRangeFilter" data-translate="date_range_label">Date Range:</label>
                             <select id="dateRangeFilter" class="filter-select">
-                                <option value="all">All Time</option>
-                                <option value="today">Today</option>
-                                <option value="week">This Week</option>
-                                <option value="month">This Month</option>
-                                <option value="quarter">This Quarter</option>
-                                <option value="year">This Year</option>
-                                <option value="custom">Custom Range</option>
+                                <option value="all" data-translate="all_time">All Time</option>
+                                <option value="today" data-translate="today">Today</option>
+                                <option value="week" data-translate="this_week">This Week</option>
+                                <option value="month" data-translate="this_month">This Month</option>
+                                <option value="quarter" data-translate="this_quarter">This Quarter</option>
+                                <option value="year" data-translate="this_year">This Year</option>
+                                <option value="custom" data-translate="custom_range">Custom Range</option>
                             </select>
                             
                             <div id="customDateRange" class="custom-date-range" style="display: none;">
@@ -266,20 +265,20 @@
                         </div>
 
                         <div class="search-filter">
-                            <label for="searchInvoices">Search:</label>
-                            <input type="text" id="searchInvoices" placeholder="Invoice number, client name...">
+                            <label for="searchInvoices" data-translate="search">Search:</label>
+                            <input type="text" id="searchInvoices" data-translate-placeholder="search_invoices_placeholder" placeholder="Invoice number, client name...">
                             <button id="clearFilters" class="clear-filters-btn">
-                                <i class="fas fa-times"></i> Clear
+                                <i class="fas fa-times"></i> <span data-translate="clear">Clear</span>
                             </button>
                         </div>
 
                         <!-- Export Buttons -->
                         <div class="export-buttons">
                             <button id="exportCsvBtn" class="btn btn-success">
-                                <i class="fas fa-file-csv"></i> Export CSV
+                                <i class="fas fa-file-csv"></i> <span data-translate="export_csv">Export CSV</span>
                             </button>
                             <button id="exportSaftBtn" class="btn btn-primary">
-                                <i class="fas fa-file-code"></i> Export SAFT
+                                <i class="fas fa-file-code"></i> <span data-translate="export_saft">Export SAFT</span>
                             </button>
                         </div>
                     </div>
@@ -290,43 +289,13 @@
                     <table id="invoicesTable" class="data-table">
                         <thead>
                             <tr>
-                                <th>
-                                    Invoice # 
-                                    <span class="sort-icon" data-sort="invoice">
-                                        <i class="fas fa-sort"></i>
-                                    </span>
-                                </th>
-                                <th>
-                                    Client 
-                                    <span class="sort-icon" data-sort="client">
-                                        <i class="fas fa-sort"></i>
-                                    </span>
-                                </th>
-                                <th>
-                                    Date 
-                                    <span class="sort-icon" data-sort="date">
-                                        <i class="fas fa-sort"></i>
-                                    </span>
-                                </th>
-                                <th>
-                                    Due Date 
-                                    <span class="sort-icon" data-sort="dueDate">
-                                        <i class="fas fa-sort"></i>
-                                    </span>
-                                </th>
-                                <th>
-                                    Amount 
-                                    <span class="sort-icon" data-sort="amount">
-                                        <i class="fas fa-sort"></i>
-                                    </span>
-                                </th>
-                                <th>
-                                    Status 
-                                    <span class="sort-icon" data-sort="status">
-                                        <i class="fas fa-sort"></i>
-                                    </span>
-                                </th>
-                                <th>Actions</th>
+                                <th data-translate="invoice_number">Invoice #</th>
+                                <th data-translate="client">Client</th>
+                                <th data-translate="date">Date</th>
+                                <th data-translate="due_date">Due Date</th>
+                                <th data-translate="amount">Amount</th>
+                                <th data-translate="status">Status</th>
+                                <th data-translate="actions">Actions</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -370,7 +339,7 @@
     <div id="invoiceModal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
-                <h2>Create New Invoice</h2>
+                <h2 data-translate="create_new_invoice_modal_title">Create New Invoice</h2>
                 <button class="close-modal">&times;</button>
             </div>
             <div class="modal-body">
@@ -378,58 +347,58 @@
                     <div class="form-grid">
 
                         <div class="form-section">
-                            <h3>Client Information</h3>
+                            <h3 data-translate="client_information">Client Information</h3>
                             <div class="form-row">
                                 <div class="form-group">
-                                    <label for="client-list">Client Name/Company</label>
+                                    <label for="client-list" data-translate="client_name_company">Client Name/Company</label>
                                     <div class="client-input-wrapper">
-                                        <input type="text" id="client-list" placeholder="Type client name..." autocomplete="off" list="client-options">
+                                        <input type="text" id="client-list" placeholder="Type client name..." autocomplete="off" list="client-options" data-translate-placeholder="type_client_name_placeholder">
                                         <datalist id="client-options"></datalist>
                                         <button type="button" id="add-client-btn" class="btn secondary-btn" style="display:none;">
-                                            <i class="fas fa-plus"></i> New Client
+                                            <i class="fas fa-plus"></i> <span data-translate="new_client">New Client</span>
                                         </button>
                                     </div>
                                 </div>
                             </div>
                             <div class="form-row">
                                 <div class="form-group">
-                                    <label for="clientEmail">Email</label>
-                                    <input type="email" id="clientEmail" placeholder="client@example.com" readonly>
+                                    <label for="clientEmail" data-translate="email">Email</label>
+                                    <input type="email" id="clientEmail" placeholder="client@example.com" readonly data-translate-placeholder="client_email_placeholder">
                                 </div>
                                 <div class="form-group">
-                                    <label for="clientTaxId">Tax ID (NUIT)</label>
-                                    <input type="text" id="clientTaxId" placeholder="e.g. 123456789" readonly>
+                                    <label for="clientTaxId" data-translate="tax_id_nuit">Tax ID (NUIT)</label>
+                                    <input type="text" id="clientTaxId" placeholder="e.g. 123456789" readonly data-translate-placeholder="tax_id_placeholder">
                                 </div>
                             </div>
                             <div class="form-row">
                                 <div class="form-group">
-                                    <label for="clientAddress">Address</label>
-                                    <textarea id="clientAddress" rows="3" placeholder="Client's full address" readonly></textarea>
+                                    <label for="clientAddress" data-translate="address">Address</label>
+                                    <textarea id="clientAddress" rows="3" placeholder="Client's full address" readonly data-translate-placeholder="client_address_placeholder"></textarea>
                                 </div>
                             </div>
                         </div>
                         
                         <div class="form-section">
-                            <h3>Invoice Details</h3>
+                            <h3 data-translate="invoice_details">Invoice Details</h3>
                             <div class="form-row">
                                 <div class="form-group">
-                                    <label for="invoiceNumber">Invoice Number</label>
+                                    <label for="invoiceNumber" data-translate="invoice_number">Invoice Number</label>
                                     <input type="text" id="invoiceNumber" value="Generating invoice number" readonly>
                                 </div>
                                 <div class="form-group">
-                                    <label for="issueDate">Issue Date</label>
+                                    <label for="issueDate" data-translate="issue_date">Issue Date</label>
                                     <input type="date" id="issueDate" required>
                                 </div>
                             </div>
                             <div class="form-row">
                                 <div class="form-group">
-                                    <label for="dueDate">Due Date</label>
+                                    <label for="dueDate" data-translate="due_date">Due Date</label>
                                     <input type="date" id="dueDate" required>
                                 </div>
                                 <div class="form-group">
-                                    <label for="currency">Currency</label>
+                                    <label for="currency" data-translate="currency">Currency</label>
                                     <select id="currency" required>
-                                        <option value="MZN" selected>MZN - Mozambican Metical</option>
+                                        <option value="MZN" selected>MZN - Mozambican Metical (MZN)</option>
                                         <option value="USD">USD - US Dollar</option>
                                         <option value="EUR">EUR - Euro</option>
                                         <option value="GBP">GBP - British Pound</option>
@@ -438,12 +407,12 @@
                             </div>
                             <div class="form-row">
                                 <div class="form-group">
-                                    <label for="paymentTerms">Payment Terms</label>
+                                    <label for="paymentTerms" data-translate="payment_terms">Payment Terms</label>
                                     <select id="paymentTerms" required>
-                                        <option value="net30" selected>Net 30 - Due in 30 days</option>
-                                        <option value="net15">Net 15 - Due in 15 days</option>
-                                        <option value="net60">Net 60 - Due in 60 days</option>
-                                        <option value="custom">Custom</option>
+                                        <option value="net30" selected data-translate="net_30">Net 30 - Due in 30 days</option>
+                                        <option value="net15" data-translate="net_15">Net 15 - Due in 15 days</option>
+                                        <option value="net60" data-translate="net_60">Net 60 - Due in 60 days</option>
+                                        <option value="custom" data-translate="custom">Custom</option>
                                     </select>
                                 </div>
                             </div>
@@ -451,16 +420,16 @@
                     </div>
                     
                     <div class="form-section">
-                        <h3>Items</h3>
+                        <h3 data-translate="items">Items</h3>
                         <div class="items-table-container">
                             <table id="itemsTable" class="items-table">
                                 <thead>
                                     <tr>
-                                        <th width="40%">Description</th>
-                                        <th width="15%">Quantity</th>
-                                        <th width="15%">Unit Price</th>
-                                        <th width="10%">VAT (16%)</th>
-                                        <th width="15%">Total</th>
+                                        <th width="40%" data-translate="description">Description</th>
+                                        <th width="15%" data-translate="quantity">Quantity</th>
+                                        <th width="15%" data-translate="unit_price">Unit Price</th>
+                                        <th width="10%" data-translate="vat_16">VAT (16%)</th>
+                                        <th width="15%" data-translate="total">Total</th>
                                         <th width="5%"></th>
                                     </tr>
                                 </thead>
@@ -468,7 +437,7 @@
                                     <tr class="item-row">
                                         <td>
                                             <div class="item-description-wrapper">
-                                                <input type="text" class="item-description" placeholder="Enter item description">
+                                                <input type="text" class="item-description" placeholder="Enter item description" data-translate-placeholder="item_description_placeholder">
                                                 <div class="product-suggestions" style="display: none;"></div>
                                             </div>
                                         </td>
@@ -494,40 +463,40 @@
                             </table>
                         </div>
                         <button type="button" id="addItemBtn" class="btn secondary-btn">
-                            <i class="fas fa-plus"></i> Add Item
+                            <i class="fas fa-plus"></i> <span data-translate="add_item">Add Item</span>
                         </button>
                         
                         <div class="invoice-totals">
                             <div class="totals-row">
-                                <span>Subtotal:</span>
+                                <span data-translate="subtotal">Subtotal:</span>
                                 <span id="subtotal">0.00</span>
                             </div>
                             <div class="totals-row">
-                                <span>VAT (16%):</span>
+                                <span data-translate="vat_16_total">VAT (16%):</span>
                                 <span id="totalVat">0.00</span>
                             </div>
                             <div class="totals-row">
-                                <span>Total:</span>
+                                <span data-translate="total">Total:</span>
                                 <span id="invoiceTotal">0.00</span>
                             </div>
                         </div>
                     </div>
                     
                     <div class="form-section">
-                        <h3>Notes & Terms</h3>
+                        <h3 data-translate="notes_terms">Notes & Terms</h3>
                         <div class="form-row">
                             <div class="form-group">
-                                <label for="notes">Additional Notes</label>
-                                <textarea id="notes" rows="3" placeholder="Add any additional notes or terms..."></textarea>
+                                <label for="notes" data-translate="additional_notes">Additional Notes</label>
+                                <textarea id="notes" rows="3" placeholder="Add any additional notes or terms..." data-translate-placeholder="additional_notes_placeholder"></textarea>
                             </div>
                         </div>
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn secondary-btn" id="previewInvoiceBtn">
-                            <i class="fas fa-eye"></i> Preview
+                            <i class="fas fa-eye"></i> <span data-translate="preview">Preview</span>
                         </button>
                         <button type="submit" class="btn primary-btn">
-                            <i class="fas fa-check"></i> Publish Invoice
+                            <i class="fas fa-check"></i> <span data-translate="publish_invoice">Publish Invoice</span>
                         </button>
                     </div>
                 </form>
@@ -539,7 +508,7 @@
     <div id="viewInvoiceModal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
-                <h2>Invoice Details</h2>
+                <h2 data-translate="invoice_details_title">Invoice Details</h2>
                 <button class="close-modal">&times;</button>
             </div>
             <div class="modal-body">
@@ -550,10 +519,10 @@
                     </div>
                     <div class="invoice-view-actions">
                         <button class="btn secondary-btn" id="downloadPdfBtn">
-                            <i class="fas fa-download"></i> Download PDF
+                            <i class="fas fa-download"></i> <span data-translate="download_pdf">Download PDF</span>
                         </button>
                         <button class="btn primary-btn" id="sendInvoiceBtn">
-                            <i class="fas fa-paper-plane"></i> Send
+                            <i class="fas fa-paper-plane"></i> <span data-translate="send">Send</span>
                         </button>
                     </div>
                 </div>
@@ -566,7 +535,7 @@
                 
                 <div class="modal-footer">
                     <button class="btn primary-btn" id="closeInvoiceBtn">
-                        <i class="fas fa-times"></i> Close
+                        <i class="fas fa-times"></i> <span data-translate="close">Close</span>
                     </button>
                 </div>
             </div>
@@ -1090,6 +1059,15 @@
     <script>
     // Add this before other invoice scripts
     window.lastSavedInvoice = null;
+    </script>
+    <script src="services/languageManager.js"></script>
+    <script>
+      document.addEventListener('DOMContentLoaded', function() {
+        const languageManager = new LanguageManager('./');
+        window.languageManager = languageManager; // Make it globally available
+        const lang = localStorage.getItem('preferredLanguage') || 'pt';
+        languageManager.setLanguage(lang);
+      });
     </script>
 </body>
 </html>

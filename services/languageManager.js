@@ -1,5 +1,6 @@
 class LanguageManager {
-    constructor() {
+    constructor(basePath = '/') {
+        this.basePath = basePath;
         this.currentLang = localStorage.getItem('preferredLanguage') || 'pt';
         this.translations = {};
         this.locales = {
@@ -26,20 +27,25 @@ class LanguageManager {
 
     async loadTranslations(lang) {
         try {
-            const response = await fetch(`assets/translations/${lang}.json`); // Use the selected language
+            const path = `${this.basePath}assets/translations/${lang}.json`;
+            console.log(`[languageManager] Loading translations for:`, lang, `from ${path}`);
+            const response = await fetch(path); // Use the constructed path
             this.translations = await response.json();
             this.currentLang = lang;
             localStorage.setItem('preferredLanguage', lang);
+            console.log(`[languageManager] Translations loaded for:`, lang, this.translations);
         } catch (error) {
-            console.error('Error loading translations:', error);
+            console.error('[languageManager] Error loading translations:', error);
         }
     }
 
     async setLanguage(lang) {
+        console.log(`[languageManager] Setting language to:`, lang);
         await this.loadTranslations(lang);
         this.applyTranslations();
         document.documentElement.setAttribute('lang', lang);
         window.dispatchEvent(new Event('languageChanged'));
+        console.log(`[languageManager] Language set and translations applied:`, lang);
     }
 
     translate(key) {
@@ -47,7 +53,7 @@ class LanguageManager {
     }
 
     applyTranslations() {
-        console.log('Applying translations for:', this.currentLang, this.translations);
+        console.log('[languageManager] Applying translations for:', this.currentLang, this.translations);
         document.querySelectorAll('[data-translate]').forEach(element => {
             const key = element.getAttribute('data-translate');
             element.textContent = this.translate(key);
@@ -56,6 +62,7 @@ class LanguageManager {
             const key = element.getAttribute('data-translate-placeholder');
             element.placeholder = this.translate(key);
         });
+        console.log('[languageManager] Translations applied for:', this.currentLang);
     }
 
     getLocale() {
@@ -83,5 +90,5 @@ class LanguageManager {
     }
 }
 
-window.languageManager = new LanguageManager();
-export default window.languageManager;
+// window.languageManager = new LanguageManager();
+// export default window.languageManager;

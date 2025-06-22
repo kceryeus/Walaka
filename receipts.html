@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WALAKA - Receipt Management</title>
+    <title data-translate="receipt_management_title">WALAKA - Receipt Management</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
     
     <!-- Font Awesome Icons -->
@@ -155,30 +155,30 @@
 
             <div class="page-header">
                 <div>
-                    <h2>Receipt Management</h2>
-                    <p class="subtitle">Create, manage, and track all your receipts</p>
+                    <h2 data-translate="receipt_management_header">Receipt Management</h2>
+                    <p class="subtitle" data-translate="receipt_management_subtitle">Create, manage, and track all your receipts</p>
                 </div>
                 <div class="action-buttons">
                     <button class="btn primary-btn" id="createReceiptBtn">
-                        <i class="fas fa-plus"></i> Create Receipt
+                        <i class="fas fa-plus"></i> <span data-translate="create_receipt_button">Create Receipt</span>
                     </button>
                 </div>
             </div>
 
             <div class="document-table-container">
                 <div class="table-header">
-                    <h3>Receipts</h3>
+                    <h3 data-translate="receipts_table_header">Receipts</h3>
                     <div class="table-actions">
                         <div class="search-box">
                             <i class="fas fa-search"></i>
-                            <input type="text" placeholder="Search receipts...">
+                            <input type="text" data-translate-placeholder="search_receipts_placeholder" placeholder="Search receipts...">
                         </div>
                         <div class="filter-dropdown">
                             <select>
-                                <option value="">All Status</option>
-                                <option value="draft">Draft</option>
-                                <option value="paid">Paid</option>
-                                <option value="cancelled">Cancelled</option>
+                                <option value="" data-translate="all_status">All Status</option>
+                                <option value="draft" data-translate="draft_status">Draft</option>
+                                <option value="paid" data-translate="paid_status">Paid</option>
+                                <option value="cancelled" data-translate="cancelled_status">Cancelled</option>
                             </select>
                         </div>
                     </div>
@@ -187,14 +187,14 @@
                     <table id="receiptsTable" class="document-table">
                         <thead>
                             <tr>
-                                <th>Receipt #</th>
-                                <th>Client</th>
-                                <th>Payment Date</th>
-                                <th>Amount</th>
-                                <th>Payment Method</th>
-                                <th>Invoice #</th>
-                                <th>Status</th>
-                                <th>Actions</th>
+                                <th data-translate="receipt_col_number">Receipt #</th>
+                                <th data-translate="receipt_col_client">Client</th>
+                                <th data-translate="receipt_col_payment_date">Payment Date</th>
+                                <th data-translate="receipt_col_amount">Amount</th>
+                                <th data-translate="receipt_col_payment_method">Payment Method</th>
+                                <th data-translate="receipt_col_invoice_number">Invoice #</th>
+                                <th data-translate="receipt_col_status">Status</th>
+                                <th data-translate="receipt_col_actions">Actions</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -207,57 +207,57 @@
         <div id="createReceiptModal" class="document-modal">
             <div class="document-modal-content">
                 <div class="document-modal-header">
-                    <h2>Create Receipt</h2>
+                    <h2 data-translate="create_receipt_modal_title">Create Receipt</h2>
                     <button class="close-modal">&times;</button>
                 </div>
                 <div class="document-modal-body">
                     <form id="receiptForm" class="document-form">
                         <div class="form-section">
-                            <h3>Receipt Information</h3>
+                            <h3 data-translate="receipt_info_header">Receipt Information</h3>
                             <div class="form-row">
                                 <div class="form-group">
-                                    <label for="receiptNumber">Receipt Number</label>
+                                    <label for="receiptNumber" data-translate="receipt_number_label">Receipt Number</label>
                                     <input type="text" id="receiptNumber" name="receiptNumber" readonly disabled>
                                 </div>
                                 <div class="form-group">
-                                    <label for="paymentDate">Payment Date</label>
+                                    <label for="paymentDate" data-translate="payment_date_label">Payment Date</label>
                                     <input type="date" id="paymentDate" name="paymentDate" required>
                                 </div>
                             </div>
                             <div class="form-row">
                                 <div class="form-group">
-                                    <label for="client">Client</label>
+                                    <label for="client" data-translate="client_label">Client</label>
                                     <select id="client" name="client" required>
-                                        <option value="">Select Client</option>
+                                        <option value="" data-translate="select_client_option">Select Client</option>
                                         <!-- Options will be populated by JS with value=customer_id, label=company_name -->
                                     </select>
                                 </div>
                                 <div class="form-group">
-                                    <label for="relatedInvoice">Related Invoice #</label>
+                                    <label for="relatedInvoice" data-translate="related_invoice_label">Related Invoice #</label>
                                     <select id="relatedInvoice" name="relatedInvoice">
-                                        <option value="">Select Invoice</option>
+                                        <option value="" data-translate="select_invoice_option">Select Invoice</option>
                                         <!-- Options will be populated by JS with value=id, label=invoiceNumber -->
                                     </select>
                                 </div>
                             </div>
                             <div class="form-row">
                                 <div class="form-group">
-                                    <label for="amount">Amount Received</label>
+                                    <label for="amount" data-translate="amount_received_label">Amount Received</label>
                                     <input type="number" id="amount" name="amount" required step="0.01">
                                 </div>
                                 <div class="form-group">
-                                    <label for="paymentMethod">Payment Method</label>
+                                    <label for="paymentMethod" data-translate="payment_method_label">Payment Method</label>
                                     <select id="paymentMethod" name="paymentMethod" required>
-                                        <option value="cash">Cash</option>
-                                        <option value="bank_transfer">Bank Transfer</option>
-                                        <option value="credit_card">Credit Card</option>
-                                        <option value="mobile_payment">Mobile Payment</option>
+                                        <option value="cash" data-translate="payment_method_cash">Cash</option>
+                                        <option value="bank_transfer" data-translate="payment_method_bank">Bank Transfer</option>
+                                        <option value="credit_card" data-translate="payment_method_card">Credit Card</option>
+                                        <option value="mobile_payment" data-translate="payment_method_mobile">Mobile Payment</option>
                                     </select>
                                 </div>
                             </div>
                             <div class="form-row">
                                 <div class="form-group" style="flex:2;">
-                                    <label for="notes">Notes</label>
+                                    <label for="notes" data-translate="notes_label">Notes</label>
                                     <textarea id="notes" name="notes" rows="2"></textarea>
                                 </div>
                             </div>
@@ -265,8 +265,8 @@
                     </form>
                 </div>
                 <div class="document-modal-footer">
-                    <button type="button" class="btn secondary-btn close-modal">Cancel</button>
-                    <button type="submit" form="receiptForm" class="btn primary-btn">Create Receipt</button>
+                    <button type="button" class="btn secondary-btn close-modal" data-translate="cancel_button">Cancel</button>
+                    <button type="submit" form="receiptForm" class="btn primary-btn" data-translate="create_receipt_button_modal">Create Receipt</button>
                 </div>
             </div>
         </div>
@@ -274,7 +274,7 @@
         <div id="viewReceiptModal" class="document-modal">
             <div class="document-modal-content">
                 <div class="document-modal-header">
-                    <h2>Receipt Details</h2>
+                    <h2 data-translate="receipt_details_title">Receipt Details</h2>
                     <button class="close-modal">&times;</button>
                 </div>
                 <div class="document-modal-body">
@@ -284,9 +284,9 @@
                 </div>
                 <div class="document-modal-footer">
                     <button class="btn secondary-btn" id="printReceiptBtn">
-                        <i class="fas fa-print"></i> Print
+                        <i class="fas fa-print"></i> <span data-translate="print_button">Print</span>
                     </button>
-                    <button class="btn primary-btn close-modal">Close</button>
+                    <button class="btn primary-btn close-modal" data-translate="close_button">Close</button>
                 </div>
             </div>
         </div>
@@ -305,8 +305,18 @@
     <script src="js/displayname.js"></script>
     <!-- <script src="js/auth.js"></script> -->
     <script src="js/receiptscripts/receipt.js"></script>
+    <script src="services/languageManager.js"></script>
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
+        // Initialize the language manager with the correct base path
+        window.languageManager = new LanguageManager('./');
+
+        document.addEventListener('DOMContentLoaded', async function() {
+            // Language manager init
+            if (window.languageManager) {
+                const preferredLanguage = localStorage.getItem('preferredLanguage') || 'pt';
+                await window.languageManager.setLanguage(preferredLanguage);
+            }
+
             // Verifica se deve abrir o modal de novo recibo
             const urlParams = new URLSearchParams(window.location.search);
             if (urlParams.get('openNewReceipt') === '1') {
