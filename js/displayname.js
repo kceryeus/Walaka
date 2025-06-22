@@ -2,8 +2,8 @@
         // This function will fetch the username from the Supabase database and display it
         // in the user-displayname span element
         document.addEventListener('DOMContentLoaded', async () => {
-            if (typeof supabase === 'undefined') return;
-
+            const supabase = window.supabase;
+            if (typeof supabase === 'undefined' || !supabase) return;
             const { data: { session } } = await supabase.auth.getSession();
             if (!session || !session.user) return;
 

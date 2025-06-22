@@ -118,7 +118,7 @@ const InvoiceTableModule = {
                         </td>
                         <td>
                             <div class="action-menu">
-                                <button class="action-menu-btn" data-invoice="${invoice.invoiceNumber}" title="Actions">
+                                <button class="action-menu-btn" data-invoice="${invoice.invoiceNumber}" data-client-email="${invoice.clients?.email || ''}" title="Actions">
                                     <i class="fas fa-ellipsis-v"></i>
                                 </button>
                             </div>
@@ -245,10 +245,6 @@ const InvoiceTableModule = {
                     <i class="fas fa-eye"></i>
                     <span>View Invoice</span>
                 </button>
-                <button class="dropdown-item" data-action="edit">
-                    <i class="fas fa-edit"></i>
-                    <span>Edit Invoice</span>
-                </button>
                 <button class="dropdown-item" data-action="download">
                     <i class="fas fa-download"></i>
                     <span>Download PDF</span>
@@ -268,11 +264,6 @@ const InvoiceTableModule = {
                 <button class="dropdown-item" data-action="create-credit-note">
                     <i class="fas fa-file-invoice"></i>
                     <span>Create Credit Note</span>
-                </button>
-                <div class="dropdown-divider"></div>
-                <button class="dropdown-item dropdown-item-danger" data-action="delete">
-                    <i class="fas fa-trash"></i>
-                    <span>Delete Invoice</span>
                 </button>
             </div>
         `;
@@ -299,15 +290,31 @@ const InvoiceTableModule = {
                         case 'view':
                             await this.viewInvoice(invoiceNumber);
                             break;
-                        case 'edit':
-                            await this.editInvoice(invoiceNumber);
-                            break;
                         case 'download':
                             await window.invoiceActions.downloadPdf(invoiceNumber);
                             break;
-                        case 'email':
-                            await window.invoiceActions.sendInvoice(invoiceNumber);
+                        case 'email': {
+                            // Fetch invoice data for modal
+                            const btn = document.querySelector(`.action-menu-btn[data-invoice="${invoiceNumber}"]`);
+                            let clientEmail = btn ? btn.getAttribute('data-client-email') : '';
+                            // Fetch invoice data from Supabase for full info
+                            const { data: invoice, error } = await window.supabase
+                                .from('invoices')
+                                .select('*, clients(*)')
+                                .eq('invoiceNumber', invoiceNumber)
+                                .single();
+                            if (error || !invoice) {
+                                showNotification('Could not load invoice details for email', 'error');
+                                break;
+                            }
+                            if (window.emailHandler && typeof window.emailHandler.openEmailModal === 'function') {
+                                window.emailHandler.openEmailModal({
+                                    ...invoice,
+                                    client: invoice.clients || { email: clientEmail }
+                                });
+                            }
                             break;
+                        }
                         case 'duplicate':
                             await this.duplicateInvoice(invoiceNumber);
                             break;
@@ -316,9 +323,6 @@ const InvoiceTableModule = {
                             break;
                         case 'create-credit-note':
                             await this.createCreditNote(invoiceNumber);
-                            break;
-                        case 'delete':
-                            await this.deleteInvoice(invoiceNumber);
                             break;
                         default:
                             console.warn('Unknown action:', action);

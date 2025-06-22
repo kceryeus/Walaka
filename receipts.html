@@ -15,11 +15,88 @@
 
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    
+    <!-- <script src="js/receiptscripts/receipt.js"></script>  -- moved to end of body -->
     <!-- Custom CSS -->
     <link rel="stylesheet" href="components/sidebar.css"> 
     <link rel="stylesheet" href="css/styles.css">
     <link rel="stylesheet" href="css/document-styles.css">
+    <link rel="icon" type="image/png" href="assets/images/walaka-assistant.PNG">
+    <style>
+    /* Modal compact refinements */
+    #\31 createReceiptModal .document-modal-content {
+        max-width: 480px;
+        padding: 18px 20px 10px 20px;
+        background: #fff;
+        border-radius: 10px;
+        box-shadow: 0 4px 24px rgba(0,0,0,0.10);
+    }
+    #\31 createReceiptModal .document-modal-header {
+        padding-bottom: 8px;
+        margin-bottom: 10px;
+        border-bottom: 1px solid #eee;
+    }
+    #\31 createReceiptModal .document-modal-header h2 {
+        font-size: 1.2rem;
+        margin: 0;
+    }
+    #\31 createReceiptModal .document-modal-header .close-modal {
+        font-size: 1.3rem;
+        top: 10px;
+        right: 10px;
+    }
+    #\31 createReceiptModal .document-modal-body {
+        background: #fafbfc;
+        border-radius: 7px;
+        padding: 10px 10px 0 10px;
+        margin-bottom: 8px;
+    }
+    #\31 createReceiptModal .form-section h3 {
+        font-size: 1.05rem;
+        margin-bottom: 8px;
+    }
+    #\31 createReceiptModal .form-row {
+        display: flex;
+        gap: 12px;
+        margin-bottom: 8px;
+    }
+    #\31 createReceiptModal .form-group {
+        flex: 1 1 0;
+        min-width: 0;
+        margin-bottom: 0;
+    }
+    #\31 createReceiptModal .form-group label {
+        font-size: 0.97em;
+        margin-bottom: 2px;
+    }
+    #\31 createReceiptModal .form-group input,
+    #\31 createReceiptModal .form-group select,
+    #\31 createReceiptModal .form-group textarea {
+        font-size: 0.97em;
+        padding: 5px 7px;
+        border-radius: 5px;
+        border: 1px solid #d1d5db;
+    }
+    #\31 createReceiptModal .form-group textarea {
+        min-height: 38px;
+    }
+    #\31 createReceiptModal .document-modal-footer {
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+        padding-top: 8px;
+        border-top: 1px solid #eee;
+        margin-top: 8px;
+    }
+    #\31 createReceiptModal .btn {
+        padding: 5px 14px;
+        font-size: 0.97em;
+    }
+    #amount-warning {
+        margin-top: 2px;
+        font-size: 0.50em;
+        color: #d32f2f;
+    }
+    </style>
 </head>
 
 <body>
@@ -82,9 +159,6 @@
                     <p class="subtitle">Create, manage, and track all your receipts</p>
                 </div>
                 <div class="action-buttons">
-                    <button class="btn secondary-btn" id="importReceiptBtn">
-                        <i class="fas fa-file-import"></i> Import
-                    </button>
                     <button class="btn primary-btn" id="createReceiptBtn">
                         <i class="fas fa-plus"></i> Create Receipt
                     </button>
@@ -143,7 +217,7 @@
                             <div class="form-row">
                                 <div class="form-group">
                                     <label for="receiptNumber">Receipt Number</label>
-                                    <input type="text" id="receiptNumber" name="receiptNumber" required>
+                                    <input type="text" id="receiptNumber" name="receiptNumber" readonly disabled>
                                 </div>
                                 <div class="form-group">
                                     <label for="paymentDate">Payment Date</label>
@@ -155,14 +229,22 @@
                                     <label for="client">Client</label>
                                     <select id="client" name="client" required>
                                         <option value="">Select Client</option>
+                                        <!-- Options will be populated by JS with value=customer_id, label=company_name -->
                                     </select>
                                 </div>
+                                <div class="form-group">
+                                    <label for="relatedInvoice">Related Invoice #</label>
+                                    <select id="relatedInvoice" name="relatedInvoice">
+                                        <option value="">Select Invoice</option>
+                                        <!-- Options will be populated by JS with value=id, label=invoiceNumber -->
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-row">
                                 <div class="form-group">
                                     <label for="amount">Amount Received</label>
                                     <input type="number" id="amount" name="amount" required step="0.01">
                                 </div>
-                            </div>
-                            <div class="form-row">
                                 <div class="form-group">
                                     <label for="paymentMethod">Payment Method</label>
                                     <select id="paymentMethod" name="paymentMethod" required>
@@ -172,17 +254,11 @@
                                         <option value="mobile_payment">Mobile Payment</option>
                                     </select>
                                 </div>
-                                <div class="form-group">
-                                    <label for="relatedInvoice">Related Invoice #</label>
-                                    <select id="relatedInvoice" name="relatedInvoice">
-                                        <option value="">Select Invoice</option>
-                                    </select>
-                                </div>
                             </div>
                             <div class="form-row">
-                                <div class="form-group">
+                                <div class="form-group" style="flex:2;">
                                     <label for="notes">Notes</label>
-                                    <textarea id="notes" name="notes" rows="3"></textarea>
+                                    <textarea id="notes" name="notes" rows="2"></textarea>
                                 </div>
                             </div>
                         </div>
@@ -216,19 +292,19 @@
         </div>
     </div>
 
+    <!-- Add modal overlay for modals -->
+    <div class="modal-overlay" style="display:none;"></div>
+
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="js/topbar-menu.js"></script>
-    <script type="module">
-        import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.0.0/+esm';
-
+    <script>
         const supabaseUrl = 'https://qvmtozjvjflygbkjecyj.supabase.co';
         const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF2bXRvemp2amZseWdia2plY3lqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDYxMjc2MjMsImV4cCI6MjA2MTcwMzYyM30.DJMC1eM5_EouM1oc07JaoXsMX_bSLn2AVCozAcdfHmo';
-        const supabase = createClient(supabaseUrl, supabaseKey);
-        window.supabase = supabase; // Make supabase available globally for auth.js
+        window.supabase = supabase.createClient(supabaseUrl, supabaseKey);
     </script>
-    <script src="js/receiptscripts/receipt.js"></script>
     <script src="js/displayname.js"></script>
-    <script src="js/auth.js"></script>
+    <!-- <script src="js/auth.js"></script> -->
+    <script src="js/receiptscripts/receipt.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             // Verifica se deve abrir o modal de novo recibo
@@ -246,7 +322,8 @@
                     document.getElementById('notes').value = receiptData.notes || '';
                     // Abre o modal
                     document.getElementById('createReceiptModal').style.display = 'block';
-                    document.querySelector('.modal-overlay').style.display = 'block';
+                    var overlay = document.querySelector('.modal-overlay');
+                    if (overlay) overlay.style.display = 'block';
                 }
                 // Limpa o localStorage
                 localStorage.removeItem('newReceiptData');
@@ -257,9 +334,24 @@
             if (createBtn) {
                 createBtn.addEventListener('click', function() {
                     document.getElementById('createReceiptModal').style.display = 'block';
-                    document.querySelector('.modal-overlay').style.display = 'block';
+                    var overlay = document.querySelector('.modal-overlay');
+                    if (overlay) overlay.style.display = 'block';
                 });
             }
+
+            // Ensure all .close-modal buttons have type="button"
+            document.querySelectorAll('.close-modal').forEach(btn => {
+                btn.setAttribute('type', 'button');
+                btn.addEventListener('click', function(e) {
+                    let modal = e.target.closest('.document-modal');
+                    if (modal) modal.style.display = 'none';
+                    // Hide overlay if no modals are open
+                    const anyOpen = Array.from(document.querySelectorAll('.document-modal'))
+                        .some(m => m.style.display === 'block');
+                    const overlay = document.querySelector('.modal-overlay');
+                    if (overlay && !anyOpen) overlay.style.display = 'none';
+                });
+            });
         });
 
         async function markInvoiceAsPaid(invoiceNumber) {
@@ -314,6 +406,7 @@
             }
         }
     </script>
+
 </body>
 
 </html>

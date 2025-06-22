@@ -9,23 +9,161 @@ const receiptForm = document.getElementById('receiptForm');
 const searchInput = document.querySelector('.search-box input');
 const statusFilter = document.querySelector('.filter-dropdown select');
 
+// Add a global variable to store invoice amounts by invoice ID
+const invoiceAmounts = {};
+// Add a global variable to track multi-select mode
+let multiSelectMode = false;
+
 // Event Listeners
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
+    await populateClientsDropdown();
     loadReceipts();
     setupEventListeners();
+    // Add warning message element below the amount input
+    // (This code should be run after DOMContentLoaded)
+    const amountInput = document.getElementById('amount');
+    if (amountInput && !document.getElementById('amount-warning')) {
+        const warning = document.createElement('div');
+        warning.id = 'amount-warning';
+        warning.style.color = 'red';
+        warning.style.display = 'none';
+        warning.style.fontSize = '0.95em';
+        warning.textContent = 'Amount exceeds the selected invoice total.';
+        amountInput.parentNode.appendChild(warning);
+    }
+    // Add event listeners for validation
+    const invoiceSelect = document.getElementById('relatedInvoice');
+    if (amountInput && invoiceSelect) {
+        function checkAmountWarning() {
+            let invoiceAmount = 0;
+            if (multiSelectMode) {
+                // Sum all selected invoice amounts
+                Array.from(invoiceSelect.selectedOptions).forEach(opt => {
+                    const id = opt.value;
+                    if (invoiceAmounts[id]) invoiceAmount += parseFloat(invoiceAmounts[id]);
+                });
+            } else {
+                const selectedInvoiceId = invoiceSelect.value;
+                invoiceAmount = invoiceAmounts[selectedInvoiceId] || 0;
+            }
+            const enteredAmount = parseFloat(amountInput.value);
+            const warning = document.getElementById('amount-warning');
+            if (!isNaN(invoiceAmount) && !isNaN(enteredAmount)) {
+                if (enteredAmount > invoiceAmount && invoiceAmount > 0) {
+                    warning.style.display = 'block';
+                } else {
+                    warning.style.display = 'none';
+                }
+            } else {
+                warning.style.display = 'none';
+            }
+        }
+        amountInput.addEventListener('input', checkAmountWarning);
+        invoiceSelect.addEventListener('change', checkAmountWarning);
+    }
+
+    // Add button for multi-select toggle
+    const invoiceSelectContainer = document.getElementById('relatedInvoice')?.parentNode;
+    if (invoiceSelectContainer && !document.getElementById('toggle-multiselect-btn')) {
+        const toggleBtn = document.createElement('button');
+        toggleBtn.id = 'toggle-multiselect-btn';
+        toggleBtn.type = 'button';
+        toggleBtn.textContent = 'Select Multiple Invoices';
+        toggleBtn.style.marginLeft = '8px';
+        toggleBtn.style.background = '#1976d2'; // Blue
+        toggleBtn.style.color = 'white';
+        toggleBtn.style.border = 'none';
+        toggleBtn.style.borderRadius = '4px';
+        toggleBtn.style.padding = '4px 12px';
+        toggleBtn.style.fontSize = '0.95em';
+        toggleBtn.style.width = 'auto';
+        toggleBtn.style.minWidth = 'unset';
+        toggleBtn.onclick = function() {
+            // Disabled for now: show toast and do not enable multi-select
+            showNotification('em desenvolvimento, brevemente disponível', 'info');
+            /*
+            multiSelectMode = !multiSelectMode;
+            const invoiceSelect = document.getElementById('relatedInvoice');
+            if (multiSelectMode) {
+                invoiceSelect.setAttribute('multiple', 'multiple');
+                invoiceSelect.size = 5;
+                toggleBtn.textContent = 'Single Invoice Mode';
+            } else {
+                invoiceSelect.removeAttribute('multiple');
+                invoiceSelect.size = 1;
+                toggleBtn.textContent = 'Select Multiple Invoices';
+                // Deselect all but the first selected
+                if (invoiceSelect.selectedOptions.length > 1) {
+                    const first = invoiceSelect.selectedOptions[0];
+                    Array.from(invoiceSelect.options).forEach(opt => opt.selected = false);
+                    if (first) first.selected = true;
+                }
+            }
+            */
+        };
+        invoiceSelectContainer.appendChild(toggleBtn);
+    }
 });
 
 function setupEventListeners() {
-    // Create Receipt Button
-    createReceiptBtn?.addEventListener('click', () => {
-        createReceiptModal.style.display = 'block';
+    // Ensure all .close-modal buttons have type="button"
+    document.querySelectorAll('.close-modal').forEach(btn => {
+        btn.setAttribute('type', 'button');
     });
 
-    // Close Modal Buttons
+    // Create Receipt Button
+    createReceiptBtn?.addEventListener('click', async () => {
+        // Get current user ID
+        const user_id = await getCurrentUserId();
+        // Generate the next receipt number
+        const nextReceiptNumber = await generateIncrementalReceiptNumber(user_id);
+        // Set the value in the input field
+        const receiptNumberInput = document.getElementById('receiptNumber');
+        if (receiptNumberInput) {
+            receiptNumberInput.value = nextReceiptNumber;
+            receiptNumberInput.readOnly = true; // Make it read-only
+        }
+        openModal('createReceiptModal');
+    });
+
+    // Event delegation for all .close-modal buttons
+    document.body.addEventListener('click', function(e) {
+        if (e.target.classList.contains('close-modal')) {
+            console.log('close-modal clicked (delegated)', e.target);
+            // Find the parent modal
+            let modal = e.target.closest('.document-modal');
+            if (modal) closeModal(modal.id);
+        }
+    });
+
+    // Direct event listener for .close-modal buttons (robustness)
     document.querySelectorAll('.close-modal').forEach(btn => {
-        btn.addEventListener('click', () => {
-            createReceiptModal.style.display = 'none';
-            document.getElementById('viewReceiptModal').style.display = 'none';
+        btn.addEventListener('click', function(e) {
+            console.log('close-modal clicked (direct)', e.target);
+            let modal = e.target.closest('.document-modal');
+            if (modal) closeModal(modal.id);
+        });
+    });
+
+    // Also close when clicking the overlay
+    const overlay = document.querySelector('.modal-overlay');
+    if (overlay) {
+        overlay.addEventListener('click', (e) => {
+            // Only close if clicking directly on the overlay, not on modal content
+            if (e.target === overlay) {
+                // Close the topmost open modal
+                const openModals = Array.from(document.querySelectorAll('.document-modal'))
+                    .filter(m => m.style.display === 'block');
+                if (openModals.length > 0) {
+                    closeModal(openModals[openModals.length - 1].id);
+                }
+            }
+        });
+    }
+    // Prevent modal from closing when clicking inside modal content
+    document.querySelectorAll('.document-modal-content').forEach(modalContent => {
+        modalContent.addEventListener('click', (e) => {
+            e.stopPropagation();
         });
     });
 
@@ -50,7 +188,7 @@ async function loadReceipts() {
     try {
         const { data: receipts, error } = await supabase
             .from('receipts')
-            .select('*')
+            .select('*, invoices:related_invoice_id ("invoiceNumber")')
             .order('created_at', { ascending: false });
 
         if (error) throw error;
@@ -67,6 +205,15 @@ function displayReceipts(receipts) {
     tbody.innerHTML = '';
 
     receipts.forEach(receipt => {
+        // Support multiple invoice numbers
+        let invoiceNumbers = '-';
+        if (receipt.invoices && Array.isArray(receipt.invoices)) {
+            invoiceNumbers = receipt.invoices.map(inv => inv.invoiceNumber).join(', ');
+        } else if (receipt.invoices?.invoiceNumber) {
+            invoiceNumbers = receipt.invoices.invoiceNumber;
+        } else if (receipt.related_invoice_id && typeof receipt.related_invoice_id === 'string' && receipt.related_invoice_id.includes(',')) {
+            invoiceNumbers = receipt.related_invoice_id;
+        }
         const tr = document.createElement('tr');
         tr.innerHTML = `
             <td>${receipt.receipt_number}</td>
@@ -74,16 +221,16 @@ function displayReceipts(receipts) {
             <td>${formatDate(receipt.payment_date)}</td>
             <td>${formatCurrency(receipt.amount)}</td>
             <td>${receipt.payment_method}</td>
-            <td>${receipt.related_invoice || '-'}</td>
+            <td>${invoiceNumbers}</td>
             <td><span class="status-badge status-${receipt.status.toLowerCase()}">${receipt.status}</span></td>
             <td class="actions-cell">
-                <button class="action-btn view-btn" onclick="viewReceipt('${receipt.id}')">
+                <button class="action-btn view-btn" onclick="viewReceipt('${receipt.receipt_id}')">
                     <i class="fas fa-eye"></i> View
                 </button>
-                <button class="action-btn edit-btn" onclick="editReceipt('${receipt.id}')">
+                <button class="action-btn edit-btn" onclick="editReceipt('${receipt.receipt_id}')">
                     <i class="fas fa-edit"></i> Edit
                 </button>
-                <button class="action-btn delete-btn" onclick="deleteReceipt('${receipt.id}')">
+                <button class="action-btn delete-btn" onclick="deleteReceipt('${receipt.receipt_id}')">
                     <i class="fas fa-trash"></i> Delete
                 </button>
             </td>
@@ -92,33 +239,239 @@ function displayReceipts(receipts) {
     });
 }
 
+// Replace the old generateReceiptNumber with an async version
+async function generateIncrementalReceiptNumber(user_id) {
+    const year = new Date().getFullYear();
+    // Query the latest receipt for this user and year
+    const { data, error } = await supabase
+        .from('receipts')
+        .select('receipt_number')
+        .eq('user_id', user_id)
+        .ilike('receipt_number', `REC-${year}-%`)
+        .order('created_at', { ascending: false })
+        .limit(1);
+    if (error) {
+        console.error('Error fetching last receipt number:', error);
+        // Fallback to 1 if error
+        return `REC-${year}-0001`;
+    }
+    let nextNumber = 1;
+    if (data && data.length > 0) {
+        const last = data[0].receipt_number;
+        // Extract the numeric part
+        const match = last.match(/REC-\d{4}-(\d+)/);
+        if (match) {
+            nextNumber = parseInt(match[1], 10) + 1;
+        }
+    }
+    // Zero pad to 4 digits
+    const padded = String(nextNumber).padStart(4, '0');
+    return `REC-${year}-${padded}`;
+}
+
+// Utility: Show notification (improved for user feedback)
+function showNotification(message, type = 'success') {
+    // Basic toast implementation
+    let toast = document.getElementById('walaka-toast');
+    if (!toast) {
+        toast = document.createElement('div');
+        toast.id = 'walaka-toast';
+        toast.style.position = 'fixed';
+        toast.style.bottom = '32px';
+        toast.style.left = '50%';
+        toast.style.transform = 'translateX(-50%)';
+        toast.style.background = type === 'error' ? '#d32f2f' : (type === 'info' ? '#1976d2' : '#388e3c');
+        toast.style.color = 'white';
+        toast.style.padding = '12px 24px';
+        toast.style.borderRadius = '6px';
+        toast.style.fontSize = '1em';
+        toast.style.zIndex = 9999;
+        toast.style.boxShadow = '0 2px 8px rgba(0,0,0,0.15)';
+        toast.style.display = 'none';
+        document.body.appendChild(toast);
+    }
+    toast.textContent = message;
+    toast.style.display = 'block';
+    toast.style.background = type === 'error' ? '#d32f2f' : (type === 'info' ? '#1976d2' : '#388e3c');
+    clearTimeout(toast._timeout);
+    toast._timeout = setTimeout(() => {
+        toast.style.display = 'none';
+    }, 2500);
+    // Also log to console
+    console.log(`${type}: ${message}`);
+}
+
+// Helper: Validate receipt form data
+function validateReceiptForm(formData) {
+    const requiredFields = ['client', 'paymentDate', 'amount', 'paymentMethod'];
+    for (const field of requiredFields) {
+        if (!formData.get(field)) {
+            showNotification(`Missing required field: ${field}`, 'error');
+            return false;
+        }
+    }
+    if (isNaN(parseFloat(formData.get('amount')))) {
+        showNotification('Amount must be a valid number', 'error');
+        return false;
+    }
+    return true;
+}
+
+// Improved: Populate clients dropdown with explicit columns and error handling
+async function populateClientsDropdown() {
+    const clientSelect = document.getElementById('client');
+    if (!clientSelect) return;
+    const { data: clients, error } = await supabase
+        .from('clients')
+        .select('customer_id, customer_name')
+        .order('customer_name', { ascending: true });
+    if (error) {
+        showNotification('Failed to load clients', 'error');
+        console.error(error);
+        return;
+    }
+    clientSelect.innerHTML = '<option value="">Select Client</option>';
+    for (const client of clients) {
+        const option = document.createElement('option');
+        option.value = client.customer_id;
+        option.textContent = client.customer_name;
+        option.setAttribute('data-client-name', client.customer_name);
+        clientSelect.appendChild(option);
+    }
+    clientSelect.onchange = async function() {
+        await populateInvoicesDropdown(this.value);
+    };
+}
+
+// Improved: Populate invoices dropdown for selected client_id
+async function populateInvoicesDropdown(clientId) {
+    const invoiceSelect = document.getElementById('relatedInvoice');
+    if (!invoiceSelect) return;
+    // Clear dropdown before fetching
+    invoiceSelect.innerHTML = '<option value="">Select Invoice</option>';
+    // Clear invoiceAmounts
+    Object.keys(invoiceAmounts).forEach(key => delete invoiceAmounts[key]);
+    if (!clientId) {
+        return;
+    }
+    // Fetch all invoices for this client (for fallback)
+    const { data: allInvoices, error: allError } = await supabase
+        .from('invoices')
+        .select('id, "invoiceNumber", client_id, status, total_amount')
+        .eq('client_id', clientId);
+    if (allError) {
+        console.error('Error fetching all invoices for client:', allError);
+    }
+    // Fetch only pending invoices (case-insensitive)
+    let { data: invoices, error } = await supabase
+        .from('invoices')
+        .select('id, "invoiceNumber", client_id, status, total_amount')
+        .eq('client_id', clientId)
+        .ilike('status', 'pending')
+        .order('created_at', { ascending: false });
+    if (error) {
+        showNotification('Failed to load invoices', 'error');
+        console.error(error);
+        return;
+    }
+    // Fallback: If no pending invoices, show all invoices for the client
+    if (!invoices || invoices.length === 0) {
+        showNotification('No pending invoices found. Showing all invoices for this client.', 'warning');
+        if (allInvoices && allInvoices.length > 0) {
+            for (const inv of allInvoices) {
+                invoiceAmounts[inv.id] = inv.total_amount;
+                const option = document.createElement('option');
+                option.value = inv.id;
+                option.textContent = `${inv.invoiceNumber} (${inv.status}) - ${formatCurrency(inv.total_amount)}`;
+                option.setAttribute('data-amount', inv.total_amount);
+                invoiceSelect.appendChild(option);
+            }
+        } else {
+            invoiceSelect.innerHTML = '<option value="">No invoices found</option>';
+        }
+        return;
+    }
+    for (const inv of invoices) {
+        invoiceAmounts[inv.id] = inv.total_amount;
+        const option = document.createElement('option');
+        option.value = inv.id;
+        option.textContent = `${inv.invoiceNumber} - ${formatCurrency(inv.total_amount)}`;
+        option.setAttribute('data-amount', inv.total_amount);
+        invoiceSelect.appendChild(option);
+    }
+}
+
+// Improved: Create or upsert receipt with validation and error handling
 async function createReceipt() {
     try {
         const formData = new FormData(receiptForm);
+        if (!validateReceiptForm(formData)) return;
+        const user_id = await getCurrentUserId();
+        const client_id = formData.get('client');
+        const clientSelect = document.getElementById('client');
+        const client_name = clientSelect.options[clientSelect.selectedIndex]?.getAttribute('data-client-name') ?? '';
+        const invoiceSelect = document.getElementById('relatedInvoice');
+        let related_invoice_ids = null;
+        let totalInvoiceAmount = 0;
+        if (multiSelectMode) {
+            // Collect all selected invoice IDs
+            const selected = Array.from(invoiceSelect.selectedOptions).map(opt => opt.value).filter(Boolean);
+            related_invoice_ids = selected.join(','); // Store as comma-separated string for now
+            totalInvoiceAmount = selected.reduce((sum, id) => sum + (parseFloat(invoiceAmounts[id]) || 0), 0);
+        } else {
+            related_invoice_ids = invoiceSelect.value || null;
+            totalInvoiceAmount = parseFloat(invoiceAmounts[related_invoice_ids]) || 0;
+        }
+        // Use the receipt number from the input field
+        const receipt_number = document.getElementById('receiptNumber').value;
+        const enteredAmount = parseFloat(formData.get('amount'));
         const receiptData = {
-            receipt_number: formData.get('receiptNumber'),
-            client_id: formData.get('client'),
+            receipt_number,
+            client_id,
+            client_name,
             payment_date: formData.get('paymentDate'),
-            amount: formData.get('amount'),
+            amount: enteredAmount,
             payment_method: formData.get('paymentMethod'),
-            related_invoice: formData.get('relatedInvoice'),
+            related_invoice_id: related_invoice_ids, // Now supports multiple
             notes: formData.get('notes'),
-            status: 'paid'
+            status: 'paid',
+            user_id
         };
-
+        // Use insert (or upsert if you want to avoid duplicates)
         const { error } = await supabase
             .from('receipts')
-            .insert([receiptData]);
-
+            .insert([receiptData]); // .upsert([receiptData], { onConflict: ['receipt_number'] })
         if (error) throw error;
-
         showNotification('Receipt created successfully');
-        createReceiptModal.style.display = 'none';
+        closeModal('createReceiptModal');
         receiptForm.reset();
+        document.getElementById('receiptNumber').value = '';
         loadReceipts();
     } catch (error) {
-        console.error('Error creating receipt:', error);
         showNotification('Error creating receipt', 'error');
+        console.error(error);
+    }
+}
+
+// Utility: Mark invoice as paid and create receipt (not truly atomic, but sequential)
+async function markInvoiceAsPaidAndCreateReceipt(invoiceId, receiptData) {
+    // This is not a true transaction; for true atomicity, use a Postgres function
+    try {
+        // 1. Update invoice status
+        const { error: updateError } = await supabase
+            .from('invoices')
+            .update({ status: 'paid', payment_date: new Date().toISOString() })
+            .eq('id', invoiceId);
+        if (updateError) throw updateError;
+        // 2. Create receipt
+        const { error: receiptError } = await supabase
+            .from('receipts')
+            .insert([receiptData]);
+        if (receiptError) throw receiptError;
+        showNotification('Invoice marked as paid and receipt created!');
+    } catch (error) {
+        showNotification('Error updating invoice or creating receipt', 'error');
+        console.error(error);
     }
 }
 
@@ -126,15 +479,23 @@ async function viewReceipt(id) {
     try {
         const { data: receipt, error } = await supabase
             .from('receipts')
-            .select('*')
-            .eq('id', id)
+            .select('*, invoices:related_invoice_id ("invoiceNumber")')
+            .eq('receipt_id', id)
             .single();
 
         if (error) throw error;
 
         const modal = document.getElementById('viewReceiptModal');
         const details = document.getElementById('receiptDetails');
-        
+        // Support multiple invoice numbers
+        let invoiceNumbers = '-';
+        if (receipt.invoices && Array.isArray(receipt.invoices)) {
+            invoiceNumbers = receipt.invoices.map(inv => inv.invoiceNumber).join(', ');
+        } else if (receipt.invoices?.invoiceNumber) {
+            invoiceNumbers = receipt.invoices.invoiceNumber;
+        } else if (receipt.related_invoice_id && typeof receipt.related_invoice_id === 'string' && receipt.related_invoice_id.includes(',')) {
+            invoiceNumbers = receipt.related_invoice_id;
+        }
         details.innerHTML = `
             <div class="receipt-details">
                 <div class="detail-row">
@@ -158,8 +519,8 @@ async function viewReceipt(id) {
                     <span class="value">${receipt.payment_method}</span>
                 </div>
                 <div class="detail-row">
-                    <span class="label">Related Invoice:</span>
-                    <span class="value">${receipt.related_invoice || '-'}</span>
+                    <span class="label">Related Invoice(s):</span>
+                    <span class="value">${invoiceNumbers}</span>
                 </div>
                 <div class="detail-row">
                     <span class="label">Status:</span>
@@ -172,7 +533,7 @@ async function viewReceipt(id) {
             </div>
         `;
 
-        modal.style.display = 'block';
+        openModal('viewReceiptModal');
     } catch (error) {
         console.error('Error viewing receipt:', error);
         showNotification('Error viewing receipt', 'error');
@@ -186,7 +547,7 @@ async function deleteReceipt(id) {
         const { error } = await supabase
             .from('receipts')
             .delete()
-            .eq('id', id);
+            .eq('receipt_id', id);
 
         if (error) throw error;
 
@@ -230,7 +591,114 @@ function formatCurrency(amount) {
     }).format(amount);
 }
 
-function showNotification(message, type = 'success') {
-    // Implement your notification system here
-    console.log(`${type}: ${message}`);
+// Helper: Fetch current user
+async function getCurrentUserId() {
+    const { data: { user }, error } = await supabase.auth.getUser();
+    if (error || !user) throw new Error('User not authenticated');
+    return user.id;
+}
+
+// Helper: Populate clients dropdown from clients table
+async function populateClientsDropdown() {
+    const clientSelect = document.getElementById('client');
+    if (!clientSelect) return;
+    const { data: clients, error } = await supabase
+        .from('clients')
+        .select('customer_id, customer_name')
+        .order('customer_name', { ascending: true });
+    if (error) return;
+    clientSelect.innerHTML = '<option value="">Select Client</option>';
+    clients.forEach(client => {
+        const option = document.createElement('option');
+        option.value = client.customer_id;
+        option.textContent = client.customer_name;
+        option.setAttribute('data-client-name', client.customer_name);
+        clientSelect.appendChild(option);
+    });
+    // Add event listener to fetch pending invoices when client changes
+    clientSelect.addEventListener('change', async function() {
+        await populateInvoicesDropdown(this.value);
+    });
+}
+
+// Helper: Populate invoices dropdown for selected client_id
+async function populateInvoicesDropdown(clientId) {
+    const invoiceSelect = document.getElementById('relatedInvoice');
+    if (!invoiceSelect) return;
+    // Clear dropdown before fetching
+    invoiceSelect.innerHTML = '<option value="">Select Invoice</option>';
+    // Clear invoiceAmounts
+    Object.keys(invoiceAmounts).forEach(key => delete invoiceAmounts[key]);
+    if (!clientId) {
+        return;
+    }
+    // Fetch all invoices for this client (for fallback)
+    const { data: allInvoices, error: allError } = await supabase
+        .from('invoices')
+        .select('id, "invoiceNumber", client_id, status, total_amount')
+        .eq('client_id', clientId);
+    if (allError) {
+        console.error('Error fetching all invoices for client:', allError);
+    }
+    // Fetch only pending invoices (case-insensitive)
+    let { data: invoices, error } = await supabase
+        .from('invoices')
+        .select('id, "invoiceNumber", client_id, status, total_amount')
+        .eq('client_id', clientId)
+        .ilike('status', 'pending')
+        .order('created_at', { ascending: false });
+    if (error) {
+        showNotification('Failed to load invoices', 'error');
+        console.error(error);
+        return;
+    }
+    // Fallback: If no pending invoices, show all invoices for the client
+    if (!invoices || invoices.length === 0) {
+        showNotification('No pending invoices found. Showing all invoices for this client.', 'warning');
+        if (allInvoices && allInvoices.length > 0) {
+            for (const inv of allInvoices) {
+                invoiceAmounts[inv.id] = inv.total_amount;
+                const option = document.createElement('option');
+                option.value = inv.id;
+                option.textContent = `${inv.invoiceNumber} (${inv.status}) - ${formatCurrency(inv.total_amount)}`;
+                option.setAttribute('data-amount', inv.total_amount);
+                invoiceSelect.appendChild(option);
+            }
+        } else {
+            invoiceSelect.innerHTML = '<option value="">No invoices found</option>';
+        }
+        return;
+    }
+    for (const inv of invoices) {
+        invoiceAmounts[inv.id] = inv.total_amount;
+        const option = document.createElement('option');
+        option.value = inv.id;
+        option.textContent = `${inv.invoiceNumber} - ${formatCurrency(inv.total_amount)}`;
+        option.setAttribute('data-amount', inv.total_amount);
+        invoiceSelect.appendChild(option);
+    }
+}
+
+// Utility functions for modals
+function openModal(modalId) {
+    const modal = document.getElementById(modalId);
+    const overlay = document.querySelector('.modal-overlay');
+    if (modal) modal.style.display = 'block';
+    if (overlay) overlay.style.display = 'block';
+}
+
+function closeModal(modalId) {
+    const modal = document.getElementById(modalId);
+    if (modal) modal.style.display = 'none';
+    // Hide overlay only if no modals are open
+    const anyOpen = Array.from(document.querySelectorAll('.document-modal'))
+        .some(m => m.style.display === 'block');
+    const overlay = document.querySelector('.modal-overlay');
+    if (overlay && !anyOpen) overlay.style.display = 'none';
+}
+
+// Placeholder for editReceipt modal logic
+function editReceipt(id) {
+    alert('Edit receipt functionality coming soon!');
+    // In the future, implement modal open and populate logic here
 } 

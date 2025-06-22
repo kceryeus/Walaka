@@ -1,5 +1,6 @@
 // Authentication utilities
-import { supabase } from './supabaseClient.js';
+// import { supabase } from './supabaseClient.js';
+const supabase = window.supabase;
 
 export const auth = {
     // Check if user is authenticated
