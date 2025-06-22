@@ -690,6 +690,7 @@
   <script src="services/languageManager.js"></script>
   <script>
     window.languageManager = new LanguageManager('./');
+<<<<<<< HEAD
     document.addEventListener('DOMContentLoaded', async () => {
       // Initialize language manager with database sync
       await window.languageManager.initialize();
@@ -706,6 +707,11 @@
           langSelect.value = window.languageManager.currentLang;
         });
       }
+=======
+    document.addEventListener('DOMContentLoaded', () => {
+      const lang = localStorage.getItem('preferredLanguage') || 'pt';
+      window.languageManager.setLanguage(lang);
+>>>>>>> e05396820f7d7c919a78b3ad9989451459916ce4
     });
   </script>
   <!-- Load your settings.js -->

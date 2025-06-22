@@ -454,9 +454,17 @@
       if (typeof window.initClientList === 'function') {
         window.initClientList();
       }
+<<<<<<< HEAD
       // Initialize the language manager with database sync
       if (window.languageManager) {
         await window.languageManager.initialize();
+=======
+      // Initialize the language manager
+      if (window.languageManager) {
+        // Load the preferred language and apply translations
+        const preferredLanguage = localStorage.getItem('preferredLanguage') || 'pt';
+        await window.languageManager.setLanguage(preferredLanguage);
+>>>>>>> e05396820f7d7c919a78b3ad9989451459916ce4
       }
     });
   </script>

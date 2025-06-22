@@ -29,7 +29,11 @@ class LanguageManager {
         try {
             const path = `${this.basePath}assets/translations/${lang}.json`;
             console.log(`[languageManager] Loading translations for:`, lang, `from ${path}`);
+<<<<<<< HEAD
             const response = await fetch(path);
+=======
+            const response = await fetch(path); // Use the constructed path
+>>>>>>> e05396820f7d7c919a78b3ad9989451459916ce4
             this.translations = await response.json();
             this.currentLang = lang;
             localStorage.setItem('preferredLanguage', lang);
@@ -50,6 +54,7 @@ class LanguageManager {
         
         window.dispatchEvent(new Event('languageChanged'));
         console.log(`[languageManager] Language set and translations applied:`, lang);
+<<<<<<< HEAD
     }
 
     async saveLanguageToDatabase(lang) {
@@ -120,6 +125,8 @@ class LanguageManager {
         await this.setLanguage(preferredLanguage);
         
         console.log('[languageManager] Language manager initialized');
+=======
+>>>>>>> e05396820f7d7c919a78b3ad9989451459916ce4
     }
 
     translate(key) {
@@ -164,7 +171,12 @@ class LanguageManager {
     }
 }
 
+<<<<<<< HEAD
 // Export for use in other modules
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = LanguageManager;
 }
+=======
+// window.languageManager = new LanguageManager();
+// export default window.languageManager;
+>>>>>>> e05396820f7d7c919a78b3ad9989451459916ce4

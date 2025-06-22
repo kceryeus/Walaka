@@ -1697,11 +1697,20 @@
   <script src="js/displayname.js"></script>
   <script src="services/languageManager.js"></script>
   <script>
+<<<<<<< HEAD
     document.addEventListener('DOMContentLoaded', async () => {
       // Initialize language manager with database sync
       const languageManager = new LanguageManager('./');
       window.languageManager = languageManager; // Make it globally available for other scripts
       await languageManager.initialize();
+=======
+    document.addEventListener('DOMContentLoaded', () => {
+      // It's important to wait for the DOM to be fully loaded before translating
+      const languageManager = new LanguageManager('./');
+      window.languageManager = languageManager; // Make it globally available for other scripts
+      const lang = localStorage.getItem('preferredLanguage') || 'pt';
+      languageManager.setLanguage(lang);
+>>>>>>> e05396820f7d7c919a78b3ad9989451459916ce4
     });
   </script>
 </body>
