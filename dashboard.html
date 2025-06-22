@@ -5,23 +5,31 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard - Walaka</title>
     
+    <script>
+        // Set base path for assets to handle GitHub Pages sub-directory
+        const repoName = 'Walaka';
+        const isGitHubPages = window.location.hostname.includes('github.io');
+        const basePath = isGitHubPages ? `/${repoName}/` : '/';
+    </script>
+
     <!-- Font Awesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="vendors/style.css">
-    <link rel="stylesheet" href="trial/css/upgrade-modal.css">
-    <link rel="stylesheet" href="components/trial-banner.css">
-    <link rel="stylesheet" href="components/trial-restrictions.css">
+    <script>
+        document.write(`<link rel="stylesheet" href="${basePath}vendors/style.css">`);
+        document.write(`<link rel="stylesheet" href="${basePath}trial/css/upgrade-modal.css">`);
+        document.write(`<link rel="stylesheet" href="${basePath}components/trial-banner.css">`);
+        document.write(`<link rel="stylesheet" href="${basePath}components/trial-restrictions.css">`);
+        document.write(`<link rel="stylesheet" href="${basePath}components/sidebar.css">`);
+        document.write(`<link rel="stylesheet" href="${basePath}css/styles.css">`);
+        document.write(`<link rel="stylesheet" href="${basePath}css/metrics.css">`);
+        document.write(`<link rel="stylesheet" href="${basePath}css/hints.css">`);
+    </script>
     
     <!-- Google Fonts - Inter -->
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap">
     
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <!-- Custom CSS -->
-    <link rel="stylesheet" href="components/sidebar.css">
-    <link rel="stylesheet" href="css/styles.css">
-    <link rel="stylesheet" href="css/metrics.css">
-    <link rel="stylesheet" href="css/hints.css">
 </head>
 <body>
     <div class="container">
@@ -31,13 +39,13 @@
             <script>
             // Dynamically load the sidebar from components/sidebar.html
             document.addEventListener('DOMContentLoaded', function() {
-                fetch('components/sidebar.html')
+                fetch(`${basePath}components/sidebar.html`)
                     .then(response => response.text())
                     .then(html => {
                         document.getElementById('sidebar-container').innerHTML = html;
                         // Dynamically load the sidebar-actions.js script after sidebar is injected
                         var script = document.createElement('script');
-                        script.src = 'components/sidebar-actions.js';
+                        script.src = `${basePath}components/sidebar-actions.js`;
                         document.body.appendChild(script);
                     })
                     .catch(err => {
@@ -83,7 +91,7 @@
             <div id="trial-banner-container"></div>
             <script>
             document.addEventListener('DOMContentLoaded', function() {
-                fetch('components/trial-banner.html')
+                fetch(`${basePath}components/trial-banner.html`)
                     .then(response => {
                         if (!response.ok) {
                             throw new Error('Network response was not ok');
@@ -96,12 +104,12 @@
                         // Load the banner script
                         const bannerScript = document.createElement('script');
                         bannerScript.type = 'module';
-                        bannerScript.src = 'components/trial-banner.js';
+                        bannerScript.src = `${basePath}components/trial-banner.js`;
                         document.body.appendChild(bannerScript);
                         
                         // Load the restrictions script immediately after
                         const restrictionsScript = document.createElement('script');
-                        restrictionsScript.src = 'components/trial-restrictions.js';
+                        restrictionsScript.src = `${basePath}components/trial-restrictions.js`;
                         document.body.appendChild(restrictionsScript);
 
                     })
