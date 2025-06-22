@@ -1,0 +1,118 @@
+/* Trial Restrictions Styling */
+
+.action-card.trial-restricted {
+    position: relative;
+    opacity: 0.7;
+    pointer-events: none;
+}
+
+.action-card.trial-restricted:hover {
+    transform: none;
+    box-shadow: var(--box-shadow);
+}
+
+.trial-restriction-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.1);
+    border-radius: var(--card-radius);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1;
+    backdrop-filter: blur(1px);
+}
+
+.restriction-content {
+    text-align: center;
+    color: #666;
+    background: rgba(255, 255, 255, 0.9);
+    padding: 0.5rem;
+    border-radius: 6px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.restriction-content i {
+    font-size: 1.2rem;
+    margin-bottom: 0.25rem;
+    display: block;
+    color: #e55353;
+}
+
+.restriction-content span {
+    font-size: 0.7rem;
+    font-weight: 500;
+    color: #666;
+}
+
+/* Ensure restricted links are properly disabled */
+.action-card.trial-restricted a {
+    pointer-events: none !important;
+    opacity: 0.6 !important;
+    cursor: not-allowed !important;
+}
+
+/* Button restrictions */
+button.trial-restricted,
+.btn.trial-restricted,
+.primary-btn.trial-restricted {
+    opacity: 0.6 !important;
+    cursor: not-allowed !important;
+    pointer-events: none !important;
+    position: relative;
+}
+
+button.trial-restricted:hover,
+.btn.trial-restricted:hover,
+.primary-btn.trial-restricted:hover {
+    transform: none !important;
+    box-shadow: none !important;
+}
+
+/* Lock icon for restricted buttons */
+button.trial-restricted i.fas.fa-lock,
+.btn.trial-restricted i.fas.fa-lock,
+.primary-btn.trial-restricted i.fas.fa-lock {
+    color: #e55353;
+    margin-right: 8px;
+    font-size: 0.9em;
+}
+
+/* Disable form submissions for restricted forms */
+form.trial-restricted {
+    pointer-events: none;
+    opacity: 0.6;
+}
+
+form.trial-restricted input,
+form.trial-restricted select,
+form.trial-restricted textarea {
+    pointer-events: none;
+    opacity: 0.6;
+}
+
+/* Tooltip for restricted elements */
+.trial-restricted[title]::after {
+    content: attr(title);
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    white-space: nowrap;
+    z-index: 1000;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s;
+}
+
+.trial-restricted:hover[title]::after {
+    opacity: 1;
+} 

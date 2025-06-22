@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Trial Restrictions</title>
+    
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="components/trial-banner.css">
+    <link rel="stylesheet" href="components/trial-restrictions.css">
+    <link rel="stylesheet" href="css/styles.css">
+    
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        
+        .test-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .test-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+        }
+        
+        .test-section h3 {
+            margin-top: 0;
+            color: #333;
+        }
+        
+        .quick-actions-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin: 1.5rem 0;
+        }
+        
+        .action-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            cursor: pointer;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .action-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 6px 10px rgba(0,0,0,0.1);
+        }
+        
+        .action-card i {
+            font-size: 2rem;
+            color: #007ec7;
+            margin-bottom: 0.75rem;
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+        
+        .btn.primary-btn {
+            background-color: #007ec7;
+            color: white;
+        }
+        
+        .btn.primary-btn:hover {
+            background-color: #0066a3;
+        }
+        
+        .btn.secondary-btn {
+            background-color: #f1f1f1;
+            color: #666;
+        }
+        
+        .btn.secondary-btn:hover {
+            background-color: #e5e5e5;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>Test Trial Restrictions System</h1>
+        
+        <!-- Trial Banner Container -->
+        <div id="trial-banner-container"></div>
+        
+        <!-- Test Section 1: Quick Actions -->
+        <div class="test-section">
+            <h3>Quick Actions (Should be restricted when trial limits reached)</h3>
+            <div class="quick-actions-grid">
+                <div class="action-card">
+                    <a href="invoices.html" style="text-decoration: none; color: inherit;">
+                        <i class="fas fa-file-invoice"></i>
+                        <h4>New Invoice</h4>
+                        <p>Create a new invoice</p>
+                    </a>
+                </div>
+                <div class="action-card">
+                    <a href="clients/clients.html" style="text-decoration: none; color: inherit;">
+                        <i class="fas fa-user-plus"></i>
+                        <h4>Add Client</h4>
+                        <p>Register a new client</p>
+                    </a>
+                </div>
+                <div class="action-card">
+                    <a href="products.html" style="text-decoration: none; color: inherit;">
+                        <i class="fas fa-box"></i>
+                        <h4>Add Product</h4>
+                        <p>Add product to inventory</p>
+                    </a>
+                </div>
+                <div class="action-card">
+                    <a href="banks/banks.html" style="text-decoration: none; color: inherit;">
+                        <i class="fas fa-university"></i>
+                        <h4>Banks & Wallets</h4>
+                        <p>Manage bank accounts</p>
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Test Section 2: Buttons -->
+        <div class="test-section">
+            <h3>Action Buttons (Should be restricted when trial limits reached)</h3>
+            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                <button class="btn primary-btn" id="createInvoiceBtn">
+                    <i class="fas fa-plus"></i> Create Invoice
+                </button>
+                <button class="btn primary-btn" id="add-new-client-btn">
+                    <i class="fas fa-plus"></i> Add New Client
+                </button>
+                <button class="btn primary-btn" id="add-new-product-btn">
+                    <i class="fas fa-plus"></i> Add New Product
+                </button>
+                <button class="btn primary-btn" id="add-account-btn">
+                    <i class="fas fa-plus"></i> Add New Account
+                </button>
+                <button class="btn primary-btn" data-action="create">
+                    <i class="fas fa-plus"></i> Add New Item
+                </button>
+                <button class="btn secondary-btn">
+                    <i class="fas fa-download"></i> Export Data
+                </button>
+            </div>
+        </div>
+        
+        <!-- Test Section 3: Manual Trial Data -->
+        <div class="test-section">
+            <h3>Manual Trial Data Control</h3>
+            <p>Use these buttons to simulate different trial states:</p>
+            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                <button onclick="simulateTrialExpired()" class="btn secondary-btn">Simulate Trial Expired</button>
+                <button onclick="simulateInvoicesExhausted()" class="btn secondary-btn">Simulate Invoices Exhausted</button>
+                <button onclick="simulateActiveTrial()" class="btn secondary-btn">Simulate Active Trial</button>
+            </div>
+        </div>
+        
+        <!-- Test Section 4: Status Display -->
+        <div class="test-section">
+            <h3>Current Trial Status</h3>
+            <div id="trial-status">
+                <p>Loading trial status...</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Load trial banner
+        document.addEventListener('DOMContentLoaded', function() {
+            fetch('components/trial-banner.html')
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.text();
+                })
+                .then(html => {
+                    document.getElementById('trial-banner-container').innerHTML = html;
+                    
+                    // Load trial banner script
+                    const script = document.createElement('script');
+                    script.type = 'module';
+                    script.src = 'components/trial-banner.js';
+                    document.body.appendChild(script);
+                    
+                    // Load trial restrictions after trial banner
+                    setTimeout(() => {
+                        const restrictionsScript = document.createElement('script');
+                        restrictionsScript.src = 'components/trial-restrictions.js';
+                        document.body.appendChild(restrictionsScript);
+                    }, 500);
+                })
+                .catch(error => {
+                    console.error('Failed to load trial banner component:', error);
+                });
+        });
+
+        // Manual trial state simulation functions
+        function simulateTrialExpired() {
+            const daysElement = document.getElementById('days-remaining');
+            const invoicesElement = document.getElementById('invoices-remaining');
+            
+            if (daysElement) daysElement.textContent = '0';
+            if (invoicesElement) invoicesElement.textContent = '5';
+            
+            updateTrialStatus();
+            if (window.trialRestrictions) {
+                window.trialRestrictions.trialData.daysRemaining = 0;
+                window.trialRestrictions.trialData.invoicesRemaining = 5;
+                window.trialRestrictions.trialData.isRestricted = true;
+                window.trialRestrictions.applyRestrictions();
+            }
+        }
+
+        function simulateInvoicesExhausted() {
+            const daysElement = document.getElementById('days-remaining');
+            const invoicesElement = document.getElementById('invoices-remaining');
+            
+            if (daysElement) daysElement.textContent = '14';
+            if (invoicesElement) invoicesElement.textContent = '0';
+            
+            updateTrialStatus();
+            if (window.trialRestrictions) {
+                window.trialRestrictions.trialData.daysRemaining = 14;
+                window.trialRestrictions.trialData.invoicesRemaining = 0;
+                window.trialRestrictions.trialData.isRestricted = true;
+                window.trialRestrictions.applyRestrictions();
+            }
+        }
+
+        function simulateActiveTrial() {
+            const daysElement = document.getElementById('days-remaining');
+            const invoicesElement = document.getElementById('invoices-remaining');
+            
+            if (daysElement) daysElement.textContent = '10';
+            if (invoicesElement) invoicesElement.textContent = '3';
+            
+            updateTrialStatus();
+            if (window.trialRestrictions) {
+                window.trialRestrictions.trialData.daysRemaining = 10;
+                window.trialRestrictions.trialData.invoicesRemaining = 3;
+                window.trialRestrictions.trialData.isRestricted = false;
+                window.trialRestrictions.applyRestrictions();
+            }
+        }
+
+        function updateTrialStatus() {
+            const statusDiv = document.getElementById('trial-status');
+            const daysElement = document.getElementById('days-remaining');
+            const invoicesElement = document.getElementById('invoices-remaining');
+            
+            if (daysElement && invoicesElement) {
+                const days = daysElement.textContent;
+                const invoices = invoicesElement.textContent;
+                const isRestricted = days === '0' || invoices === '0';
+                
+                statusDiv.innerHTML = `
+                    <p><strong>Days Remaining:</strong> ${days}</p>
+                    <p><strong>Invoices Remaining:</strong> ${invoices}</p>
+                    <p><strong>Restricted:</strong> ${isRestricted ? 'Yes' : 'No'}</p>
+                    <p><strong>Status:</strong> <span style="color: ${isRestricted ? '#e55353' : '#3bb077'}">${isRestricted ? 'Trial Limits Reached' : 'Active Trial'}</span></p>
+                `;
+            }
+        }
+
+        // Update status every second
+        setInterval(updateTrialStatus, 1000);
+    </script>
+</body>
+</html> 

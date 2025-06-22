@@ -371,8 +371,8 @@ class InvoiceActions {
     }
 
     async refreshInvoiceList() {
-        if (window.InvoiceTableModule) {
-            await window.InvoiceTableModule.fetchAndDisplayInvoices(1, 10, {});
+        if (window.invoiceTable && typeof window.invoiceTable.fetchAndDisplayInvoices === 'function') {
+            await window.invoiceTable.fetchAndDisplayInvoices(1, 10, {});
         }
     }
 

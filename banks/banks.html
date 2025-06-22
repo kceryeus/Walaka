@@ -12,8 +12,10 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet" />
     
     <!-- Internal CSS -->
+    <link rel="stylesheet" href="trial-banner.css"> 
     <link rel="stylesheet" href="../components/sidebar.css">
     <link rel="stylesheet" href="assets/css/banks.css">
+    <link rel="stylesheet" href="../components/trial-restrictions.css">
 
 
     <!-- Initialize Supabase -->
@@ -83,6 +85,37 @@
                     </div>
                 </div>
             </div>
+
+            <!-- Add trial banner and restrictions system -->
+            <div id="trial-banner-container"></div>
+            <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                fetch('../components/trial-banner.html')
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('Network response was not ok');
+                        }
+                        return response.text();
+                    })
+                    .then(html => {
+                        document.getElementById('trial-banner-container').innerHTML = html;
+                        
+                        // Load the banner script
+                        const bannerScript = document.createElement('script');
+                        bannerScript.type = 'module';
+                        bannerScript.src = '../components/trial-banner.js';
+                        document.body.appendChild(bannerScript);
+                        
+                        // Load the restrictions script immediately after
+                        const restrictionsScript = document.createElement('script');
+                        restrictionsScript.src = '../components/trial-restrictions.js';
+                        document.body.appendChild(restrictionsScript);
+                    })
+                    .catch(error => {
+                        console.error('Failed to load trial banner component:', error);
+                    });
+            });
+            </script>
 
             <!-- Banks Page Header -->
             <div class="page-header">

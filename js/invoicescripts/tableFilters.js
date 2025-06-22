@@ -52,7 +52,7 @@ function setupTableFilters() {
             // Add client options
             clients.forEach(client => {
                 const option = document.createElement('option');
-                option.value = client.id;
+                option.value = client.customer_id;
                 option.textContent = client.customer_name;
                 clientFilter.appendChild(option);
             });
@@ -103,10 +103,10 @@ function setupTableFilters() {
             console.log('Applying filters:', filters);
             
             // Always reset to page 1 when filters change
-            if (typeof window.fetchAndDisplayInvoices === 'function') {
-                await window.fetchAndDisplayInvoices(1, 10, filters);
+            if (window.invoiceTable && typeof window.invoiceTable.fetchAndDisplayInvoices === 'function') {
+                await window.invoiceTable.fetchAndDisplayInvoices(1, 10, filters);
             } else {
-                console.error('fetchAndDisplayInvoices function not found');
+                console.error('invoiceTable or fetchAndDisplayInvoices function not found');
             }
         } catch (error) {
             console.error('Error applying filters:', error);
@@ -220,7 +220,11 @@ function setupTableSorting(table) {
             };
 
             // Fetch and display invoices with new sort
-            await fetchAndDisplayInvoices(1, 10, filters, currentSort);
+            if (window.invoiceTable && typeof window.invoiceTable.fetchAndDisplayInvoices === 'function') {
+                await window.invoiceTable.fetchAndDisplayInvoices(1, 10, filters);
+            } else {
+                console.error('invoiceTable or fetchAndDisplayInvoices function not found');
+            }
         });
     });
 }
