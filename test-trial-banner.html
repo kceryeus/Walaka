@@ -81,6 +81,8 @@
             <button onclick="testTrialBanner()">Test Trial Banner</button>
             <button onclick="clearConsole()">Clear Console</button>
             <button onclick="showDebugInfo()">Show Debug Info</button>
+            <button onclick="testZeroValues()">Test Zero Values</button>
+            <button onclick="testWarningValues()">Test Warning Values</button>
         </div>
 
         <div class="test-section">
@@ -211,6 +213,50 @@
             }
             
             console.log('Manual update applied:', { days, invoices });
+        };
+
+        // Test zero values
+        window.testZeroValues = function() {
+            console.log('Testing zero values...');
+            if (window.TrialBanner && window.TrialBanner.testWithValues) {
+                window.TrialBanner.testWithValues(0, 0);
+            } else {
+                // Fallback manual update
+                const daysElem = document.getElementById('days-remaining');
+                const invoicesElem = document.getElementById('invoices-remaining');
+                
+                if (daysElem) {
+                    daysElem.textContent = '0';
+                    daysElem.classList.add('warning');
+                }
+                
+                if (invoicesElem) {
+                    invoicesElem.textContent = '0';
+                    invoicesElem.classList.add('warning');
+                }
+            }
+        };
+
+        // Test warning values
+        window.testWarningValues = function() {
+            console.log('Testing warning values...');
+            if (window.TrialBanner && window.TrialBanner.testWithValues) {
+                window.TrialBanner.testWithValues(2, 1);
+            } else {
+                // Fallback manual update
+                const daysElem = document.getElementById('days-remaining');
+                const invoicesElem = document.getElementById('invoices-remaining');
+                
+                if (daysElem) {
+                    daysElem.textContent = '2';
+                    daysElem.classList.add('warning');
+                }
+                
+                if (invoicesElem) {
+                    invoicesElem.textContent = '1';
+                    invoicesElem.classList.add('warning');
+                }
+            }
         };
 
         // Listen for trial data updates

@@ -5,7 +5,7 @@ Dedicated styling for the trial banner component.
 .trial-banner {
     background: linear-gradient(to right, #007ec7, #1e3aa1);
     border-radius: 8px;
-    padding: 0 1.5rem; /* Using horizontal padding to respect the height */
+    padding: 0 1.5rem;
     margin: 1rem 0;
     box-shadow: var(--box-shadow);
     display: flex;
@@ -14,31 +14,30 @@ Dedicated styling for the trial banner component.
     color: white;
     height: 48px;
     font-family: 'Inter', sans-serif;
+    gap: 24px; /* Add gap for spacing between all items */
 }
 
-.trial-banner .trial-info {
+.trial-info-group {
     display: flex;
     align-items: center;
-    gap: 20px;
-    margin-bottom: 0px;
-    background-color: transparent;
-    border: none;
+    gap: 24px;
+    flex-shrink: 0; /* Prevent this group from shrinking */
 }
 
-.trial-banner .trial-header {
+.trial-header {
     display: flex;
     align-items: center;
     gap: 8px;
-    margin-bottom: 0px;
 }
 
-.trial-banner .trial-header h3 {
+.trial-header h3 {
     margin: 0;
     font-size: 14px;
     font-weight: 600;
+    white-space: nowrap;
 }
 
-.trial-banner .trial-badge {
+.trial-badge {
     background-color: rgba(255, 255, 255, 0.15);
     padding: 3px 8px;
     border-radius: 6px;
@@ -46,47 +45,62 @@ Dedicated styling for the trial banner component.
     font-weight: 500;
 }
 
-.trial-banner .trial-details {
+.trial-details {
     display: flex;
     align-items: center;
-    gap: 20px;
+    gap: 24px;
 }
 
-.trial-banner .trial-metric {
+.trial-metric {
     text-align: center;
+    min-width: 70px;
 }
 
-.trial-banner .trial-metric-value {
+.trial-metric-value {
     font-size: 18px;
     font-weight: 700;
+    transition: color 0.3s ease;
 }
 
-.trial-banner .trial-metric-label {
+.trial-metric-value.warning {
+    color: #ffc107; /* Orange color */
+}
+
+.trial-metric-label {
     font-size: 10px;
     opacity: 0.8;
     text-transform: uppercase;
 }
 
-.trial-banner .trial-progress {
-    width: 120px;
+.trial-progress {
+    flex-grow: 1; /* Allow progress bar to take up remaining space */
+    min-width: 100px; /* Ensure it has a minimum width */
 }
 
-.trial-banner .progress-bar {
+.progress-bar {
     height: 6px;
     background-color: rgba(255, 255, 255, 0.25);
-    border-radius: 9999px;
+    border-radius: 9999px; /* Rounded bar */
     overflow: hidden;
 }
 
-.trial-banner .progress-fill {
+.progress-fill {
     height: 100%;
     background-color: #ffffff;
     border-radius: 9999px;
     transition: width 0.3s ease-in-out;
 }
 
+.progress-fill.warning {
+    background-color: #ffc107; /* Orange color */
+}
+
+.trial-actions {
+    flex-shrink: 0; /* Prevent the button from shrinking */
+}
+
 /* New Button Style */
-.trial-banner .trial-actions .trial-btn {
+.trial-actions .trial-btn {
     background-color: #ffffff;
     color: #2563eb;
     border: none;
@@ -99,30 +113,48 @@ Dedicated styling for the trial banner component.
     align-items: center;
     gap: 6px;
     transition: transform 0.2s ease-in-out;
+    white-space: nowrap;
 }
 
-.trial-banner .trial-actions .trial-btn:hover {
+.trial-actions .trial-btn:hover {
     transform: scale(1.05);
 }
 
-.trial-banner .trial-actions .btn-content-wrapper {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    background-color: #fff;
-    padding: 6px 12px;
-    border-radius: 7px;
-}
-
-.trial-banner .trial-actions .trial-btn span {
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-    font-size: 14px;
-    font-weight: 200;
-    color: #4f46e5;
-}
-
-.trial-banner .trial-actions .trial-btn i {
+.trial-actions .trial-btn i {
     font-family: "Font Awesome 6 Free";
-    font-weight: 900; /* Required for solid icons in FA6 */
+    font-weight: 900;
     font-size: 12px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 900px) {
+    .trial-banner {
+        flex-wrap: wrap;
+        height: auto;
+        padding: 1rem;
+        gap: 1rem;
+    }
+
+    .trial-info-group {
+        width: 100%;
+        justify-content: center;
+    }
+    
+    .trial-progress {
+        order: 3; /* Move progress bar to the bottom on wrap */
+        width: 100%;
+        flex-basis: 100%;
+    }
+
+    .trial-actions {
+        order: 2;
+        margin: 0 auto;
+    }
+}
+
+@media (max-width: 500px) {
+    .trial-info-group {
+        flex-direction: column;
+        text-align: center;
+    }
 } 

@@ -168,33 +168,21 @@ async function updateTrialBanner() {
 function updateTrialUI(daysRemaining, invoicesRemaining, trialStartDate) {
     console.log('[TrialBanner] Updating UI with:', { daysRemaining, invoicesRemaining });
     
-    // Update days remaining
+    // Update days remaining - always show the value, even if 0
     const daysElem = document.getElementById('days-remaining');
     if (daysElem) {
         daysElem.textContent = daysRemaining;
         daysElem.classList.toggle('warning', daysRemaining <= 3);
-        
-        // Hide the entire metric if no days remaining
-        const daysContainer = daysElem.closest('.trial-metric');
-        if (daysContainer) {
-            daysContainer.style.display = daysRemaining > 0 ? 'block' : 'none';
-        }
         console.log('[TrialBanner] Updated days remaining element:', daysRemaining);
     } else {
         console.warn('[TrialBanner] #days-remaining element not found.');
     }
 
-    // Update invoices remaining
+    // Update invoices remaining - always show the value, even if 0
     const invoicesElem = document.getElementById('invoices-remaining');
     if (invoicesElem) {
         invoicesElem.textContent = invoicesRemaining;
         invoicesElem.classList.toggle('warning', invoicesRemaining <= 1);
-        
-        // Hide the entire metric if no invoices remaining
-        const invoicesContainer = invoicesElem.closest('.trial-metric');
-        if (invoicesContainer) {
-            invoicesContainer.style.display = invoicesRemaining > 0 ? 'block' : 'none';
-        }
         console.log('[TrialBanner] Updated invoices remaining element:', invoicesRemaining);
     } else {
         console.warn('[TrialBanner] #invoices-remaining element not found.');
@@ -317,5 +305,10 @@ if (document.readyState === 'loading') {
 window.TrialBanner = {
     updateTrialBanner,
     showUpgradeModal,
-    setupUpgradeButton
+    setupUpgradeButton,
+    // Add manual test function
+    testWithValues: function(days, invoices) {
+        console.log('[TrialBanner] Manual test with values:', { days, invoices });
+        updateTrialUI(days, invoices, new Date());
+    }
 }; 
