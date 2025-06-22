@@ -143,6 +143,13 @@ async function updateTrialBanner() {
         // Show banner
         banner.style.display = '';
         console.log('[TrialBanner] Banner displayed.');
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+>>>>>>> 86a8ad1e44a22239283ce45067097b52d5438a42
+>>>>>>> 2fadc796fd216b4d847c97772b44ce62d50e77af
         
         // Dispatch custom event with trial data for other components
         const trialData = {
@@ -155,6 +162,14 @@ async function updateTrialBanner() {
             detail: trialData 
         }));
         
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+=======
+=======
+>>>>>>> cb1b423ed96505b9fd847f9068fe42f3f881f553
+>>>>>>> 86a8ad1e44a22239283ce45067097b52d5438a42
+>>>>>>> 2fadc796fd216b4d847c97772b44ce62d50e77af
     } catch (err) {
         console.error('[TrialBanner] Unexpected error:', err);
         if (banner) banner.style.display = 'none';
