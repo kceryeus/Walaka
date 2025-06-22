@@ -5,17 +5,27 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Product Management | WALAKA</title>
 
+  <script>
+      // Set base path for assets to handle GitHub Pages sub-directory
+      const repoName = 'Walaka';
+      const isGitHubPages = window.location.hostname.includes('github.io');
+      const basePath = isGitHubPages ? `/${repoName}/` : '/';
+  </script>
+
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.9.2/html2pdf.bundle.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap">
 
-  <link rel="stylesheet" href="trial-banner.css">  
-  <link rel="stylesheet" href="css/styles.css">
-  <link rel="stylesheet" href="styles.css">  
-  <link rel="stylesheet" href="components/sidebar.css">
-  <link rel="stylesheet" href="css/hints.css">
-  <link rel="stylesheet" href="components/trial-restrictions.css">
+  <script>
+      document.write(`<link rel="stylesheet" href="${basePath}trial/css/upgrade-modal.css">`);
+      document.write(`<link rel="stylesheet" href="${basePath}components/trial-banner.css">`);
+      document.write(`<link rel="stylesheet" href="${basePath}components/trial-restrictions.css">`);
+      document.write(`<link rel="stylesheet" href="${basePath}components/sidebar.css">`);
+      document.write(`<link rel="stylesheet" href="${basePath}css/styles.css">`);
+      document.write(`<link rel="stylesheet" href="${basePath}css/hints.css">`);
+  </script>
+
   <!-- Hints System -->
   <script src="js/hints/walaka-hints.js"></script>
   <script src="js/hints/page-hints.js"></script>
@@ -839,13 +849,13 @@ button:disabled:hover {
     <script>
     // Dynamically load the sidebar from components/sidebar.html
     document.addEventListener('DOMContentLoaded', function() {
-        fetch('components/sidebar.html')
+        fetch(`${basePath}components/sidebar.html`)
             .then(response => response.text())
             .then(html => {
                 document.getElementById('sidebar-container').innerHTML = html;
                 // Dynamically load the sidebar-actions.js script after sidebar is injected
                 var script = document.createElement('script');
-                script.src = 'components/sidebar-actions.js';
+                script.src = `${basePath}components/sidebar-actions.js`;
                 document.body.appendChild(script);
             })
             .catch(err => {
@@ -882,7 +892,7 @@ button:disabled:hover {
       <div id="trial-banner-container"></div>
       <script>
       document.addEventListener('DOMContentLoaded', function() {
-          fetch('components/trial-banner.html')
+          fetch(`${basePath}components/trial-banner.html`)
               .then(response => {
                   if (!response.ok) {
                       throw new Error('Network response was not ok');
@@ -895,12 +905,12 @@ button:disabled:hover {
                   // Load the banner script
                   const bannerScript = document.createElement('script');
                   bannerScript.type = 'module';
-                  bannerScript.src = 'components/trial-banner.js';
+                  bannerScript.src = `${basePath}components/trial-banner.js`;
                   document.body.appendChild(bannerScript);
                   
                   // Load the restrictions script immediately after
                   const restrictionsScript = document.createElement('script');
-                  restrictionsScript.src = 'components/trial-restrictions.js';
+                  restrictionsScript.src = `${basePath}components/trial-restrictions.js`;
                   document.body.appendChild(restrictionsScript);
               })
               .catch(error => {

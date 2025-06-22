@@ -4,6 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>WALAKA - Invoice Management</title>
+    <script>
+        // Set base path for assets to handle GitHub Pages sub-directory
+        const repoName = 'Walaka';
+        const isGitHubPages = window.location.hostname.includes('github.io');
+        const basePath = isGitHubPages ? `/${repoName}/` : '/';
+    </script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
     
     <!-- Font Awesome Icons -->
@@ -16,13 +22,15 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
     <!-- Custom CSS -->
-    <link rel="stylesheet" href="components/sidebar.css">
-    <link rel="stylesheet" href="css/styles.css">
-    <link rel="stylesheet" href="css/invoice.css">
-    <link rel="stylesheet" href="css/hints.css">
-    <link rel="stylesheet" href="components/trial-restrictions.css">
-
-    <link rel="stylesheet" href="trial-banner.css"> 
+    <script>
+        document.write(`<link rel="stylesheet" href="${basePath}trial/css/upgrade-modal.css">`);
+        document.write(`<link rel="stylesheet" href="${basePath}components/trial-banner.css">`);
+        document.write(`<link rel="stylesheet" href="${basePath}components/trial-restrictions.css">`);
+        document.write(`<link rel="stylesheet" href="${basePath}components/sidebar.css">`);
+        document.write(`<link rel="stylesheet" href="${basePath}css/styles.css">`);
+        document.write(`<link rel="stylesheet" href="${basePath}css/invoice.css">`);
+        document.write(`<link rel="stylesheet" href="${basePath}css/hints.css">`);
+    </script>
 
     <!-- Custom JS -->
 
@@ -37,13 +45,13 @@
         <script>
         // Dynamically load the sidebar from components/sidebar.html
         document.addEventListener('DOMContentLoaded', function() {
-            fetch('components/sidebar.html')
+            fetch(`${basePath}components/sidebar.html`)
                 .then(response => response.text())
                 .then(html => {
                     document.getElementById('sidebar-container').innerHTML = html;
                     // Dynamically load the sidebar-actions.js script after sidebar is injected
                     var script = document.createElement('script');
-                    script.src = 'components/sidebar-actions.js';
+                    script.src = `${basePath}components/sidebar-actions.js`;
                     document.body.appendChild(script);
                 })
                 .catch(err => {
@@ -91,7 +99,7 @@
             <div id="trial-banner-container"></div>
             <script>
             document.addEventListener('DOMContentLoaded', function() {
-                fetch('components/trial-banner.html')
+                fetch(`${basePath}components/trial-banner.html`)
                     .then(response => {
                         if (!response.ok) {
                             throw new Error('Network response was not ok');
@@ -104,12 +112,12 @@
                         // Load the banner script
                         const bannerScript = document.createElement('script');
                         bannerScript.type = 'module';
-                        bannerScript.src = 'components/trial-banner.js';
+                        bannerScript.src = `${basePath}components/trial-banner.js`;
                         document.body.appendChild(bannerScript);
                         
                         // Load the restrictions script immediately after
                         const restrictionsScript = document.createElement('script');
-                        restrictionsScript.src = 'components/trial-restrictions.js';
+                        restrictionsScript.src = `${basePath}components/trial-restrictions.js`;
                         document.body.appendChild(restrictionsScript);
                     })
                     .catch(error => {

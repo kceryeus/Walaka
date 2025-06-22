@@ -209,8 +209,8 @@ ul {
 .main-content {
   flex: 1;
   margin-left: var(--sidebar-width);
-  padding: 1.5rem;
-  margin-top: var(--topbar-height);
+/*  padding: 1.5rem; 
+  margin-top: var(--topbar-height);*/
   background-color: var(--background-color);
 }
 
