@@ -6,22 +6,16 @@
     <title>Dashboard - Walaka</title>
     
     <!-- Font Awesome Icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="vendors/style.css">
     <link rel="stylesheet" href="trial/css/upgrade-modal.css">
     <link rel="stylesheet" href="components/trial-banner.css">
-<<<<<<< HEAD
     <link rel="stylesheet" href="components/trial-restrictions.css">
-=======
-<<<<<<< HEAD
+
     <link rel="stylesheet" href="components/trial-restrictions.css">
-=======
-<<<<<<< HEAD
+
     <link rel="stylesheet" href="components/trial-restrictions.css">
-=======
->>>>>>> cb1b423ed96505b9fd847f9068fe42f3f881f553
->>>>>>> 86a8ad1e44a22239283ce45067097b52d5438a42
->>>>>>> 2fadc796fd216b4d847c97772b44ce62d50e77af
+
     
     <!-- Google Fonts - Inter -->
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap">
@@ -105,13 +99,7 @@
                     .then(html => {
                         document.getElementById('trial-banner-container').innerHTML = html;
                         
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
->>>>>>> 86a8ad1e44a22239283ce45067097b52d5438a42
->>>>>>> 2fadc796fd216b4d847c97772b44ce62d50e77af
+
                         // Load the banner script
                         const bannerScript = document.createElement('script');
                         bannerScript.type = 'module';
@@ -122,19 +110,13 @@
                         const restrictionsScript = document.createElement('script');
                         restrictionsScript.src = 'components/trial-restrictions.js';
                         document.body.appendChild(restrictionsScript);
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-=======
-=======
+
                         // Now that the HTML is loaded, load the script
                         const script = document.createElement('script');
                         script.type = 'module';
                         script.src = 'components/trial-banner.js';
                         document.body.appendChild(script);
->>>>>>> cb1b423ed96505b9fd847f9068fe42f3f881f553
->>>>>>> 86a8ad1e44a22239283ce45067097b52d5438a42
->>>>>>> 2fadc796fd216b4d847c97772b44ce62d50e77af
+
                     })
                     .catch(error => {
                         console.error('Failed to load trial banner component:', error);
