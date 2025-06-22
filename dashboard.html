@@ -99,7 +99,6 @@
                     .then(html => {
                         document.getElementById('trial-banner-container').innerHTML = html;
                         
-
                         // Load the banner script
                         const bannerScript = document.createElement('script');
                         bannerScript.type = 'module';
@@ -110,12 +109,6 @@
                         const restrictionsScript = document.createElement('script');
                         restrictionsScript.src = 'components/trial-restrictions.js';
                         document.body.appendChild(restrictionsScript);
-
-                        // Now that the HTML is loaded, load the script
-                        const script = document.createElement('script');
-                        script.type = 'module';
-                        script.src = 'components/trial-banner.js';
-                        document.body.appendChild(script);
 
                     })
                     .catch(error => {

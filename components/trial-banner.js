@@ -5,6 +5,12 @@ const supabaseUrl = 'https://qvmtozjvjflygbkjecyj.supabase.co';
 const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF2bXRvemp2amZseWdia2plY3lqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDYxMjc2MjMsImV4cCI6MjA2MTcwMzYyM30.DJMC1eM5_EouM1oc07JaoXsMX_bSLn2AVCozAcdfHmo';
 const supabase = createClient(supabaseUrl, supabaseKey);
 
+// Trial configuration
+const TRIAL_CONFIG = {
+    totalDays: 14,
+    maxInvoices: 5
+};
+
 async function updateTrialBanner() {
     console.log('[TrialBanner] updateTrialBanner called');
     const banner = document.getElementById('trial-banner');
@@ -19,160 +25,193 @@ async function updateTrialBanner() {
         const { data: { session }, error: sessionError } = await supabase.auth.getSession();
         if (sessionError) {
             console.error('[TrialBanner] Error fetching session:', sessionError);
+            banner.style.display = 'none';
+            return;
         }
+        
         if (!session || !session.user) {
             console.log('[TrialBanner] No user session found. Hiding banner.');
             banner.style.display = 'none';
             return;
         }
+        
         const userId = session.user.id;
         console.log('[TrialBanner] User ID:', userId);
+        console.log('[TrialBanner] User created_at:', session.user.created_at);
 
-        // Fetch subscription info
-        console.log('[TrialBanner] Fetching subscription info...');
-        const { data: subscription, error } = await supabase
+        // Check if user has a subscription
+        const { data: subscription, error: subscriptionError } = await supabase
             .from('subscriptions')
             .select('*')
             .eq('user_id', userId)
             .maybeSingle();
 
-        if (error) {
-            console.error('[TrialBanner] Error fetching subscription:', error);
-            banner.style.display = 'none';
-            return;
-        }
-        if (!subscription) {
-            console.log('[TrialBanner] No subscription found. Showing trial banner.');
-            banner.style.display = '';
-            return;
+        if (subscriptionError) {
+            console.error('[TrialBanner] Error fetching subscription:', subscriptionError);
+        } else {
+            console.log('[TrialBanner] Subscription data:', subscription);
         }
 
-        console.log('[TrialBanner] Subscription:', subscription);
-
-        // If user is not on trial, hide the banner
-        if (!((subscription.plan === 'trial') && (subscription.status === 'active' || subscription.status === 'trialing'))) {
-            console.log('[TrialBanner] User is not on trial (plan:', subscription.plan, ', status:', subscription.status, '). Hiding banner.');
+        // If user has an active paid subscription, hide the banner
+        if (subscription && subscription.status === 'active' && subscription.plan !== 'trial') {
+            console.log('[TrialBanner] User has active paid subscription. Hiding banner.');
             banner.style.display = 'none';
             return;
         }
 
-        // Calculate days remaining based on user's creation date (14-day trial)
-        console.log("[TrialBanner] Fetching user's created_at date for trial calculation...");
+        // Calculate trial days remaining
+        let daysRemaining = 0;
+        let trialStartDate = null;
+        
+        // Try to get trial start date from user's created_at
         const { data: userData, error: userError } = await supabase
             .from('users')
             .select('created_at')
             .eq('id', userId)
             .single();
 
-        let daysRemaining = 0;
-        const totalTrialDays = 14;
-
-        if (userError || !userData || !userData.created_at) {
-            console.error("[TrialBanner] Could not fetch user's created_at date:", userError);
-            const daysElemContainer = document.getElementById('days-remaining')?.parentElement;
-            if (daysElemContainer) daysElemContainer.style.display = 'none';
+        if (userError) {
+            console.error('[TrialBanner] Error fetching user data:', userError);
+            // Fallback to session user creation date
+            trialStartDate = new Date(session.user.created_at);
+            console.log('[TrialBanner] Using session user created_at as fallback:', trialStartDate);
+        } else if (userData && userData.created_at) {
+            trialStartDate = new Date(userData.created_at);
+            console.log('[TrialBanner] Using users table created_at:', trialStartDate);
         } else {
-            const now = new Date();
-            const createdAt = new Date(userData.created_at);
-            const daysElapsed = (now.getTime() - createdAt.getTime()) / (1000 * 60 * 60 * 24);
-            daysRemaining = Math.max(0, Math.ceil(totalTrialDays - daysElapsed));
-            
-            console.log(`[TrialBanner] Trial started at: ${createdAt.toISOString()}. Days elapsed: ${daysElapsed.toFixed(2)}. Days remaining: ${daysRemaining}`);
-
-            const daysElem = document.getElementById('days-remaining');
-            if (daysElem) {
-                daysElem.textContent = daysRemaining;
-                daysElem.classList.toggle('warning', daysRemaining <= 3);
-            } else {
-                console.warn('[TrialBanner] #days-remaining element not found.');
-            }
+            // Fallback to session user creation date
+            trialStartDate = new Date(session.user.created_at);
+            console.log('[TrialBanner] Using session user created_at as final fallback:', trialStartDate);
         }
 
-        // Fetch invoice count for this user
-        let invoicesRemaining = 5;
-        try {
-            console.log('[TrialBanner] Querying invoices with user_id (snake_case)...');
-            let { data: invoiceData, count, error: invoiceError } = await supabase
-                .from('invoices')
-                .select('id', { count: 'exact', head: true })
-                .eq('user_id', userId);
+        if (trialStartDate) {
+            const now = new Date();
+            const daysElapsed = Math.floor((now.getTime() - trialStartDate.getTime()) / (1000 * 60 * 60 * 24));
+            daysRemaining = Math.max(0, TRIAL_CONFIG.totalDays - daysElapsed);
             
-            console.log('[TrialBanner] user_id count:', count, 'error:', invoiceError);
+            console.log(`[TrialBanner] Trial calculation:`);
+            console.log(`  - Trial start: ${trialStartDate.toISOString()}`);
+            console.log(`  - Current time: ${now.toISOString()}`);
+            console.log(`  - Days elapsed: ${daysElapsed}`);
+            console.log(`  - Days remaining: ${daysRemaining}`);
+        }
 
-            // Fallback for safety: if no invoices found with user_id, try userId (camelCase)
-            if ((!count || count === 0) && !invoiceError) {
-                console.log('[TrialBanner] No invoices found with user_id. Trying userId (camelCase) as a fallback...');
-                const result = await supabase
-                    .from('invoices')
-                    .select('id', { count: 'exact', head: true })
-                    .eq('userId', userId);
-                
-                console.log('[TrialBanner] userId (camelCase) count:', result.count, 'error:', result.error);
-                if (result.count && result.count > 0) {
-                    count = result.count;
-                }
-            }
+        // Count user's invoices - try multiple approaches
+        let invoiceCount = 0;
+        try {
+            console.log('[TrialBanner] Attempting to count invoices...');
+            
+            // First, try with user_id (snake_case)
+            let { count, error: invoiceError } = await supabase
+                .from('invoices')
+                .select('*', { count: 'exact', head: true })
+                .eq('user_id', userId);
+
+            console.log('[TrialBanner] user_id query result:', { count, error: invoiceError });
 
             if (invoiceError) {
-                console.error('[TrialBanner] Error fetching invoice count:', invoiceError);
-            } else {
-                invoicesRemaining = Math.max(0, 5 - (count || 0));
-                console.log(`[TrialBanner] User has ${count || 0} invoices. Invoices remaining: ${invoicesRemaining}`);
-                const invoicesElem = document.getElementById('invoices-remaining');
-                if (invoicesElem) {
-                    invoicesElem.textContent = invoicesRemaining;
+                console.error('[TrialBanner] Error with user_id query:', invoiceError);
+                
+                // Try with userId (camelCase) as fallback
+                const result = await supabase
+                    .from('invoices')
+                    .select('*', { count: 'exact', head: true })
+                    .eq('userId', userId);
+                
+                console.log('[TrialBanner] userId query result:', { count: result.count, error: result.error });
+                
+                if (result.error) {
+                    console.error('[TrialBanner] Error with userId query:', result.error);
                 } else {
-                    console.warn('[TrialBanner] Element #invoices-remaining not found.');
+                    invoiceCount = result.count || 0;
                 }
+            } else {
+                invoiceCount = count || 0;
             }
+
+            console.log(`[TrialBanner] Final invoice count: ${invoiceCount}`);
+            
         } catch (err) {
-            console.error('[TrialBanner] A critical error occurred while fetching invoice count:', err);
+            console.error('[TrialBanner] Critical error counting invoices:', err);
         }
 
-        // Progress bar
-        const percent = totalTrialDays > 0 ? Math.max(0, Math.min(100, ((totalTrialDays - daysRemaining) / totalTrialDays) * 100)) : 0;
-        const progressFill = document.getElementById('trial-progress');
-        if (progressFill) {
-            progressFill.style.width = percent + '%';
-            progressFill.classList.toggle('warning', daysRemaining <= 3);
-            console.log('[TrialBanner] Progress bar percent:', percent + '%');
-        } else {
-            console.warn('[TrialBanner] #trial-progress element not found.');
-        }
+        const invoicesRemaining = Math.max(0, TRIAL_CONFIG.maxInvoices - invoiceCount);
+        console.log(`[TrialBanner] Invoices remaining: ${invoicesRemaining}`);
+
+        // Update UI elements
+        updateTrialUI(daysRemaining, invoicesRemaining, trialStartDate);
 
         // Show banner
         banner.style.display = '';
-        console.log('[TrialBanner] Banner displayed.');
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
->>>>>>> 86a8ad1e44a22239283ce45067097b52d5438a42
->>>>>>> 2fadc796fd216b4d847c97772b44ce62d50e77af
-        
+        console.log('[TrialBanner] Banner displayed successfully');
+
         // Dispatch custom event with trial data for other components
         const trialData = {
             daysRemaining: daysRemaining,
             invoicesRemaining: invoicesRemaining,
-            isRestricted: daysRemaining === 0 || invoicesRemaining === 0
+            isRestricted: daysRemaining === 0 || invoicesRemaining === 0,
+            trialStartDate: trialStartDate,
+            invoiceCount: invoiceCount
         };
         
+        console.log('[TrialBanner] Dispatching trialDataUpdated event:', trialData);
         window.dispatchEvent(new CustomEvent('trialDataUpdated', { 
             detail: trialData 
         }));
-        
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-=======
-=======
->>>>>>> cb1b423ed96505b9fd847f9068fe42f3f881f553
->>>>>>> 86a8ad1e44a22239283ce45067097b52d5438a42
->>>>>>> 2fadc796fd216b4d847c97772b44ce62d50e77af
+
     } catch (err) {
         console.error('[TrialBanner] Unexpected error:', err);
         if (banner) banner.style.display = 'none';
+    }
+}
+
+function updateTrialUI(daysRemaining, invoicesRemaining, trialStartDate) {
+    console.log('[TrialBanner] Updating UI with:', { daysRemaining, invoicesRemaining });
+    
+    // Update days remaining
+    const daysElem = document.getElementById('days-remaining');
+    if (daysElem) {
+        daysElem.textContent = daysRemaining;
+        daysElem.classList.toggle('warning', daysRemaining <= 3);
+        
+        // Hide the entire metric if no days remaining
+        const daysContainer = daysElem.closest('.trial-metric');
+        if (daysContainer) {
+            daysContainer.style.display = daysRemaining > 0 ? 'block' : 'none';
+        }
+        console.log('[TrialBanner] Updated days remaining element:', daysRemaining);
+    } else {
+        console.warn('[TrialBanner] #days-remaining element not found.');
+    }
+
+    // Update invoices remaining
+    const invoicesElem = document.getElementById('invoices-remaining');
+    if (invoicesElem) {
+        invoicesElem.textContent = invoicesRemaining;
+        invoicesElem.classList.toggle('warning', invoicesRemaining <= 1);
+        
+        // Hide the entire metric if no invoices remaining
+        const invoicesContainer = invoicesElem.closest('.trial-metric');
+        if (invoicesContainer) {
+            invoicesContainer.style.display = invoicesRemaining > 0 ? 'block' : 'none';
+        }
+        console.log('[TrialBanner] Updated invoices remaining element:', invoicesRemaining);
+    } else {
+        console.warn('[TrialBanner] #invoices-remaining element not found.');
+    }
+
+    // Update progress bar
+    const progressFill = document.getElementById('trial-progress');
+    if (progressFill && trialStartDate) {
+        const now = new Date();
+        const daysElapsed = Math.floor((now.getTime() - trialStartDate.getTime()) / (1000 * 60 * 60 * 24));
+        const percent = Math.min(100, Math.max(0, (daysElapsed / TRIAL_CONFIG.totalDays) * 100));
+        
+        progressFill.style.width = percent + '%';
+        progressFill.classList.toggle('warning', daysRemaining <= 3);
+        console.log('[TrialBanner] Progress bar updated:', percent + '%');
+    } else {
+        console.warn('[TrialBanner] #trial-progress element not found.');
     }
 }
 
@@ -190,11 +229,25 @@ function showUpgradeModal(currentPlan = 'Trial') {
     injectUpgradeModalCSS();
     if (document.querySelector('.upgrade-modal-overlay')) return;
 
-    // Example plans (replace with Supabase fetch if needed)
     const plans = [
-        { name: 'Trial', price: 'Free', features: ['Limited invoices', '14 days'], recommended: false },
-        { name: 'Starter', price: 'MZN 499/mo', features: ['Up to 100 invoices', 'Basic support'], recommended: true },
-        { name: 'Pro', price: 'MZN 999/mo', features: ['Unlimited invoices', 'Priority support'], recommended: false }
+        { 
+            name: 'Trial', 
+            price: 'Free', 
+            features: ['Limited invoices', '14 days'], 
+            recommended: false 
+        },
+        { 
+            name: 'Starter', 
+            price: 'MZN 499/mo', 
+            features: ['Up to 100 invoices', 'Basic support', 'Email support'], 
+            recommended: true 
+        },
+        { 
+            name: 'Pro', 
+            price: 'MZN 999/mo', 
+            features: ['Unlimited invoices', 'Priority support', 'Advanced features'], 
+            recommended: false 
+        }
     ];
 
     const modal = document.createElement('div');
@@ -202,7 +255,7 @@ function showUpgradeModal(currentPlan = 'Trial') {
     modal.innerHTML = `
         <div class="upgrade-modal">
             <div class="upgrade-modal-header">
-                <h2>Upgrade Plan</h2>
+                <h2>Upgrade Your Plan</h2>
                 <button class="close-modal" aria-label="Close">&times;</button>
             </div>
             <div class="trial-info">
@@ -211,10 +264,10 @@ function showUpgradeModal(currentPlan = 'Trial') {
             <div class="pricing-options">
                 ${plans.map(plan => `
                     <div class="pricing-plan${plan.recommended ? ' recommended' : ''}${plan.name === currentPlan ? ' current' : ''}">
-                        <h3>${plan.name}${plan.name === currentPlan ? ' <span style=\'color:green;font-size:0.8em\'>(Current)</span>' : ''}</h3>
+                        <h3>${plan.name}${plan.name === currentPlan ? ' <span style="color:green;font-size:0.8em">(Current)</span>' : ''}</h3>
                         <div style="font-size:1.2em;font-weight:bold;margin:0.5em 0;">${plan.price}</div>
                         <ul style="list-style:none;padding:0;margin:0 0 1em 0;">
-                            ${plan.features.map(f => `<li>${f}</li>`).join('')}
+                            ${plan.features.map(f => `<li>✓ ${f}</li>`).join('')}
                         </ul>
                         ${plan.name !== currentPlan ? `<button class="payment-btn card-btn">Choose ${plan.name}</button>` : ''}
                     </div>
@@ -222,10 +275,14 @@ function showUpgradeModal(currentPlan = 'Trial') {
             </div>
         </div>
     `;
+    
     document.body.appendChild(modal);
+    
     // Close logic
     modal.querySelector('.close-modal').onclick = () => modal.remove();
-    modal.onclick = e => { if (e.target === modal) modal.remove(); };
+    modal.onclick = e => { 
+        if (e.target === modal) modal.remove(); 
+    };
 }
 
 function setupUpgradeButton() {
@@ -234,7 +291,6 @@ function setupUpgradeButton() {
         btn.addEventListener('click', (e) => {
             e.preventDefault();
             console.log('[TrialBanner] Upgrade button clicked. Showing upgrade modal.');
-            // You could fetch the current plan from Supabase if needed
             showUpgradeModal('Trial');
         });
     } else {
@@ -243,6 +299,23 @@ function setupUpgradeButton() {
 }
 
 // --- Initialize Banner and Buttons ---
-// The script is loaded after the DOM is ready, so we can call the functions directly.
-updateTrialBanner();
-setupUpgradeButton(); 
+// Wait for DOM to be ready before initializing
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => {
+        console.log('[TrialBanner] DOM loaded, initializing...');
+        updateTrialBanner();
+        setupUpgradeButton();
+    });
+} else {
+    // DOM is already ready
+    console.log('[TrialBanner] DOM already ready, initializing...');
+    updateTrialBanner();
+    setupUpgradeButton();
+}
+
+// Export functions for external use
+window.TrialBanner = {
+    updateTrialBanner,
+    showUpgradeModal,
+    setupUpgradeButton
+}; 
