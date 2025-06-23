@@ -1066,17 +1066,6 @@
         const languageManager = new LanguageManager('./');
         window.languageManager = languageManager; // Make it globally available
         await languageManager.initialize();
-        const lang = localStorage.getItem('preferredLanguage') || 'pt';
-        languageManager.setLanguage(lang);
-      });
-    </script>
-=======
-      document.addEventListener('DOMContentLoaded', function() {
-        const languageManager = new LanguageManager('./');
-        window.languageManager = languageManager; // Make it globally available
-        const lang = localStorage.getItem('preferredLanguage') || 'pt';
-        languageManager.setLanguage(lang);
->>>>>>> e05396820f7d7c919a78b3ad9989451459916ce4
       });
     </script>
 </body>

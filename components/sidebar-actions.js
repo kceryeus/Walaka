@@ -28,12 +28,21 @@
         });
     }
 
+    function updateSidebarLogo() {
+        const basePath = getBasePath();
+        const logoImg = document.getElementById('sidebar-logo');
+        if (logoImg) {
+            logoImg.src = basePath + 'assets/images/walaka-logo.PNG';
+        }
+    }
+
     function initSidebarActions() {
         // Only target the sidebar in this component
         const sidebar = document.querySelector('.sidebar');
         if (!sidebar) return;
 
         updateSidebarLinks(); // Update links as soon as sidebar is present
+        updateSidebarLogo(); // Set the logo src dynamically
 
         // Find all nav headers with submenus (these are <h3> elements)
         const navHeaders = sidebar.querySelectorAll('.nav-header.has-submenu');
