@@ -1062,11 +1062,14 @@
     </script>
     <script src="services/languageManager.js"></script>
     <script>
-<<<<<<< HEAD
       document.addEventListener('DOMContentLoaded', async function() {
         const languageManager = new LanguageManager('./');
         window.languageManager = languageManager; // Make it globally available
         await languageManager.initialize();
+        const lang = localStorage.getItem('preferredLanguage') || 'pt';
+        languageManager.setLanguage(lang);
+      });
+    </script>
 =======
       document.addEventListener('DOMContentLoaded', function() {
         const languageManager = new LanguageManager('./');

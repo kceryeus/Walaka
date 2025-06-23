@@ -29,11 +29,7 @@ class LanguageManager {
         try {
             const path = `${this.basePath}assets/translations/${lang}.json`;
             console.log(`[languageManager] Loading translations for:`, lang, `from ${path}`);
-<<<<<<< HEAD
-            const response = await fetch(path);
-=======
             const response = await fetch(path); // Use the constructed path
->>>>>>> e05396820f7d7c919a78b3ad9989451459916ce4
             this.translations = await response.json();
             this.currentLang = lang;
             localStorage.setItem('preferredLanguage', lang);
@@ -48,13 +44,10 @@ class LanguageManager {
         await this.loadTranslations(lang);
         this.applyTranslations();
         document.documentElement.setAttribute('lang', lang);
-        
         // Save to database if user is authenticated
         await this.saveLanguageToDatabase(lang);
-        
         window.dispatchEvent(new Event('languageChanged'));
         console.log(`[languageManager] Language set and translations applied:`, lang);
-<<<<<<< HEAD
     }
 
     async saveLanguageToDatabase(lang) {
@@ -112,21 +105,14 @@ class LanguageManager {
 
     async initialize() {
         console.log('[languageManager] Initializing language manager...');
-        
         // First try to load from database (if user is authenticated)
         const dbLanguage = await this.loadLanguageFromDatabase();
-        
         // Use database language if available, otherwise use localStorage
         const preferredLanguage = dbLanguage || localStorage.getItem('preferredLanguage') || 'pt';
-        
         console.log('[languageManager] Preferred language:', preferredLanguage);
-        
         // Set the language
         await this.setLanguage(preferredLanguage);
-        
         console.log('[languageManager] Language manager initialized');
-=======
->>>>>>> e05396820f7d7c919a78b3ad9989451459916ce4
     }
 
     translate(key) {
@@ -171,12 +157,9 @@ class LanguageManager {
     }
 }
 
-<<<<<<< HEAD
 // Export for use in other modules
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = LanguageManager;
 }
-=======
 // window.languageManager = new LanguageManager();
 // export default window.languageManager;
->>>>>>> e05396820f7d7c919a78b3ad9989451459916ce4
