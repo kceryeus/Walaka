@@ -103,6 +103,18 @@ document.addEventListener('DOMContentLoaded', async () => {
         };
         invoiceSelectContainer.appendChild(toggleBtn);
     }
+
+    // Attach Download PDF button event listener
+    const downloadBtn = document.getElementById('downloadReceiptPdfBtn');
+    if (downloadBtn) {
+        downloadBtn.addEventListener('click', function() {
+            if (window._lastViewedReceiptId) {
+                downloadReceiptPdf(window._lastViewedReceiptId);
+            } else {
+                showNotification('Please view a receipt first before downloading PDF.', 'warning');
+            }
+        });
+    }
 });
 
 function setupEventListeners() {
@@ -701,4 +713,161 @@ function closeModal(modalId) {
 function editReceipt(id) {
     alert('Edit receipt functionality coming soon!');
     // In the future, implement modal open and populate logic here
-} 
+}
+
+// --- PDF Download Functionality ---
+async function downloadReceiptPdf(receiptId) {
+    try {
+        // Fetch receipt data (reuse viewReceipt logic)
+        const { data: receipt, error } = await supabase
+            .from('receipts')
+            .select('*, invoices:related_invoice_id ("invoiceNumber")')
+            .eq('receipt_id', receiptId)
+            .single();
+        if (error) throw error;
+        // Fetch business profile for current user
+        let user_id = null;
+        try {
+            const { data: { user } } = await supabase.auth.getUser();
+            user_id = user?.id;
+        } catch (e) {}
+        let company = {
+            company_name: 'WALAKA',
+            address: 'Maputo, Mozambique',
+            email: 'info@walaka.co.mz',
+            tax_id: 'N/A'
+        };
+        if (user_id) {
+            const { data: profiles, error: profileError } = await supabase
+                .from('business_profiles')
+                .select('company_name, address, email, tax_id')
+                .eq('user_id', user_id)
+                .limit(1);
+            if (!profileError && profiles && profiles.length > 0) {
+                company = {
+                    company_name: profiles[0].company_name || company.company_name,
+                    address: profiles[0].address || company.address,
+                    email: profiles[0].email || company.email,
+                    tax_id: profiles[0].tax_id || company.tax_id
+                };
+            }
+        }
+        // Prepare data
+        let invoiceNumbers = '-';
+        if (receipt.invoices && Array.isArray(receipt.invoices)) {
+            invoiceNumbers = receipt.invoices.map(inv => inv.invoiceNumber).join(', ');
+        } else if (receipt.invoices?.invoiceNumber) {
+            invoiceNumbers = receipt.invoices.invoiceNumber;
+        } else if (receipt.related_invoice_id && typeof receipt.related_invoice_id === 'string' && receipt.related_invoice_id.includes(',')) {
+            invoiceNumbers = receipt.related_invoice_id;
+        }
+        // --- Modern Minimalist PDF Layout ---
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF({ unit: 'mm', format: 'a4' });
+        // Colors & fonts
+        const primary = '#3498db';
+        const text = '#2d3436';
+        const lightText = '#636e72';
+        const border = '#dfe6e9';
+        // Header
+        doc.setFillColor(52, 152, 219); // primary
+        doc.rect(0, 0, 210, 22, 'F');
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(20);
+        doc.setTextColor(255,255,255);
+        doc.text(company.company_name, 14, 15);
+        doc.setFontSize(14);
+        doc.text('RECEIPT', 180, 15, { align: 'right' });
+        // Receipt Number
+        doc.setFontSize(11);
+        doc.setTextColor(text);
+        doc.setFont('helvetica', 'normal');
+        doc.text(`Receipt Number: ${receipt.receipt_number}`, 14, 30);
+        // Company Info (dynamic)
+        doc.setFont('helvetica', 'bold');
+        doc.text('From:', 14, 40);
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(10);
+        doc.text(company.company_name, 14, 45);
+        doc.text(company.address, 14, 50);
+        doc.text(company.email, 14, 55);
+        doc.text(`NUIT: ${company.tax_id}`, 14, 60);
+        // Client Info
+        doc.setFont('helvetica', 'bold');
+        doc.text('To:', 120, 40);
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(10);
+        doc.text(receipt.client_name || '-', 120, 45);
+        // Receipt Details
+        let y = 70;
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(12);
+        doc.text('Receipt Details', 14, y);
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(10);
+        y += 7;
+        doc.text(`Payment Date:`, 14, y); doc.text(formatDate(receipt.payment_date), 50, y);
+        y += 6;
+        doc.text(`Payment Method:`, 14, y); doc.text(receipt.payment_method, 50, y);
+        y += 6;
+        doc.text(`Related Invoice(s):`, 14, y); doc.text(invoiceNumbers, 50, y);
+        y += 6;
+        doc.text(`Status:`, 14, y); doc.text(receipt.status, 50, y);
+        // Amount Summary Box
+        y += 10;
+        doc.setDrawColor(primary);
+        doc.setFillColor(247, 247, 247);
+        doc.roundedRect(120, 65, 70, 25, 3, 3, 'FD');
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(13);
+        doc.setTextColor(primary);
+        doc.text('Amount Received', 155, 75, { align: 'center' });
+        doc.setFontSize(16);
+        doc.text(formatCurrency(receipt.amount), 155, 88, { align: 'center' });
+        // Notes
+        y += 25;
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(12);
+        doc.setTextColor(text);
+        doc.text('Notes', 14, y);
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(10);
+        doc.setTextColor(lightText);
+        doc.text(receipt.notes || '-', 14, y + 6, { maxWidth: 180 });
+        // Footer
+        doc.setFontSize(9);
+        doc.setTextColor(lightText);
+        doc.text('Generated by WALAKA', 105, 287, { align: 'center' });
+        // Download
+        doc.save(`${receipt.receipt_number || 'receipt'}.pdf`);
+    } catch (error) {
+        showNotification('Error generating PDF', 'error');
+        console.error(error);
+    }
+}
+// Attach event listener after viewReceipt loads
+const viewReceiptModal = document.getElementById('viewReceiptModal');
+if (viewReceiptModal) {
+    viewReceiptModal.addEventListener('click', function(e) {
+        if (e.target && e.target.id === 'downloadReceiptPdfBtn') {
+            const details = document.getElementById('receiptDetails');
+            // Try to get the receipt number from the details
+            const receiptNumberEl = details?.querySelector('.detail-row .value');
+            let receiptNumber = receiptNumberEl ? receiptNumberEl.textContent : null;
+            // Fallback: store last viewed receiptId
+            if (window._lastViewedReceiptId) {
+                downloadReceiptPdf(window._lastViewedReceiptId);
+            } else if (receiptNumber) {
+                // Try to find by receipt number (not ideal, but fallback)
+                // Not implemented: would require a lookup
+                showNotification('Could not determine receipt ID for PDF', 'error');
+            }
+        }
+    });
+}
+// Patch viewReceipt to store last viewed receiptId
+const _orig_viewReceipt = window.viewReceipt;
+window.viewReceipt = async function(id) {
+    window._lastViewedReceiptId = id;
+    return _orig_viewReceipt ? _orig_viewReceipt(id) : (await viewReceipt(id));
+}; 

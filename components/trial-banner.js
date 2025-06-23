@@ -273,10 +273,155 @@ async function simulatePaymentAndSubscribe(paymentMethod, parentModal) {
         if (error) throw error;
         parentModal.remove();
         alert('Subscription successful! Welcome to Invoicing plan.');
+        // Generate and download invoice-receipt PDF
+        await generateSubscriptionInvoiceReceipt({
+            userId,
+            plan: 'Invoicing',
+            price: 'MZN 300',
+            paymentMethod,
+            startDate: now,
+            endDate: endDate
+        });
         updateTrialBanner();
     } catch (err) {
         alert('Failed to subscribe: ' + (err.message || err));
     }
+}
+
+// --- Generate Subscription Invoice-Receipt PDF ---
+async function generateSubscriptionInvoiceReceipt({ userId, plan, price, paymentMethod, startDate, endDate }) {
+    // Load jsPDF if not present
+    if (!window.jspdf) {
+        await new Promise((resolve, reject) => {
+            const script = document.createElement('script');
+            script.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
+            script.onload = resolve;
+            script.onerror = reject;
+            document.head.appendChild(script);
+        });
+    }
+    // Hardcoded system/company info for 'From:'
+    const systemCompany = {
+        company_name: 'Walaka Software, Lda',
+        address: 'Av. Julius Nyerere, Maputo, Mozambique',
+        email: 'info@walaka.co.mz',
+        tax_id: '401883155' // Example NUIT
+    };
+    // Fetch business profile for user info (for 'To:')
+    let client = {
+        company_name: '-',
+        address: '-',
+        email: '-',
+        tax_id: '-'
+    };
+    if (userId) {
+        const { data: profiles, error: profileError } = await supabase
+            .from('business_profiles')
+            .select('company_name, address, email, tax_id')
+            .eq('user_id', userId)
+            .limit(1);
+        if (!profileError && profiles && profiles.length > 0) {
+            client = {
+                company_name: profiles[0].company_name || '-',
+                address: profiles[0].address || '-',
+                email: profiles[0].email || '-',
+                tax_id: profiles[0].tax_id || '-'
+            };
+        }
+    }
+    // Fetch user email for client info fallback
+    try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user?.email && client.email === '-') client.email = user.email;
+    } catch (e) {}
+    // Generate unique invoice-receipt number
+    const dateStr = startDate.toISOString().slice(0,10).replace(/-/g, '');
+    const rand = Math.floor(Math.random()*9000+1000);
+    const invoiceNumber = `SUB-${dateStr}-${rand}`;
+    // --- PDF Layout ---
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ unit: 'mm', format: 'a4' });
+    const primary = '#3498db';
+    const text = '#2d3436';
+    const lightText = '#636e72';
+    // Header
+    doc.setFillColor(52, 152, 219);
+    doc.rect(0, 0, 210, 22, 'F');
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(20);
+    doc.setTextColor(255,255,255);
+    doc.text(systemCompany.company_name, 14, 15);
+    doc.setFontSize(14);
+    doc.text('INVOICE-RECEIPT', 180, 15, { align: 'right' });
+    // Invoice Number
+    doc.setFontSize(11);
+    doc.setTextColor(text);
+    doc.setFont('helvetica', 'normal');
+    doc.text(`Invoice-Receipt #: ${invoiceNumber}`, 14, 30);
+    // From (system info)
+    doc.setFont('helvetica', 'bold');
+    doc.text('From:', 14, 40);
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(10);
+    doc.text(systemCompany.company_name, 14, 45);
+    doc.text(systemCompany.address, 14, 50);
+    doc.text(systemCompany.email, 14, 55);
+    doc.text(`NUIT: ${systemCompany.tax_id}`, 14, 60);
+    // To (user business profile)
+    doc.setFont('helvetica', 'bold');
+    doc.text('To:', 120, 40);
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(10);
+    doc.text(client.company_name, 120, 45);
+    doc.text(client.address, 120, 50);
+    doc.text(client.email, 120, 55);
+    doc.text(`NUIT: ${client.tax_id}`, 120, 60);
+    // Subscription Details
+    let y = 70;
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(12);
+    doc.text('Subscription Details', 14, y);
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(10);
+    y += 7;
+    doc.text(`Plan:`, 14, y); doc.text(plan, 50, y);
+    y += 6;
+    doc.text(`Price:`, 14, y); doc.text(price, 50, y);
+    y += 6;
+    doc.text(`Payment Method:`, 14, y); doc.text(paymentMethod, 50, y);
+    y += 6;
+    doc.text(`Start Date:`, 14, y); doc.text(startDate.toISOString().slice(0,10), 50, y);
+    y += 6;
+    doc.text(`End Date:`, 14, y); doc.text(endDate.toISOString().slice(0,10), 50, y);
+    y += 6;
+    doc.text(`Status:`, 14, y); doc.text('Paid', 50, y);
+    // Amount Summary Box
+    y += 10;
+    doc.setDrawColor(primary);
+    doc.setFillColor(247, 247, 247);
+    doc.roundedRect(120, 65, 70, 25, 3, 3, 'FD');
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(13);
+    doc.setTextColor(primary);
+    doc.text('Amount Paid', 155, 75, { align: 'center' });
+    doc.setFontSize(16);
+    doc.text(price, 155, 88, { align: 'center' });
+    // Notes
+    y += 25;
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(12);
+    doc.setTextColor(text);
+    doc.text('Notes', 14, y);
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(10);
+    doc.setTextColor(lightText);
+    doc.text('Subscription to WALAKA Invoicing plan. This document serves as both invoice and receipt.', 14, y + 6, { maxWidth: 180 });
+    // Footer
+    doc.setFontSize(9);
+    doc.setTextColor(lightText);
+    doc.text('Generated by WALAKA', 105, 287, { align: 'center' });
+    // Download
+    doc.save(`${invoiceNumber}.pdf`);
 }
 
 function setupUpgradeButton() {
