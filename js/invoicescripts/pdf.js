@@ -151,7 +151,68 @@ function formatClientInfo(client) {
 async function generatePDF(invoiceData) {
     try {
         console.log('Generating PDF with data:', invoiceData);
-        
+
+        // --- Fetch full client record from DB if client name is present ---
+        let client = null;
+        let clientName = '';
+        if (invoiceData.client && (invoiceData.client.customer_name || invoiceData.client.name)) {
+            clientName = invoiceData.client.customer_name || invoiceData.client.name;
+        } else if (invoiceData.client_name) {
+            clientName = invoiceData.client_name;
+        }
+        if (clientName) {
+            // Try to fetch client from DB
+            const { data: clientData, error } = await window.supabase
+                .from('clients')
+                .select('*')
+                .eq('customer_name', clientName)
+                .maybeSingle();
+            if (!error && clientData) {
+                client = {
+                    name: clientData.customer_name || '',
+                    address: clientData.billing_address || '',
+                    nuit: clientData.customer_tax_id || clientData.nuit || '',
+                    email: clientData.email || '',
+                    contact: clientData.contact || '',
+                    phone: clientData.telephone || '',
+                    city: clientData.city || '',
+                    postal_code: clientData.postal_code || '',
+                    province: clientData.province || '',
+                    country: clientData.country || ''
+                };
+            }
+        }
+        // Fallback to form data if not found
+        if (!client) {
+            if (invoiceData.client) {
+                client = {
+                    name: invoiceData.client.name || invoiceData.client.customer_name || invoiceData.client_name || 'Client Name',
+                    address: invoiceData.client.address || invoiceData.client.billing_address || invoiceData.client_address || '',
+                    nuit: invoiceData.client.nuit || invoiceData.client.customer_tax_id || invoiceData.client_tax_id || '',
+                    email: invoiceData.client.email || invoiceData.client_email || '',
+                    contact: invoiceData.client.contact || invoiceData.client_contact || '',
+                    phone: invoiceData.client.phone || invoiceData.client.telephone || invoiceData.client_phone || '',
+                    city: invoiceData.client.city || '',
+                    postal_code: invoiceData.client.postal_code || '',
+                    province: invoiceData.client.province || '',
+                    country: invoiceData.client.country || ''
+                };
+            } else {
+                client = {
+                    name: invoiceData.client_name || 'Client Name',
+                    address: invoiceData.client_address || '',
+                    nuit: invoiceData.client_tax_id || '',
+                    email: invoiceData.client_email || '',
+                    contact: invoiceData.client_contact || '',
+                    phone: invoiceData.client_phone || '',
+                    city: '',
+                    postal_code: '',
+                    province: '',
+                    country: ''
+                };
+            }
+        }
+
         // Format the items with proper calculations
         const formattedItems = invoiceData.items?.map(item => {
             const quantity = parseFloat(item.quantity) || 0;
@@ -205,18 +266,7 @@ async function generatePDF(invoiceData) {
                 paymentTerms: invoiceData.paymentTerms || 'net30'
             },
             // Client info
-            client: {
-                name: invoiceData.client?.customer_name || invoiceData.client_name || 'Client Name',
-                address: invoiceData.client?.billing_address || invoiceData.client_address || '',
-                nuit: Number(invoiceData.client?.customer_tax_id || invoiceData.client_tax_id) || 0,
-                email: invoiceData.client?.email || '',
-                contact: invoiceData.client?.contact || '',
-                phone: invoiceData.client?.telephone || '',
-                city: invoiceData.client?.city || '',
-                postal_code: invoiceData.client?.postal_code || '',
-                province: invoiceData.client?.province || '',
-                country: invoiceData.client?.country || ''
-            },
+            client: client,
             // Items
             items: formattedItems,
             // Currency
@@ -250,25 +300,57 @@ async function generatePDF(invoiceData) {
         // Populate template with data
         let populatedHtml = await window.invoiceTemplateManager.populateTemplate(html, formattedData);
 
+        // Determine if conversion is needed
+        let showConversion = false;
+        let rate = 1;
+        let currency = formattedData.currency || 'MZN';
+        if (window.invoiceForm && currency !== 'MZN' && window.invoiceForm.currentRate && !isNaN(window.invoiceForm.currentRate)) {
+            showConversion = true;
+            rate = window.invoiceForm.currentRate;
+        }
         // Replace the totals section if present
-        populatedHtml = populatedHtml.replace(
-            /<div class="invoice-totals">[\s\S]*?<\/div>/,
-            `
+        let totalsHtml = `
             <div class="invoice-totals">
                 <div class="totals-row">
                     <span>Subtotal:</span>
-                    <span>${formattedData.currency} ${formatNumber(formattedData.invoice.subtotal)}</span>
+                    <span>MZN ${formatNumber(formattedData.invoice.subtotal)}</span>
                 </div>
                 <div class="totals-row">
                     <span>VAT (16%):</span>
-                    <span>${formattedData.currency} ${formatNumber(formattedData.invoice.vat)}</span>
+                    <span>MZN ${formatNumber(formattedData.invoice.vat)}</span>
                 </div>
                 <div class="totals-row total">
                     <span>Total:</span>
-                    <span>${formattedData.currency} ${formatNumber(formattedData.invoice.total)}</span>
+                    <span>MZN ${formatNumber(formattedData.invoice.total)}</span>
                 </div>
-            </div>
-            `
+        `;
+        if (showConversion) {
+            const convertedSubtotal = window.invoiceForm.getConvertedAmount(formattedData.invoice.subtotal);
+            const convertedVat = window.invoiceForm.getConvertedAmount(formattedData.invoice.vat);
+            const convertedTotal = window.invoiceForm.getConvertedAmount(formattedData.invoice.total);
+            totalsHtml += `
+                <div class=\"totals-row\">
+                    <span>Subtotal:</span>
+                    <span>${currency} ${formatNumber(convertedSubtotal)}</span>
+                </div>
+                <div class=\"totals-row\">
+                    <span>VAT (16%):</span>
+                    <span>${currency} ${formatNumber(convertedVat)}</span>
+                </div>
+                <div class=\"totals-row total\">
+                    <span>Total:</span>
+                    <span>${currency} ${formatNumber(convertedTotal)}</span>
+                </div>
+                <div class=\"totals-row\" style=\"font-size:0.95em;color:#555;\">
+                    <span></span>
+                    <span>1 MZN ≈ ${rate.toFixed(4)} ${currency}</span>
+                </div>
+            `;
+        }
+        totalsHtml += '</div>';
+        populatedHtml = populatedHtml.replace(
+            /<div class="invoice-totals">[\s\S]*?<\/div>/,
+            totalsHtml
         );
 
         // Create PDF container

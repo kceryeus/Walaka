@@ -1138,3 +1138,83 @@
 .dropdown-item-danger i {
     color: #dc3545;
 }
+
+/* --- Modal Stepper Styles --- */
+.modal-stepper {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  padding: 0 8px;
+}
+.step-indicator {
+  flex: 1;
+  text-align: center;
+  padding: 8px 0;
+  border-bottom: 3px solid #e0e0e0;
+  color: #888;
+  font-weight: 500;
+  position: relative;
+  transition: color 0.2s, border-color 0.2s;
+  background: none;
+}
+.step-indicator.active {
+  color: #1a73e8;
+  border-bottom: 3px solid #1a73e8;
+  background: #f5faff;
+}
+.step-indicator:not(:last-child)::after {
+  content: '';
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 1px;
+  height: 24px;
+  background: #e0e0e0;
+}
+
+/* --- Step Content --- */
+.step {
+  display: none;
+  animation: fadeIn 0.3s;
+}
+.step.active {
+  display: block;
+}
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* --- Step Footer Buttons --- */
+.step-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+/* --- Review Section --- */
+.review-section {
+  background: #f8f9fa;
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 16px;
+  font-size: 1rem;
+}
+
+/* --- Responsive Modal --- */
+@media (max-width: 600px) {
+  .modal-content {
+    padding: 8px;
+  }
+  .modal-stepper {
+    flex-direction: column;
+    gap: 4px;
+  }
+  .step-indicator {
+    font-size: 0.95em;
+    padding: 6px 0;
+  }
+}

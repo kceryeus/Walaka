@@ -338,88 +338,101 @@
     <!-- Create Invoice Modal -->
     <div id="invoiceModal" class="modal">
         <div class="modal-content">
+            <!-- Stepper/Progress Bar -->
+            <div class="modal-stepper">
+                <div class="step-indicator active" data-step="1">1. Client Info</div>
+                <div class="step-indicator" data-step="2">2. Invoice Details</div>
+                <div class="step-indicator" data-step="3">3. Items</div>
+                <div class="step-indicator" data-step="4">4. Review</div>
+            </div>
             <div class="modal-header">
                 <h2 data-translate="create_new_invoice_modal_title">Create New Invoice</h2>
                 <button class="close-modal">&times;</button>
             </div>
             <div class="modal-body">
                 <form id="invoiceForm">
-                    <div class="form-grid">
-
-                        <div class="form-section">
-                            <h3 data-translate="client_information">Client Information</h3>
-                            <div class="form-row">
-                                <div class="form-group">
-                                    <label for="client-list" data-translate="client_name_company">Client Name/Company</label>
-                                    <div class="client-input-wrapper">
-                                        <input type="text" id="client-list" placeholder="Type client name..." autocomplete="off" list="client-options" data-translate-placeholder="type_client_name_placeholder">
-                                        <datalist id="client-options"></datalist>
-                                        <button type="button" id="add-client-btn" class="btn secondary-btn" style="display:none;">
-                                            <i class="fas fa-plus"></i> <span data-translate="new_client">New Client</span>
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="form-row">
-                                <div class="form-group">
-                                    <label for="clientEmail" data-translate="email">Email</label>
-                                    <input type="email" id="clientEmail" placeholder="client@example.com" readonly data-translate-placeholder="client_email_placeholder">
-                                </div>
-                                <div class="form-group">
-                                    <label for="clientTaxId" data-translate="tax_id_nuit">Tax ID (NUIT)</label>
-                                    <input type="text" id="clientTaxId" placeholder="e.g. 123456789" readonly data-translate-placeholder="tax_id_placeholder">
-                                </div>
-                            </div>
-                            <div class="form-row">
-                                <div class="form-group">
-                                    <label for="clientAddress" data-translate="address">Address</label>
-                                    <textarea id="clientAddress" rows="3" placeholder="Client's full address" readonly data-translate-placeholder="client_address_placeholder"></textarea>
+                    <!-- Step 1: Client Information -->
+                    <div class="step step-1">
+                        <h3 data-translate="client_information">Client Information</h3>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="client-list" data-translate="client_name_company">Client Name/Company</label>
+                                <div class="client-input-wrapper">
+                                    <input type="text" id="client-list" placeholder="Type client name..." autocomplete="off" list="client-options" data-translate-placeholder="type_client_name_placeholder">
+                                    <datalist id="client-options"></datalist>
+                                    <button type="button" id="add-client-btn" class="btn secondary-btn" style="display:none;">
+                                        <i class="fas fa-plus"></i> <span data-translate="new_client">New Client</span>
+                                    </button>
                                 </div>
                             </div>
                         </div>
-                        
-                        <div class="form-section">
-                            <h3 data-translate="invoice_details">Invoice Details</h3>
-                            <div class="form-row">
-                                <div class="form-group">
-                                    <label for="invoiceNumber" data-translate="invoice_number">Invoice Number</label>
-                                    <input type="text" id="invoiceNumber" value="Generating invoice number" readonly>
-                                </div>
-                                <div class="form-group">
-                                    <label for="issueDate" data-translate="issue_date">Issue Date</label>
-                                    <input type="date" id="issueDate" required>
-                                </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="clientEmail" data-translate="email">Email</label>
+                                <input type="email" id="clientEmail" placeholder="client@example.com" readonly data-translate-placeholder="client_email_placeholder">
                             </div>
-                            <div class="form-row">
-                                <div class="form-group">
-                                    <label for="dueDate" data-translate="due_date">Due Date</label>
-                                    <input type="date" id="dueDate" required>
-                                </div>
-                                <div class="form-group">
-                                    <label for="currency" data-translate="currency">Currency</label>
-                                    <select id="currency" required>
-                                        <option value="MZN" selected>MZN - Mozambican Metical (MZN)</option>
-                                        <option value="USD">USD - US Dollar</option>
-                                        <option value="EUR">EUR - Euro</option>
-                                        <option value="GBP">GBP - British Pound</option>
-                                    </select>
-                                </div>
+                            <div class="form-group">
+                                <label for="clientTaxId" data-translate="tax_id_nuit">Tax ID (NUIT)</label>
+                                <input type="text" id="clientTaxId" placeholder="e.g. 123456789" readonly data-translate-placeholder="tax_id_placeholder">
                             </div>
-                            <div class="form-row">
-                                <div class="form-group">
-                                    <label for="paymentTerms" data-translate="payment_terms">Payment Terms</label>
-                                    <select id="paymentTerms" required>
-                                        <option value="net30" selected data-translate="net_30">Net 30 - Due in 30 days</option>
-                                        <option value="net15" data-translate="net_15">Net 15 - Due in 15 days</option>
-                                        <option value="net60" data-translate="net_60">Net 60 - Due in 60 days</option>
-                                        <option value="custom" data-translate="custom">Custom</option>
-                                    </select>
-                                </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="clientAddress" data-translate="address">Address</label>
+                                <textarea id="clientAddress" rows="3" placeholder="Client's full address" readonly data-translate-placeholder="client_address_placeholder"></textarea>
                             </div>
+                        </div>
+                        <div class="modal-footer step-footer">
+                            <button type="button" class="btn primary-btn next-step">Next</button>
                         </div>
                     </div>
-                    
-                    <div class="form-section">
+                    <!-- Step 2: Invoice Details -->
+                    <div class="step step-2" style="display:none;">
+                        <h3 data-translate="invoice_details">Invoice Details</h3>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="invoiceNumber" data-translate="invoice_number">Invoice Number</label>
+                                <input type="text" id="invoiceNumber" value="Generating invoice number" readonly>
+                            </div>
+                            <div class="form-group">
+                                <label for="issueDate" data-translate="issue_date">Issue Date</label>
+                                <input type="date" id="issueDate" required>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="dueDate" data-translate="due_date">Due Date</label>
+                                <input type="date" id="dueDate" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="currency" data-translate="currency">Currency</label>
+                                <select id="currency" required>
+                                    <option value="MZN" selected>MZN - Mozambican Metical (MZN)</option>
+                                    <option value="USD">USD - US Dollar</option>
+                                    <option value="EUR">EUR - Euro</option>
+                                    <option value="GBP">GBP - British Pound</option>
+                                </select>
+                                <div id="exchangeRateInfo" style="margin-top: 4px; font-size: 0.95em; color: #555;"></div>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="paymentTerms" data-translate="payment_terms">Payment Terms</label>
+                                <select id="paymentTerms" required>
+                                    <option value="net30" selected data-translate="net_30">Net 30 - Due in 30 days</option>
+                                    <option value="net15" data-translate="net_15">Net 15 - Due in 15 days</option>
+                                    <option value="net60" data-translate="net_60">Net 60 - Due in 60 days</option>
+                                    <option value="custom" data-translate="custom">Custom</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="modal-footer step-footer">
+                            <button type="button" class="btn secondary-btn prev-step">Back</button>
+                            <button type="button" class="btn primary-btn next-step">Next</button>
+                        </div>
+                    </div>
+                    <!-- Step 3: Items -->
+                    <div class="step step-3" style="display:none;">
                         <h3 data-translate="items">Items</h3>
                         <div class="items-table-container">
                             <table id="itemsTable" class="items-table">
@@ -465,7 +478,6 @@
                         <button type="button" id="addItemBtn" class="btn secondary-btn">
                             <i class="fas fa-plus"></i> <span data-translate="add_item">Add Item</span>
                         </button>
-                        
                         <div class="invoice-totals">
                             <div class="totals-row">
                                 <span data-translate="subtotal">Subtotal:</span>
@@ -480,9 +492,13 @@
                                 <span id="invoiceTotal">0.00</span>
                             </div>
                         </div>
+                        <div class="modal-footer step-footer">
+                            <button type="button" class="btn secondary-btn prev-step">Back</button>
+                            <button type="button" class="btn primary-btn next-step">Next</button>
+                        </div>
                     </div>
-                    
-                    <div class="form-section">
+                    <!-- Step 4: Notes & Review -->
+                    <div class="step step-4" style="display:none;">
                         <h3 data-translate="notes_terms">Notes & Terms</h3>
                         <div class="form-row">
                             <div class="form-group">
@@ -490,14 +506,31 @@
                                 <textarea id="notes" rows="3" placeholder="Add any additional notes or terms..." data-translate-placeholder="additional_notes_placeholder"></textarea>
                             </div>
                         </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn secondary-btn" id="previewInvoiceBtn">
-                            <i class="fas fa-eye"></i> <span data-translate="preview">Preview</span>
-                        </button>
-                        <button type="submit" class="btn primary-btn">
-                            <i class="fas fa-check"></i> <span data-translate="publish_invoice">Publish Invoice</span>
-                        </button>
+                        <h3>Review & Confirm</h3>
+                        <div class="review-section">
+                            <!-- Summary will be dynamically filled by JS -->
+                            <div id="invoiceReviewSummary"></div>
+                        </div>
+                        <div class="invoice-totals">
+                            <div class="totals-row">
+                                <span data-translate="subtotal">Subtotal:</span>
+                                <span id="reviewSubtotal">0.00</span>
+                            </div>
+                            <div class="totals-row">
+                                <span data-translate="vat_16_total">VAT (16%):</span>
+                                <span id="reviewTotalVat">0.00</span>
+                            </div>
+                            <div class="totals-row">
+                                <span data-translate="total">Total:</span>
+                                <span id="reviewInvoiceTotal">0.00</span>
+                            </div>
+                        </div>
+                        <div class="modal-footer step-footer">
+                            <button type="button" class="btn secondary-btn prev-step">Back</button>
+                            <button type="submit" class="btn primary-btn">
+                                <i class="fas fa-check"></i> <span data-translate="publish_invoice">Publish Invoice</span>
+                            </button>
+                        </div>
                     </div>
                 </form>
             </div>
@@ -1067,6 +1100,81 @@
         window.languageManager = languageManager; // Make it globally available
         await languageManager.initialize();
       });
+    </script>
+    <script>
+    // Register hints for key UI elements in Invoice Management
+    // Ensure this runs after walaka-hints.js and DOMContentLoaded
+
+    document.addEventListener('DOMContentLoaded', function() {
+      // Wait for walakaHints to be initialized
+      function registerHints() {
+        if (!window.walakaHints) {
+          setTimeout(registerHints, 100);
+          return;
+        }
+        // Create Invoice button
+        window.walakaHints.addHint(
+          'createInvoiceBtn',
+          'Create Invoice',
+          'Click here to start creating a new invoice. You will be able to add client details, items, and set payment terms.'
+        );
+        // Status filter
+        window.walakaHints.addHint(
+          'statusFilter',
+          'Status Filter',
+          'Filter invoices by their payment status: Paid, Pending, Overdue, or Draft.'
+        );
+        // Client filter
+        window.walakaHints.addHint(
+          'clientFilter',
+          'Client Filter',
+          'Show invoices for a specific client or view all clients.'
+        );
+        // Date range filter
+        window.walakaHints.addHint(
+          'dateRangeFilter',
+          'Date Range Filter',
+          'Filter invoices by date. Choose a preset period or select a custom date range.'
+        );
+        // Search bar
+        window.walakaHints.addHint(
+          'searchInvoices',
+          'Search Invoices',
+          'Quickly find invoices by number, client name, or other keywords.'
+        );
+        // Export CSV button
+        window.walakaHints.addHint(
+          'exportCsvBtn',
+          'Export as CSV',
+          'Download the current list of invoices as a CSV file for use in Excel or other tools.'
+        );
+        // Export SAFT button
+        window.walakaHints.addHint(
+          'exportSaftBtn',
+          'Export as SAFT',
+          'Export invoices in SAFT format for tax and compliance reporting.'
+        );
+        // Add Item button in modal
+        window.walakaHints.addHint(
+          'addItemBtn',
+          'Add Item',
+          'Add a new product or service line to this invoice.'
+        );
+        // Invoice Total
+        window.walakaHints.addHint(
+          'invoiceTotal',
+          'Invoice Total',
+          'This is the total amount for the invoice, including VAT.'
+        );
+        // Preview Invoice button
+        window.walakaHints.addHint(
+          'previewInvoiceBtn',
+          'Preview Invoice',
+          'See a preview of the invoice before publishing or sending it to the client.'
+        );
+      }
+      registerHints();
+    });
     </script>
 </body>
 </html>

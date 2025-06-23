@@ -245,10 +245,32 @@ class InvoiceItems {
         });
         
         const grandTotal = subtotal + totalVat;
-        
         document.getElementById('subtotal').textContent = this.formatCurrency(subtotal);
         document.getElementById('totalVat').textContent = this.formatCurrency(totalVat);
         document.getElementById('invoiceTotal').textContent = this.formatCurrency(grandTotal);
+
+        // Show converted total if not MZN
+        const currency = window.invoiceForm?.currentCurrency || 'MZN';
+        const rate = window.invoiceForm?.currentRate;
+        let converted = '';
+        let convertedTotal = null;
+        if (currency !== 'MZN' && rate && !isNaN(rate)) {
+            convertedTotal = window.invoiceForm.getConvertedAmount(grandTotal);
+            if (convertedTotal !== null) {
+                converted = `${convertedTotal.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} ${currency} (1 MZN ≈ ${rate.toFixed(4)} ${currency})`;
+            } else {
+                converted = 'Exchange rate unavailable.';
+            }
+        }
+        let convertedDiv = document.getElementById('convertedTotalInfo');
+        if (!convertedDiv) {
+            convertedDiv = document.createElement('div');
+            convertedDiv.id = 'convertedTotalInfo';
+            convertedDiv.style.fontSize = '0.95em';
+            convertedDiv.style.color = '#555';
+            document.getElementById('invoiceTotal').parentElement.appendChild(convertedDiv);
+        }
+        convertedDiv.textContent = converted;
     }
 
     addInvoiceItem() {

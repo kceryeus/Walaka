@@ -409,32 +409,70 @@
             <!-- Add this after top bar section -->
             <div id="trial-banner-container"></div>
             <script>
-            document.addEventListener('DOMContentLoaded', function() {
-                fetch(`${basePath}components/trial-banner.html`)
-                    .then(response => {
-                        if (!response.ok) {
-                            throw new Error('Network response was not ok');
-                        }
-                        return response.text();
-                    })
-                    .then(html => {
-                        document.getElementById('trial-banner-container').innerHTML = html;
-                        
-                        // Load the banner script
-                        const bannerScript = document.createElement('script');
-                        bannerScript.type = 'module';
-                        bannerScript.src = `${basePath}components/trial-banner.js`;
-                        document.body.appendChild(bannerScript);
-                        
-                        // Load the restrictions script immediately after
-                        const restrictionsScript = document.createElement('script');
-                        restrictionsScript.src = `${basePath}components/trial-restrictions.js`;
-                        document.body.appendChild(restrictionsScript);
-
-                    })
-                    .catch(error => {
-                        console.error('Failed to load trial banner component:', error);
-                    });
+            // Ensure window.supabase is initialized
+            if (typeof window.supabase === 'undefined') {
+                const SUPABASE_URL = 'https://qvmtozjvjflygbkjecyj.supabase.co';
+                const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF2bXRvemp2amZseWdia2plY3lqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDYxMjc2MjMsImV4cCI6MjA2MTcwMzYyM30.DJMC1eM5_EouM1oc07JaoXsMX_bSLn2AVCozAcdfHmo';
+                window.supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+            }
+            // Username display and dropdown logic (from js/displayname.js)
+            document.addEventListener('DOMContentLoaded', async () => {
+                // Username display
+                if (typeof window.supabase !== 'undefined') {
+                    const { data: { session } } = await window.supabase.auth.getSession();
+                    if (session && session.user) {
+                        let displayName = session.user.email;
+                        try {
+                            const { data: userRecord } = await window.supabase
+                                .from('users')
+                                .select('username')
+                                .eq('id', session.user.id)
+                                .maybeSingle();
+                            if (userRecord && userRecord.username) {
+                                displayName = userRecord.username;
+                            }
+                        } catch (e) {}
+                        const userSpan = document.getElementById('user-displayname');
+                        if (userSpan) userSpan.textContent = displayName;
+                    }
+                }
+                // Dropdown open/close logic
+                const userProfile = document.getElementById('userProfile');
+                const userDropdown = document.getElementById('userDropdown');
+                if (!userProfile || !userDropdown) return;
+                let dropdownTimeout;
+                function openDropdown() {
+                    clearTimeout(dropdownTimeout);
+                    userProfile.classList.add('open');
+                }
+                function closeDropdown() {
+                    dropdownTimeout = setTimeout(() => {
+                        userProfile.classList.remove('open');
+                    }, 150);
+                }
+                userProfile.addEventListener('mouseenter', openDropdown);
+                userProfile.addEventListener('mouseleave', closeDropdown);
+                userDropdown.addEventListener('mouseenter', openDropdown);
+                userDropdown.addEventListener('mouseleave', closeDropdown);
+                // Click events for mobile
+                userProfile.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    if (window.innerWidth <= 768) {
+                        userProfile.classList.toggle('open');
+                    }
+                });
+                // Close dropdown when clicking outside
+                document.addEventListener('click', (e) => {
+                    if (!userProfile.contains(e.target)) {
+                        userProfile.classList.remove('open');
+                    }
+                });
+                // Handle window resize
+                window.addEventListener('resize', () => {
+                    if (window.innerWidth > 768) {
+                        userProfile.classList.remove('open');
+                    }
+                });
             });
             </script>
             <!-- Page Title and Filters -->

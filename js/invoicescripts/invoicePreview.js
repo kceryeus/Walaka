@@ -8,25 +8,77 @@ async function previewInvoice(invoiceData) {
     try {
         console.log('Preview Invoice - Received Data:', invoiceData);
         
-        // Format the items with proper calculations
-        const formattedItems = invoiceData.items?.map(item => {
-            const quantity = parseFloat(item.quantity) || 0;
-            const price = parseFloat(item.price) || 0;
-            const subtotal = quantity * price;
-            const vatAmount = subtotal * 0.16; // 16% VAT
-            
-            return {
-                description: item.description || '',
-                quantity: quantity,
-                price: price,
-                vat: vatAmount, // Store actual amount, not percentage
-                total: subtotal + vatAmount
-            };
-        }) || [];
-
-        // Calculate totals
-        const subtotal = formattedItems.reduce((sum, item) => sum + (item.quantity * item.price), 0);
-        const totalVat = formattedItems.reduce((sum, item) => sum + item.vat, 0);
+        // --- Fetch full client record from DB if client name is present ---
+        let client = null;
+        let clientName = '';
+        if (invoiceData.client && (invoiceData.client.customer_name || invoiceData.client.name)) {
+            clientName = invoiceData.client.customer_name || invoiceData.client.name;
+        } else if (invoiceData.client_name) {
+            clientName = invoiceData.client_name;
+        }
+        if (clientName) {
+            // Try to fetch client from DB
+            const { data: clientData, error } = await window.supabase
+                .from('clients')
+                .select('*')
+                .eq('customer_name', clientName)
+                .maybeSingle();
+            if (!error && clientData) {
+                client = {
+                    name: clientData.customer_name || '',
+                    address: clientData.billing_address || '',
+                    nuit: clientData.customer_tax_id || clientData.nuit || '',
+                    email: clientData.email || '',
+                    contact: clientData.contact || '',
+                    phone: clientData.telephone || '',
+                    city: clientData.city || '',
+                    postal_code: clientData.postal_code || '',
+                    province: clientData.province || '',
+                    country: clientData.country || ''
+                };
+            }
+        }
+        // Fallback to form data if not found
+        if (!client) {
+            if (invoiceData.client) {
+                client = {
+                    name: invoiceData.client.name || invoiceData.client.customer_name || invoiceData.client_name || 'Client Name',
+                    address: invoiceData.client.address || invoiceData.client.billing_address || invoiceData.client_address || '',
+                    nuit: invoiceData.client.nuit || invoiceData.client.customer_tax_id || invoiceData.client_tax_id || '',
+                    email: invoiceData.client.email || invoiceData.client_email || '',
+                    contact: invoiceData.client.contact || invoiceData.client_contact || '',
+                    phone: invoiceData.client.phone || invoiceData.client.telephone || invoiceData.client_phone || '',
+                    city: invoiceData.client.city || '',
+                    postal_code: invoiceData.client.postal_code || '',
+                    province: invoiceData.client.province || '',
+                    country: invoiceData.client.country || ''
+                };
+            } else {
+                client = {
+                    name: invoiceData.client_name || 'Client Name',
+                    address: invoiceData.client_address || '',
+                    nuit: invoiceData.client_tax_id || '',
+                    email: invoiceData.client_email || '',
+                    contact: invoiceData.client_contact || '',
+                    phone: invoiceData.client_phone || '',
+                    city: '',
+                    postal_code: '',
+                    province: '',
+                    country: ''
+                };
+            }
+        }
+        // Support both {items: [{description, quantity, price, ...}]} and {items: [{unit_price, vat_amount, ...}]}
+        let items = (invoiceData.items || []).map(item => ({
+            description: item.description || '',
+            quantity: item.quantity || 0,
+            price: item.price !== undefined ? item.price : (item.unit_price !== undefined ? item.unit_price : 0),
+            vat: item.vat !== undefined ? item.vat : (item.vat_amount !== undefined ? item.vat_amount : 0),
+            total: item.total !== undefined ? item.total : 0
+        }));
+        // Recalculate totals
+        const subtotal = items.reduce((sum, item) => sum + (item.quantity * item.price), 0);
+        const totalVat = items.reduce((sum, item) => sum + item.vat, 0);
         const total = subtotal + totalVat;
 
         // Get business profile
@@ -34,7 +86,6 @@ async function previewInvoice(invoiceData) {
         
         // Format the data for the template
         const formattedData = {
-            // Company info
             company: {
                 name: businessProfile.company_name || 'Your Company Name',
                 address: businessProfile.address || 'Your Company Address',
@@ -44,37 +95,22 @@ async function previewInvoice(invoiceData) {
                 logo: window.companySettings?.logo || '',
                 website: businessProfile.website || ''
             },
-            // Invoice details - ensure these fields are populated
             invoice: {
                 id: invoiceData.id || invoiceData.invoice_id,
                 number: invoiceData.invoiceNumber || await getNextInvoiceNumber(),
-                issueDate: invoiceData.issueDate || new Date().toISOString().split('T')[0],
-                dueDate: invoiceData.dueDate || new Date(Date.now() + 30*24*60*60*1000).toISOString().split('T')[0],
+                issueDate: invoiceData.issueDate || invoiceData.issue_date || new Date().toISOString().split('T')[0],
+                dueDate: invoiceData.dueDate || invoiceData.due_date || new Date(Date.now() + 30*24*60*60*1000).toISOString().split('T')[0],
                 status: invoiceData.status || 'draft',
                 projectName: invoiceData.projectName || '',
                 subtotal: subtotal,
-                vat: totalVat, // Use calculated VAT amount
+                vat: totalVat,
                 total: total,
                 discount: invoiceData.discount || 0,
                 notes: invoiceData.notes || '',
-                paymentTerms: invoiceData.paymentTerms || 'net30'
+                paymentTerms: invoiceData.paymentTerms || invoiceData.payment_terms || 'net30'
             },
-            // Client info
-            client: {
-                name: invoiceData.client?.customer_name || 'Client Name',
-                address: invoiceData.client?.billing_address || '',
-                nuit: Number(invoiceData.client?.customer_tax_id) || 0,
-                email: invoiceData.client?.email || '',
-                contact: invoiceData.client?.contact || '',
-                phone: invoiceData.client?.telephone || '',
-                city: invoiceData.client?.city || '',
-                postal_code: invoiceData.client?.postal_code || '',
-                province: invoiceData.client?.province || '',
-                country: invoiceData.client?.country || ''
-            },
-            // Items
-            items: formattedItems,
-            // Currency
+            client: client,
+            items: items,
             currency: invoiceData.currency || 'MZN'
         };
         
@@ -88,8 +124,12 @@ async function previewInvoice(invoiceData) {
         }
         
         // Get selected template
-        const selectedTemplate = await window.invoiceTemplateManager.getSelectedTemplate();
-        const template = window.invoiceTemplateManager.TEMPLATES[selectedTemplate] || window.invoiceTemplateManager.TEMPLATES['classic'];
+        let selectedTemplate = await window.invoiceTemplateManager.getSelectedTemplate();
+        let template = window.invoiceTemplateManager.TEMPLATES?.[selectedTemplate] || window.invoiceTemplateManager.defaultTemplate;
+        // Fallback to default if template is missing or incomplete
+        if (!template || !template.layout || !template.styles) {
+            template = window.invoiceTemplateManager.defaultTemplate;
+        }
         
         // Create the full HTML document with styles
         const html = `
@@ -100,17 +140,56 @@ async function previewInvoice(invoiceData) {
                 <meta name="viewport" content="width=device-width, initial-scale=1.0">
                 <title>Invoice ${formattedData.invoice.number}</title>
                 <style>
-                    ${template.styles}
+                    ${template.styles || ''}
                 </style>
             </head>
             <body>
-                ${template.layout}
+                ${template.layout || template}
             </body>
             </html>
         `;
         
-        // Populate template with data
-        const populatedHtml = await window.invoiceTemplateManager.populateTemplate(html, formattedData);
+        // Populate template with data (ensure all fields are present)
+        const safeData = {
+            company: {
+                name: formattedData.company?.name || 'Your Company Name',
+                address: formattedData.company?.address || 'Your Company Address',
+                email: formattedData.company?.email || 'info@yourcompany.com',
+                phone: formattedData.company?.phone || '+258 XX XXX XXXX',
+                nuit: formattedData.company?.nuit || '0',
+                logo: formattedData.company?.logo || '',
+                website: formattedData.company?.website || ''
+            },
+            invoice: {
+                id: formattedData.invoice?.id || '',
+                number: formattedData.invoice?.number || '',
+                issueDate: formattedData.invoice?.issueDate || '',
+                dueDate: formattedData.invoice?.dueDate || '',
+                status: formattedData.invoice?.status || 'draft',
+                projectName: formattedData.invoice?.projectName || '',
+                subtotal: formattedData.invoice?.subtotal || 0,
+                vat: formattedData.invoice?.vat || 0,
+                total: formattedData.invoice?.total || 0,
+                discount: formattedData.invoice?.discount || 0,
+                notes: formattedData.invoice?.notes || '',
+                paymentTerms: formattedData.invoice?.paymentTerms || 'net30'
+            },
+            client: {
+                name: formattedData.client?.name || 'Client Name',
+                address: formattedData.client?.address || '',
+                nuit: formattedData.client?.nuit || 0,
+                email: formattedData.client?.email || '',
+                contact: formattedData.client?.contact || '',
+                phone: formattedData.client?.phone || '',
+                city: formattedData.client?.city || '',
+                postal_code: formattedData.client?.postal_code || '',
+                province: formattedData.client?.province || '',
+                country: formattedData.client?.country || ''
+            },
+            items: formattedData.items || [],
+            currency: formattedData.currency || 'MZN'
+        };
+        const populatedHtml = await window.invoiceTemplateManager.populateTemplate(html, safeData);
         
         // Clear and update the preview content
         previewContainer.innerHTML = populatedHtml;
@@ -149,56 +228,45 @@ async function previewInvoice(invoiceData) {
                 <button class="btn secondary-btn" id="downloadPdfBtn">
                     <i class="fas fa-download"></i> Download PDF
                 </button>
-                <button class="btn primary-btn" id="sendInvoiceBtn">
+                <button class="btn primary-btn" id="sendInvoiceBtn" type="button">
                     <i class="fas fa-paper-plane"></i> Send
                 </button>
             `;
-
             // Add event listeners for the action buttons
             const downloadPdfBtn = document.getElementById('downloadPdfBtn');
             const sendInvoiceBtn = document.getElementById('sendInvoiceBtn');
-
             if (downloadPdfBtn) {
+                downloadPdfBtn.disabled = false;
                 downloadPdfBtn.addEventListener('click', async () => {
                     try {
-                        // Disable button and show loading state
                         downloadPdfBtn.disabled = true;
                         downloadPdfBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generating...';
-                        
-                        // Get the current invoice data
                         const currentInvoiceData = JSON.parse(previewContainer.dataset.currentInvoice || '{}');
                         if (!currentInvoiceData || !currentInvoiceData.invoice?.number) {
                             throw new Error('No valid invoice data found');
                         }
-
                         showNotification('Generating PDF...', 'info');
-                        
-                        // Generate and download the PDF
                         const pdfBlob = await window.generatePDF(currentInvoiceData);
-                        
-                        // Create download link
                         const downloadLink = document.createElement('a');
                         downloadLink.href = URL.createObjectURL(pdfBlob);
                         downloadLink.download = `Invoice-${currentInvoiceData.invoice.number}.pdf`;
                         document.body.appendChild(downloadLink);
                         downloadLink.click();
                         document.body.removeChild(downloadLink);
-                        
                         showNotification('PDF downloaded successfully', 'success');
                     } catch (error) {
                         console.error('Error downloading PDF:', error);
                         showNotification('Error generating PDF: ' + error.message, 'error');
                     } finally {
-                        // Re-enable button and restore original state
                         downloadPdfBtn.disabled = false;
                         downloadPdfBtn.innerHTML = '<i class="fas fa-download"></i> Download PDF';
                     }
                 });
             }
-
             if (sendInvoiceBtn) {
+                sendInvoiceBtn.disabled = false;
                 sendInvoiceBtn.addEventListener('click', () => {
-                    openEmailModal(formattedData);
+                    openEmailModal(safeData);
                 });
             }
         }
@@ -224,37 +292,79 @@ async function previewInvoice(invoiceData) {
             invoiceDetailsSection.innerHTML = detailsHtml;
         }
 
+        // Determine if conversion is needed
+        let showConversion = false;
+        let rate = 1;
+        let currency = formattedData.currency || 'MZN';
+        if (window.invoiceForm && currency !== 'MZN' && window.invoiceForm.currentRate && !isNaN(window.invoiceForm.currentRate)) {
+            showConversion = true;
+            rate = window.invoiceForm.currentRate;
+        }
         // Update the invoice totals in the preview
         const totalsSection = document.querySelector("#invoicePreviewContent .invoice-totals");
         if (totalsSection) {
-            totalsSection.innerHTML = `
+            let totalsHtml = `
                 <div class="totals-row">
                     <span>Subtotal:</span>
-                    <span>${formattedData.currency} ${formatNumber(formattedData.invoice.subtotal)}</span>
+                    <span>MZN ${formatNumber(formattedData.invoice.subtotal)}</span>
                 </div>
                 <div class="totals-row">
                     <span>VAT (16%):</span>
-                    <span>${formattedData.currency} ${formatNumber(formattedData.invoice.vat)}</span>
+                    <span>MZN ${formatNumber(formattedData.invoice.vat)}</span>
                 </div>
                 <div class="totals-row total">
                     <span>Total:</span>
-                    <span>${formattedData.currency} ${formatNumber(formattedData.invoice.total)}</span>
+                    <span>MZN ${formatNumber(formattedData.invoice.total)}</span>
                 </div>
             `;
+            if (showConversion) {
+                const convertedSubtotal = window.invoiceForm.getConvertedAmount(formattedData.invoice.subtotal);
+                const convertedVat = window.invoiceForm.getConvertedAmount(formattedData.invoice.vat);
+                const convertedTotal = window.invoiceForm.getConvertedAmount(formattedData.invoice.total);
+                totalsHtml += `
+                <div class=\"totals-row\">
+                    <span>Subtotal:</span>
+                    <span>${currency} ${formatNumber(convertedSubtotal)}</span>
+                </div>
+                <div class=\"totals-row\">
+                    <span>VAT (16%):</span>
+                    <span>${currency} ${formatNumber(convertedVat)}</span>
+                </div>
+                <div class=\"totals-row total\">
+                    <span>Total:</span>
+                    <span>${currency} ${formatNumber(convertedTotal)}</span>
+                </div>
+                <div class=\"totals-row\" style=\"font-size:0.95em;color:#555;\">
+                    <span></span>
+                    <span>1 MZN ≈ ${rate.toFixed(4)} ${currency}</span>
+                </div>
+                `;
+            }
+            totalsSection.innerHTML = totalsHtml;
         }
-
         // Update items table with proper formatting
         const itemsTable = document.querySelector("#invoicePreviewContent table tbody");
         if (itemsTable) {
-            itemsTable.innerHTML = formattedItems.map(item => `
-                <tr>
+            let itemsHtml = formattedData.items.map(item => {
+                let row = `<tr>
                     <td>${item.description}</td>
                     <td>${item.quantity}</td>
-                    <td>${formattedData.currency} ${formatNumber(item.price)}</td>
-                    <td>${formattedData.currency} ${formatNumber(item.vat)}</td>
-                    <td>${formattedData.currency} ${formatNumber(item.total)}</td>
-                </tr>
-            `).join('');
+                    <td>MZN ${formatNumber(item.price)}</td>
+                    <td>MZN ${formatNumber(item.vat)}</td>
+                    <td>MZN ${formatNumber(item.total)}</td>
+                </tr>`;
+                if (showConversion) {
+                    row += `<tr style=\"font-size:0.95em;color:#555;\">
+                        <td></td>
+                        <td></td>
+                        <td>${currency} ${formatNumber(window.invoiceForm.getConvertedAmount(item.price))}</td>
+                        <td>${currency} ${formatNumber(window.invoiceForm.getConvertedAmount(item.vat))}</td>
+                        <td>${currency} ${formatNumber(window.invoiceForm.getConvertedAmount(item.total))}</td>
+                    </tr>`;
+                }
+                return row;
+            }).join('');
+            itemsTable.innerHTML = itemsHtml;
         }
 
         // Store the current invoice data for PDF generation
@@ -370,6 +480,22 @@ async function getNextInvoiceNumber() {
 window.previewInvoice = previewInvoice;
 window.downloadInvoicePdf = downloadInvoicePdf;
 window.openEmailModal = openEmailModal;
+
+// Provide a window.invoicePreview object for compatibility
+window.invoicePreview = {
+    showPreview: previewInvoice,
+    openPreview: async function() {
+        // Try to get form data from the form if available
+        if (typeof getCurrentFormData === 'function') {
+            const data = getCurrentFormData();
+            if (data) {
+                await previewInvoice(data);
+                return;
+            }
+        }
+        showNotification('No invoice data available for preview', 'error');
+    }
+};
 
 // Event listeners for preview and send buttons
 document.getElementById('previewInvoiceBtn')?.addEventListener('click', () => {

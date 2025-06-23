@@ -2,7 +2,12 @@
 class InvoiceForm {
     constructor() {
         this.supabase = window.supabase;
+        this.exchangeRates = { MZN: 1 };
+        this.currentCurrency = 'MZN';
+        this.currentRate = 1;
+        this.fetchingRate = false;
         this.initializeDateFields();
+        this.setupCurrencyListener();
     }
 
     initializeDateFields() {
@@ -308,6 +313,136 @@ class InvoiceForm {
             throw error;
         }
     }
+
+    setupCurrencyListener() {
+        const currencySelect = document.getElementById('currency');
+        if (!currencySelect) return;
+        currencySelect.addEventListener('change', async (e) => {
+            const newCurrency = e.target.value;
+            await this.updateExchangeRate(newCurrency);
+            if (window.invoiceItems && typeof window.invoiceItems.updateInvoiceTotals === 'function') {
+                window.invoiceItems.updateInvoiceTotals();
+            }
+            this.updateReviewTotals();
+        });
+        // On load, fetch rate if not MZN
+        if (currencySelect.value !== 'MZN') {
+            this.updateExchangeRate(currencySelect.value);
+        }
+    }
+
+    getConvertedAmount(mznAmount) {
+        // If MZN, return as is
+        if (this.currentCurrency === 'MZN') return mznAmount;
+        if (!this.currentRate || isNaN(this.currentRate) || this.currentRate === 1) return null;
+        // API returns: 1 MZN = X USD (so multiply MZN * rate)
+        return mznAmount * this.currentRate;
+    }
+
+    async updateExchangeRate(currency) {
+        if (currency === 'MZN') {
+            this.currentCurrency = 'MZN';
+            this.currentRate = 1;
+            this.updateExchangeRateInfo();
+            return;
+        }
+        // Cache in sessionStorage
+        const cacheKey = `walaka_rates_${currency}`;
+        const cached = sessionStorage.getItem(cacheKey);
+        let rate = null;
+        if (cached) {
+            const { value, timestamp } = JSON.parse(cached);
+            // 1 hour cache
+            if (Date.now() - timestamp < 60 * 60 * 1000) {
+                rate = value;
+            }
+        }
+        if (!rate) {
+            this.fetchingRate = true;
+            try {
+                // Use Open Exchange Rates as the new source
+                const res = await fetch(`https://openexchangerates.org/api/latest.json?app_id=0a2208bb4ead48929a4485ae45dff65d&symbols=USD,EUR,GBP,MZN`);
+                const data = await res.json();
+                // The base is always USD. To get 1 MZN in the selected currency:
+                // rate = (CURRENCY/MZN)
+                if (data && data.rates && data.rates['MZN']) {
+                    if (currency === 'USD') {
+                        rate = data.rates['USD'] / data.rates['MZN'];
+                    } else if (currency === 'EUR') {
+                        rate = data.rates['EUR'] / data.rates['MZN'];
+                    } else if (currency === 'GBP') {
+                        rate = data.rates['GBP'] / data.rates['MZN'];
+                    }
+                }
+                if (rate) {
+                    sessionStorage.setItem(cacheKey, JSON.stringify({ value: rate, timestamp: Date.now() }));
+                }
+            } catch (err) {
+                rate = null;
+            }
+            this.fetchingRate = false;
+        }
+        this.currentCurrency = currency;
+        if (rate && !isNaN(rate)) {
+            this.currentRate = rate;
+        } else {
+            this.currentRate = null;
+        }
+        this.updateExchangeRateInfo();
+    }
+
+    updateExchangeRateInfo() {
+        const infoDiv = document.getElementById('exchangeRateInfo');
+        if (!infoDiv) return;
+        if (this.currentCurrency === 'MZN') {
+            infoDiv.textContent = 'Base currency: Mozambican Metical (MZN)';
+        } else if (this.fetchingRate) {
+            infoDiv.textContent = 'Fetching latest exchange rate...';
+        } else if (this.currentRate && !isNaN(this.currentRate)) {
+            infoDiv.textContent = `1 MZN ≈ ${this.currentRate.toFixed(4)} ${this.currentCurrency}`;
+        } else {
+            infoDiv.textContent = 'Exchange rate unavailable. Showing MZN only.';
+        }
+    }
+
+    updateReviewTotals() {
+        // Show both MZN and selected currency in review step
+        const currency = this.currentCurrency || 'MZN';
+        const rate = this.currentRate || 1;
+        const subtotalElem = document.getElementById('reviewSubtotal');
+        const vatElem = document.getElementById('reviewTotalVat');
+        const totalElem = document.getElementById('reviewInvoiceTotal');
+        const mainSubtotal = parseFloat(document.getElementById('subtotal')?.textContent.replace(/[^\d.\-]/g, '') || '0');
+        const mainVat = parseFloat(document.getElementById('totalVat')?.textContent.replace(/[^\d.\-]/g, '') || '0');
+        const mainTotal = parseFloat(document.getElementById('invoiceTotal')?.textContent.replace(/[^\d.\-]/g, '') || '0');
+        if (subtotalElem && vatElem && totalElem) {
+            subtotalElem.textContent = new Intl.NumberFormat('pt-MZ', { style: 'currency', currency: 'MZN' }).format(mainSubtotal);
+            vatElem.textContent = new Intl.NumberFormat('pt-MZ', { style: 'currency', currency: 'MZN' }).format(mainVat);
+            totalElem.textContent = new Intl.NumberFormat('pt-MZ', { style: 'currency', currency: 'MZN' }).format(mainTotal);
+            // Add converted values below if not MZN
+            ['reviewSubtotal','reviewTotalVat','reviewInvoiceTotal'].forEach((id, idx) => {
+                let convertedDiv = document.getElementById(id + '_converted');
+                if (!convertedDiv) {
+                    convertedDiv = document.createElement('div');
+                    convertedDiv.id = id + '_converted';
+                    convertedDiv.style.fontSize = '0.95em';
+                    convertedDiv.style.color = '#555';
+                    document.getElementById(id).parentElement.appendChild(convertedDiv);
+                }
+                if (currency !== 'MZN' && rate && !isNaN(rate)) {
+                    let baseVal = [mainSubtotal, mainVat, mainTotal][idx];
+                    const convertedVal = this.getConvertedAmount(baseVal);
+                    if (convertedVal !== null) {
+                        convertedDiv.textContent = `${convertedVal.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} ${currency} (1 MZN ≈ ${rate.toFixed(4)} ${currency})`;
+                    } else {
+                        convertedDiv.textContent = 'Exchange rate unavailable.';
+                    }
+                } else {
+                    convertedDiv.textContent = '';
+                }
+            });
+        }
+    }
 }
 
 // Initialize and attach to window
@@ -375,3 +510,163 @@ async function handleInvoiceSubmission(event) {
 
 // Event Listeners
 document.getElementById('invoiceForm')?.addEventListener('submit', handleInvoiceSubmission);
+
+// Multi-step modal logic for Create Invoice
+(function() {
+  const steps = Array.from(document.querySelectorAll('#invoiceModal .step'));
+  const stepIndicators = Array.from(document.querySelectorAll('#invoiceModal .step-indicator'));
+  let currentStep = 0;
+  let maxStepReached = 0;
+
+  function showStep(index) {
+    steps.forEach((step, i) => {
+      step.style.display = i === index ? 'block' : 'none';
+      step.classList.toggle('active', i === index);
+    });
+    stepIndicators.forEach((ind, i) => {
+      ind.classList.toggle('active', i === index);
+    });
+    currentStep = index;
+    if (index > maxStepReached) maxStepReached = index;
+    // Always populate review when entering review step
+    if (index === 3) populateReview();
+  }
+
+  function validateStep(index) {
+    // Basic validation for each step (expand as needed)
+    if (index === 0) {
+      // Client info: require client name
+      const clientName = document.getElementById('client-list').value.trim();
+      if (!clientName) {
+        showNotification('Please enter/select a client name', 'error');
+        return false;
+      }
+    }
+    if (index === 1) {
+      // Invoice details: require dates
+      const issueDate = document.getElementById('issueDate').value;
+      const dueDate = document.getElementById('dueDate').value;
+      if (!issueDate || !dueDate) {
+        showNotification('Please select both issue and due dates', 'error');
+        return false;
+      }
+    }
+    if (index === 2) {
+      // Items: require at least one item with description and quantity > 0
+      const itemRows = document.querySelectorAll('#itemsTable .item-row');
+      let valid = false;
+      itemRows.forEach(row => {
+        const desc = row.querySelector('.item-description').value.trim();
+        const qty = parseFloat(row.querySelector('.item-quantity').value);
+        if (desc && qty > 0) valid = true;
+      });
+      if (!valid) {
+        showNotification('Please add at least one valid item', 'error');
+        return false;
+      }
+    }
+    return true;
+  }
+
+  function nextStep() {
+    if (!validateStep(currentStep)) return;
+    if (currentStep < steps.length - 1) {
+      showStep(currentStep + 1);
+      if (currentStep + 1 === 3) populateReview();
+    }
+  }
+  function prevStep() {
+    if (currentStep > 0) showStep(currentStep - 1);
+  }
+
+  function populateReview() {
+    // Fill the review summary with entered data
+    const clientName = document.getElementById('client-list').value;
+    const clientEmail = document.getElementById('clientEmail').value;
+    const clientTaxId = document.getElementById('clientTaxId').value;
+    const clientAddress = document.getElementById('clientAddress').value;
+    const invoiceNumber = document.getElementById('invoiceNumber').value;
+    const issueDate = document.getElementById('issueDate').value;
+    const dueDate = document.getElementById('dueDate').value;
+    const currency = document.getElementById('currency').value;
+    const paymentTerms = document.getElementById('paymentTerms').options[document.getElementById('paymentTerms').selectedIndex].text;
+    const notes = document.getElementById('notes').value;
+    // Items
+    const itemRows = document.querySelectorAll('#itemsTable .item-row');
+    let itemsHtml = '';
+    itemRows.forEach(row => {
+      const desc = row.querySelector('.item-description').value;
+      const qty = row.querySelector('.item-quantity').value;
+      const price = row.querySelector('.item-price').value;
+      const vat = row.querySelector('.item-vat').textContent;
+      const total = row.querySelector('.item-total').textContent;
+      if (desc && qty > 0) {
+        itemsHtml += `<tr><td>${desc}</td><td>${qty}</td><td>${price}</td><td>${vat}</td><td>${total}</td></tr>`;
+      }
+    });
+    const reviewHtml = `
+      <div><strong>Client:</strong> ${clientName} (${clientEmail}, NUIT: ${clientTaxId})<br><strong>Address:</strong> ${clientAddress}</div>
+      <div><strong>Invoice #:</strong> ${invoiceNumber} | <strong>Issue:</strong> ${issueDate} | <strong>Due:</strong> ${dueDate}</div>
+      <div><strong>Currency:</strong> ${currency} | <strong>Terms:</strong> ${paymentTerms}</div>
+      <div><strong>Notes:</strong> ${notes || '—'}</div>
+      <table class="items-table" style="margin-top:12px;width:100%"><thead><tr><th>Description</th><th>Qty</th><th>Unit Price</th><th>VAT</th><th>Total</th></tr></thead><tbody>${itemsHtml}</tbody></table>
+      <div style="margin-top:16px;text-align:right;">
+        <button type="button" class="btn secondary-btn" id="previewInvoiceBtn">
+          <i class="fas fa-eye"></i> <span data-translate="preview">Preview</span>
+        </button>
+      </div>
+    `;
+    document.getElementById('invoiceReviewSummary').innerHTML = reviewHtml;
+    // Copy totals
+    document.getElementById('reviewSubtotal').textContent = document.getElementById('subtotal').textContent;
+    document.getElementById('reviewTotalVat').textContent = document.getElementById('totalVat').textContent;
+    document.getElementById('reviewInvoiceTotal').textContent = document.getElementById('invoiceTotal').textContent;
+    // Attach preview button event
+    setTimeout(() => {
+      const previewBtn = document.getElementById('previewInvoiceBtn');
+      if (previewBtn) {
+        previewBtn.addEventListener('click', function() {
+          if (typeof window.invoicePreview === 'object' && typeof window.invoicePreview.openPreview === 'function') {
+            window.invoicePreview.openPreview();
+          } else if (typeof window.openInvoicePreview === 'function') {
+            window.openInvoicePreview();
+          } else {
+            showNotification('Preview function not found', 'error');
+          }
+        });
+      }
+    }, 100);
+  }
+
+  // Event listeners
+  document.querySelectorAll('#invoiceModal .next-step').forEach(btn => {
+    btn.addEventListener('click', nextStep);
+  });
+  document.querySelectorAll('#invoiceModal .prev-step').forEach(btn => {
+    btn.addEventListener('click', prevStep);
+  });
+
+  // Stepper tab click logic
+  stepIndicators.forEach((ind, i) => {
+    ind.style.cursor = 'pointer';
+    ind.addEventListener('click', function() {
+      if (i <= maxStepReached) {
+        showStep(i);
+        if (i === 3) populateReview();
+      }
+    });
+  });
+
+  // Show first step on modal open
+  document.addEventListener('DOMContentLoaded', function() {
+    showStep(0);
+  });
+
+  // Optional: Reset to first step when modal is closed
+  document.querySelectorAll('#invoiceModal .close-modal').forEach(btn => {
+    btn.addEventListener('click', function() {
+      showStep(0);
+      maxStepReached = 0;
+    });
+  });
+})();
