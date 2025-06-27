@@ -168,6 +168,9 @@ async function handleInvoiceFormSubmit(event) {
   // 3. Save invoice to local storage
   addInvoiceToLocalStorage(invoice);
 
+  // Dispatch event to update trial banner
+  document.dispatchEvent(new CustomEvent('invoiceCreated'));
+
   // Also save to Supabase
   await insertInvoiceToSupabase(invoice);
 

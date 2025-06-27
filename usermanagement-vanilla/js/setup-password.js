@@ -12,18 +12,55 @@ const supabase = createClient(supabaseUrl, supabaseKey, {
     }
 });
 
+console.log('[DEBUG] setup-password.js script loaded');
 document.addEventListener('DOMContentLoaded', async () => {
+    console.log('[DEBUG] DOMContentLoaded fired');
+    // Always log device time for debugging (moved to top)
+    const now = Math.floor(Date.now() / 1000);
+    console.log('==============================');
+    console.log('[DEBUG] Device current time (epoch):', now, '- (ISO):', new Date(now * 1000).toISOString());
+    console.log('==============================');
     const form = document.getElementById('passwordSetupForm');
     const errorMessage = document.getElementById('errorMessage');
 
-    // Get the access token from the URL
-    const params = new URLSearchParams(window.location.search);
+    // Log the current URL
+    console.log('[DEBUG] window.location.href:', window.location.href);
+
+    // Get the access token from the URL (query string or hash fragment)
+    let params = new URLSearchParams(window.location.search);
+    if (!params.has('access_token')) {
+        // Try hash fragment
+        if (window.location.hash && window.location.hash.length > 1) {
+            params = new URLSearchParams(window.location.hash.substring(1));
+            console.log('[DEBUG] Parsed URLSearchParams from hash:', Array.from(params.entries()));
+        }
+    }
+    console.log('[DEBUG] All URLSearchParams:', Array.from(params.entries()));
     const accessToken = params.get('access_token');
     const refreshToken = params.get('refresh_token');
-
     if (!accessToken) {
+        console.warn('[DEBUG] access_token is missing from URL parameters!');
         showError('Invalid or expired invitation link');
         return;
+    }
+
+    // Debug: Log JWT and device time for clock skew (expecting port 3000)
+    if (accessToken) {
+        try {
+            const jwt = accessToken.split('.')[1];
+            const decoded = JSON.parse(atob(jwt.replace(/-/g, '+').replace(/_/g, '/')));
+            const iat = decoded.iat;
+            const exp = decoded.exp;
+            const now = Math.floor(Date.now() / 1000);
+            console.log('[DEBUG] JWT issued at (iat):', iat, '-', new Date(iat * 1000).toISOString());
+            console.log('[DEBUG] JWT expires at (exp):', exp, '-', new Date(exp * 1000).toISOString());
+            console.log('[DEBUG] Device current time:', now, '-', new Date(now * 1000).toISOString());
+            if (now < iat) {
+                console.warn('[DEBUG] Device time is behind JWT issued-at time by', iat - now, 'seconds');
+            }
+        } catch (err) {
+            console.warn('[DEBUG] Could not decode JWT for clock skew check:', err);
+        }
     }
 
     form.addEventListener('submit', async (e) => {

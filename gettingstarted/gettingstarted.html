@@ -7,7 +7,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
     <link rel="stylesheet" href="css/getting-started.css">
     <link rel="stylesheet" href="css/subscription-styles.css">
-    <script type="module" src="../js/auth.js"></script>
+    <!-- <script type="module" src="../js/auth.js"></script> -->
 </head>
 <body>
     <div class="language-toggle">
@@ -323,31 +323,31 @@
                         <p data-lang="en">Select your subscription plan and payment method.</p>
                         <p data-lang="pt">Selecione seu plano de assinatura e método de pagamento.</p>
                     </div>
-                    
                     <form id="payment-form" class="onboarding-form">
                         <div class="form-group subscription-plan">
-                            <div class="plan-card">
-                                <div class="plan-header">
-                                    <h4 data-lang="en">WALAKA ERP Subscription</h4>
-                                    <h4 data-lang="pt">Assinatura WALAKA ERP</h4>
-                                    <div class="plan-price">
-                                        <span class="price">399 MZN</span>
-                                        <span class="period" data-lang="en">/ month</span>
-                                        <span class="period" data-lang="pt">/ mês</span>
+                            <div class="plan-options">
+                                <label class="plan-card">
+                                    <input type="radio" name="plan" value="trial" checked>
+                                    <div class="plan-header">
+                                        <h4>Trial</h4>
+                                        <div class="plan-price">Free</div>
                                     </div>
-                                </div>
-                                <div class="plan-features">
-                                    <ul>
-                                        <li data-lang="en"><i class="fas fa-check"></i> Full access to all modules</li>
-                                        <li data-lang="pt"><i class="fas fa-check"></i> Acesso completo a todos os módulos</li>
-                                        <li data-lang="en"><i class="fas fa-check"></i> Unlimited invoice creation</li>
-                                        <li data-lang="pt"><i class="fas fa-check"></i> Criação ilimitada de faturas</li>
-                                        <li data-lang="en"><i class="fas fa-check"></i> Customer management</li>
-                                        <li data-lang="pt"><i class="fas fa-check"></i> Gestão de clientes</li>
-                                        <li data-lang="en"><i class="fas fa-check"></i> Email support</li>
-                                        <li data-lang="pt"><i class="fas fa-check"></i> Suporte por email</li>
+                                    <ul class="plan-features">
+                                        <li>Limited invoices</li>
+                                        <li>14 days</li>
                                     </ul>
-                                </div>
+                                </label>
+                                <label class="plan-card">
+                                    <input type="radio" name="plan" value="invoicing">
+                                    <div class="plan-header">
+                                        <h4>Invoicing</h4>
+                                        <div class="plan-price">MZN 300/mo</div>
+                                    </div>
+                                    <ul class="plan-features">
+                                        <li>Unlimited invoices</li>
+                                        <li>Full support</li>
+                                    </ul>
+                                </label>
                             </div>
                         </div>
 

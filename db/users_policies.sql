@@ -69,3 +69,38 @@ WITH CHECK (
 -- Index for faster lookups
 CREATE INDEX IF NOT EXISTS users_id_idx ON users(id);
 CREATE INDEX IF NOT EXISTS users_email_idx ON users(email);
+
+-- Remove the auth_id column and its constraint
+ALTER TABLE public.users DROP CONSTRAINT IF EXISTS users_auth_id_fkey;
+ALTER TABLE public.users DROP COLUMN IF EXISTS auth_id;
+
+-- Update created_by to reference public.users(id) instead of auth.users(id)
+ALTER TABLE public.users DROP CONSTRAINT IF EXISTS users_created_by_fkey;
+ALTER TABLE public.users
+    ADD CONSTRAINT users_created_by_fkey FOREIGN KEY (created_by) REFERENCES public.users(id);
+
+-- Ensure id references auth.users(id) ON DELETE CASCADE
+ALTER TABLE public.users DROP CONSTRAINT IF EXISTS users_pkey;
+ALTER TABLE public.users
+    ADD CONSTRAINT users_pkey PRIMARY KEY (id);
+ALTER TABLE public.users DROP CONSTRAINT IF EXISTS users_id_fkey;
+ALTER TABLE public.users
+    ADD CONSTRAINT users_id_fkey FOREIGN KEY (id) REFERENCES auth.users(id) ON DELETE CASCADE;
+
+-- Create or replace the set_created_by trigger function
+CREATE OR REPLACE FUNCTION set_created_by()
+RETURNS TRIGGER AS $$
+BEGIN
+  IF NEW.created_by IS NULL THEN
+    NEW.created_by := auth.uid();
+  END IF;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Create the trigger to set created_by before insert
+DROP TRIGGER IF EXISTS set_created_by_before_insert ON public.users;
+CREATE TRIGGER set_created_by_before_insert
+BEFORE INSERT ON public.users
+FOR EACH ROW
+EXECUTE FUNCTION set_created_by();

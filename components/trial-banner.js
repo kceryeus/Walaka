@@ -33,8 +33,14 @@ async function updateTrialBanner() {
         if (!subscriptionError && subscriptions && subscriptions.length > 0) {
             const latest = subscriptions[0];
             currentPlan = latest.plan ? capitalizePlanName(latest.plan) : 'Trial';
-            // Check if subscription is active and not expired
-            if (latest.status === 'active' && latest.end_date && new Date(latest.end_date) > new Date()) {
+            // Check if subscription is active, not expired, and not a trial plan
+            if (
+                latest.status === 'active' &&
+                latest.end_date &&
+                new Date(latest.end_date) > new Date() &&
+                latest.plan &&
+                latest.plan.toLowerCase() !== 'trial'
+            ) {
                 validSubscription = true;
             }
         }
@@ -85,6 +91,13 @@ async function updateTrialBanner() {
         } catch (err) {}
         const invoicesRemaining = Math.max(0, TRIAL_CONFIG.maxInvoices - invoiceCount);
         updateTrialUI(daysRemaining, invoicesRemaining, trialStartDate);
+        window.dispatchEvent(new CustomEvent('trialDataUpdated', {
+            detail: {
+                daysRemaining,
+                invoicesRemaining,
+                isRestricted: daysRemaining === 0 || invoicesRemaining === 0
+            }
+        }));
     } catch (err) {
         planBadge.textContent = 'Trial';
         if (banner) banner.style.display = '';
@@ -126,6 +139,11 @@ function updateTrialUI(daysRemaining, invoicesRemaining, trialStartDate) {
         console.log('[TrialBanner] Progress bar updated:', percent + '%');
     } else {
         console.warn('[TrialBanner] #trial-progress element not found.');
+    }
+
+    // After updating UI, apply translations if languageManager is available
+    if (window.languageManager && typeof window.languageManager.applyTranslations === 'function') {
+        window.languageManager.applyTranslations();
     }
 }
 
@@ -464,4 +482,21 @@ window.TrialBanner = {
         console.log('[TrialBanner] Manual test with values:', { days, invoices });
         updateTrialUI(days, invoices, new Date());
     }
-}; 
+};
+
+// Signal that the trial banner is ready
+window.dispatchEvent(new Event('trialBannerReady'));
+
+// Listen for invoice creation to update banner in real time
+
+document.addEventListener('invoiceCreated', () => {
+    console.log('[TrialBanner] Invoice created event detected, updating banner...');
+    window.TrialBanner.updateTrialBanner();
+});
+
+// Listen for language changes to re-apply translations to the trial banner
+window.addEventListener('languageChanged', () => {
+    if (window.languageManager && typeof window.languageManager.applyTranslations === 'function') {
+        window.languageManager.applyTranslations();
+    }
+}); 

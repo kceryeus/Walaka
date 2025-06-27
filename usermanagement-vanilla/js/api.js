@@ -27,60 +27,34 @@ class API {
 
     async createUser(userData) {
         try {
-            // 1. Check if email already exists in user_management (NOT public.users)
-            const { data: existingMeta, error: metaError } = await this.supabase
-                .from('user_management')
-                .select('id')
-                .eq('email', userData.email)
-                .maybeSingle();
-            if (metaError) throw metaError;
-            if (existingMeta) {
-                throw new Error('A user with this email already exists in the system.');
-            }
-
-            // 2. Insert metadata into user_management
-            const { data: userSession } = await this.supabase.auth.getUser();
-            const creatorId = userSession?.user?.id || null;
-            const { data: mgmtData, error: mgmtError } = await this.supabase
-                .from('user_management')
-                .insert([
-                    {
-                        username: userData.username,
-                        email: userData.email,
-                        role: userData.role,
-                        status: 'pending',
-                        created_by: creatorId
-                    }
-                ])
-                .select()
-                .single();
-            if (mgmtError) {
-                console.error('Supabase user_management insert error:', mgmtError, JSON.stringify(mgmtError));
-                throw mgmtError;
-            }
-
-            // 3. Register user in Supabase Auth (send invite email)
             const randomPassword = Math.random().toString(36).slice(-10) + 'A1!';
-            const { data: authData, error: authError } = await this.supabase.auth.signUp({
+
+            // Build metadata object
+            const metadata = {
+                username: userData.username,
+                role: userData.role
+            };
+            if (userData.created_by) {
+                metadata.created_by = userData.created_by;
+            }
+
+            const { data: { user }, error: signUpError } = await this.supabase.auth.signUp({
                 email: userData.email,
                 password: randomPassword,
                 options: {
-                    emailRedirectTo: 'http://localhost:5505/usermanagement-vanilla/setup-password.html',
-                    data: {
-                        username: userData.username,
-                        role: userData.role
-                    }
+                    emailRedirectTo: 'http://localhost:3000/usermanagement-vanilla/setup-password.html',
+                    data: metadata
                 }
             });
-            if (authError) {
-                console.error('Supabase Auth signUp error:', authError, JSON.stringify(authError));
-                throw authError;
+
+            if (signUpError) {
+                console.error('Auth signUp failed:', signUpError);
+                throw signUpError;
             }
 
-            return { user_management: mgmtData, auth: authData };
+            return { auth: user };
         } catch (error) {
-            // Improved error logging
-            console.error('Error creating user:', error, JSON.stringify(error));
+            console.error('Invite failed:', error.message);
             throw error;
         }
     }
@@ -92,10 +66,13 @@ class API {
             const creatorId = userSession?.user?.id || null;
 
             // Insert into public.users table
+            // The id should be set to the Supabase Auth user id (userData.id)
+            // created_by is set to the current user's id (creatorId)
             const { data, error } = await this.supabase
                 .from('users')
                 .insert([
                     {
+                        id: userData.id, // This should be the id from Supabase Auth
                         username: userData.username,
                         email: userData.email,
                         role: userData.role,

@@ -399,7 +399,29 @@
 
                 if (error) throw error;
                 console.log('Logged in:', data);
-                window.location.href = "dashboard.html";
+
+                // Fetch onboarding status from users table by id
+                const userId = data.user.id;
+                const { data: userRecord, error: userError } = await supabase
+                    .from('users')
+                    .select('onboarding')
+                    .eq('id', userId)
+                    .single();
+
+                if (userError) {
+                    throw new Error('Could not determine onboarding status: ' + userError.message);
+                }
+                if (!userRecord || typeof userRecord.onboarding === 'undefined') {
+                    throw new Error('Onboarding status not set for this user.');
+                }
+
+                if (userRecord.onboarding === 'no') {
+                    window.location.href = 'gettingstarted/gettingstarted.html';
+                } else if (userRecord.onboarding === 'yes') {
+                    window.location.href = 'dashboard.html';
+                } else {
+                    throw new Error('Invalid onboarding status: ' + userRecord.onboarding);
+                }
             } catch (error) {
                 console.error('Error logging in:', error.message);
                 errorDiv.textContent = error.message || 'Login failed';

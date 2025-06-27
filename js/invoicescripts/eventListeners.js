@@ -16,7 +16,12 @@ class InvoiceEventListeners {
         // Create Invoice Button
         const createInvoiceBtn = document.getElementById('createInvoiceBtn');
         if (createInvoiceBtn) {
-            createInvoiceBtn.addEventListener('click', async function() {
+            createInvoiceBtn.addEventListener('click', async function(e) {
+                if (createInvoiceBtn.disabled || createInvoiceBtn.classList.contains('trial-restricted')) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    return;
+                }
                 await openModal('invoiceModal');
             });
         }

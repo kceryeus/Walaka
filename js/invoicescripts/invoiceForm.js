@@ -306,6 +306,17 @@ class InvoiceForm {
             }
 
             showNotification('Invoice saved successfully', 'success');
+            // Update trial banner if ready, or wait for readiness
+            function updateTrialBannerIfReady() {
+                if (window.TrialBanner && typeof window.TrialBanner.updateTrialBanner === 'function') {
+                    window.TrialBanner.updateTrialBanner();
+                } else {
+                    window.addEventListener('trialBannerReady', () => {
+                        window.TrialBanner.updateTrialBanner();
+                    }, { once: true });
+                }
+            }
+            updateTrialBannerIfReady();
             return invoice;
         } catch (error) {
             console.error('Error saving invoice:', error);

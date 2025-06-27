@@ -1,6 +1,7 @@
 import { toast } from './toast.js';
 import { api } from './api.js';
 import { app } from './app.js';
+import authHandler from './auth-handler.js';
 
 class UI {
     constructor() {
@@ -166,6 +167,15 @@ class UI {
             this.setLoading(true);
 
             if (!this.currentUserId) {
+                // Add created_by if available
+                const currentUser = authHandler.getCurrentUser();
+                if (currentUser && currentUser.id) {
+                    userData.created_by = currentUser.id;
+                    console.log('[User Invite] Passing inviter ID:', currentUser.id, 'as created_by');
+                } else {
+                    console.warn('[User Invite] No inviter ID found, created_by will not be set');
+                }
+                console.log('[User Invite] userData to be sent to api.createUser:', userData);
                 await api.createUser(userData);
                 toast.show({
                     title: 'Success',

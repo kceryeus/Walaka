@@ -547,5 +547,11 @@
   "confirm_cancel_button": "Confirm Cancel",
   "confirm_cancellation_modal_title": "Confirm Cancellation",
   "no_button": "No",
-  "yes_cancel_button": "Yes, Cancel"
+  "yes_cancel_button": "Yes, Cancel",
+  "your_plan": "Your Plan",
+  "trial": "Trial",
+  "days_remaining": "Days Remaining",
+  "invoices_remaining": "Invoices Remaining",
+  "upgrade_now": "Upgrade Now",
+  "plan_expired": "Plan Expired"
 }

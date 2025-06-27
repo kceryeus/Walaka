@@ -537,5 +537,11 @@
     "confirm_cancel_button": "Confirmar Cancelamento",
     "confirm_cancellation_modal_title": "Confirmar Cancelamento",
     "no_button": "Não",
-    "yes_cancel_button": "Sim, Cancelar"
+    "yes_cancel_button": "Sim, Cancelar",
+    "your_plan": "Seu Plano",
+    "trial": "Teste",
+    "days_remaining": "Dias Restantes",
+    "invoices_remaining": "Faturas Restantes",
+    "upgrade_now": "Atualizar Agora",
+    "plan_expired": "Plano Expirado"
 }

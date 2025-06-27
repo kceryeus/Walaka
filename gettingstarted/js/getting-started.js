@@ -185,6 +185,9 @@ async function saveAndContinue(step) {
     }
     const form = document.getElementById(getFormId(step));
     const formData = new FormData(form);
+    // Get userId at the start so it's available for all steps
+    const { data: { session } } = await supabase.auth.getSession();
+    const userId = session.user.id;
     console.log('[Onboarding] saveAndContinue called for step:', step);
     console.log('[Onboarding] Form:', form);
     console.log('[Onboarding] FormData entries:', Array.from(formData.entries()));
@@ -209,10 +212,32 @@ async function saveAndContinue(step) {
             };
             break;
         case '3':
-            onboardingData.subscription = {
-                ...onboardingData.subscription,
-                ...Object.fromEntries(formData)
+            // Only use valid columns for subscriptions table
+            let paymentMethod = formData.get('payment-method');
+            if (!paymentMethod) {
+                paymentMethod = onboardingData.subscription.paymentMethod;
+            }
+            const selectedPlan = formData.get('plan') || 'trial';
+            const now = new Date();
+            const startDate = now.toISOString();
+            const endDateObj = new Date(now);
+            endDateObj.setDate(endDateObj.getDate() + 30);
+            const endDate = endDateObj.toISOString();
+            console.log('[Onboarding] Submitting subscription with payment_method:', paymentMethod, 'plan:', selectedPlan, 'start_date:', startDate, 'end_date:', endDate);
+            const subscriptionPayload = {
+                user_id: userId,
+                payment_method: paymentMethod,
+                plan: selectedPlan,
+                status: 'active', // or set as needed
+                start_date: startDate,
+                end_date: endDate,
+                // Optionally set invoices_count, days_remaining if you have those values
             };
+            onboardingData.subscription = subscriptionPayload;
+            // Save subscription to Supabase
+            await supabase
+                .from('subscriptions')
+                .upsert(subscriptionPayload);
             break;
         case '4':
             onboardingData.modules = {
@@ -224,9 +249,6 @@ async function saveAndContinue(step) {
 
     // Save to Supabase
     try {
-        const { data: { session } } = await supabase.auth.getSession();
-        const userId = session.user.id;
-
         if (step === '1') {
             // Save business profile
             const { error: businessError } = await supabase
@@ -240,7 +262,7 @@ async function saveAndContinue(step) {
                     email: onboardingData.organization.email,
                     created_at: new Date().toISOString(),
                     updated_at: new Date().toISOString()
-                }, { onConflict: 'user_id' });
+                });
 
             if (businessError) throw businessError;
         } else {
@@ -287,6 +309,11 @@ async function completeSetup() {
         // Show completion screen
         document.querySelectorAll('.onboarding-step').forEach(step => step.style.display = 'none');
         document.getElementById('completion').style.display = 'block';
+
+        // Redirect to dashboard after a short delay
+        setTimeout(() => {
+            window.location.href = '../dashboard.html';
+        }, 1200);
     } catch (error) {
         console.error('Error completing setup:', error);
         showNotification('Error completing setup. Please try again.', 'error');

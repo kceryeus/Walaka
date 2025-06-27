@@ -15,7 +15,8 @@ class TrialRestrictions {
             '#add-new-client-btn',
             '#add-new-product-btn',
             '#add-account-btn',
-            '#empty-add-btn'
+            '#empty-add-btn',
+            '.btn.primary-btn'
         ]);
         this.init();
     }
@@ -36,13 +37,9 @@ class TrialRestrictions {
     }
     
     setTrialData(data) {
-        // Only set data once to avoid re-running restrictions
-        if (this.trialData !== null) return;
-        
+        // Always update trial data and re-apply restrictions
         console.log('[TrialRestrictions] Received trial data:', data);
         this.trialData = data;
-        
-        // Once data is available, apply the visual restrictions if needed
         if (this.trialData.isRestricted) {
             this.applyRestrictions();
         }
@@ -138,11 +135,14 @@ class TrialRestrictions {
     }
 
     shouldRestrictButton(button) {
-         if (!this.trialData || !this.trialData.isRestricted) return false;
-         
-         const buttonText = button.textContent.toLowerCase();
-         const createKeywords = ['create', 'add', 'new', 'generate', 'salvar'];
-         return createKeywords.some(keyword => buttonText.includes(keyword));
+        if (!this.trialData || !this.trialData.isRestricted) return false;
+        // If the button matches .btn.primary-btn, always restrict
+        if (button.classList.contains('primary-btn') && button.classList.contains('btn')) {
+            return true;
+        }
+        const buttonText = button.textContent.toLowerCase();
+        const createKeywords = ['create', 'add', 'new', 'generate', 'salvar'];
+        return createKeywords.some(keyword => buttonText.includes(keyword));
     }
 
     applyRestrictions() {
@@ -173,11 +173,15 @@ class TrialRestrictions {
         card.classList.add('trial-restricted');
         const overlay = document.createElement('div');
         overlay.className = 'trial-restriction-overlay';
-        overlay.innerHTML = `<div class="restriction-content"><i class="fas fa-lock"></i><span>Trial Limit Reached</span></div>`;
+        overlay.innerHTML = `<div class="restriction-content"><i class="fas fa-lock"></i><span data-translate="plan_expired">Plan Expired</span></div>`;
         card.appendChild(overlay);
         const link = card.querySelector('a');
         if (link) {
             link.style.pointerEvents = 'none';
+        }
+        // Apply translation
+        if (window.languageManager && typeof window.languageManager.applyTranslations === 'function') {
+            window.languageManager.applyTranslations();
         }
     }
 
@@ -202,12 +206,12 @@ class TrialRestrictions {
         modal.innerHTML = `
             <div class="trial-restriction-modal-content">
                 <div class="modal-header">
-                    <h3>Trial Limit Reached</h3>
+                    <h3 data-translate="plan_expired">Plan Expired</h3>
                     <button class="close-modal">&times;</button>
                 </div>
                 <div class="modal-body">
                     <div class="restriction-icon"><i class="fas fa-lock"></i></div>
-                    <p>You've reached your trial limits and cannot perform ${restrictedAction}.</p>
+                    <p data-translate="plan_expired">Plan Expired</p>
                     <ul>
                         ${this.trialData.daysRemaining === 0 ? '<li>Your 14-day trial period has expired.</li>' : ''}
                         ${this.trialData.invoicesRemaining === 0 ? '<li>You have used all 5 of your free invoices.</li>' : ''}
@@ -221,6 +225,10 @@ class TrialRestrictions {
             </div>
         `;
         document.body.appendChild(modal);
+        // Apply translation
+        if (window.languageManager && typeof window.languageManager.applyTranslations === 'function') {
+            window.languageManager.applyTranslations();
+        }
         const closeModal = () => modal.remove();
         modal.querySelectorAll('.close-modal').forEach(btn => btn.addEventListener('click', closeModal));
         modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
