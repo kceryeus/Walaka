@@ -278,6 +278,10 @@ ul {
   background-color: var(--primary-light);
 }
 
+.user-profile.open .dropdown-menu {
+  display: block;
+}
+
 .avatar {
   width: 36px;
   height: 36px;
@@ -321,6 +325,7 @@ ul {
   text-decoration: none;
   display: block;
   transition: all 0.2s ease;
+  font-size: 0.9rem;
 }
 
 .dropdown-menu a:hover {

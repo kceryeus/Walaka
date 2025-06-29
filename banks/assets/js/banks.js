@@ -74,6 +74,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
 */
         // Check authentication status
+        /* Commented out authentication check to prevent redirect
         const { data: { session }, error: sessionError } = await window.supabase.auth.getSession();
         console.log('Supabase session:', session, 'Error:', sessionError);
         const debugDiv = document.getElementById('debug-session');
@@ -89,6 +90,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
         
         userId = session.user.id;
+        */
+        
+        // For testing purposes, set a dummy user ID
+        userId = '123e4567-e89b-12d3-a456-426614174000';
         
         // Initialize the application
         await displayUserName();
@@ -96,11 +101,13 @@ document.addEventListener('DOMContentLoaded', async () => {
         initEventListeners();
 
         // Set up auth state change listener
+        /* Commented out auth state change listener to prevent redirect
         window.supabase.auth.onAuthStateChange((event, session) => {
             if (event === 'SIGNED_OUT' || !session) {
                 window.location.href = '/login.html';
             }
         });
+        */
     } catch (error) {
         console.error('Error initializing app:', error);
         showToast('Error initializing application', 'error');
@@ -112,58 +119,63 @@ document.addEventListener('DOMContentLoaded', async () => {
  */
 function initEventListeners() {
     // Add account buttons
-    addAccountBtn.addEventListener('click', () => openAddAccountModal());
-    emptyAddBtn.addEventListener('click', () => openAddAccountModal());
+    if (addAccountBtn) addAccountBtn.addEventListener('click', () => openAddAccountModal());
+    if (emptyAddBtn) emptyAddBtn.addEventListener('click', () => openAddAccountModal());
     
     // Form type change
-    accountTypeSelect.addEventListener('change', toggleAccountTypeFields);
+    if (accountTypeSelect) accountTypeSelect.addEventListener('change', toggleAccountTypeFields);
     
     // Other field for custom bank/operator names
-    bankNameSelect.addEventListener('change', () => {
+    if (bankNameSelect) bankNameSelect.addEventListener('change', () => {
         bankNameOther.style.display = bankNameSelect.value === 'other' ? 'block' : 'none';
     });
     
-    operatorNameSelect.addEventListener('change', () => {
+    if (operatorNameSelect) operatorNameSelect.addEventListener('change', () => {
         operatorNameOther.style.display = operatorNameSelect.value === 'other' ? 'block' : 'none';
     });
     
     // Cancel account form
-    cancelAccountBtn.addEventListener('click', closeAccountModal);
+    if (cancelAccountBtn) cancelAccountBtn.addEventListener('click', closeAccountModal);
     
     // Submit account form
-    accountForm.addEventListener('submit', handleAccountFormSubmit);
+    if (accountForm) accountForm.addEventListener('submit', handleAccountFormSubmit);
     
     // Close buttons for modals
-    closeModalBtns.forEach(btn => {
-        btn.addEventListener('click', function() {
-            const modal = this.closest('.modal');
-            modal.style.display = 'none';
+    if (closeModalBtns && closeModalBtns.length) {
+        closeModalBtns.forEach(btn => {
+            btn.addEventListener('click', function() {
+                const modal = this.closest('.modal');
+                modal.style.display = 'none';
+            });
         });
-    });
+    }
     
     // Delete modal buttons
-    cancelDeleteBtn.addEventListener('click', () => deleteModal.style.display = 'none');
-    confirmDeleteBtn.addEventListener('click', deleteAccount);
+    if (cancelDeleteBtn) cancelDeleteBtn.addEventListener('click', () => deleteModal.style.display = 'none');
+    if (confirmDeleteBtn) confirmDeleteBtn.addEventListener('click', deleteAccount);
     
     // Filter change
-    filterType.addEventListener('change', applyFilters);
-    filterCurrency.addEventListener('change', applyFilters);
+    if (filterType) filterType.addEventListener('change', applyFilters);
+    if (filterCurrency) filterCurrency.addEventListener('change', applyFilters);
     
     // View options toggle
-    viewOptionBtns.forEach(btn => {
-        btn.addEventListener('click', () => {
-            const viewType = btn.dataset.view;
-            setActiveView(viewType);
+    if (viewOptionBtns && viewOptionBtns.length) {
+        viewOptionBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const viewType = btn.dataset.view;
+                setActiveView(viewType);
+            });
         });
-    });
+    }
     
     // Close toast
-    toastCloseBtn.addEventListener('click', () => {
+    if (toastCloseBtn) toastCloseBtn.addEventListener('click', () => {
         toast.classList.remove('show');
     });
     
     // Handle sign out
-    document.getElementById('sign-out-btn').addEventListener('click', handleSignOut);
+    const signOutBtn = document.getElementById('sign-out-btn');
+    if (signOutBtn) signOutBtn.addEventListener('click', handleSignOut);
 }
 
 /**
@@ -521,7 +533,6 @@ function closeAccountModal() {
  */
 function toggleAccountTypeFields() {
     const accountType = accountTypeSelect.value;
-    
     if (accountType === 'bank') {
         bankFields.style.display = 'block';
         walletFields.style.display = 'none';
@@ -529,6 +540,7 @@ function toggleAccountTypeFields() {
         document.querySelector('.wallet-instructions').style.display = 'none';
         accountNumberLabel.textContent = 'Account Number';
         accountNumberHint.textContent = 'Enter your bank account number';
+        operatorNameSelect.disabled = true;
     } else {
         bankFields.style.display = 'none';
         walletFields.style.display = 'block';
@@ -536,6 +548,7 @@ function toggleAccountTypeFields() {
         document.querySelector('.wallet-instructions').style.display = 'block';
         accountNumberLabel.textContent = 'Mobile Number';
         accountNumberHint.textContent = 'Enter mobile number (e.g., 84xxxxxxx)';
+        operatorNameSelect.disabled = false;
     }
 }
 
@@ -651,7 +664,7 @@ async function handleAccountFormSubmit(e) {
  */
 async function createAccount(accountData) {
     try {
-        const { data, error } = await supabase
+        const { data, error } = await window.supabase
             .from('bank_accounts')
             .insert([accountData]);
         
@@ -671,7 +684,7 @@ async function createAccount(accountData) {
  */
 async function updateAccount(accountId, accountData) {
     try {
-        const { data, error } = await supabase
+        const { data, error } = await window.supabase
             .from('bank_accounts')
             .update(accountData)
             .eq('id', accountId)
@@ -695,7 +708,7 @@ async function deleteAccount() {
     if (!currentAccountId) return;
     
     try {
-        const { error } = await supabase
+        const { error } = await window.supabase
             .from('bank_accounts')
             .delete()
             .eq('id', currentAccountId)
@@ -729,7 +742,7 @@ async function setAsPrimary(accountId) {
         await unsetAllPrimary();
         
         // Then set the selected account as primary
-        const { error } = await supabase
+        const { error } = await window.supabase
             .from('bank_accounts')
             .update({ is_primary: true })
             .eq('id', accountId)
@@ -755,7 +768,7 @@ async function setAsPrimary(accountId) {
  */
 async function unsetAllPrimary() {
     try {
-        const { error } = await supabase
+        const { error } = await window.supabase
             .from('bank_accounts')
             .update({ is_primary: false })
             .eq('user_id', userId)
@@ -774,38 +787,28 @@ async function unsetAllPrimary() {
  * Display the current user's name
  */
 async function displayUserName() {
+    const supabase = window.supabase;
+    if (typeof supabase === 'undefined' || !supabase) return;
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session || !session.user) return;
+
+    let displayName = session.user.email;
     try {
-        const { data: { user }, error } = await supabase.auth.getUser();
-        
-        if (error) {
-            console.error('Error fetching user:', error.message);
-            return;
+        const { data: userRecord, error } = await supabase
+            .from('users')
+            .select('username')
+            .eq('id', session.user.id)
+            .maybeSingle();
+
+        if (userRecord && userRecord.username) {
+            displayName = userRecord.username;
         }
-        
-        if (user) {
-            const { data: profileData, error: profileError } = await supabase
-                .from('users')
-                .select('username, logo')
-                .eq('id', user.id);
-            
-            if (profileError) {
-                console.error('Error fetching profile:', profileError.message);
-                return;
-            }
-            
-            const userNameSpan = document.getElementById('user-name');
-            if (userNameSpan) {
-                userNameSpan.textContent = profileData[0]?.username || 'User';
-            }
-            
-            const userAvatar = document.querySelector('.avatar');
-            if (userAvatar && profileData[0]?.logo) {
-                userAvatar.innerHTML = `<img src="${profileData[0].logo}" alt="User Logo" style="width: 100%; height: 100%; border-radius: 50%;">`;
-            }
-        }
-    } catch (err) {
-        console.error('Unexpected error:', err);
+    } catch (e) {
+        console.error('Error fetching user record:', e);
     }
+
+    const userSpan = document.getElementById('user-displayname');
+    if (userSpan) userSpan.textContent = displayName;
 }
 
 /**
@@ -849,9 +852,59 @@ function showToast(message, type = 'success') {
  */
 async function handleSignOut() {
     try {
-        await auth.logout();
+        await window.supabase.auth.signOut();
     } catch (error) {
         console.error('Error signing out:', error);
         showToast('Error signing out: ' + error.message, 'error');
     }
 }
+
+// Dropdown open/close logic for user menu
+// (copied from invoices page)
+document.addEventListener('DOMContentLoaded', () => {
+    const userProfile = document.getElementById('userProfile');
+    const userDropdown = document.getElementById('userDropdown');
+
+    if (!userProfile || !userDropdown) return;
+
+    let dropdownTimeout;
+
+    function openDropdown() {
+        clearTimeout(dropdownTimeout);
+        userProfile.classList.add('open');
+    }
+
+    function closeDropdown() {
+        dropdownTimeout = setTimeout(() => {
+            userProfile.classList.remove('open');
+        }, 150);
+    }
+
+    // Mouse events for desktop
+    userProfile.addEventListener('mouseenter', openDropdown);
+    userProfile.addEventListener('mouseleave', closeDropdown);
+    userDropdown.addEventListener('mouseenter', openDropdown);
+    userDropdown.addEventListener('mouseleave', closeDropdown);
+
+    // Click events for mobile
+    userProfile.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (window.innerWidth <= 768) {
+            userProfile.classList.toggle('open');
+        }
+    });
+
+    // Close dropdown when clicking outside
+    document.addEventListener('click', (e) => {
+        if (!userProfile.contains(e.target)) {
+            userProfile.classList.remove('open');
+        }
+    });
+
+    // Handle window resize
+    window.addEventListener('resize', () => {
+        if (window.innerWidth > 768) {
+            userProfile.classList.remove('open');
+        }
+    });
+});

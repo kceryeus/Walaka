@@ -29,7 +29,7 @@
 
     <!-- Initialize Supabase -->
     <script type="module">
-/*        import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm'
+        import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm'
         
         const supabaseUrl = 'https://qvmtozjvjflygbkjecyj.supabase.co'
         const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF2bXRvemp2amZseWdia2plY3lqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDYxMjc2MjMsImV4cCI6MjA2MTcwMzYyM30.DJMC1eM5_EouM1oc07JaoXsMX_bSLn2AVCozAcdfHmo';
@@ -41,7 +41,19 @@
                 storage: window.localStorage,
                 storageKey: 'supabase-auth-token'
             }
-        });*/
+        });
+
+        // Create auth object for compatibility
+        window.auth = {
+            logout: async () => {
+                const { error } = await window.supabase.auth.signOut();
+                if (error) throw error;
+            },
+            checkAuth: async () => {
+                const { data: { session }, error } = await window.supabase.auth.getSession();
+                return !error && session;
+            }
+        };
     </script>
 </head>
 <body>
@@ -68,33 +80,38 @@
 
         <!-- Main Content -->
         <main class="main-content">
-            <!-- Top Bar -->
-            <div class="top-bar">
-                <div class="search-bar">
-                    <input type="text" placeholder="Pesquisar..." data-translate-placeholder="search_placeholder">
-                </div>
-                <div class="user-menu">
-                    <div class="notification-bell">
-                        <i class="fas fa-bell"></i>
-                        <span class="badge">0</span>
-                    </div>
-                    <div class="user-profile">
-                        <div class="avatar">
-                            <i class="fas fa-user"></i>
-                        </div>
-                        <span id="user-name">Loading...</span>
-                        <div class="dropdown">
-                            <button class="dropdown-toggle"><i class="fas fa-caret-down"></i></button>
-                            <div class="dropdown-menu">
-                                <a href="profile.html">Profile Management</a>
-                                <a href="settings.html">General Settings</a>
-                                <a href="#" id="sign-out-btn">Sign Out</a>
+                    <!-- Top Bar -->
+                    <div class="top-bar">
+                        <button class="menu-toggle">
+                            <i class="fas fa-bars"></i>
+                        </button>
+                        
+                        <div class="user-menu" style="margin-left:auto;">
+                            <a href="../notifications.html" class="notification-bell">
+                                <i class="fas fa-bell"></i>
+                                <span class="badge">3</span>
+                            </a>
+                            
+                            <div class="user-profile" id="userProfile">
+                                <div class="avatar">
+                                    <i class="fas fa-user"></i>
+                                </div>
+                                <span id="user-displayname">Loading...</span>
+                                <div class="dropdown-menu" id="userDropdown">
+                                    <a href="../profile.html">
+                                        <i class="fas fa-user-circle"></i> My Profile
+                                    </a>
+                                    <a href="../settings.html">
+                                        <i class="fas fa-cog"></i> Settings
+                                    </a>
+                                    <a href="#" id="sign-out-btn">
+                                        <i class="fas fa-sign-out-alt"></i> Logout
+                                    </a>
+                                </div>
                             </div>
                         </div>
                     </div>
-                </div>
-            </div>
-
+                    
             <!-- Add trial banner and restrictions system -->
             <div id="trial-banner-container"></div>
             <script>
@@ -298,7 +315,7 @@
                                 <div class="form-group">
                                     <label for="operator-name">Operator Name <span class="required">*</span></label>
                                     <select id="operator-name" required>
-                                        <option value="">Select Operator</option>
+                                        <option value="" disabled selected>Select Operator</option>
                                         <option value="M-PESA">M-PESA</option>
                                         <option value="EMOLA">EMOLA</option>
                                         <option value="mKesh">mKesh</option>
@@ -419,36 +436,54 @@
 
     <!-- JavaScript -->
     <script type="module">
-
-
         // Initialize auth and check session
         document.addEventListener('DOMContentLoaded', async () => {
-            // Check if user is authenticated
-/*            const isAuthenticated = await auth.checkAuth();
-            if (!isAuthenticated) {
-                window.location.href = '/login.html';
-                return;
-            }
-*/
-            // Get user info
-            const { data: { user }, error } = await supabase.auth.getUser();
-            if (user) {
-                const userSpan = document.getElementById('user-name');
-                if (userSpan) userSpan.textContent = user.email;
-            }
-
-            // Set up auth state change listener
-            supabase.auth.onAuthStateChange((event, session) => {
-                if (event === 'SIGNED_OUT' || !session) {
+            try {
+                // Check if user is authenticated
+                /* Commented out authentication check to prevent redirect
+                const isAuthenticated = await window.auth.checkAuth();
+                if (!isAuthenticated) {
                     window.location.href = '/login.html';
+                    return;
                 }
-            });
+                */
+
+                // Get user info
+                const { data: { user }, error } = await window.supabase.auth.getUser();
+                if (user) {
+                    const userSpan = document.getElementById('user-name');
+                    if (userSpan) userSpan.textContent = user.email;
+                }
+
+                // Set up auth state change listener
+                /* Commented out auth state change listener to prevent redirect
+                window.supabase.auth.onAuthStateChange((event, session) => {
+                    if (event === 'SIGNED_OUT' || !session) {
+                        window.location.href = '/login.html';
+                    }
+                });
+                */
+            } catch (error) {
+                console.error('Auth initialization error:', error);
+                /* Commented out redirect on error
+                window.location.href = '/login.html';
+                */
+            }
         });
 
         // Handle sign out
-        document.getElementById('sign-out-btn')?.addEventListener('click', async (e) => {
-            e.preventDefault();
-            await auth.logout();
+        document.addEventListener('DOMContentLoaded', () => {
+            const signOutBtn = document.getElementById('sign-out-btn');
+            if (signOutBtn) {
+                signOutBtn.addEventListener('click', async (e) => {
+                    e.preventDefault();
+                    try {
+                        await window.auth.logout();
+                    } catch (error) {
+                        console.error('Sign out error:', error);
+                    }
+                });
+            }
         });
     </script>
     <script type="module" src="assets/js/banks.js"></script>

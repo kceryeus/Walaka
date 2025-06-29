@@ -18,11 +18,15 @@ class TrialRestrictions {
             '#empty-add-btn',
             '.btn.primary-btn'
         ]);
+        this.spinnerClass = 'trial-spinner-overlay';
         this.init();
     }
 
     init() {
         console.log('[TrialRestrictions] Initializing listeners and waiting for trial data.');
+
+        // Show spinners on restricted elements while waiting for trial data
+        this.showLoadingSpinners();
 
         // Listen for data from the banner
         window.addEventListener('trialDataUpdated', (event) => {
@@ -40,6 +44,7 @@ class TrialRestrictions {
         // Always update trial data and re-apply restrictions
         console.log('[TrialRestrictions] Received trial data:', data);
         this.trialData = data;
+        this.removeLoadingSpinners();
         if (this.trialData.isRestricted) {
             this.applyRestrictions();
         }
@@ -94,6 +99,59 @@ class TrialRestrictions {
         }, true);
     }
 
+    showLoadingSpinners() {
+        // Remove spinner overlay logic for action cards
+        // Only add spinner to restricted buttons
+        this.restrictedSelectors.forEach(selector => {
+            document.querySelectorAll(selector).forEach(button => {
+                if (!button.querySelector('.trial-spinner')) {
+                    const spinner = document.createElement('span');
+                    spinner.className = 'trial-spinner';
+                    spinner.style.marginRight = '8px';
+                    button.insertBefore(spinner, button.firstChild);
+                }
+                button.classList.add('trial-spinner-loading');
+                button.disabled = true;
+            });
+        });
+        this.injectSpinnerCSS();
+    }
+
+    removeLoadingSpinners() {
+        // Remove spinner from buttons only
+        document.querySelectorAll('.trial-spinner').forEach(spinner => spinner.remove());
+        document.querySelectorAll('.trial-spinner-loading').forEach(btn => {
+            btn.classList.remove('trial-spinner-loading');
+            btn.disabled = false;
+        });
+    }
+
+    injectSpinnerCSS() {
+        if (document.getElementById('trial-spinner-css')) return;
+        const style = document.createElement('style');
+        style.id = 'trial-spinner-css';
+        style.textContent = `
+            .trial-spinner {
+                width: 18px;
+                height: 18px;
+                border: 3px solid #e0e0e0;
+                border-top: 3px solid #007ec7;
+                border-radius: 50%;
+                animation: trial-spin 1s linear infinite;
+                display: inline-block;
+            }
+            @keyframes trial-spin {
+                0% { transform: rotate(0deg); }
+                100% { transform: rotate(360deg); }
+            }
+            .trial-spinner-loading {
+                opacity: 0.7 !important;
+                cursor: wait !important;
+            }
+        `;
+        document.head.appendChild(style);
+    }
+
     async pollForTrialData() {
         // Give the event listener 1.5 seconds to receive the event from the banner.
         await new Promise(resolve => setTimeout(resolve, 1500));
@@ -101,7 +159,7 @@ class TrialRestrictions {
 
         console.log('[TrialRestrictions] Event not received. Starting polling fallback.');
         let attempts = 0;
-        const maxAttempts = 35; // Poll for 3.5 more seconds.
+        const maxAttempts = 10; // Poll for 1.0 more seconds (was 35 for 3.5s)
 
         while (attempts < maxAttempts) {
             if (this.trialData !== null) return;
@@ -126,6 +184,7 @@ class TrialRestrictions {
         if (this.trialData === null) {
             console.warn('[TrialRestrictions] Could not determine trial status. Defaulting to not restricted.');
             this.trialData = { isRestricted: false }; // Default to not restricted if we can't find out.
+            this.removeLoadingSpinners();
         }
     }
 

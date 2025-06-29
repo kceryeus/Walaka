@@ -494,8 +494,8 @@
                 link.click();
                 document.body.removeChild(link);
                 
-                // Redirect to success page or show success message
-                window.location.href = "dashboard.html";
+                // Redirect to login page instead of dashboard
+                window.location.href = "login.html";
             } catch (error) {
                 console.error('Unexpected error:', error.message);
                 errorDiv.textContent = error.message || 'Signup failed';
