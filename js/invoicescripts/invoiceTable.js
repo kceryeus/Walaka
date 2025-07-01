@@ -286,7 +286,7 @@ const InvoiceTableModule = {
                 </button>
                 <button class="dropdown-item" data-action="mark-paid">
                     <i class="fas fa-check-circle"></i>
-                    <span>Mark as Paid</span>
+                    <span>Mark as Paid & Create Receipt</span>
                 </button>
                 <button class="dropdown-item" data-action="create-credit-note">
                     <i class="fas fa-file-invoice"></i>
@@ -315,6 +315,7 @@ const InvoiceTableModule = {
                 if (window.invoiceActions) {
                     switch (action) {
                         case 'view':
+                            // Open invoice modal in a style similar to receipt modal
                             await this.viewInvoice(invoiceNumber);
                             break;
                         case 'download':
@@ -345,12 +346,83 @@ const InvoiceTableModule = {
                         case 'duplicate':
                             await this.duplicateInvoice(invoiceNumber);
                             break;
-                        case 'mark-paid':
+                        case 'mark-paid': {
+                            // Mark as paid, then create receipt and redirect to receipts.html
                             await window.invoiceActions.updateInvoiceStatus(invoiceNumber, 'paid');
+                            // Fetch invoice data for receipt creation
+                            const { data: invoice, error } = await window.supabase
+                                .from('invoices')
+                                .select('*, clients(*)')
+                                .eq('invoiceNumber', invoiceNumber)
+                                .single();
+                            if (!error && invoice) {
+                                // Fetch current user ID
+                                let user_id = invoice.user_id;
+                                if (!user_id && window.supabase && window.supabase.auth) {
+                                    const { data: { user } } = await window.supabase.auth.getUser();
+                                    user_id = user?.id;
+                                }
+                                // Generate next sequential receipt number
+                                let receipt_number = '';
+                                if (user_id) {
+                                    const year = new Date().getFullYear();
+                                    const { data: lastReceipts, error: lastError } = await window.supabase
+                                        .from('receipts')
+                                        .select('receipt_number')
+                                        .eq('user_id', user_id)
+                                        .ilike('receipt_number', `REC-${year}-%`)
+                                        .order('created_at', { ascending: false })
+                                        .limit(1);
+                                    let nextNumber = 1;
+                                    if (!lastError && lastReceipts && lastReceipts.length > 0) {
+                                        const last = lastReceipts[0].receipt_number;
+                                        const match = last.match(/REC-\d{4}-(\d+)/);
+                                        if (match) {
+                                            nextNumber = parseInt(match[1], 10) + 1;
+                                        }
+                                    }
+                                    const padded = String(nextNumber).padStart(4, '0');
+                                    receipt_number = `REC-${year}-${padded}`;
+                                } else {
+                                    // fallback
+                                    receipt_number = `REC-${new Date().getFullYear()}-0001`;
+                                }
+                                // Prepare receipt data
+                                const receiptData = {
+                                    receipt_number,
+                                    client_id: invoice.client_id,
+                                    client_name: invoice.clients?.customer_name || invoice.customer_name || '',
+                                    payment_date: new Date().toISOString().slice(0,10),
+                                    amount: invoice.total_amount,
+                                    payment_method: invoice.payment_method || 'manual',
+                                    related_invoice_id: invoice.id,
+                                    notes: 'Receipt auto-generated when marking invoice as paid',
+                                    status: 'paid',
+                                    user_id: user_id
+                                };
+                                // Insert receipt
+                                const { error: receiptError, data: receiptInsert } = await window.supabase
+                                    .from('receipts')
+                                    .insert([receiptData])
+                                    .select();
+                                if (!receiptError && receiptInsert && receiptInsert[0]) {
+                                    // Redirect to receipts.html and highlight the new receipt
+                                    localStorage.setItem('highlightReceiptId', receiptInsert[0].receipt_id);
+                                    window.location.href = 'receipts.html';
+                                } else {
+                                    showNotification('Receipt creation failed', 'error');
+                                }
+                            } else {
+                                showNotification('Could not fetch invoice for receipt', 'error');
+                            }
                             break;
-                        case 'create-credit-note':
-                            await this.createCreditNote(invoiceNumber);
+                        }
+                        case 'create-credit-note': {
+                            // Store invoice number in localStorage and redirect to credit_notes.html
+                            localStorage.setItem('relatedInvoiceForCreditNote', invoiceNumber);
+                            window.location.href = 'credit_notes.html';
                             break;
+                        }
                         default:
                             console.warn('Unknown action:', action);
                     }

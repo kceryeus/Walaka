@@ -76,35 +76,31 @@ function setupCharts() {
 }
 
 function setupChartPeriodControls() {
-    const weeklyBtn = document.getElementById('weeklyBtn');
-    const monthlyBtn = document.getElementById('monthlyBtn');
-    const quarterlyBtn = document.getElementById('quarterlyBtn');
+    const periodSelect = document.getElementById('invoiceDistributionPeriod');
+    const customRangeDiv = document.getElementById('invoiceDistributionCustomRange');
+    const startDateInput = document.getElementById('invoiceDistributionStartDate');
+    const endDateInput = document.getElementById('invoiceDistributionEndDate');
+    const applyBtn = document.getElementById('applyInvoiceDistributionRange');
 
-    if (weeklyBtn && monthlyBtn && quarterlyBtn) {
-        weeklyBtn.addEventListener('click', function() {
-            updateChartPeriodButtons(this, [monthlyBtn, quarterlyBtn]);
-            updateInvoiceDistributionChart('weekly');
-        });
-        monthlyBtn.addEventListener('click', function() {
-            updateChartPeriodButtons(this, [weeklyBtn, quarterlyBtn]);
-            updateInvoiceDistributionChart('monthly');
-        });
-        quarterlyBtn.addEventListener('click', function() {
-            updateChartPeriodButtons(this, [weeklyBtn, monthlyBtn]);
-            updateInvoiceDistributionChart('quarterly');
+    if (periodSelect) {
+        periodSelect.addEventListener('change', function() {
+            if (this.value === 'custom') {
+                customRangeDiv.style.display = 'inline-block';
+            } else {
+                customRangeDiv.style.display = 'none';
+                updateInvoiceDistributionChart(this.value);
+            }
         });
     }
-
-    const revenueMonthlyBtn = document.getElementById('revenueMonthlyBtn');
-    const revenueYearlyBtn = document.getElementById('revenueYearlyBtn');
-    if (revenueMonthlyBtn && revenueYearlyBtn) {
-        revenueMonthlyBtn.addEventListener('click', function() {
-            updateChartPeriodButtons(this, [revenueYearlyBtn]);
-            updateRevenueByStatusChart('monthly');
-        });
-        revenueYearlyBtn.addEventListener('click', function() {
-            updateChartPeriodButtons(this, [revenueMonthlyBtn]);
-            updateRevenueByStatusChart('yearly');
+    if (applyBtn && startDateInput && endDateInput) {
+        applyBtn.addEventListener('click', function() {
+            const start = startDateInput.value;
+            const end = endDateInput.value;
+            if (!start || !end) {
+                alert('Please select both start and end dates.');
+                return;
+            }
+            updateInvoiceDistributionChart('custom', { startDate: start, endDate: end });
         });
     }
 }
@@ -114,36 +110,50 @@ function updateChartPeriodButtons(activeButton, inactiveButtons) {
     inactiveButtons.forEach(button => button.classList.remove('active'));
 }
 
-function updateInvoiceDistributionChart(period, data = null) {
+function updateInvoiceDistributionChart(period, customRange = null) {
     try {
         const chart = window.invoiceDistributionChart;
         if (!chart) throw new Error('Chart instance not found');
-        if (data) {
-            chart.data.datasets[0].data = data.values;
-            chart.data.labels = data.labels;
-        } else if (typeof period === 'string') {
-            let labels = [];
-            let values = [];
-            switch (period.toLowerCase()) {
-                case 'weekly':
-                    labels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-                    values = [5, 7, 10, 8, 12, 3, 1];
-                    break;
-                case 'monthly':
-                    labels = ['Week 1', 'Week 2', 'Week 3', 'Week 4'];
-                    values = [20, 30, 25, 15];
-                    break;
-                case 'quarterly':
-                    labels = ['Jan-Mar', 'Apr-Jun', 'Jul-Sep', 'Oct-Dec'];
-                    values = [60, 80, 70, 50];
-                    break;
-                default:
-                    labels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-                    values = Array(7).fill(0);
+        let labels = [];
+        let values = [];
+        if (period === 'last30') {
+            // Last 30 days
+            const today = new Date();
+            for (let i = 29; i >= 0; i--) {
+                const d = new Date(today);
+                d.setDate(today.getDate() - i);
+                labels.push(d.toISOString().slice(5, 10)); // MM-DD
+                values.push(Math.floor(Math.random() * 5)); // MOCK: Replace with real data
             }
-            chart.data.labels = labels;
-            chart.data.datasets[0].data = values;
+        } else if (period === 'week') {
+            labels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+            values = [5, 7, 10, 8, 12, 3, 1]; // MOCK
+        } else if (period === 'month') {
+            labels = Array.from({length: 4}, (_, i) => `Week ${i+1}`);
+            values = [20, 30, 25, 15]; // MOCK
+        } else if (period === 'quarter') {
+            labels = ['Jan-Mar', 'Apr-Jun', 'Jul-Sep', 'Oct-Dec'];
+            values = [60, 80, 70, 50]; // MOCK
+        } else if (period === 'year') {
+            labels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+            values = Array(12).fill(0).map(() => Math.floor(Math.random() * 50)); // MOCK
+        } else if (period === 'custom' && customRange) {
+            // Calculate days between start and end
+            const start = new Date(customRange.startDate);
+            const end = new Date(customRange.endDate);
+            const days = Math.floor((end - start) / (1000 * 60 * 60 * 24)) + 1;
+            for (let i = 0; i < days; i++) {
+                const d = new Date(start);
+                d.setDate(start.getDate() + i);
+                labels.push(d.toISOString().slice(5, 10));
+                values.push(Math.floor(Math.random() * 5)); // MOCK
+            }
+        } else {
+            labels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+            values = Array(7).fill(0);
         }
+        chart.data.labels = labels;
+        chart.data.datasets[0].data = values;
         chart.update();
     } catch (error) {
         console.error('Error updating distribution chart:', error);

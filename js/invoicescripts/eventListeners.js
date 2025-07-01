@@ -329,3 +329,18 @@ window.addEventListener('load', () => {
 });
 
 window.openModal = openModal;
+
+document.addEventListener('DOMContentLoaded', function() {
+    if (typeof window.setupCharts === 'function') {
+        window.setupCharts();
+        // Set default to last 30 days
+        if (typeof window.updateInvoiceDistributionChart === 'function') {
+            window.updateInvoiceDistributionChart('last30');
+        }
+        // Setup new period controls
+        if (typeof window.setupChartPeriodControls === 'function') {
+            window.setupChartPeriodControls();
+        }
+    }
+    // ... rest of your event listeners ...
+});

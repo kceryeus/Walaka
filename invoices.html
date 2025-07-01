@@ -192,9 +192,19 @@
                     <h3>
                         <span data-translate="invoice_distribution">Invoice Distribution</span>
                         <div class="chart-actions">
-                            <button id="weeklyBtn" class="chart-period-btn active" data-translate="weekly">Weekly</button>
-                            <button id="monthlyBtn" class="chart-period-btn" data-translate="monthly">Monthly</button>
-                            <button id="quarterlyBtn" class="chart-period-btn" data-translate="quarterly">Quarterly</button>
+                            <select id="invoiceDistributionPeriod" class="chart-period-select">
+                                <option value="last30" selected>Last 30 Days</option>
+                                <option value="week">This Week</option>
+                                <option value="month">This Month</option>
+                                <option value="quarter">This Quarter</option>
+                                <option value="year">This Year</option>
+                                <option value="custom">Custom Range</option>
+                            </select>
+                            <div id="invoiceDistributionCustomRange" class="custom-date-range" style="display: none; margin-left: 10px;">
+                                <input type="date" id="invoiceDistributionStartDate" class="date-input">
+                                <input type="date" id="invoiceDistributionEndDate" class="date-input">
+                                <button id="applyInvoiceDistributionRange" class="btn btn-primary btn-sm">Apply</button>
+                            </div>
                         </div>
                     </h3>
                     <div class="chart-container">

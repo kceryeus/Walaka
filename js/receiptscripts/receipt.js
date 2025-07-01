@@ -19,6 +19,39 @@ document.addEventListener('DOMContentLoaded', async () => {
     await populateClientsDropdown();
     loadReceipts();
     setupEventListeners();
+
+    // Highlight receipt if coming from invoice action
+    const highlightId = localStorage.getItem('highlightReceiptId');
+    if (highlightId) {
+        // Wait for table to load
+        setTimeout(() => {
+            const row = document.querySelector(`tr[data-receipt-id='${highlightId}']`);
+            if (row) {
+                row.classList.add('highlight-receipt');
+                row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+            localStorage.removeItem('highlightReceiptId');
+        }, 800);
+    }
+
+    // Auto-select related invoice if coming from invoice action
+    const relatedInvoice = localStorage.getItem('relatedInvoiceForCreditNote');
+    if (relatedInvoice) {
+        // Wait for modal and invoice select to be available
+        setTimeout(() => {
+            const invoiceSelect = document.getElementById('relatedInvoice');
+            if (invoiceSelect) {
+                for (const opt of invoiceSelect.options) {
+                    if (opt.textContent.includes(relatedInvoice) || opt.value === relatedInvoice) {
+                        opt.selected = true;
+                        break;
+                    }
+                }
+            }
+            localStorage.removeItem('relatedInvoiceForCreditNote');
+        }, 800);
+    }
+
     // Add warning message element below the amount input
     // (This code should be run after DOMContentLoaded)
     const amountInput = document.getElementById('amount');
@@ -115,6 +148,11 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         });
     }
+
+    // Add CSS for highlight
+    const style = document.createElement('style');
+    style.innerHTML = `.highlight-receipt { background: #fffbe6 !important; transition: background 1s; }`;
+    document.head.appendChild(style);
 });
 
 function setupEventListeners() {

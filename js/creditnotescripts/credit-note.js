@@ -13,6 +13,23 @@ const statusFilter = document.querySelector('.filter-dropdown select');
 document.addEventListener('DOMContentLoaded', () => {
     loadCreditNotes();
     setupEventListeners();
+
+    // Auto-select related invoice if coming from invoice action
+    const relatedInvoice = localStorage.getItem('relatedInvoiceForCreditNote');
+    if (relatedInvoice) {
+        setTimeout(() => {
+            const invoiceSelect = document.getElementById('relatedInvoice');
+            if (invoiceSelect) {
+                for (const opt of invoiceSelect.options) {
+                    if (opt.textContent.includes(relatedInvoice) || opt.value === relatedInvoice) {
+                        opt.selected = true;
+                        break;
+                    }
+                }
+            }
+            localStorage.removeItem('relatedInvoiceForCreditNote');
+        }, 800);
+    }
 });
 
 function setupEventListeners() {

@@ -47,6 +47,8 @@ document.addEventListener('DOMContentLoaded', async function() {
     // Continue onboarding
     initializeFormValidation();
     setupEventListeners();
+    // Populate industries from cae table
+    await fetchAndPopulateIndustries();
 });
 
 // Initialize form validation
@@ -55,6 +57,30 @@ function initializeFormValidation() {
     forms.forEach(form => {
         form.addEventListener('submit', (e) => {
             e.preventDefault();
+            // NUIT validation for organization form
+            if (form.id === 'organization-form') {
+                const taxIdInput = form.querySelector('#org-tax-id');
+                if (taxIdInput) {
+                    const nuitValidation = validateOrganizationNUIT(taxIdInput.value);
+                    // Remove previous error message
+                    let errorMsg = taxIdInput.parentElement.querySelector('.error-message');
+                    if (!errorMsg) {
+                        errorMsg = document.createElement('div');
+                        errorMsg.className = 'error-message';
+                        taxIdInput.parentElement.appendChild(errorMsg);
+                    }
+                    if (!nuitValidation.isValid) {
+                        errorMsg.textContent = nuitValidation.message;
+                        taxIdInput.classList.add('invalid');
+                        taxIdInput.classList.remove('valid');
+                        return;
+                    } else {
+                        errorMsg.textContent = '';
+                        taxIdInput.classList.remove('invalid');
+                        taxIdInput.classList.add('valid');
+                    }
+                }
+            }
             if (validateForm(form)) {
                 // Use the data-step attribute from the .btn-next button inside this form
                 const nextBtn = form.querySelector('.btn-next');
@@ -359,5 +385,50 @@ function showNotification(message, type = 'success') {
 
 function isValidStep(step) {
     return ['1', '2', '3', '4'].includes(String(step));
+}
+
+// --- CAE Industry Fetch & Populate ---
+async function fetchAndPopulateIndustries() {
+    const industrySelect = document.getElementById('org-industry');
+    if (!industrySelect) return;
+    try {
+        // Show loading state
+        industrySelect.innerHTML = '<option value="" data-lang="en">Loading industries...</option><option value="" data-lang="pt">A carregar indústrias...</option>';
+        // Fetch industries from cae table
+        const { data, error } = await supabase
+            .from('cae')
+            .select('Subclasse, Descricao')
+            .order('Descricao', { ascending: true });
+        if (error) throw error;
+        if (!data || data.length === 0) {
+            industrySelect.innerHTML = '<option value="" data-lang="en">No industries found</option><option value="" data-lang="pt">Nenhuma indústria encontrada</option>';
+            return;
+        }
+        // Only keep rows with a valid subclasse (number)
+        const validIndustries = data.filter(row => row.Subclasse && /^\d+$/.test(row.Subclasse) && row.Descricao && row.Descricao.trim() !== '');
+        // Sort by subclasse ascending (as number)
+        validIndustries.sort((a, b) => Number(a.Subclasse) - Number(b.Subclasse));
+        // Populate select
+        industrySelect.innerHTML = '<option value="" data-lang="en">Select industry</option><option value="" data-lang="pt">Selecione a Indústria</option>' +
+            validIndustries.map(row => `<option value="${row.Subclasse}">${row.Subclasse} - ${row.Descricao}</option>`).join('');
+    } catch (err) {
+        industrySelect.innerHTML = '<option value="" data-lang="en">Failed to load industries</option><option value="" data-lang="pt">Falha ao carregar indústrias</option>';
+        console.error('Error loading industries:', err);
+    }
+}
+
+// Add NUIT validation for organization (business) - must be 9 digits and start with 4
+function validateOrganizationNUIT(value) {
+    const cleanNUIT = (value || '').replace(/\D/g, '');
+    if (!cleanNUIT) {
+        return { isValid: false, message: 'NUIT is required' };
+    }
+    if (cleanNUIT.length !== 9) {
+        return { isValid: false, message: 'NUIT must be exactly 9 digits' };
+    }
+    if (cleanNUIT.charAt(0) !== '4') {
+        return { isValid: false, message: 'Company NUIT must start with 4' };
+    }
+    return { isValid: true, message: '' };
 }
 
