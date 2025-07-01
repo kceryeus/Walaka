@@ -512,8 +512,11 @@
             messageDiv.style.display = 'none';
 
             try {
+                // Dynamically construct the redirectTo URL for reset-password.html
+                const basePath = window.location.origin + window.location.pathname.replace(/\/[^\/]*$/, '');
+                const redirectTo = `${basePath}/reset-password.html`;
                 const { error } = await supabase.auth.resetPasswordForEmail(email, {
-                    redirectTo: 'http://localhost:3000/reset-password.html'  // Match exactly with Supabase URL
+                    redirectTo
                 });
 
                 if (error) throw error;
