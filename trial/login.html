@@ -520,7 +520,7 @@
 
             try {
                 const { error } = await supabase.auth.resetPasswordForEmail(email, {
-                    redirectTo: 'http://localhost:5505/reset-password.html'
+                    redirectTo: 'http://localhost:3000/reset-password.html'
                 });
                 if (error) throw error;
                 messageDiv.textContent = 'Password reset link has been sent to your email.';
