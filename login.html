@@ -513,7 +513,7 @@
 
             try {
                 const { error } = await supabase.auth.resetPasswordForEmail(email, {
-                    redirectTo: 'http://localhost:5505/reset-password.html'  // Match exactly with Supabase URL
+                    redirectTo: 'http://localhost:3000/reset-password.html'  // Match exactly with Supabase URL
                 });
 
                 if (error) throw error;
