@@ -350,9 +350,20 @@
         const supabaseUrl = 'https://qvmtozjvjflygbkjecyj.supabase.co'
         const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF2bXRvemp2amZseWdia2plY3lqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDYxMjc2MjMsImV4cCI6MjA2MTcwMzYyM30.DJMC1eM5_EouM1oc07JaoXsMX_bSLn2AVCozAcdfHmo';
         const supabase = createClient(supabaseUrl, supabaseKey)
-        window.supabase = supabase // Make supabase available globally
+        // Add a Proxy guard to prevent calling supabase as a function
+        window.supabase = new Proxy(supabase, {
+            apply(target, thisArg, argumentsList) {
+                throw new Error("Do not call supabase as a function! Use supabase.from('table') instead.");
+            }
+        });
 
-        console.log('Supabase client initialized:', supabase);
+        // Log session and user on page load
+        (async () => {
+            const { data: { session }, error } = await window.supabase.auth.getSession();
+            console.log('[login.html] On page load: session:', session, 'user:', session?.user, 'error:', error);
+        })();
+
+        console.log('Supabase client initialized:', window.supabase);
 
         // Define the toggleForms function
         function toggleForms() {
@@ -392,7 +403,7 @@
             errorDiv.style.display = 'none';
 
             try {
-                const { data, error } = await supabase.auth.signInWithPassword({
+                const { data, error } = await window.supabase.auth.signInWithPassword({
                     email: email,
                     password: password
                 });
@@ -400,9 +411,13 @@
                 if (error) throw error;
                 console.log('Logged in:', data);
 
-                // Fetch onboarding status from users table by id
+                // Log session and user after login
+                const { data: { session: postLoginSession }, error: postLoginError } = await window.supabase.auth.getSession();
+                console.log('[login.html] After login: session:', postLoginSession, 'user:', postLoginSession?.user, 'error:', postLoginError);
+
+                // Fetch onboarding status and created_by from users table by id
                 const userId = data.user.id;
-                const { data: userRecord, error: userError } = await supabase
+                const { data: userRecord, error: userError } = await window.supabase
                     .from('users')
                     .select('onboarding')
                     .eq('id', userId)
@@ -415,9 +430,10 @@
                     throw new Error('Onboarding status not set for this user.');
                 }
 
+                // Handle onboarding status: 'no', 'yes', or 'skip'
                 if (userRecord.onboarding === 'no') {
                     window.location.href = 'gettingstarted/gettingstarted.html';
-                } else if (userRecord.onboarding === 'yes') {
+                } else if (userRecord.onboarding === 'yes' || userRecord.onboarding === 'skip') {
                     window.location.href = 'dashboard.html';
                 } else {
                     throw new Error('Invalid onboarding status: ' + userRecord.onboarding);
@@ -454,7 +470,7 @@
             try {
                 console.log('Attempting to sign up with:', email);
                 // 1. Create the user in Supabase Auth
-                const { data: { user }, error: signUpError } = await supabase.auth.signUp({
+                const { data: { user }, error: signUpError } = await window.supabase.auth.signUp({
                     email,
                     password,
                     options: {
@@ -469,7 +485,7 @@
 
                 // 2. Create the user profile in the users table
                 // This will be protected by RLS policies, but the user can create their own profile
-                const { error: profileError } = await supabase
+                const { error: profileError } = await window.supabase
                     .from('users')
                     .insert([{
                         id: user.id,
@@ -515,7 +531,7 @@
                 // Dynamically construct the redirectTo URL for reset-password.html
                 const basePath = window.location.origin + window.location.pathname.replace(/\/[^\/]*$/, '');
                 const redirectTo = `${basePath}/reset-password.html`;
-                const { error } = await supabase.auth.resetPasswordForEmail(email, {
+                const { error } = await window.supabase.auth.resetPasswordForEmail(email, {
                     redirectTo
                 });
 

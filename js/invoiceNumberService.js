@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
+import { getCurrentEnvironmentId } from './environment-utils.js';
 
 class InvoiceNumberService {
     constructor() {
@@ -12,12 +13,14 @@ class InvoiceNumberService {
             }
 
             const currentYear = new Date().getFullYear();
+            const environment_id = await getCurrentEnvironmentId();
 
-            // Get the latest invoice number for this client in the current year
+            // Get the latest invoice number for this client in the current year and environment
             const { data: lastInvoice, error } = await window.supabase
                 .from('invoices')
                 .select('invoiceNumber')
                 .eq('client_id', clientId)
+                .eq('environment_id', environment_id)
                 .ilike('invoiceNumber', `CLI-${clientId}-${currentYear}-%`)
                 .order('invoiceNumber', { ascending: false })
                 .limit(1)
@@ -40,11 +43,12 @@ class InvoiceNumberService {
             // Format: CLI-{ClientId}-YYYY-XXXX
             const formattedNumber = `CLI-${clientId}-${currentYear}-${String(nextSequence).padStart(4, '0')}`;
             
-            // Verify uniqueness
+            // Verify uniqueness within environment
             const { data: existingInvoice, error: checkError } = await window.supabase
                 .from('invoices')
                 .select('invoiceNumber')
                 .eq('invoiceNumber', formattedNumber)
+                .eq('environment_id', environment_id)
                 .single();
 
             if (checkError && checkError.code !== 'PGRST116') throw checkError;

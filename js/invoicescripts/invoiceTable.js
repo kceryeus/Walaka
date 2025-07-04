@@ -38,7 +38,7 @@ const InvoiceTableModule = {
                 return;
             }
 
-            // Build query, mirroring the working implementation from dashboard.html
+            // Fetch all invoices, let RLS filter them
             let query = window.supabase
                 .from('invoices')
                 .select('*, clients(customer_name)', { count: 'exact' });
@@ -673,4 +673,4 @@ const InvoiceTableModule = {
 };
 
 // Export the module
-window.InvoiceTableModule = InvoiceTableModule;
+window.invoiceTable = InvoiceTableModule;

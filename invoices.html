@@ -641,11 +641,6 @@
     <!-- Core invoice modules -->
     <script src="js/invoicescripts/modalManager.js"></script>
     <script src="js/invoicescripts/invoiceTable.js"></script>
-    <script src="js/invoicescripts/dateRangeFilter.js"></script>
-    <script src="js/invoicescripts/tableFilters.js"></script>
-    <!-- Supporting modules -->
-    <script src="js/invoicescripts/export.js"></script>
-    <script src="js/invoicescripts/invoiceForm.js"></script>
     <script src="js/invoicescripts/invoiceStatus.js"></script>
     <script src="js/invoicescripts/invoicePreview.js"></script>
     <script src="js/invoicescripts/invoiceItems.js"></script>
@@ -841,6 +836,21 @@
             }
         }
 
+        // Invoices functionality
+        let cachedInvoices = [];
+
+        async function fetchInvoices() {
+            try {
+                const { data, error } = await supabase.from('invoices').select('*').order('created_at', { ascending: false });
+                if (error) throw error;
+                cachedInvoices = data;
+                console.log('Invoices loaded (RLS enforced):', cachedInvoices.length);
+            } catch (error) {
+                console.error('Error fetching invoices:', error);
+                showNotification('Error loading invoices: ' + error.message);
+            }
+        }
+
         // Initialize everything
         document.addEventListener('DOMContentLoaded', async function() {
             try {
@@ -858,12 +868,11 @@
                 } else {
                     console.error('InvoiceActions class or Supabase client not found during actions initialization');
                 }            // Initialize invoice table module first
-            if (window.InvoiceTableModule) {
-                window.invoiceTable = window.InvoiceTableModule;
+            if (window.invoiceTable) {
                 window.invoiceTable.init();
                 console.log('Invoice table module initialized successfully');
             } else {
-                console.error('InvoiceTableModule not found');
+                console.error('invoiceTable not found');
                 return;
             }
 
@@ -932,6 +941,7 @@
                 // Fetch initial data
                 await fetchClients();
                 await fetchProducts();
+                await fetchInvoices(); // Fetch invoices
 
             } catch (error) {
                 console.error('Error during initialization:', error);

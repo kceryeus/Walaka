@@ -20,7 +20,7 @@ serve(async (req) => {
     )
 
     // Get request body
-    const { email, username, role = 'viewer' } = await req.json()
+    const { email, username, role = 'viewer', creator_id } = await req.json()
 
     // First create the auth user with email confirmation enabled
     const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
@@ -30,6 +30,19 @@ serve(async (req) => {
     })
 
     if (authError) throw authError
+
+    // After creating the auth user, fetch the creator's environment_id if available
+    let environment_id = null;
+    if (creator_id) {
+      const { data: creator, error: creatorError } = await supabaseAdmin
+        .from('users')
+        .select('environment_id')
+        .eq('id', creator_id)
+        .single();
+      if (!creatorError && creator) {
+        environment_id = creator.environment_id;
+      }
+    }
 
     // Then create the user profile in the users table
     const { data: profileData, error: profileError } = await supabaseAdmin
@@ -41,7 +54,8 @@ serve(async (req) => {
           username,
           role,
           status: 'pending',
-          created_at: new Date().toISOString()
+          created_at: new Date().toISOString(),
+          environment_id // Set environment_id from creator
         }
       ])
       .select()

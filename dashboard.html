@@ -267,6 +267,7 @@
 
                     async fetchAndDisplayInvoices(page = 1, limit = 10, filters = {}) {
                         try {
+                            const environment_id = await window.getEffectiveEnvironmentId();
                             const tbody = document.querySelector('#invoicesTable tbody');
                             const pageInfo = document.querySelector('.page-info');
                             
@@ -278,7 +279,8 @@
                             // Build query
                             let query = window.supabase
                                 .from('invoices')
-                                .select('*, clients(customer_name)', { count: 'exact' });
+                                .select('*, clients(customer_name)', { count: 'exact' })
+                                .eq('environment_id', environment_id);
 
                             // Apply filters
                             if (filters.status && filters.status !== 'all') {
@@ -517,10 +519,12 @@
 
                     async updateInvoiceStatus(invoiceNumber, status) {
                         try {
+                            const environment_id = await window.getEffectiveEnvironmentId();
                             const { error } = await window.supabase
                                 .from('invoices')
                                 .update({ status })
-                                .eq('invoiceNumber', invoiceNumber);
+                                .eq('invoiceNumber', invoiceNumber)
+                                .eq('environment_id', environment_id);
 
                             if (error) throw error;
                             this.fetchAndDisplayInvoices(this.currentPage, this.itemsPerPage, this.currentFilters);
@@ -849,843 +853,274 @@
         </main>
     </div>
     
+    <!-- Ensure environment-utils is loaded first -->
+    <script src="js/environment-utils.js"></script>
+    <!-- Then Supabase client -->
+    <script type="module" src="js/supabaseClient.js"></script>
+
     <!-- JavaScript -->
     <script type="module">
-        import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.0.0/+esm';
+        // Use window.supabase directly (initialized by js/supabaseClient.js)
 
-        const supabaseUrl = 'https://qvmtozjvjflygbkjecyj.supabase.co';
-        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF2bXRvemp2amZseWdia2plY3lqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDYxMjc2MjMsImV4cCI6MjA2MTcwMzYyM30.DJMC1eM5_EouM1oc07JaoXsMX_bSLn2AVCozAcdfHmo';
+        // Log session and user on page load
+        (async () => {
+            const { data: { session }, error } = await window.supabase.auth.getSession();
+            console.log('[dashboard.html] On page load: session:', session, 'user:', session?.user, 'error:', error);
+        })();
 
-        window.supabase = createClient(supabaseUrl, supabaseKey);
-/*
-        // Apply user settings
-        async function applySettings() {
-            try {
-                const { data: { session }, error: sessionError } = await window.supabase.auth.getSession();
-                if (sessionError || !session) {
-                    console.error('Error fetching session:', sessionError?.message);
-                    return;
-                }
-
-                const userId = session.user.id;
-
-                const { data: settingsData, error: settingsError } = await window.supabase
-                    .from('settings')
-                    .select('*')
-                    .eq('user_id', userId)
-                    .single();
-
-                if (settingsError) {
-                    console.error('Error fetching settings:', settingsError.message);
-                    return;
-                }
-
-                // Apply settings to page
-                if (settingsData) {
-                    document.documentElement.style.setProperty('--primary-color', settingsData.invoice_color || '#007ec7');
-
-                    // Update logo if available
-                    const logoUrl = settingsData.logo_url;
-                    if (logoUrl) {
-                        const userAvatar = document.querySelector('.avatar');
-                        if (userAvatar) {
-                            userAvatar.innerHTML = `<img src="${logoUrl}" alt="User Logo" style="width: 100%; height: 100%; border-radius: 50%;">`;
-                        }
-                    }
-
-                    // Set language
-                    const language = settingsData.language || 'pt';
-                    document.documentElement.setAttribute('lang', language);
-                    toggleLanguage(language);
-                }
-            } catch (err) {
-                console.error('Error applying settings:', err);
-
-                }
-        }
-*/
-        // Function to fetch and update client metrics
-        async function updateClientMetrics() {
-            try {
-                // Get total clients
-                const { data: totalClients, error: totalError } = await window.supabase
-                    .from('clients')
-                    .select('count');
-
-                if (totalError) throw totalError;
-
-                // Get active clients
-                const { data: activeClients, error: activeError } = await window.supabase
-                    .from('clients')
-                    .select('count')
-                    .eq('status', 'active');
-
-                if (activeError) throw activeError;
-
-                // Get inactive clients
-                const { data: inactiveClients, error: inactiveError } = await window.supabase
-                    .from('clients')
-                    .select('count')
-                    .eq('status', 'inactive');
-
-                if (inactiveError) throw inactiveError;
-
-                // Get new clients (added in the last 30 days)
-                const thirtyDaysAgo = new Date();
-                thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-                
-                const { data: newClients, error: newError } = await window.supabase
-                    .from('clients')
-                    .select('count')
-                    .gte('created_at', thirtyDaysAgo.toISOString());
-
-                if (newError) throw newError;
-
-                // Calculate growth percentage (comparing to previous month)
-                const { data: previousMonthClients, error: prevError } = await window.supabase
-                    .from('clients')
-                    .select('count')
-                    .lt('created_at', thirtyDaysAgo.toISOString());
-
-                if (prevError) throw prevError;
-
-                const growth = previousMonthClients.length > 0 
-                    ? ((totalClients[0].count - previousMonthClients[0].count) / previousMonthClients[0].count * 100).toFixed(1)
-                    : 0;
-
-                // Update the UI
-                document.getElementById('totalClientsValue').textContent = totalClients[0].count;
-                document.getElementById('activeClientsCount').textContent = activeClients[0].count;
-                document.getElementById('inactiveClientsCount').textContent = inactiveClients[0].count;
-                document.getElementById('newClientsCount').textContent = newClients[0].count;
-                
-                const growthElement = document.getElementById('clientsGrowth');
-                growthElement.textContent = `${growth}%`;
-                growthElement.className = `metric-change ${growth >= 0 ? 'positive' : 'negative'}`;
-
-            } catch (error) {
-                console.error('Error fetching client metrics:', error);
-            }
-        }
-
-        // Function to update invoice metrics
-        async function updateInvoiceMetrics() {
-            try {
-                // Get all invoices for total count
-                const { data: allInvoices, error: allError } = await window.supabase
-                    .from('invoices')
-                    .select('total_amount, status, issue_date');
-
-                if (allError) throw allError;
-
-                // Calculate total invoices and revenue
-                const totalInvoices = allInvoices.length;
-                const totalRevenue = allInvoices
-                    .reduce((sum, invoice) => sum + (invoice.total_amount || 0), 0);
-
-                // Get this month's invoices
-                const today = new Date();
-                const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
-                const thisMonthInvoices = allInvoices.filter(invoice => 
-                    new Date(invoice.issue_date) >= startOfMonth
-                );
-
-                // Calculate this month's metrics
-                const thisMonthTotal = thisMonthInvoices.length;
-                const thisMonthRevenue = thisMonthInvoices
-                    .reduce((sum, invoice) => sum + (invoice.total_amount || 0), 0);
-
-                // Get last month's invoices for comparison
-                const firstDayOfThisMonth = new Date(today.getFullYear(), today.getMonth(), 1);
-                const endOfLastMonth = new Date(firstDayOfThisMonth);
-                endOfLastMonth.setDate(firstDayOfThisMonth.getDate() - 1);
-
-                const startOfLastMonth = new Date(endOfLastMonth.getFullYear(), endOfLastMonth.getMonth(), 1);
-
-                console.log('Start of last month:', startOfLastMonth.toISOString());
-                console.log('End of last month:', endOfLastMonth.toISOString());
-
-                const lastMonthInvoices = allInvoices.filter(invoice => {
-                    const invoiceDate = new Date(invoice.issue_date);
-                    return invoiceDate >= startOfLastMonth && invoiceDate <= endOfLastMonth;
-                });
-
-                // Calculate growth percentages
-                const lastMonthTotal = lastMonthInvoices.length;
-                const lastMonthRevenue = lastMonthInvoices
-                    .reduce((sum, invoice) => sum + (invoice.total_amount || 0), 0);
-
-                const totalGrowth = lastMonthTotal > 0 
-                    ? ((thisMonthTotal - lastMonthTotal) / lastMonthTotal * 100).toFixed(1)
-                    : 0;
-
-                const revenueGrowthPercentage = lastMonthRevenue > 0
-                    ? ((thisMonthRevenue - lastMonthRevenue) / lastMonthRevenue * 100).toFixed(1)
-                    : 0;
-
-                console.log('This Month Total:', thisMonthTotal);
-                console.log('Last Month Total:', lastMonthTotal);
-                console.log('This Month Revenue:', thisMonthRevenue);
-                console.log('Last Month Revenue:', lastMonthRevenue);
-                console.log('Total Growth Percentage:', totalGrowth);
-                console.log('Revenue Growth Percentage:', revenueGrowthPercentage);
-
-                // Update Total Invoices card
-                const totalInvoicesValue = document.querySelector('#totalInvoicesCard .metric-value');
-                if (totalInvoicesValue) {
-                    totalInvoicesValue.textContent = thisMonthTotal;
-                }
-
-                const totalInvoicesGrowth = document.querySelector('#totalInvoicesCard .metric-change');
-                if (totalInvoicesGrowth) {
-                    totalInvoicesGrowth.textContent = `${totalGrowth}%`;
-                    totalInvoicesGrowth.className = `metric-change ${totalGrowth >= 0 ? 'positive' : 'negative'}`;
-                }
-
-                // Update Revenue card
-                const revenueValue = document.querySelector('#revenueCard .metric-value');
-                if (revenueValue) {
-                    revenueValue.setAttribute('data-base-amount', thisMonthRevenue.toString());
-                    revenueValue.textContent = formatCurrencyByCode(thisMonthRevenue, 'MZN');
-                }
-
-                const revenueGrowthElement = document.querySelector('#revenueCard .metric-change');
-                if (revenueGrowthElement) {
-                    revenueGrowthElement.textContent = `${revenueGrowthPercentage}%`;
-                    revenueGrowthElement.className = `metric-change ${revenueGrowthPercentage >= 0 ? 'positive' : 'negative'}`;
-                }
-/*
-                // Update drilldown data
-                const drilldownData = document.querySelector('#totalInvoicesDetail .drilldown-data');
-                if (drilldownData) {
-                    const newInvoices = currentMonthInvoices.length;
-                    const sentInvoices = invoices.filter(inv => inv.status === 'pending').length;
-                    const paidInvoices = invoices.filter(inv => inv.status === 'paid').length;
-                    const overdueInvoices = invoices.filter(inv => inv.status === 'overdue').length;
-
-                    const items = drilldownData.querySelectorAll('.drilldown-item');
-                    if (items.length >= 4) {
-                        items[0].querySelector('span:last-child').textContent = newInvoices;
-                        items[1].querySelector('span:last-child').textContent = sentInvoices;
-                        items[2].querySelector('span:last-child').textContent = paidInvoices;
-                        items[3].querySelector('span:last-child').textContent = overdueInvoices;
-                    }
-                }
-*/
-            } catch (error) {
-                console.error('Error updating metrics:', error);
-            }
-        }
-
-        // Call the functions when the page loads
-        document.addEventListener('DOMContentLoaded', () => {
-            updateClientMetrics();
-            updateInvoiceMetrics();
-            // Update metrics every 5 minutes
-            setInterval(() => {
-                updateClientMetrics();
-                updateInvoiceMetrics();
-            }, 300000);
-
-            // Add drilldown button functionality
-            document.querySelectorAll('.drilldown-btn').forEach(button => {
-                button.addEventListener('click', (e) => {
-                    e.preventDefault();
-                    const targetId = button.getAttribute('data-target');
-                    const content = document.getElementById(targetId);
-                    const isExpanded = button.getAttribute('aria-expanded') === 'true';
-
-                    // Toggle expanded state
-                    button.setAttribute('aria-expanded', !isExpanded);
-                    
-                    // Toggle icon
-                    const icon = button.querySelector('i');
-                    if (icon) {
-                        icon.className = isExpanded ? 'fas fa-chevron-down' : 'fas fa-chevron-up';
-                    }
-
-                    // Toggle content visibility
-                    if (content) {
-                        content.style.display = isExpanded ? 'none' : 'block';
+        async function waitForSession() {
+            let { data: { session } } = await window.supabase.auth.getSession();
+            if (session && session.user) return session;
+            return new Promise((resolve, reject) => {
+                const { data: listener } = window.supabase.auth.onAuthStateChange((event, session) => {
+                    if (session && session.user) {
+                        listener.subscription.unsubscribe();
+                        resolve(session);
                     }
                 });
+                setTimeout(() => {
+                    listener.subscription.unsubscribe();
+                    reject(new Error('Session not found'));
+                }, 5000);
             });
-        });
+        }
 
-        // Display user name function
         document.addEventListener('DOMContentLoaded', async () => {
-            if (typeof window.supabase === 'undefined') return;
-
-            const { data: { session } } = await window.supabase.auth.getSession();
-            if (!session || !session.user) return;
-
-            let displayName = session.user.email;
             try {
-                const { data: userRecord, error } = await window.supabase
-                    .from('users')
-                    .select('username')
-                    .eq('id', session.user.id)
-                    .maybeSingle();
-
-                if (userRecord && userRecord.username) {
-                    displayName = userRecord.username;
+                const session = await waitForSession();
+                if (!session || !session.user) {
+                    window.location.href = '/login.html';
+                    return;
                 }
-            } catch (e) {
-                console.error('Error fetching username:', e);
-            }
 
-            const userSpan = document.getElementById('user-displayname');
-            if (userSpan) userSpan.textContent = displayName;
-
-            // Update subtitle with displayName
-            const subtitle = document.getElementById('dashboard-subtitle');
-            if (subtitle) {
-                ['en', 'pt'].forEach(lang => {
-                    if (subtitle.dataset[lang]) {
-                        subtitle.dataset[lang] = subtitle.dataset[lang].replace(/User/g, displayName);
-                    }
-                });
-                subtitle.textContent = subtitle.textContent.replace(/User/g, displayName);
-            }
-        });
-
-        // Global variables and functions
-        const exchangeRates = {
-            MZN: 1,
-            USD: 0.016,  // 1 MZN = 0.016 USD
-            EUR: 0.015,  // 1 MZN = 0.015 EUR
-            ZAR: 0.30    // 1 MZN = 0.30 ZAR
-        };
-
-        function formatCurrencyByCode(amount, currencyCode) {
-            return new Intl.NumberFormat('pt-MZ', {
-                style: 'currency',
-                currency: currencyCode
-            }).format(amount);
-        }
-
-        function changeCurrency(newCurrency) {
-            try {
-                const revenueValue = document.querySelector('#revenueCard .metric-value');
-                const expensesValue = document.querySelector('#expensesCard .metric-value');
-                
-                // Get the base amounts in MZN
-                const revenueMZN = parseFloat(revenueValue.getAttribute('data-base-amount') || '0');
-                const expensesMZN = parseFloat(expensesValue.getAttribute('data-base-amount') || '0');
-                
-                // Convert to new currency
-                const revenueConverted = revenueMZN * exchangeRates[newCurrency];
-                const expensesConverted = expensesMZN * exchangeRates[newCurrency];
-                
-                // Update displays with new currency
-                revenueValue.textContent = formatCurrencyByCode(revenueConverted, newCurrency);
-                expensesValue.textContent = formatCurrencyByCode(expensesConverted, newCurrency);
-                
-                // Save preference
-                localStorage.setItem('preferredCurrency', newCurrency);
-                
-                // Update all drilldown values
-                updateDrilldownCurrency(newCurrency);
-            } catch (error) {
-                console.error('Error changing currency:', error);
-            }
-        }
-
-        function updateDrilldownCurrency(currencyCode) {
-            document.querySelectorAll('.drilldown-item span:last-child').forEach(span => {
-                const baseMZN = parseFloat(span.getAttribute('data-base-amount') || '0');
-                const converted = baseMZN * exchangeRates[currencyCode];
-                span.textContent = formatCurrencyByCode(converted, currencyCode);
-            });
-        }
-
-        // Initialize with saved preference or default to MZN
-        document.addEventListener('DOMContentLoaded', () => {
-            const savedCurrency = localStorage.getItem('preferredCurrency') || 'MZN';
-            const currencySelector = document.getElementById('currency-selector');
-            if (currencySelector) {
-                currencySelector.value = savedCurrency;
-                changeCurrency(savedCurrency);
-            }
-        });
-
-        // Dropdown open/close logic for user menu
-        const userProfile = document.getElementById('userProfile');
-        const userDropdown = document.getElementById('userDropdown');
-
-        let dropdownTimeout;
-
-        function openDropdown() {
-            clearTimeout(dropdownTimeout);
-            userProfile.classList.add('open');
-        }
-        function closeDropdown() {
-            dropdownTimeout = setTimeout(() => {
-                userProfile.classList.remove('open');
-            }, 150);
-        }
-
-        userProfile.addEventListener('mouseenter', openDropdown);
-        userProfile.addEventListener('mouseleave', closeDropdown);
-    </script>
-    <script src="js/metricsData.js"></script>
-    <script src="js/dashboard.js"></script>
-    
-    <!-- Initialize Charts -->
-    <script>
-        // Global functions
-        function formatCurrencyByCode(amount, currencyCode) {
-            return new Intl.NumberFormat('pt-MZ', {
-                style: 'currency',
-                currency: currencyCode
-            }).format(amount);
-        }
-
-        // Revenue Chart
-        const revenueCtx = document.getElementById('revenueChart').getContext('2d');
-        const revenueChart = new Chart(revenueCtx, {
-            type: 'bar',
-            data: {
-                labels: [], // Will be populated with months
-                datasets: [{
-                    label: 'Revenue',
-                    data: [], // Will be populated with revenue data
-                    backgroundColor: '#007ec7',
-                    borderRadius: 4
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        display: false
-                    },
-                    tooltip: {
-                        callbacks: {
-                            title: function(context) {
-                                const label = context[0].label;
-                                return `Click to see ${label} details`;
-                            }
-                        }
-                    }
-                },
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        grid: {
-                            color: 'rgba(0, 0, 0, 0.05)'
+                // Initialize Revenue Chart if not already initialized
+                const revenueCanvas = document.getElementById('revenueChart');
+                if (!revenueCanvas) {
+                    console.error('No canvas found with id revenueChart');
+                } else if (!window.revenueChartInstance) {
+                    const ctx = revenueCanvas.getContext('2d');
+                    window.revenueChartInstance = new Chart(ctx, {
+                        type: 'bar',
+                        data: {
+                            labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+                            datasets: [{
+                                label: 'Revenue',
+                                data: Array(12).fill(0),
+                                backgroundColor: '#007ec7',
+                                borderRadius: 4
+                            }]
                         },
-                        ticks: {
-                            callback: function(value) {
-                                return formatCurrencyByCode(value, 'MZN');
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: { legend: { display: false } },
+                            scales: {
+                                y: { beginAtZero: true, grid: { color: 'rgba(0, 0, 0, 0.05)' } },
+                                x: { grid: { display: false } }
                             }
                         }
-                    },
-                    x: {
-                        grid: {
-                            display: false
+                    });
+                }
+                // Initialize Invoice Status Chart if not already initialized
+                const statusCanvas = document.getElementById('invoiceStatusChart');
+                if (!statusCanvas) {
+                    console.error('No canvas found with id invoiceStatusChart');
+                } else if (!window.invoiceStatusChartInstance) {
+                    const ctx = statusCanvas.getContext('2d');
+                    window.invoiceStatusChartInstance = new Chart(ctx, {
+                        type: 'doughnut',
+                        data: {
+                            labels: ['Paid', 'Pending', 'Overdue'],
+                            datasets: [{
+                                data: [0, 0, 0],
+                                backgroundColor: ['#3bb077', '#f7b924', '#e55353'],
+                                borderWidth: 0,
+                                hoverOffset: 4
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: { legend: { position: 'right' } },
+                            cutout: '70%'
                         }
+                    });
+                }
+
+                // Define all dashboard functions here
+                async function updateClientMetrics() {
+                    try {
+                        const environment_id = await window.getEffectiveEnvironmentId();
+                        // Get total clients
+                        const { data: totalClients, error: totalError } = await window.supabase
+                            .from('clients')
+                            .select('count')
+                            .eq('environment_id', environment_id);
+                        if (totalError) throw totalError;
+                        // Get active clients
+                        const { data: activeClients, error: activeError } = await window.supabase
+                            .from('clients')
+                            .select('count')
+                            .eq('status', 'active')
+                            .eq('environment_id', environment_id);
+                        if (activeError) throw activeError;
+                        // Get inactive clients
+                        const { data: inactiveClients, error: inactiveError } = await window.supabase
+                            .from('clients')
+                            .select('count')
+                            .eq('status', 'inactive')
+                            .eq('environment_id', environment_id);
+                        if (inactiveError) throw inactiveError;
+                        // Get new clients (added in the last 30 days)
+                        const thirtyDaysAgo = new Date();
+                        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+                        const { data: newClients, error: newError } = await window.supabase
+                            .from('clients')
+                            .select('count')
+                            .gte('created_at', thirtyDaysAgo.toISOString())
+                            .eq('environment_id', environment_id);
+                        if (newError) throw newError;
+                        // Calculate growth percentage (comparing to previous month)
+                        const { data: previousMonthClients, error: prevError } = await window.supabase
+                            .from('clients')
+                            .select('count')
+                            .lt('created_at', thirtyDaysAgo.toISOString())
+                            .eq('environment_id', environment_id);
+                        if (prevError) throw prevError;
+                        const growth = previousMonthClients.length > 0 
+                            ? ((totalClients[0].count - previousMonthClients[0].count) / previousMonthClients[0].count * 100).toFixed(1)
+                            : 0;
+                        // Update the UI
+                        document.getElementById('totalClientsValue').textContent = totalClients[0].count;
+                        document.getElementById('activeClientsCount').textContent = activeClients[0].count;
+                        document.getElementById('inactiveClientsCount').textContent = inactiveClients[0].count;
+                        document.getElementById('newClientsCount').textContent = newClients[0].count;
+                        const growthElement = document.getElementById('clientsGrowth');
+                        growthElement.textContent = `${growth}%`;
+                        growthElement.className = `metric-change ${growth >= 0 ? 'positive' : 'negative'}`;
+                    } catch (error) {
+                        console.error('Error fetching client metrics:', error);
                     }
-                },
-                onClick: async function(event, elements) {
-                    if (elements.length > 0) {
-                        const index = elements[0].index;
-                        const currentView = this.data.datasets[0].view || 'year';
-                        const currentLabel = this.data.labels[index];
-                        
-                        if (currentView === 'year') {
-                            // Drill down to month view
-                            await showMonthView(currentLabel);
-                        } else if (currentView === 'month') {
-                            // Drill down to day view
-                            await showDayView(currentLabel);
+                }
+                async function updateInvoiceMetrics() {
+                    try {
+                        const environment_id = await window.getEffectiveEnvironmentId();
+                        // Get total invoices
+                        const { data: totalInvoices, error: totalError } = await window.supabase
+                            .from('invoices')
+                            .select('id', { count: 'exact' })
+                            .eq('environment_id', environment_id);
+                        if (totalError) throw totalError;
+                        // Get paid invoices
+                        const { data: paidInvoices, error: paidError } = await window.supabase
+                            .from('invoices')
+                            .select('id', { count: 'exact' })
+                            .eq('status', 'paid')
+                            .eq('environment_id', environment_id);
+                        if (paidError) throw paidError;
+                        // Get pending invoices
+                        const { data: pendingInvoices, error: pendingError } = await window.supabase
+                            .from('invoices')
+                            .select('id', { count: 'exact' })
+                            .eq('status', 'pending')
+                            .eq('environment_id', environment_id);
+                        if (pendingError) throw pendingError;
+                        // Get overdue invoices
+                        const { data: overdueInvoices, error: overdueError } = await window.supabase
+                            .from('invoices')
+                            .select('id', { count: 'exact' })
+                            .eq('status', 'overdue')
+                            .eq('environment_id', environment_id);
+                        if (overdueError) throw overdueError;
+                        // Update the UI
+                        document.querySelector('#totalInvoicesCard .metric-value').textContent = totalInvoices.length;
+                        // Optionally update other metric cards if present
+                    } catch (error) {
+                        console.error('Error updating metrics:', error);
+                    }
+                }
+                async function updateRevenueChart() {
+                    try {
+                        const environment_id = await window.getEffectiveEnvironmentId();
+                        // Get all invoices for this environment
+                        const { data: invoices, error } = await window.supabase
+                            .from('invoices')
+                            .select('total_amount, total, issue_date')
+                            .eq('environment_id', environment_id);
+                        if (error) throw error;
+                        console.log('[updateRevenueChart] invoices:', invoices); // Debug log
+                        // Prepare monthly revenue data
+                        const monthlyRevenue = Array(12).fill(0);
+                        invoices.forEach(inv => {
+                            if (!inv.issue_date) return;
+                            const date = new Date(inv.issue_date);
+                            const month = date.getMonth();
+                            // Use total_amount if present, else total
+                            const amount = (typeof inv.total_amount === 'number' && !isNaN(inv.total_amount)) ? inv.total_amount : (Number(inv.total) || 0);
+                            monthlyRevenue[month] += amount;
+                        });
+                        // Update the chart
+                        if (window.revenueChartInstance instanceof Chart) {
+                            if (window.revenueChartInstance.data && window.revenueChartInstance.data.datasets) {
+                                window.revenueChartInstance.data.datasets[0].data = monthlyRevenue;
+                                window.revenueChartInstance.update();
+                            } else {
+                                console.error('Revenue chart data or datasets is undefined:', window.revenueChartInstance.data);
+                            }
+                        } else {
+                            console.error('window.revenueChartInstance is not a Chart instance:', window.revenueChartInstance);
                         }
+                        // Update revenue metric card
+                        const totalRevenue = monthlyRevenue.reduce((a, b) => a + b, 0);
+                        const revenueDisplay = document.querySelector('#revenueCard .metric-value');
+                        if (revenueDisplay) revenueDisplay.textContent = `MZN ${totalRevenue.toLocaleString()}`;
+                    } catch (error) {
+                        console.error('Error updating revenue chart:', error);
                     }
                 }
-            }
-        });
-
-        // Store the original year data for navigation
-        let yearData = {
-            labels: [],
-            data: []
-        };
-
-        async function updateRevenueChart() {
-            try {
-                const today = new Date();
-                const startOfYear = new Date(today.getFullYear(), 0, 1);
-                
-                const { data: invoices, error } = await window.supabase
-                    .from('invoices')
-                    .select('total_amount, issue_date, status, invoiceNumber')
-                    .gte('issue_date', startOfYear.toISOString())
-                    .order('issue_date', { ascending: true });
-
-                if (error) throw error;
-
-                // Initialize monthly revenue data
-                const monthlyRevenue = Array(12).fill(0);
-                const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-
-                // Calculate revenue for each month (all invoices)
-                invoices.forEach(invoice => {
-                    const date = new Date(invoice.issue_date);
-                    const month = date.getMonth();
-                    monthlyRevenue[month] += Number(invoice.total_amount || 0);
-                });
-
-                // Store year data for navigation
-                yearData = {
-                    labels: months,
-                    data: monthlyRevenue
-                };
-
-                // Update chart data
-                revenueChart.data.labels = months;
-                revenueChart.data.datasets[0].data = monthlyRevenue;
-                revenueChart.data.datasets[0].view = 'year';
-                revenueChart.update();
-
-            } catch (error) {
-                console.error('Error updating revenue chart:', error);
-            }
-        }
-
-        async function showMonthView(monthLabel) {
-            try {
-                const monthIndex = yearData.labels.indexOf(monthLabel);
-                if (monthIndex === -1) return;
-
-                const today = new Date();
-                const startOfMonth = new Date(today.getFullYear(), monthIndex, 1);
-                const endOfMonth = new Date(today.getFullYear(), monthIndex + 1, 0);
-
-                const { data: invoices, error } = await window.supabase
-                    .from('invoices')
-                    .select('total_amount, issue_date, status, invoiceNumber')
-                    .gte('issue_date', startOfMonth.toISOString())
-                    .lte('issue_date', endOfMonth.toISOString())
-                    .order('issue_date', { ascending: true });
-
-                if (error) throw error;
-
-                // Create array for all days in the month
-                const daysInMonth = endOfMonth.getDate();
-                const dailyRevenue = Array(daysInMonth).fill(0);
-                const dayLabels = Array.from({length: daysInMonth}, (_, i) => i + 1);
-
-                // Calculate daily revenue (all invoices)
-                invoices.forEach(invoice => {
-                    const date = new Date(invoice.issue_date);
-                    const day = date.getDate() - 1; // 0-based index
-                    dailyRevenue[day] += Number(invoice.total_amount || 0);
-                });
-
-                // Update chart
-                revenueChart.data.labels = dayLabels;
-                revenueChart.data.datasets[0].data = dailyRevenue;
-                revenueChart.data.datasets[0].view = 'month';
-                revenueChart.options.scales.x.title = {
-                    display: true,
-                    text: monthLabel
-                };
-                revenueChart.update();
-
-            } catch (error) {
-                console.error('Error showing month view:', error);
-            }
-        }
-
-        async function showDayView(dayLabel) {
-            try {
-                const currentView = revenueChart.data.datasets[0].view;
-                if (currentView !== 'month') return;
-
-                const monthIndex = yearData.labels.indexOf(revenueChart.options.scales.x.title.text);
-                const selectedDate = new Date(new Date().getFullYear(), monthIndex, parseInt(dayLabel));
-                const nextDate = new Date(selectedDate);
-                nextDate.setDate(nextDate.getDate() + 1);
-
-                const { data: invoices, error } = await window.supabase
-                    .from('invoices')
-                    .select('total_amount, issue_date, status, invoiceNumber')
-                    .gte('issue_date', selectedDate.toISOString())
-                    .lt('issue_date', nextDate.toISOString())
-                    .order('issue_date', { ascending: true });
-
-                if (error) throw error;
-
-                // Create table for daily invoices
-                const tableContainer = document.createElement('div');
-                tableContainer.className = 'daily-invoices-table';
-                tableContainer.innerHTML = `
-                    <h4>Invoices for ${selectedDate.toLocaleDateString()}</h4>
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Invoice #</th>
-                                <th>Amount</th>
-                                <th>Status</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ${invoices.map(invoice => `
-                                <tr>
-                                    <td>${invoice.invoiceNumber}</td>
-                                    <td>${formatCurrencyByCode(invoice.total_amount, 'MZN')}</td>
-                                    <td>${invoice.status}</td>
-                                </tr>
-                            `).join('')}
-                        </tbody>
-                    </table>
-                    <button class="back-button" onclick="showMonthView('${revenueChart.options.scales.x.title.text}')">
-                        <i class="fas fa-arrow-left"></i>
-                    </button>
-                `;
-
-                // Replace chart with table
-                const chartContainer = revenueChart.canvas.parentElement;
-                chartContainer.innerHTML = '';
-                chartContainer.appendChild(tableContainer);
-
-            } catch (error) {
-                console.error('Error showing day view:', error);
-            }
-        }
-
-        // Add back button functionality
-        function addBackButton() {
-            const chartContainer = revenueChart.canvas.parentElement;
-            const backButton = document.createElement('button');
-            backButton.className = 'back-button';
-            backButton.innerHTML = '<i class="fas fa-arrow-left"></i>';
-            backButton.onclick = () => {
-                revenueChart.data.labels = yearData.labels;
-                revenueChart.data.datasets[0].data = yearData.data;
-                revenueChart.data.datasets[0].view = 'year';
-                revenueChart.options.scales.x.title = {
-                    display: false
-                };
-                revenueChart.update();
-                backButton.remove();
-            };
-            chartContainer.appendChild(backButton);
-        }
-
-        // Update the CSS for the back button
-        const style = document.createElement('style');
-        style.textContent = `
-            .back-button {
-                width: 32px;
-                height: 32px;
-                padding: 0;
-                background-color: #007ec7;
-                color: white;
-                border: none;
-                border-radius: 50%;
-                cursor: pointer;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                position: absolute;
-                top: 10px;
-                right: 10px;
-                z-index: 1;
-                transition: background-color 0.2s;
-            }
-
-            .back-button:hover {
-                background-color: #0066a3;
-            }
-
-            .back-button i {
-                font-size: 14px;
-            }
-
-            .daily-invoices-table .back-button {
-                position: static;
-                margin-top: 15px;
-            }
-        `;
-        document.head.appendChild(style);
-
-        // Invoice Status Chart
-        const invoiceStatusCtx = document.getElementById('invoiceStatusChart').getContext('2d');
-        const invoiceStatusChart = new Chart(invoiceStatusCtx, {
-            type: 'doughnut',
-            data: {
-                labels: ['Paid', 'Pending', 'Overdue'],
-                datasets: [{
-                    data: [0, 0, 0], // Will be populated with real data
-                    backgroundColor: ['#3bb077', '#f7b924', '#e55353'],
-                    borderWidth: 0
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        position: 'right'
-                    }
-                },
-                cutout: '70%'
-            }
-        });
-
-        async function updateInvoiceStatusChart() {
-            try {
-                const { data: invoices, error } = await window.supabase
-                    .from('invoices')
-                    .select('status');
-
-                if (error) throw error;
-
-                // Count invoices by status
-                const statusCounts = {
-                    paid: 0,
-                    pending: 0,
-                    overdue: 0
-                };
-
-                invoices.forEach(invoice => {
-                    if (statusCounts.hasOwnProperty(invoice.status)) {
-                        statusCounts[invoice.status]++;
-                    }
-                });
-
-                // Update chart data
-                invoiceStatusChart.data.datasets[0].data = [
-                    statusCounts.paid,
-                    statusCounts.pending,
-                    statusCounts.overdue
-                ];
-                invoiceStatusChart.update();
-
-            } catch (error) {
-                console.error('Error updating invoice status chart:', error);
-            }
-        }
-
-        function updateChartLabels(lang) {
-            // Translate Revenue Chart
-            revenueChart.data.datasets[0].label = lang === 'pt' ? 'Receita' : 'Revenue';
-            revenueChart.update();
-
-            // Translate Invoice Status Chart
-            invoiceStatusChart.data.labels = lang === 'pt' ? ['Pago', 'Pendente', 'Atrasado'] : ['Paid', 'Pending', 'Overdue'];
-            invoiceStatusChart.update();
-        }
-
-        // Call updateRevenueChart when page loads and after new invoices are added
-        document.addEventListener('DOMContentLoaded', () => {
-            updateRevenueChart();
-            updateInvoiceStatusChart();
-            // Update charts every 5 minutes
-            setInterval(() => {
-                updateRevenueChart();
-                updateInvoiceStatusChart();
-            }, 300000);
-        });
-
-        // Update metrics function
-        async function updateMetrics() {
-            try {
-                const now = new Date();
-                const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-                const startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-                const endOfLastMonth = new Date(now.getFullYear(), now.getMonth(), 0);
-
-                const { data: invoices, error } = await window.supabase
-                    .from('invoices')
-                    .select('total_amount, issue_date, status')
-                    .gte('issue_date', startOfLastMonth.toISOString());
-
-                if (error) throw error;
-
-                // Calculate metrics
-                const currentMonthInvoices = invoices.filter(inv => 
-                    new Date(inv.issue_date) >= startOfMonth
-                );
-                const lastMonthInvoices = invoices.filter(inv => 
-                    new Date(inv.issue_date) >= startOfLastMonth &&
-                    new Date(inv.issue_date) <= endOfLastMonth
-                );
-
-                // Total Invoices Metrics
-                const totalInvoicesValue = currentMonthInvoices.length || 0;
-                const lastMonthTotalInvoices = lastMonthInvoices.length || 0;
-                const invoiceGrowth = lastMonthTotalInvoices ? 
-                    ((totalInvoicesValue - lastMonthTotalInvoices) / lastMonthTotalInvoices * 100).toFixed(1) : 
-                    0;
-
-                // Revenue Metrics
-                const currentMonthRevenue = currentMonthInvoices.reduce((sum, inv) => sum + (Number(inv.total_amount) || 0), 0);
-                const lastMonthRevenue = lastMonthInvoices.reduce((sum, inv) => sum + (Number(inv.total_amount) || 0), 0);
-                const revenueGrowth = lastMonthRevenue ? 
-                    ((currentMonthRevenue - lastMonthRevenue) / lastMonthRevenue * 100).toFixed(1) : 
-                    0;
-
-                // Direct DOM updates for Total Invoices Card
-                const totalInvoicesValueElement = document.querySelector('#totalInvoicesCard .metric-value');
-                const totalInvoicesGrowthElement = document.querySelector('#totalInvoicesCard .metric-change');
-                
-                if (totalInvoicesValueElement) {
-                    totalInvoicesValueElement.textContent = totalInvoicesValue;
-                }
-                if (totalInvoicesGrowthElement) {
-                    totalInvoicesGrowthElement.textContent = `${invoiceGrowth}%`;
-                    totalInvoicesGrowthElement.className = `metric-change ${Number(invoiceGrowth) >= 0 ? 'positive' : 'negative'}`;
-                }
-
-                // Direct DOM updates for Revenue Card
-                const revenueValueElement = document.querySelector('#revenueCard .metric-value');
-                const revenueGrowthElement = document.querySelector('#revenueCard .metric-change');
-                
-                if (revenueValueElement) {
-                    revenueValueElement.setAttribute('data-base-amount', currentMonthRevenue.toString());
-                    const currentCurrency = document.querySelector('#currency-selector')?.value || 'MZN';
-                    revenueValueElement.textContent = formatCurrencyByCode(currentMonthRevenue, currentCurrency);
-                }
-                if (revenueGrowthElement) {
-                    revenueGrowthElement.textContent = `${revenueGrowth}%`;
-                    revenueGrowthElement.className = `metric-change ${Number(revenueGrowth) >= 0 ? 'positive' : 'negative'}`;
-                }
-
-                // Update drilldown data
-                const drilldownData = document.querySelector('#totalInvoicesDetail .drilldown-data');
-                if (drilldownData) {
-                    const newInvoices = currentMonthInvoices.length;
-                    const sentInvoices = invoices.filter(inv => inv.status === 'pending').length;
-                    const paidInvoices = invoices.filter(inv => inv.status === 'paid').length;
-                    const overdueInvoices = invoices.filter(inv => inv.status === 'overdue').length;
-
-                    const items = drilldownData.querySelectorAll('.drilldown-item');
-                    if (items.length >= 4) {
-                        items[0].querySelector('span:last-child').textContent = newInvoices;
-                        items[1].querySelector('span:last-child').textContent = sentInvoices;
-                        items[2].querySelector('span:last-child').textContent = paidInvoices;
-                        items[3].querySelector('span:last-child').textContent = overdueInvoices;
+                async function updateInvoiceStatusChart() {
+                    try {
+                        const environment_id = await window.getEffectiveEnvironmentId();
+                        // Get all invoices for this environment
+                        const { data: invoices, error } = await window.supabase
+                            .from('invoices')
+                            .select('status, total_amount')
+                            .eq('environment_id', environment_id);
+                        if (error) throw error;
+                        // Count by status
+                        const statusCounts = { paid: 0, pending: 0, overdue: 0 };
+                        invoices.forEach(inv => {
+                            if (statusCounts[inv.status] !== undefined) {
+                                statusCounts[inv.status] += 1;
+                            }
+                        });
+                        // Update the chart
+                        if (window.invoiceStatusChartInstance instanceof Chart) {
+                            if (window.invoiceStatusChartInstance.data && window.invoiceStatusChartInstance.data.datasets) {
+                                window.invoiceStatusChartInstance.data.datasets[0].data = [statusCounts.paid, statusCounts.pending, statusCounts.overdue];
+                                window.invoiceStatusChartInstance.update();
+                            } else {
+                                console.error('Invoice status chart data or datasets is undefined:', window.invoiceStatusChartInstance.data);
+                            }
+                        } else {
+                            console.error('window.invoiceStatusChartInstance is not a Chart instance:', window.invoiceStatusChartInstance);
+                        }
+                    } catch (error) {
+                        console.error('Error updating invoice status chart:', error);
                     }
                 }
+                // ... (define any other dashboard functions here) ...
 
+                // Call your dashboard functions
+                await updateClientMetrics();
+                await updateInvoiceMetrics();
+                await updateRevenueChart();
+                await updateInvoiceStatusChart();
+                // ... (call any other dashboard functions as needed) ...
             } catch (error) {
-                console.error('Error updating metrics:', error);
+                window.location.href = '/login.html';
             }
-        }
-
-        // Add to DOMContentLoaded event listener
-        document.addEventListener('DOMContentLoaded', () => {
-            // Initial metrics update
-            updateMetrics();
-            
-            // Update metrics every 5 minutes
-            setInterval(updateMetrics, 300000);
         });
-
-        // ...existing code...
     </script>
   
     <!-- Hints System -->
@@ -1702,6 +1137,29 @@
       const languageManager = new LanguageManager('./');
       window.languageManager = languageManager; // Make it globally available for other scripts
       await languageManager.initialize();
+    });
+  </script>
+  <script src="js/metricsData.js"></script>
+  <script src="js/dashboard.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        document.body.addEventListener('click', function(e) {
+            if (e.target.closest('.drilldown-btn')) {
+                const button = e.target.closest('.drilldown-btn');
+                const targetId = button.getAttribute('data-target');
+                const content = document.getElementById(targetId);
+                const isExpanded = button.getAttribute('aria-expanded') === 'true';
+                button.setAttribute('aria-expanded', !isExpanded);
+                if (content) {
+                    content.classList.toggle('active', !isExpanded);
+                }
+            }
+            if (e.target.classList.contains('drilldown-tab')) {
+                const parent = e.target.closest('.drilldown-actions');
+                parent.querySelectorAll('.drilldown-tab').forEach(t => t.classList.remove('active'));
+                e.target.classList.add('active');
+            }
+        });
     });
   </script>
 </body>

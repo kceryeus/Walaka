@@ -138,6 +138,13 @@ html[data-theme="dark"] {
     font-weight: 500;
     cursor: pointer;
     transition: all 0.2s ease;
+    box-shadow: 0 2px 8px 0 rgba(59, 130, 246, 0.08);
+    outline: none;
+}
+
+.btn:focus {
+    box-shadow: 0 0 0 2px var(--primary-100);
+    border-color: var(--primary-color);
 }
 
 .btn-primary {
@@ -150,6 +157,10 @@ html[data-theme="dark"] {
     background-color: var(--primary-dark);
 }
 
+.btn-primary:active {
+    background-color: var(--primary-700);
+}
+
 .btn-secondary {
     background-color: var(--gray-100);
     color: var(--gray-700);
@@ -158,6 +169,10 @@ html[data-theme="dark"] {
 
 .btn-secondary:hover {
     background-color: var(--gray-200);
+}
+
+.btn-secondary:active {
+    background-color: var(--gray-300);
 }
 
 /* Table styles */
@@ -186,8 +201,12 @@ html[data-theme="dark"] {
     color: var(--gray-700);
 }
 
-.table tr:hover {
-    background-color: var(--gray-50);
+.table tr {
+    transition: background 0.2s;
+}
+
+.table tr:hover, .table tr:focus-within {
+    background-color: var(--primary-100);
 }
 
 /* Tooltip styles */
@@ -219,21 +238,23 @@ html[data-theme="dark"] {
     font-size: 0.75rem;
     font-weight: 600;
     line-height: 1;
+    box-shadow: 0 1px 2px 0 rgba(0,0,0,0.04);
+    letter-spacing: 0.02em;
 }
 
 .role-badge.admin {
-    background-color: var(--red-100, #FEE2E2);
-    color: var(--red-800, #991B1B);
+    background: linear-gradient(90deg, #fee2e2 60%, #fecaca 100%);
+    color: #991b1b;
 }
 
 .role-badge.editor {
-    background-color: var(--blue-100, #DBEAFE);
-    color: var(--blue-800, #1E40AF);
+    background: linear-gradient(90deg, #dbeafe 60%, #93c5fd 100%);
+    color: #1e40af;
 }
 
 .role-badge.viewer {
-    background-color: var(--green-100, #D1FAE5);
-    color: var(--green-800, #065F46);
+    background: linear-gradient(90deg, #d1fae5 60%, #6ee7b7 100%);
+    color: #065f46;
 }
 
 /* Status badges */
@@ -245,16 +266,18 @@ html[data-theme="dark"] {
     font-size: 0.75rem;
     font-weight: 600;
     line-height: 1;
+    box-shadow: 0 1px 2px 0 rgba(0,0,0,0.04);
+    letter-spacing: 0.02em;
 }
 
 .status-badge.active {
-    background-color: var(--green-100, #D1FAE5);
-    color: var(--green-800, #065F46);
+    background: linear-gradient(90deg, #d1fae5 60%, #6ee7b7 100%);
+    color: #065f46;
 }
 
 .status-badge.inactive {
-    background-color: var(--red-100, #FEE2E2);
-    color: var(--red-800, #991B1B);
+    background: linear-gradient(90deg, #fee2e2 60%, #fecaca 100%);
+    color: #991b1b;
 }
 
 /* Role distribution chart */
@@ -313,4 +336,57 @@ html[data-theme="dark"] {
 /* Toast container */
 #toastContainer {
     z-index: 9999;
+}
+
+#toastContainer .toast {
+    border-radius: 8px;
+    box-shadow: 0 4px 16px 0 rgba(31, 41, 55, 0.10);
+    font-size: 1rem;
+    padding: 1rem 1.5rem;
+}
+
+/* --- Form Input Styles --- */
+input[type="text"], input[type="email"], select {
+    width: 100%;
+    padding: 0.5rem 0.75rem;
+    border: 1px solid var(--gray-300);
+    border-radius: 6px;
+    background: var(--gray-50);
+    color: var(--text-color);
+    font-size: 1rem;
+    transition: border 0.2s, box-shadow 0.2s;
+    margin-top: 0.25rem;
+}
+input[type="text"]:focus, input[type="email"]:focus, select:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 2px var(--primary-100);
+    outline: none;
+}
+
+/* --- Miscellaneous --- */
+input:disabled, select:disabled {
+    background: var(--gray-100);
+    color: var(--gray-400);
+    cursor: not-allowed;
+}
+
+::-webkit-input-placeholder { color: var(--gray-400); }
+::-moz-placeholder { color: var(--gray-400); }
+:-ms-input-placeholder { color: var(--gray-400); }
+::placeholder { color: var(--gray-400); }
+
+/* --- Modal Overlay and Animation --- */
+#userModal, #confirmationModal, #loadingOverlay {
+    background: rgba(31, 41, 55, 0.45);
+    backdrop-filter: blur(2px);
+    transition: opacity 0.3s;
+    z-index: 1000;
+}
+
+.modal-content, .bg-white.rounded-lg.p-6 {
+    animation: modalPop 0.3s cubic-bezier(.4,2,.6,1) both;
+}
+@keyframes modalPop {
+    0% { transform: scale(0.95) translateY(20px); opacity: 0; }
+    100% { transform: scale(1) translateY(0); opacity: 1; }
 }

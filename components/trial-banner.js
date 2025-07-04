@@ -23,11 +23,64 @@ async function updateTrialBanner() {
             return;
         }
         const userId = session.user.id;
-        const { data: subscriptions, error: subscriptionError } = await supabase
-            .from('subscriptions')
-            .select('plan, end_date, status')
-            .eq('user_id', userId)
-            .order('end_date', { ascending: false });
+        // --- Fetch user row to check for created_by (parent) ---
+        let parentId = userId;
+        let userCreatedAt = session.user.created_at;
+        let environmentId = null;
+        let userRow = null;
+        let parentRow = null;
+        try {
+            const userResult = await supabase
+                .from('users')
+                .select('created_by, created_at, environment_id')
+                .eq('id', userId)
+                .single();
+            userRow = userResult.data;
+            const userRowError = userResult.error;
+            console.log('[TrialBanner][DEBUG] userRow:', userRow, 'userRowError:', userRowError);
+            if (!userRowError && userRow) {
+                if (userRow.created_by) {
+                    parentId = userRow.created_by;
+                    const parentResult = await supabase
+                        .from('users')
+                        .select('created_at, environment_id')
+                        .eq('id', parentId)
+                        .single();
+                    parentRow = parentResult.data;
+                    const parentRowError = parentResult.error;
+                    console.log('[TrialBanner][DEBUG] parentRow:', parentRow, 'parentRowError:', parentRowError);
+                    if (!parentRowError && parentRow) {
+                        if (parentRow.created_at) userCreatedAt = parentRow.created_at;
+                        if (parentRow.environment_id) {
+                            environmentId = parentRow.environment_id;
+                        } else if (userRow.environment_id) {
+                            // fallback: use child's environment_id if parent has none
+                            environmentId = userRow.environment_id;
+                        }
+                    } else if (userRow.environment_id) {
+                        // fallback: use child's environment_id if parent fetch fails
+                        environmentId = userRow.environment_id;
+                    }
+                } else {
+                    if (userRow.created_at) userCreatedAt = userRow.created_at;
+                    if (userRow.environment_id) environmentId = userRow.environment_id;
+                }
+            }
+        } catch (e) { console.error('[TrialBanner][DEBUG] Error fetching user/parent row:', e); }
+        console.log('[TrialBanner][DEBUG] Using parentId:', parentId, 'userCreatedAt:', userCreatedAt, 'environmentId:', environmentId);
+        // --- Use environmentId for all subscription/trial queries ---
+        let subscriptions = [];
+        let subscriptionError = null;
+        if (environmentId) {
+            const subResult = await supabase
+                .from('subscriptions')
+                .select('plan, end_date, status')
+                .eq('environment_id', environmentId)
+                .order('end_date', { ascending: false });
+            subscriptions = subResult.data;
+            subscriptionError = subResult.error;
+        }
+        console.log('[TrialBanner][DEBUG] subscriptions:', subscriptions, 'subscriptionError:', subscriptionError);
         let currentPlan = 'Trial';
         let validSubscription = false;
         if (!subscriptionError && subscriptions && subscriptions.length > 0) {
@@ -44,6 +97,7 @@ async function updateTrialBanner() {
                 validSubscription = true;
             }
         }
+        console.log('[TrialBanner][DEBUG] validSubscription:', validSubscription, 'currentPlan:', currentPlan);
         planBadge.textContent = currentPlan;
         if (validSubscription) {
             banner.style.display = 'none';
@@ -51,20 +105,14 @@ async function updateTrialBanner() {
         } else {
             banner.style.display = '';
         }
-        // --- Days remaining and invoices remaining logic (intact) ---
+        // --- Days remaining and invoices remaining logic (intact, but use parentId and parent's created_at) ---
         let daysRemaining = 0;
         let trialStartDate = null;
-        const { data: userData, error: userError } = await supabase
-            .from('users')
-            .select('created_at')
-            .eq('id', userId)
-            .single();
-        if (userError) {
-            trialStartDate = new Date(session.user.created_at);
-        } else if (userData && userData.created_at) {
-            trialStartDate = new Date(userData.created_at);
+        // Use parent's created_at if child, else own
+        if (userCreatedAt) {
+            trialStartDate = new Date(userCreatedAt);
         } else {
-            trialStartDate = new Date(session.user.created_at);
+            trialStartDate = new Date();
         }
         if (trialStartDate) {
             const now = new Date();
@@ -76,12 +124,12 @@ async function updateTrialBanner() {
             let { count, error: invoiceError } = await supabase
                 .from('invoices')
                 .select('*', { count: 'exact', head: true })
-                .eq('user_id', userId);
+                .eq('user_id', parentId);
             if (invoiceError) {
                 const result = await supabase
                     .from('invoices')
                     .select('*', { count: 'exact', head: true })
-                    .eq('userId', userId);
+                    .eq('userId', parentId);
                 if (!result.error) {
                     invoiceCount = result.count || 0;
                 }

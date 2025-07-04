@@ -1,3 +1,5 @@
+import { getCurrentEnvironmentId } from './js/environment-utils.js';
+
 document.addEventListener('DOMContentLoaded', () => {
     const createReceiptBtn = document.getElementById('createReceiptBtn');
     const createReceiptModal = document.getElementById('createReceiptModal');
@@ -49,9 +51,10 @@ document.addEventListener('DOMContentLoaded', () => {
         };
 
         try {
+            const environment_id = await getCurrentEnvironmentId();
             const { data, error } = await supabase
                 .from('receipts') // Replace with your table name
-                .insert([receiptData])
+                .insert([{ ...receiptData, environment_id }])
                 .select();
 
             if (error) throw error;
@@ -69,9 +72,11 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- Fetch and Display Receipts ---
     async function fetchAndDisplayReceipts() {
         try {
+            const environment_id = await getCurrentEnvironmentId();
             const { data: receipts, error } = await supabase
                 .from('receipts') // Replace with your table name
                 .select('*')
+                .eq('environment_id', environment_id)
                 .order('payment_date', { ascending: false });
 
             if (error) throw error;
@@ -112,10 +117,12 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- View Receipt Details ---
     async function fetchAndDisplayReceiptDetails(receiptId) {
         try {
+            const environment_id = await getCurrentEnvironmentId();
             const { data: receipt, error } = await supabase
                 .from('receipts') // Replace with your table name
                 .select('*')
                 .eq('id', receiptId)
+                .eq('environment_id', environment_id)
                 .single();
 
             if (error) throw error;

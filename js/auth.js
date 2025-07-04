@@ -1,12 +1,11 @@
 // Authentication utilities
 // import { supabase } from './supabaseClient.js';
-const supabase = window.supabase;
 
-export const auth = {
+const auth = {
     // Check if user is authenticated
     async checkAuth() {
         try {
-            const { data: { session } } = await supabase.auth.getSession();
+            const { data: { session } } = await window.supabase.auth.getSession();
             return !!session;
         } catch (error) {
             console.error('Error checking authentication:', error);
@@ -17,7 +16,7 @@ export const auth = {
     // Handle logout
     async logout() {
         try {
-            const { error } = await supabase.auth.signOut();
+            const { error } = await window.supabase.auth.signOut();
             if (error) throw error;
             window.location.href = '/login.html';
         } catch (error) {
@@ -30,7 +29,8 @@ export const auth = {
     async protectPage() {
         const isAuthenticated = await this.checkAuth();
         if (!isAuthenticated) {
-            window.location.href = '/login.html';
+            // window.location.href = '/login.html';
+            console.log('[auth.js] Would redirect to /login.html: not authenticated');
             return false;
         }
         return true;
@@ -42,9 +42,10 @@ export const auth = {
         await this.protectPage();
 
         // Set up auth state change listener
-        supabase.auth.onAuthStateChange((event, session) => {
+        window.supabase.auth.onAuthStateChange((event, session) => {
             if (event === 'SIGNED_OUT' || !session) {
-                window.location.href = '/login.html';
+                // window.location.href = '/login.html';
+                console.log(`[auth.js] Would redirect to /login.html: event = ${event}, session =`, session);
             }
         });
 
@@ -58,8 +59,19 @@ export const auth = {
         }
     }
 };
+window.auth = auth;
 
 // Initialize auth when the page loads
+function waitForSupabaseClient(callback) {
+    if (window.supabase) {
+        callback();
+    } else {
+        setTimeout(() => waitForSupabaseClient(callback), 50);
+    }
+}
+
 document.addEventListener('DOMContentLoaded', () => {
-    auth.init();
+    waitForSupabaseClient(() => {
+        auth.init();
+    });
 }); 

@@ -40,11 +40,16 @@ async function fetchClientsFromSupabase() {
       .select('*')
       .order('created_at', { ascending: false });
 
-    if (error) throw error;
-    console.log('Fetched clients:', data);
+    if (error) {
+      console.error('Error fetching clients:', error);
+      return [];
+    }
+
+    console.log('Fetched clients (RLS enforced):', data);
     return data || [];
   } catch (err) {
     console.error('Error fetching clients:', err);
+    showErrorMessage('Error fetching clients: ' + (err.message || err));
     return [];
   }
 }
@@ -244,13 +249,13 @@ async function getClientById(clientId) {
     if (!window.supabase) {
       throw new Error('Supabase client not initialized');
     }
-
+    const environment_id = await window.getCurrentEnvironmentId();
     const { data, error } = await window.supabase
       .from('clients')
       .select('*')
       .eq('customer_id', clientId)
+      .eq('environment_id', environment_id)
       .single();
-
     if (error) throw error;
     return data;
   } catch (error) {
@@ -324,14 +329,13 @@ function renderClientList(clients) {
 async function toggleClientStatus(clientId, currentStatus) {
   try {
     const newStatus = currentStatus === 'active' ? 'inactive' : 'active';
-    
+    const environment_id = await window.getCurrentEnvironmentId();
     const { error } = await window.supabase
       .from('clients')
       .update({ status: newStatus })
-      .eq('customer_id', clientId);
-
+      .eq('customer_id', clientId)
+      .eq('environment_id', environment_id);
     if (error) throw error;
-
     window.appUtils.showToast(`Client ${newStatus === 'active' ? 'activated' : 'deactivated'} successfully`, 'success');
     refreshClientList();
   } catch (error) {
@@ -410,11 +414,12 @@ window.refreshClientList = refreshClientList;
 // Update the deleteClient function
 async function deleteClient(clientId) {
   try {
+    const environment_id = await window.getCurrentEnvironmentId();
     const { error } = await window.supabase
       .from('clients')
       .delete()
-      .eq('customer_id', clientId);
-
+      .eq('customer_id', clientId)
+      .eq('environment_id', environment_id);
     if (error) throw error;
     window.appUtils.showToast('Client deleted successfully', 'success');
     refreshClientList();

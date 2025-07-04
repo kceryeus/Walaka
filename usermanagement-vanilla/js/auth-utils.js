@@ -1,6 +1,4 @@
 // Shared authentication utilities
-// import { supabase } from './supabaseClient.js';
-// import { getCurrentEnvironmentId } from './environment-utils.js';
 
 window.checkFirstTimeLogin = async function(supabase, userId) {
     try {
@@ -29,20 +27,4 @@ window.checkFirstTimeLogin = async function(supabase, userId) {
         console.error('Error checking first time login:', error);
         return false;
     }
-}
-
-window.createUserWithEnvironment = async function(userData) {
-    // const environment_id = window.getCurrentEnvironmentId(); // Environment check/commented out for now
-    const { data: { session } } = await window.supabase.auth.getSession();
-    const { data, error } = await window.supabase
-        .from('users')
-        .insert([{
-            ...userData,
-            // environment_id, // Commented out for now
-            created_by: session.user.id
-        }])
-        .select()
-        .single();
-    if (error) throw error;
-    return data;
-}
+} 

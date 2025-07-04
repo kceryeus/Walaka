@@ -235,10 +235,12 @@ function setupEventListeners() {
 }
 
 async function loadReceipts() {
+    const environment_id = await getCurrentEnvironmentId();
     try {
         const { data: receipts, error } = await supabase
             .from('receipts')
             .select('*, invoices:related_invoice_id ("invoiceNumber")')
+            .eq('environment_id', environment_id)
             .order('created_at', { ascending: false });
 
         if (error) throw error;
@@ -475,6 +477,7 @@ async function createReceipt() {
         // Use the receipt number from the input field
         const receipt_number = document.getElementById('receiptNumber').value;
         const enteredAmount = parseFloat(formData.get('amount'));
+        const environment_id = await getCurrentEnvironmentId();
         const receiptData = {
             receipt_number,
             client_id,
@@ -485,12 +488,14 @@ async function createReceipt() {
             related_invoice_id: related_invoice_ids, // Now supports multiple
             notes: formData.get('notes'),
             status: 'paid',
-            user_id
+            user_id,
+            environment_id
         };
         // Use insert (or upsert if you want to avoid duplicates)
-        const { error } = await supabase
+        const { data, error } = await supabase
             .from('receipts')
-            .insert([receiptData]); // .upsert([receiptData], { onConflict: ['receipt_number'] })
+            .insert([receiptData])
+            .select();
         if (error) throw error;
         showNotification('Receipt created successfully');
         closeModal('createReceiptModal');
@@ -591,13 +596,15 @@ async function viewReceipt(id) {
 }
 
 async function deleteReceipt(id) {
+    const environment_id = await getCurrentEnvironmentId();
     if (!confirm('Are you sure you want to delete this receipt?')) return;
 
     try {
         const { error } = await supabase
             .from('receipts')
             .delete()
-            .eq('receipt_id', id);
+            .eq('receipt_id', id)
+            .eq('environment_id', environment_id);
 
         if (error) throw error;
 

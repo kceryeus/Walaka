@@ -2,6 +2,8 @@ import { toast } from './toast.js';
 import { api } from './api.js';
 import { app } from './app.js';
 import authHandler from './auth-handler.js';
+// import { createUserWithEnvironment } from './auth-utils.js'; // Commented out: now using global version or not used
+// If you need to create a user with environment, use window.createUserWithEnvironment(userData) instead.
 
 class UI {
     constructor() {
@@ -167,16 +169,21 @@ class UI {
             this.setLoading(true);
 
             if (!this.currentUserId) {
-                // Add created_by if available
-                const currentUser = authHandler.getCurrentUser();
-                if (currentUser && currentUser.id) {
-                    userData.created_by = currentUser.id;
-                    console.log('[User Invite] Passing inviter ID:', currentUser.id, 'as created_by');
-                } else {
-                    console.warn('[User Invite] No inviter ID found, created_by will not be set');
+                // Actually create the user in Supabase Auth
+                let createdUser;
+                try {
+                    const result = await api.createUser(userData);
+                    createdUser = result.auth;
+                } catch (err) {
+                    toast.show({
+                        title: 'Error',
+                        description: 'Failed to create user in Auth: ' + (err.message || err),
+                        type: 'error'
+                    });
+                    this.setLoading(false);
+                    return;
                 }
-                console.log('[User Invite] userData to be sent to api.createUser:', userData);
-                await api.createUser(userData);
+
                 toast.show({
                     title: 'Success',
                     description: 'User created successfully. They will receive an email to set up their password.',

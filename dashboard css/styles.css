@@ -65,6 +65,7 @@
 }
 
 .drilldown-content.active {
+  display: block !important;
   animation: fadeIn 0.25s ease;
 }
 

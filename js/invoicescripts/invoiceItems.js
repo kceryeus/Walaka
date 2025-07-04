@@ -391,6 +391,22 @@ class InvoiceItems {
             showNotification('Error saving product: ' + error.message, 'error');
         }
     }
+
+    // Add this method to InvoiceItems
+    getInvoiceItems() {
+        const items = [];
+        const rows = document.querySelectorAll('.item-row');
+        rows.forEach(row => {
+            items.push({
+                description: row.querySelector('.item-description')?.value,
+                quantity: parseFloat(row.querySelector('.item-quantity')?.value) || 0,
+                price: parseFloat(row.querySelector('.item-price')?.value) || 0,
+                vat: parseFloat(row.querySelector('.item-vat')?.textContent) || 0,
+                total: parseFloat(row.querySelector('.item-total')?.textContent) || 0
+            });
+        });
+        return items;
+    }
 }
 
 // Export to window object

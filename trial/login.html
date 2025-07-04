@@ -460,19 +460,15 @@
                 });
                 if (signUpError) throw signUpError;
 
-                // 2. Create user profile in users table
-                const now = new Date();
-                const { error: profileError } = await supabase
-                    .from('users')
-                    .insert([{
-                        id: user.id,
-                        email: email,
-                        username: email.split('@')[0],
-                        role: 'user',
-                        created_at: now.toISOString(),
-                        updated_at: now.toISOString()
-                    }]);
-                if (profileError) throw profileError;
+                // 2. Use helper to insert user profile
+                await createUserWithEnvironment({
+                    id: user.id,
+                    email: email,
+                    username: email.split('@')[0],
+                    role: 'user',
+                    created_at: now.toISOString(),
+                    updated_at: now.toISOString()
+                });
 
                 // 3. Create record in trial_users
                 const trialEnd = new Date(now);

@@ -1,4 +1,5 @@
-import { supabaseClient } from './api.js';
+// import { supabaseClient } from './api.js'; // Commented out: use window.supabase instead
+// Use window.supabase directly in this file.
 
 // Handle user profile dropdown
 document.addEventListener('DOMContentLoaded', () => {
@@ -24,7 +25,7 @@ document.addEventListener('DOMContentLoaded', () => {
         logoutLink.addEventListener('click', async (e) => {
             e.preventDefault();
             try {
-                const { error } = await supabaseClient.auth.signOut();
+                const { error } = await window.supabase.auth.signOut();
                 if (error) throw error;
                 window.location.href = '/login.html';
             } catch (error) {

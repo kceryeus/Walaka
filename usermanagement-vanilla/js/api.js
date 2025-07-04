@@ -1,5 +1,6 @@
 // Simple API class for user management
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm'
+// import { createUserWithEnvironment } from '../../js/auth-utils.js';
 
 const supabaseUrl = 'https://qvmtozjvjflygbkjecyj.supabase.co';
 const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF2bXRvemp2amZseWdia2plY3lqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDYxMjc2MjMsImV4cCI6MjA2MTcwMzYyM30.DJMC1eM5_EouM1oc07JaoXsMX_bSLn2AVCozAcdfHmo';
@@ -12,6 +13,13 @@ class API {
 
     async fetchUsers() {
         try {
+            // Confirm current user session exists
+            const { data: { session }, error: sessionError } = await this.supabase.auth.getSession();
+            if (sessionError) throw new Error('Could not get current session: ' + sessionError.message);
+
+            if (!session?.user?.id) throw new Error('No current user session found.');
+
+            // Fetch all rows user is authorized to see (RLS handles filtering)
             const { data, error } = await this.supabase
                 .from('users')
                 .select('*')
@@ -29,14 +37,22 @@ class API {
         try {
             const randomPassword = Math.random().toString(36).slice(-10) + 'A1!';
 
+            // Get current user id from session
+            const { data: { session }, error: sessionError } = await this.supabase.auth.getSession();
+            if (sessionError) {
+                throw new Error('Could not get current session: ' + sessionError.message);
+            }
+            const currentUserId = session?.user?.id;
+            if (!currentUserId) {
+                throw new Error('No current user session found.');
+            }
+
             // Build metadata object
             const metadata = {
                 username: userData.username,
-                role: userData.role
+                role: userData.role,
+                created_by: currentUserId
             };
-            if (userData.created_by) {
-                metadata.created_by = userData.created_by;
-            }
 
             const { data: { user }, error: signUpError } = await this.supabase.auth.signUp({
                 email: userData.email,
@@ -55,39 +71,6 @@ class API {
             return { auth: user };
         } catch (error) {
             console.error('Invite failed:', error.message);
-            throw error;
-        }
-    }
-
-    async createUserInUsersTable(userData) {
-        try {
-            // Get the current authenticated user
-            const { data: userSession } = await this.supabase.auth.getUser();
-            const creatorId = userSession?.user?.id || null;
-
-            // Insert into public.users table
-            // The id should be set to the Supabase Auth user id (userData.id)
-            // created_by is set to the current user's id (creatorId)
-            const { data, error } = await this.supabase
-                .from('users')
-                .insert([
-                    {
-                        id: userData.id, // This should be the id from Supabase Auth
-                        username: userData.username,
-                        email: userData.email,
-                        role: userData.role,
-                        created_by: creatorId // Set the creator's user id
-                    }
-                ])
-                .select()
-                .single();
-            if (error) {
-                console.error('Supabase users insert error:', error, JSON.stringify(error));
-                throw error;
-            }
-            return data;
-        } catch (error) {
-            console.error('Error creating user in users table:', error, JSON.stringify(error));
             throw error;
         }
     }

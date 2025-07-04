@@ -3,6 +3,8 @@
  * Manages the product list functionality
  */
 
+import { getCurrentEnvironmentId } from './js/environment-utils.js';
+
 // Make initialization function globally available
 window.initProductList = async () => {
   try {
@@ -34,18 +36,12 @@ async function fetchProductsFromSupabase() {
     if (!window.supabase) {
       throw new Error('Supabase client not initialized');
     }
-
-    const { data: { session } } = await window.supabase.auth.getSession();
-    if (!session?.user) {
-      throw new Error('No authenticated user');
-    }
-
+    const environment_id = await getCurrentEnvironmentId();
     const { data, error } = await window.supabase
       .from('products')
       .select('*')
-      .eq('user_id', session.user.id)
+      .eq('environment_id', environment_id)
       .order('created_at', { ascending: false });
-
     if (error) throw error;
     return data || [];
   } catch (err) {
@@ -141,27 +137,31 @@ function initDeleteModal() {
   let productToDelete = null;
   
   // Setup delete product function for external access
-  window.deleteProduct = (productId) => {
-    productToDelete = productId;
-    deleteModal.classList.add('active');
+  window.deleteProduct = async (productId) => {
+    try {
+      const environment_id = await getCurrentEnvironmentId();
+      const { error } = await window.supabase
+        .from('products')
+        .delete()
+        .eq('id', productId)
+        .eq('environment_id', environment_id);
+      if (error) throw error;
+      window.appUtils.showToast('Product deleted successfully', 'success');
+      refreshProductList();
+    } catch (error) {
+      console.error('Error deleting product:', error);
+      window.appUtils.showToast('Error deleting product', 'error');
+    }
   };
   
   // Confirm delete button
   confirmDeleteBtn.addEventListener('click', async () => {
     if (productToDelete) {
       try {
-        const { error } = await window.supabase
-          .from('products')
-          .delete()
-          .eq('id', productToDelete);
-
-        if (error) throw error;
-
-        window.appUtils.showToast('Product deleted successfully', 'success');
-        refreshProductList();
+        await window.deleteProduct(productToDelete);
       } catch (error) {
-        console.error('Error deleting product:', error);
-        window.appUtils.showToast('Error deleting product', 'error');
+        console.error('Error confirming delete:', error);
+        window.appUtils.showToast('Error confirming delete', 'error');
       }
       productToDelete = null;
     }
