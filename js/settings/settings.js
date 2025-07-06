@@ -360,72 +360,69 @@ document.addEventListener('DOMContentLoaded', async () => {
   // });
 
   // Initialize Settings
-  function initializeSettings() {
-    // Load user profile
-    userNameDisplay.textContent = userSettings.name;
-    userNameInput.value = userSettings.name;
-    userEmailInput.value = userSettings.email;
-    userPhoneInput.value = userSettings.phone;
-    userLanguageSelect.value = userSettings.language;
+  async function initializeSettings() {
+    try {
+      // Load user profile
+      userNameDisplay.textContent = userSettings.name;
+      userNameInput.value = userSettings.name;
+      userEmailInput.value = userSettings.email;
+      userPhoneInput.value = userSettings.phone;
+      userLanguageSelect.value = userSettings.language;
 
-    // Load business settings
-    businessNameInput.value = businessSettings.name;
-    taxIdInput.value = businessSettings.taxId;
-    businessAddressInput.value = businessSettings.address;
-    businessWebsiteInput.value = businessSettings.website;
-    businessEmailInput.value = businessSettings.email;
+      // Load business settings
+      businessNameInput.value = businessSettings.name;
+      taxIdInput.value = businessSettings.taxId;
+      businessAddressInput.value = businessSettings.address;
+      businessWebsiteInput.value = businessSettings.website;
+      businessEmailInput.value = businessSettings.email;
 
-    // Load appearance settings
-    if (appearanceSettings.logo) {
-      logoPreviewImg.src = appearanceSettings.logo;
-      logoPreviewImg.style.display = 'block';
-      logoPlaceholder.style.display = 'none';
-    } else {
-      logoPreviewImg.style.display = 'none';
-      logoPlaceholder.style.display = 'flex';
+      // Load appearance settings
+      if (appearanceSettings.logo) {
+        logoPreviewImg.src = appearanceSettings.logo;
+        logoPreviewImg.style.display = 'block';
+        logoPlaceholder.style.display = 'none';
+      } else {
+        logoPreviewImg.style.display = 'none';
+        logoPlaceholder.style.display = 'flex';
+      }
+      themeSelectionInput.value = appearanceSettings.theme;
+      accentColorInput.value = appearanceSettings.accentColor;
+      colorValue.textContent = appearanceSettings.accentColor;
+      fontSizeInput.value = appearanceSettings.fontSize;
+      sidebarPositionInput.value = appearanceSettings.sidebarPosition;
+
+      // Load invoice settings
+      invoicePrefixInput.value = invoiceSettings.prefix;
+      invoiceNextNumberInput.value = invoiceSettings.nextNumber;
+
+      // Get the selected template from localStorage or use default
+      // Prioritize value from invoiceSettings if it exists
+      const selectedTemplate = invoiceSettings.template || window.invoiceTemplateManager.getSelectedTemplate();
+      invoiceTemplateInput.value = selectedTemplate;
+
+      // Preview the selected template
+      window.invoiceTemplateManager.previewTemplate(selectedTemplate);
+
+      invoiceColorInput.value = invoiceSettings.color;
+      invoiceColorValue.textContent = invoiceSettings.color;
+      defaultCurrencyInput.value = invoiceSettings.currency;
+      defaultTaxRateInput.value = invoiceSettings.taxRate;
+      paymentTermsInput.value = invoiceSettings.paymentTerms;
+      invoiceNotesInput.value = invoiceSettings.notes;
+
+      // Load notification settings from database
+      await loadNotificationSettings();
+
+      // Load security settings
+      twoFaToggle.checked = securitySettings.twoFactorEnabled;
+      if (securitySettings.twoFactorEnabled) {
+        twoFaSetup.classList.remove('hidden');
+      }
+      sessionTimeoutInput.value = securitySettings.sessionTimeout;
+      requireLoginConfirmationToggle.checked = securitySettings.requireLoginConfirmation;
+    } catch (error) {
+      console.error('Error initializing settings:', error);
     }
-    themeSelectionInput.value = appearanceSettings.theme;
-    accentColorInput.value = appearanceSettings.accentColor;
-    colorValue.textContent = appearanceSettings.accentColor;
-    fontSizeInput.value = appearanceSettings.fontSize;
-    sidebarPositionInput.value = appearanceSettings.sidebarPosition;
-
-    // Load invoice settings
-    invoicePrefixInput.value = invoiceSettings.prefix;
-    invoiceNextNumberInput.value = invoiceSettings.nextNumber;
-
-    // Get the selected template from localStorage or use default
-    // Prioritize value from invoiceSettings if it exists
-    const selectedTemplate = invoiceSettings.template || window.invoiceTemplateManager.getSelectedTemplate();
-    invoiceTemplateInput.value = selectedTemplate;
-
-    // Preview the selected template
-    window.invoiceTemplateManager.previewTemplate(selectedTemplate);
-
-    invoiceColorInput.value = invoiceSettings.color;
-    invoiceColorValue.textContent = invoiceSettings.color;
-    defaultCurrencyInput.value = invoiceSettings.currency;
-    defaultTaxRateInput.value = invoiceSettings.taxRate;
-    paymentTermsInput.value = invoiceSettings.paymentTerms;
-    invoiceNotesInput.value = invoiceSettings.notes;
-
-    // Load notification settings
-    notifyInvoiceCreated.checked = notificationSettings.emailNotifications.invoiceCreated;
-    notifyPaymentReceived.checked = notificationSettings.emailNotifications.paymentReceived;
-    notifyInvoiceDue.checked = notificationSettings.emailNotifications.invoiceDue;
-    notifyInvoiceOverdue.checked = notificationSettings.emailNotifications.invoiceOverdue;
-    notifyProductLowStock.checked = notificationSettings.systemNotifications.productLowStock;
-    notifySystemUpdates.checked = notificationSettings.systemNotifications.systemUpdates;
-    notifyClientActivity.checked = notificationSettings.systemNotifications.clientActivity;
-    notifyLoginAttempts.checked = notificationSettings.systemNotifications.loginAttempts;
-
-    // Load security settings
-    twoFaToggle.checked = securitySettings.twoFactorEnabled;
-    if (securitySettings.twoFactorEnabled) {
-      twoFaSetup.classList.remove('hidden');
-    }
-    sessionTimeoutInput.value = securitySettings.sessionTimeout;
-    requireLoginConfirmationToggle.checked = securitySettings.requireLoginConfirmation;
   }
 
   // Tab Navigation
@@ -694,44 +691,119 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // Notification Settings
   function setupNotificationSettings() {
-    saveNotificationSettingsBtn.addEventListener('click', function() {
+    saveNotificationSettingsBtn.addEventListener('click', async function() {
       showLoadingOverlay();
       
-      // Simulate API call
-      setTimeout(() => {
-        notificationSettings.emailNotifications.invoiceCreated = notifyInvoiceCreated.checked;
-        notificationSettings.emailNotifications.paymentReceived = notifyPaymentReceived.checked;
-        notificationSettings.emailNotifications.invoiceDue = notifyInvoiceDue.checked;
-        notificationSettings.emailNotifications.invoiceOverdue = notifyInvoiceOverdue.checked;
-        
-        notificationSettings.systemNotifications.productLowStock = notifyProductLowStock.checked;
-        notificationSettings.systemNotifications.systemUpdates = notifySystemUpdates.checked;
-        notificationSettings.systemNotifications.clientActivity = notifyClientActivity.checked;
-        notificationSettings.systemNotifications.loginAttempts = notifyLoginAttempts.checked;
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session || !session.user) {
+          throw new Error('No active session found');
+        }
+
+        const notificationData = {
+          user_id: session.user.id,
+          invoice_created: notifyInvoiceCreated.checked,
+          payment_received: notifyPaymentReceived.checked,
+          invoice_due: notifyInvoiceDue.checked,
+          invoice_overdue: notifyInvoiceOverdue.checked,
+          product_low_stock: notifyProductLowStock.checked,
+          system_updates: notifySystemUpdates.checked,
+          client_activity: notifyClientActivity.checked,
+          login_attempts: notifyLoginAttempts.checked
+        };
+
+        const { error } = await supabase
+          .from('notification_settings')
+          .upsert(notificationData, { onConflict: 'user_id' });
+
+        if (error) throw error;
+
+        // Update local settings
+        notificationSettings = {
+          emailNotifications: {
+            invoiceCreated: notificationData.invoice_created,
+            paymentReceived: notificationData.payment_received,
+            invoiceDue: notificationData.invoice_due,
+            invoiceOverdue: notificationData.invoice_overdue
+          },
+          systemNotifications: {
+            productLowStock: notificationData.product_low_stock,
+            systemUpdates: notificationData.system_updates,
+            clientActivity: notificationData.client_activity,
+            loginAttempts: notificationData.login_attempts
+          }
+        };
         
         hideLoadingOverlay();
-        showToast('success', 'Success', 'Notification settings updated successfully.');
-        
-        // Save to localStorage
-        saveSettingsToStorage();
-      }, 1000);
+        showToast('Notification settings saved successfully', 'success');
+      } catch (error) {
+        console.error('Error saving notification settings:', error);
+        showToast('Error saving notification settings', 'error');
+        hideLoadingOverlay();
+      }
     });
 
     resetNotificationSettingsBtn.addEventListener('click', function() {
       showConfirmationModal(
         'Reset Notification Settings',
         'Are you sure you want to reset the notification settings to their default values?',
-        function() {
-          notifyInvoiceCreated.checked = true;
-          notifyPaymentReceived.checked = true;
-          notifyInvoiceDue.checked = true;
-          notifyInvoiceOverdue.checked = true;
-          notifyProductLowStock.checked = true;
-          notifySystemUpdates.checked = true;
-          notifyClientActivity.checked = false;
-          notifyLoginAttempts.checked = true;
-          
-          showToast('info', 'Reset Complete', 'Notification settings have been reset.');
+        async function() {
+          try {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (!session || !session.user) {
+              throw new Error('No active session found');
+            }
+
+            // Reset to default values
+            const defaultNotificationData = {
+              user_id: session.user.id,
+              invoice_created: true,
+              payment_received: true,
+              invoice_due: true,
+              invoice_overdue: true,
+              product_low_stock: true,
+              system_updates: true,
+              client_activity: false,
+              login_attempts: true
+            };
+
+            const { error } = await supabase
+              .from('notification_settings')
+              .upsert(defaultNotificationData, { onConflict: 'user_id' });
+
+            if (error) throw error;
+
+            // Update form checkboxes
+            notifyInvoiceCreated.checked = true;
+            notifyPaymentReceived.checked = true;
+            notifyInvoiceDue.checked = true;
+            notifyInvoiceOverdue.checked = true;
+            notifyProductLowStock.checked = true;
+            notifySystemUpdates.checked = true;
+            notifyClientActivity.checked = false;
+            notifyLoginAttempts.checked = true;
+
+            // Update local settings
+            notificationSettings = {
+              emailNotifications: {
+                invoiceCreated: true,
+                paymentReceived: true,
+                invoiceDue: true,
+                invoiceOverdue: true
+              },
+              systemNotifications: {
+                productLowStock: true,
+                systemUpdates: true,
+                clientActivity: false,
+                loginAttempts: true
+              }
+            };
+            
+            showToast('info', 'Reset Complete', 'Notification settings have been reset to defaults.');
+          } catch (error) {
+            console.error('Error resetting notification settings:', error);
+            showToast('error', 'Error', `Failed to reset notification settings: ${error.message}`);
+          }
         }
       );
     });
@@ -831,6 +903,60 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
       );
     });
+  }
+
+  // Load notification settings from database
+  async function loadNotificationSettings() {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session || !session.user) {
+        throw new Error('No active session found');
+      }
+
+      const { data: notificationData, error } = await supabase
+        .from('notification_settings')
+        .select('*')
+        .eq('user_id', session.user.id)
+        .single();
+
+      if (error && error.code !== 'PGRST116') {
+        throw error;
+      }
+
+      if (notificationData) {
+        // Update form checkboxes
+        notifyInvoiceCreated.checked = notificationData.invoice_created;
+        notifyPaymentReceived.checked = notificationData.payment_received;
+        notifyInvoiceDue.checked = notificationData.invoice_due;
+        notifyInvoiceOverdue.checked = notificationData.invoice_overdue;
+        notifyProductLowStock.checked = notificationData.product_low_stock;
+        notifySystemUpdates.checked = notificationData.system_updates;
+        notifyClientActivity.checked = notificationData.client_activity;
+        notifyLoginAttempts.checked = notificationData.login_attempts;
+
+        // Update local settings
+        notificationSettings = {
+          emailNotifications: {
+            invoiceCreated: notificationData.invoice_created,
+            paymentReceived: notificationData.payment_received,
+            invoiceDue: notificationData.invoice_due,
+            invoiceOverdue: notificationData.invoice_overdue
+          },
+          systemNotifications: {
+            productLowStock: notificationData.product_low_stock,
+            systemUpdates: notificationData.system_updates,
+            clientActivity: notificationData.client_activity,
+            loginAttempts: notificationData.login_attempts
+          }
+        };
+      } else {
+        // Use default values if no settings exist
+        console.log('No notification settings found, using defaults');
+      }
+    } catch (error) {
+      console.error('Error loading notification settings:', error);
+      // Continue with default values if there's an error
+    }
   }
 
   // Helper Functions
@@ -1017,9 +1143,9 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   // Initialize the application
-  function init() {
-    loadSettingsFromStorage();
-    initializeSettings();
+  async function init() {
+    await loadSettingsFromStorage();
+    await initializeSettings();
     setupTabs();
     setupUserProfileSettings();
     setupBusinessSettings();

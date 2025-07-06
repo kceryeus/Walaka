@@ -15,6 +15,7 @@
     <!-- External Libraries -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.9.2/html2pdf.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet" />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet" />
     
@@ -27,33 +28,15 @@
     </script>
 
 
-    <!-- Initialize Supabase -->
-    <script type="module">
-        import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm'
-        
-        const supabaseUrl = 'https://qvmtozjvjflygbkjecyj.supabase.co'
+    <!-- Initialize Supabase like other pages -->
+    <script>
+        // Initialize Supabase client synchronously like the main system
+        const supabaseUrl = 'https://qvmtozjvjflygbkjecyj.supabase.co';
         const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF2bXRvemp2amZseWdia2plY3lqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDYxMjc2MjMsImV4cCI6MjA2MTcwMzYyM30.DJMC1eM5_EouM1oc07JaoXsMX_bSLn2AVCozAcdfHmo';
-        window.supabase = createClient(supabaseUrl, supabaseKey, {
-            auth: {
-                autoRefreshToken: true,
-                persistSession: true,
-                detectSessionInUrl: true,
-                storage: window.localStorage,
-                storageKey: 'supabase-auth-token'
-            }
-        });
-
-        // Create auth object for compatibility
-        window.auth = {
-            logout: async () => {
-                const { error } = await window.supabase.auth.signOut();
-                if (error) throw error;
-            },
-            checkAuth: async () => {
-                const { data: { session }, error } = await window.supabase.auth.getSession();
-                return !error && session;
-            }
-        };
+        
+        // Initialize Supabase client and make it globally available
+        window.supabase = supabase.createClient(supabaseUrl, supabaseKey);
+        console.log('Supabase client initialized:', window.supabase);
     </script>
 </head>
 <body>
@@ -89,7 +72,7 @@
                         <div class="user-menu" style="margin-left:auto;">
                             <a href="../notifications.html" class="notification-bell">
                                 <i class="fas fa-bell"></i>
-                                <span class="badge">3</span>
+                                <span class="badge">0</span>
                             </a>
                             
                             <div class="user-profile" id="userProfile">
@@ -434,59 +417,20 @@
         </main>
     </div>
 
-    <!-- JavaScript -->
-    <script type="module">
-        // Initialize auth and check session
-        document.addEventListener('DOMContentLoaded', async () => {
-            try {
-                // Check if user is authenticated
-                /* Commented out authentication check to prevent redirect
-                const isAuthenticated = await window.auth.checkAuth();
-                if (!isAuthenticated) {
-                    window.location.href = '/login.html';
-                    return;
-                }
-                */
-
-                // Get user info
-                const { data: { user }, error } = await window.supabase.auth.getUser();
-                if (user) {
-                    const userSpan = document.getElementById('user-name');
-                    if (userSpan) userSpan.textContent = user.email;
-                }
-
-                // Set up auth state change listener
-                /* Commented out auth state change listener to prevent redirect
-                window.supabase.auth.onAuthStateChange((event, session) => {
-                    if (event === 'SIGNED_OUT' || !session) {
-                        window.location.href = '/login.html';
-                    }
-                });
-                */
-            } catch (error) {
-                console.error('Auth initialization error:', error);
-                /* Commented out redirect on error
-                window.location.href = '/login.html';
-                */
-            }
-        });
-
-        // Handle sign out
-        document.addEventListener('DOMContentLoaded', () => {
-            const signOutBtn = document.getElementById('sign-out-btn');
-            if (signOutBtn) {
-                signOutBtn.addEventListener('click', async (e) => {
-                    e.preventDefault();
-                    try {
-                        await window.auth.logout();
-                    } catch (error) {
-                        console.error('Sign out error:', error);
-                    }
-                });
-            }
-        });
-    </script>
+    <!-- Ensure environment-utils is loaded first -->
+    <script src="../js/environment-utils.js"></script>
+    <!-- Then Supabase client -->
+    <script type="module" src="../js/supabaseClient.js"></script>
+    <!-- Notification badge synchronization -->
+    <script src="../js/notification-badge.js"></script>
+    <!-- Display name functionality -->
+    <script src="../js/displayname.js"></script>
+    <!-- User dropdown functionality -->
+    <script src="assets/js/user-dropdown.js"></script>
+    <!-- Banks functionality -->
     <script type="module" src="assets/js/banks.js"></script>
+    
+    <!-- Debug session info -->
     <div id="debug-session" style="background:#fee;color:#900;padding:8px;font-size:14px;display:none;"></div>
 </body>
 </html>

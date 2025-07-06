@@ -65,10 +65,10 @@
                 </button>
                 
                 <div class="user-menu" style="margin-left:auto;">
-                    <div class="notification-bell">
+                    <a href="../notifications.html" class="notification-bell">
                         <i class="fas fa-bell"></i>
-                        <span class="badge">3</span>
-                    </div>
+                        <span class="badge">0</span>
+                    </a>
                     
                     <div class="user-profile" id="userProfile">
                         <div class="avatar">
@@ -76,10 +76,10 @@
                         </div>
                         <span id="user-displayname">Loading...</span>
                         <div class="dropdown-menu" id="userDropdown">
-                            <a href="#">
+                            <a href="../profile.html">
                                 <i class="fas fa-user-circle"></i> My Profile
                             </a>
-                            <a href="settings.html">
+                            <a href="../settings.html">
                                 <i class="fas fa-cog"></i> Settings
                             </a>
                             <a href="#">
@@ -236,20 +236,40 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="js/config.js" type="module"></script>
     <script src="js/displayname.js" type="module"></script>
-    <script src="js/dashboard.js" type="module"></script>
     <script src="js/toast.js" type="module"></script>
     <script src="js/api.js" type="module"></script>
     <script src="js/ui.js" type="module"></script>
     <script src="js/app.js" type="module"></script>
     <script src="js/environment-utils.js"></script>
-    <script src="js/supabaseClient.js"></script>
     <script src="js/auth-utils.js"></script>
+    <script src="js/user-dropdown.js"></script>
+    
+    <!-- Initialize Supabase like other pages -->
+    <script>
+        // Initialize Supabase client synchronously like the main system
+        const supabaseUrl = 'https://qvmtozjvjflygbkjecyj.supabase.co';
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF2bXRvemp2amZseWdia2plY3lqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDYxMjc2MjMsImV4cCI6MjA2MTcwMzYyM30.DJMC1eM5_EouM1oc07JaoXsMX_bSLn2AVCozAcdfHmo';
+        
+        // Initialize Supabase client and make it globally available
+        window.supabase = supabase.createClient(supabaseUrl, supabaseKey);
+        console.log('Supabase client initialized:', window.supabase);
+    </script>
+    
+    <!-- Notification badge synchronization -->
+    <script src="../js/notification-badge.js"></script>
 
     <!-- Prevent clicks during loading -->
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             const overlay = document.getElementById('loadingOverlay');
             if (overlay) overlay.classList.remove('hidden');
+            
+            // Debug Supabase initialization
+            console.log('DOM loaded, checking Supabase:', {
+                supabase: !!window.supabase,
+                supabaseAuth: !!(window.supabase && window.supabase.auth),
+                supabaseCreateClient: !!window.supabase?.createClient
+            });
             
             // Hide overlay when app is ready
             window.addEventListener('app:ready', () => {

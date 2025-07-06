@@ -59,6 +59,65 @@ html[data-theme="dark"] {
   --shadow-color: rgba(0, 0, 0, 0.5);
 }
 
+/* User dropdown styles */
+.top-bar .user-profile {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+    padding: 0.5rem;
+    border-radius: var(--card-radius);
+    transition: background-color 0.2s ease;
+}
+
+.top-bar .user-profile:hover {
+    background-color: var(--gray-100);
+}
+
+.top-bar .user-profile.open .dropdown-menu,
+.top-bar .user-profile.show .dropdown-menu {
+    display: block;
+}
+
+.top-bar .dropdown-menu {
+    display: none;
+    position: absolute;
+    background-color: white;
+    box-shadow: var(--box-shadow);
+    border-radius: var(--card-radius);
+    overflow: hidden;
+    z-index: 1000;
+    right: 0;
+    top: 110%;
+    min-width: 180px;
+    animation: fadeIn 0.2s;
+}
+
+.top-bar .dropdown-menu a {
+    color: #333;
+    padding: 0.75rem 1.5rem;
+    text-decoration: none;
+    display: block;
+    font-size: 0.9rem;
+    transition: background 0.2s;
+}
+
+.top-bar .dropdown-menu a:hover {
+    background-color: #f0f0f0;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
 /* Custom styles */
 .modal-backdrop {
     transition: opacity 0.3s ease-in-out;

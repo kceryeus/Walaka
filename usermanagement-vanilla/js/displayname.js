@@ -1,12 +1,16 @@
-import { supabaseClient } from './supabase.js';
-
 // Function to update user display name
 async function updateUserDisplayName() {
     try {
-        const { data: { user } } = await supabaseClient.auth.getUser();
+        // Use global Supabase client
+        if (!window.supabase) {
+            console.log('Supabase not available yet for display name update');
+            return;
+        }
+
+        const { data: { user } } = await window.supabase.auth.getUser();
         if (!user) return;
 
-        const { data: userData, error } = await supabaseClient
+        const { data: userData, error } = await window.supabase
             .from('users')
             .select('username')
             .eq('id', user.id)
@@ -28,16 +32,45 @@ async function updateUserDisplayName() {
 }
 
 // Update display name when auth state changes
-supabaseClient.auth.onAuthStateChange((event, session) => {
-    if (event === 'SIGNED_IN') {
-        updateUserDisplayName();
-    } else if (event === 'SIGNED_OUT') {
-        const displayNameElement = document.getElementById('user-displayname');
-        if (displayNameElement) {
-            displayNameElement.textContent = 'Loading...';
-        }
+function setupDisplayNameListener() {
+    if (!window.supabase) {
+        console.log('Supabase not available for display name listener');
+        return;
     }
-});
 
-// Initial update
-updateUserDisplayName();
+    window.supabase.auth.onAuthStateChange((event, session) => {
+        if (event === 'SIGNED_IN') {
+            updateUserDisplayName();
+        } else if (event === 'SIGNED_OUT') {
+            const displayNameElement = document.getElementById('user-displayname');
+            if (displayNameElement) {
+                displayNameElement.textContent = 'Loading...';
+            }
+        }
+    });
+}
+
+// Wait for Supabase to be available and then setup
+function initializeDisplayName() {
+    if (window.supabase) {
+        setupDisplayNameListener();
+        updateUserDisplayName();
+    } else {
+        // Wait for Supabase to be available
+        const checkSupabase = setInterval(() => {
+            if (window.supabase) {
+                clearInterval(checkSupabase);
+                setupDisplayNameListener();
+                updateUserDisplayName();
+            }
+        }, 100);
+        
+        // Stop checking after 10 seconds
+        setTimeout(() => {
+            clearInterval(checkSupabase);
+        }, 10000);
+    }
+}
+
+// Initialize when DOM is ready
+document.addEventListener('DOMContentLoaded', initializeDisplayName);

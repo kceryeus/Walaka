@@ -149,6 +149,8 @@
         .type-payment { background: #e8f5e9; }
         .type-system { background: #fff3e0; }
         .type-alert { background: #ffebee; }
+        .type-subscription_warning { background: #fff3cd; }
+        .type-subscription_expired { background: #f8d7da; }
         
         /* Dropdown functionality */
         .user-profile.open .dropdown-menu {
@@ -247,6 +249,12 @@
                     <button class="filter-button" data-filter="system">
                         System
                     </button>
+                    <button class="filter-button" data-filter="subscription_warning">
+                        Subscription Warnings
+                    </button>
+                    <button class="filter-button" data-filter="subscription_expired">
+                        Subscription Expired
+                    </button>
                     <button class="clear-all-btn" id="clear-all">
                         <i class="fas fa-trash"></i> Clear All
                     </button>
@@ -280,9 +288,19 @@
         </main>
     </div>
 
+    <!-- Notification badge synchronization -->
+    <script src="js/notification-badge.js"></script>
+    
     <!-- JavaScript -->
     <script type="module">
-        import { supabase } from './js/supabaseClient.js';
+        // Initialize Supabase client
+        import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+        
+        // Initialize Supabase
+        window.supabase = createClient(
+            'https://qvmtozjvjflygbkjecyj.supabase.co',
+            'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF2bXRvemp2amZseWdia2plY3lqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDYxMjc2MjMsImV4cCI6MjA2MTcwMzYyM30.DJMC1eM5_EouM1oc07JaoXsMX_bSLn2AVCozAcdfHmo'
+        );
 
         // DOM Elements
         const notificationsList = document.getElementById('notifications-list');
@@ -294,14 +312,22 @@
         const notificationBadge = document.querySelector('.notification-bell .badge');
 
         let notifications = [];
+        let lastSubscriptionCheck = 0; // Track last subscription check time
 
         // Initialize notifications
         async function initializeNotifications() {
-            const { data: { user } } = await supabase.auth.getUser();
+            const { data: { user } } = await window.supabase.auth.getUser();
             if (!user) return;
 
+            // Check for subscription expiration notifications (but not too frequently)
+            const now = Date.now();
+            if (now - lastSubscriptionCheck > 60000) { // Only check once per minute
+                await checkSubscriptionNotifications(user.id);
+                lastSubscriptionCheck = now;
+            }
+
             // Fetch notifications from Supabase
-            const { data, error } = await supabase
+            const { data, error } = await window.supabase
                 .from('notifications')
                 .select('*')
                 .eq('user_id', user.id)
@@ -315,6 +341,118 @@
             notifications = data || [];
             updateNotificationsDisplay();
             updateUnreadCount();
+        }
+
+        // Check and create subscription expiration notifications
+        async function checkSubscriptionNotifications(userId) {
+            try {
+                // Get user's subscription
+                const { data: subscriptions, error: subError } = await window.supabase
+                    .from('subscriptions')
+                    .select('*')
+                    .eq('user_id', userId)
+                    .order('end_date', { ascending: false });
+
+                if (subError || !subscriptions || subscriptions.length === 0) {
+                    return; // No subscription found
+                }
+
+                const subscription = subscriptions[0];
+                if (!subscription.end_date) return;
+
+                // Parse the subscription end date
+                const endDate = new Date(subscription.end_date);
+                const today = new Date();
+                
+                // Reset time to midnight for accurate day comparison
+                const endDateMidnight = new Date(endDate.getFullYear(), endDate.getMonth(), endDate.getDate());
+                const todayMidnight = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+                
+                // Calculate days until expiration
+                const daysUntilExpiration = Math.ceil((endDateMidnight - todayMidnight) / (1000 * 60 * 60 * 24));
+
+                console.log('=== NOTIFICATION DATE DEBUG ===');
+                console.log('End date:', endDate.toISOString());
+                console.log('Today:', today.toISOString());
+                console.log('Days until expiration:', daysUntilExpiration);
+
+                // Check if we need to create a 3-day warning notification
+                if (daysUntilExpiration === 3) {
+                    console.log('Checking for 3-day warning notification...');
+                    await createSubscriptionNotification(
+                        userId,
+                        'subscription_warning',
+                        'Subscription Expiring Soon',
+                        `Your subscription will expire in 3 days on ${endDate.toLocaleDateString()}. Please renew to continue using our services.`,
+                        'profile.html',
+                        endDateMidnight
+                    );
+                }
+
+                // Check if subscription has expired today
+                if (daysUntilExpiration === 0) {
+                    console.log('Checking for expired notification...');
+                    await createSubscriptionNotification(
+                        userId,
+                        'subscription_expired',
+                        'Subscription Expired',
+                        `Your subscription has expired on ${endDate.toLocaleDateString()}. Please renew to restore access to our services.`,
+                        'profile.html',
+                        endDateMidnight
+                    );
+                }
+
+            } catch (error) {
+                console.error('Error checking subscription notifications:', error);
+            }
+        }
+
+        // Create subscription notification
+        async function createSubscriptionNotification(userId, type, title, message, actionUrl, targetDate) {
+            try {
+                // Create a unique identifier for this notification based on type and target date
+                const targetDateStr = targetDate.toISOString().split('T')[0]; // YYYY-MM-DD format
+                
+                // Check if notification already exists for this type and target date
+                const { data: existingNotifications, error: checkError } = await window.supabase
+                    .from('notifications')
+                    .select('id')
+                    .eq('user_id', userId)
+                    .eq('type', type)
+                    .eq('title', title); // Also check title to be extra safe
+
+                if (checkError) {
+                    console.error('Error checking existing notifications:', checkError);
+                    return;
+                }
+
+                if (existingNotifications && existingNotifications.length > 0) {
+                    console.log(`Notification of type "${type}" already exists, skipping...`);
+                    return; // Notification already exists
+                }
+
+                console.log(`Creating new notification: ${type} - ${title}`);
+                
+                // Create new notification
+                const { error } = await window.supabase
+                    .from('notifications')
+                    .insert({
+                        user_id: userId,
+                        type: type,
+                        title: title,
+                        message: message,
+                        action_url: actionUrl,
+                        read: false
+                    });
+
+                if (error) {
+                    console.error('Error creating subscription notification:', error);
+                } else {
+                    console.log(`Successfully created notification: ${type}`);
+                }
+            } catch (error) {
+                console.error('Error creating subscription notification:', error);
+            }
         }
 
         // Update notifications display
@@ -353,15 +491,33 @@
             card.dataset.id = notification.id;
 
             let iconClass = 'fa-bell';
+            let typeClass = notification.type;
+            
             switch (notification.type) {
-                case 'invoice': iconClass = 'fa-file-invoice-dollar'; break;
-                case 'payment': iconClass = 'fa-money-bill-wave'; break;
-                case 'system': iconClass = 'fa-cog'; break;
-                case 'alert': iconClass = 'fa-exclamation-circle'; break;
+                case 'invoice': 
+                    iconClass = 'fa-file-invoice-dollar'; 
+                    break;
+                case 'payment': 
+                    iconClass = 'fa-money-bill-wave'; 
+                    break;
+                case 'system': 
+                    iconClass = 'fa-cog'; 
+                    break;
+                case 'alert': 
+                    iconClass = 'fa-exclamation-circle'; 
+                    break;
+                case 'subscription_warning': 
+                    iconClass = 'fa-exclamation-triangle'; 
+                    typeClass = 'alert';
+                    break;
+                case 'subscription_expired': 
+                    iconClass = 'fa-times-circle'; 
+                    typeClass = 'alert';
+                    break;
             }
 
             card.innerHTML = `
-                <div class="notification-icon type-${notification.type}">
+                <div class="notification-icon type-${typeClass}">
                     <i class="fas ${iconClass} notification-type-icon"></i>
                 </div>
                 <div class="notification-content">
@@ -371,8 +527,8 @@
                     </div>
                     <p class="notification-message">${notification.message}</p>
                     <div class="notification-actions">
-                        ${notification.actionUrl ? 
-                            `<button class="notification-action-btn" onclick="window.location.href='${notification.actionUrl}'">
+                        ${notification.action_url ? 
+                            `<button class="notification-action-btn" onclick="window.location.href='${notification.action_url}'">
                                 View Details
                             </button>` : ''
                         }
@@ -389,25 +545,56 @@
             return card;
         }
 
-        // Format date
+        // Format date with more precise time display
         function formatDate(dateString) {
             const date = new Date(dateString);
             const now = new Date();
             const diff = now - date;
             
+            // Less than 1 minute
             if (diff < 60000) return 'Just now';
-            if (diff < 3600000) return `${Math.floor(diff/60000)}m ago`;
-            if (diff < 86400000) return `${Math.floor(diff/3600000)}h ago`;
-            if (diff < 604800000) return `${Math.floor(diff/86400000)}d ago`;
             
-            return date.toLocaleDateString();
+            // Less than 1 hour
+            if (diff < 3600000) {
+                const minutes = Math.floor(diff / 60000);
+                return `${minutes}m ago`;
+            }
+            
+            // Less than 24 hours
+            if (diff < 86400000) {
+                const hours = Math.floor(diff / 3600000);
+                return `${hours}h ago`;
+            }
+            
+            // Less than 7 days
+            if (diff < 604800000) {
+                const days = Math.floor(diff / 86400000);
+                return `${days}d ago`;
+            }
+            
+            // Less than 30 days
+            if (diff < 2592000000) {
+                const weeks = Math.floor(diff / 604800000);
+                return `${weeks}w ago`;
+            }
+            
+            // Less than 1 year
+            if (diff < 31536000000) {
+                const months = Math.floor(diff / 2592000000);
+                return `${months}mo ago`;
+            }
+            
+            // More than 1 year
+            const years = Math.floor(diff / 31536000000);
+            return `${years}y ago`;
         }
 
-        // Update unread count
+        // Update unread count - use the badge manager instead
         function updateUnreadCount() {
-            const unreadCount = notifications.filter(n => !n.read).length;
-            notificationBadge.textContent = unreadCount;
-            notificationBadge.style.display = unreadCount > 0 ? 'block' : 'none';
+            // Let the notification badge manager handle the count
+            if (window.notificationBadgeManager) {
+                window.notificationBadgeManager.refresh();
+            }
         }
 
         // Mark notification as read/unread
@@ -415,7 +602,7 @@
             const notification = notifications.find(n => n.id === id);
             if (!notification) return;
 
-            const { error } = await supabase
+            const { error } = await window.supabase
                 .from('notifications')
                 .update({ read: !notification.read })
                 .eq('id', id);
@@ -428,12 +615,18 @@
             notification.read = !notification.read;
             updateNotificationsDisplay();
             updateUnreadCount();
+            
+            // Update notification badge count
+            if (window.notificationBadgeManager) {
+                await window.notificationBadgeManager.refresh();
+            }
+            
             showToast('Notification updated successfully');
         }
 
         // Delete notification
         async function deleteNotification(id) {
-            const { error } = await supabase
+            const { error } = await window.supabase
                 .from('notifications')
                 .delete()
                 .eq('id', id);
@@ -446,6 +639,12 @@
             notifications = notifications.filter(n => n.id !== id);
             updateNotificationsDisplay();
             updateUnreadCount();
+            
+            // Update notification badge count
+            if (window.notificationBadgeManager) {
+                await window.notificationBadgeManager.refresh();
+            }
+            
             showToast('Notification deleted successfully');
         }
 
@@ -482,10 +681,10 @@
         clearAllBtn.addEventListener('click', async () => {
             if (!confirm('Are you sure you want to clear all notifications?')) return;
 
-            const { data: { user } } = await supabase.auth.getUser();
+            const { data: { user } } = await window.supabase.auth.getUser();
             if (!user) return;
 
-            const { error } = await supabase
+            const { error } = await window.supabase
                 .from('notifications')
                 .delete()
                 .eq('user_id', user.id);
@@ -498,14 +697,20 @@
             notifications = [];
             updateNotificationsDisplay();
             updateUnreadCount();
+            
+            // Update notification badge count
+            if (window.notificationBadgeManager) {
+                await window.notificationBadgeManager.refresh();
+            }
+            
             showToast('All notifications cleared');
         });
 
         markAllReadBtn.addEventListener('click', async () => {
-            const { data: { user } } = await supabase.auth.getUser();
+            const { data: { user } } = await window.supabase.auth.getUser();
             if (!user) return;
 
-            const { error } = await supabase
+            const { error } = await window.supabase
                 .from('notifications')
                 .update({ read: true })
                 .eq('user_id', user.id);
@@ -518,15 +723,16 @@
             notifications.forEach(n => n.read = true);
             updateNotificationsDisplay();
             updateUnreadCount();
+            
+            // Update notification badge count
+            if (window.notificationBadgeManager) {
+                await window.notificationBadgeManager.refresh();
+            }
+            
             showToast('All notifications marked as read');
         });
 
-        // Ensure window.supabase is initialized
-        if (typeof window.supabase === 'undefined') {
-            const SUPABASE_URL = 'https://qvmtozjvjflygbkjecyj.supabase.co';
-            const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF2bXRvemp2amZseWdia2plY3lqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDYxMjc2MjMsImV4cCI6MjA2MTcwMzYyM30.DJMC1eM5_EouM1oc07JaoXsMX_bSLn2AVCozAcdfHmo';
-            window.supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-        }
+
         // Username display and dropdown logic (from invoices.html)
         document.addEventListener('DOMContentLoaded', async () => {
             // Username display
@@ -589,17 +795,34 @@
 
         // Authentication handler
         document.addEventListener('DOMContentLoaded', async () => {
-            const { data: { user } } = await supabase.auth.getUser();
+            const { data: { user } } = await window.supabase.auth.getUser();
             if (user) {
                 const userSpan = document.getElementById('user-name');
                 if (userSpan) userSpan.textContent = user.email;
                 initializeNotifications();
+                
+                // Set up periodic subscription notification checks (every hour)
+                setInterval(async () => {
+                    await checkSubscriptionNotifications(user.id);
+                    // Refresh notifications list
+                    const { data, error } = await window.supabase
+                        .from('notifications')
+                        .select('*')
+                        .eq('user_id', user.id)
+                        .order('created_at', { ascending: false });
+                    
+                    if (!error && data) {
+                        notifications = data;
+                        updateNotificationsDisplay();
+                        updateUnreadCount();
+                    }
+                }, 60 * 60 * 1000); // Check every hour
             }
         });
 
         // Sign out handler
         document.getElementById('sign-out-btn')?.addEventListener('click', () => {
-            supabase.auth.signOut();
+            window.supabase.auth.signOut();
         });
 
         // Make functions available globally

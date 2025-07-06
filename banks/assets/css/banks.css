@@ -278,7 +278,8 @@ ul {
   background-color: var(--primary-light);
 }
 
-.user-profile.open .dropdown-menu {
+.user-profile.open .dropdown-menu,
+.user-profile.show .dropdown-menu {
   display: block;
 }
 
@@ -317,6 +318,18 @@ ul {
   overflow: hidden;
   z-index: 1000;
   margin-top: 10px;
+  animation: fadeIn 0.2s;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .dropdown-menu a {

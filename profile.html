@@ -15,8 +15,7 @@
     <!-- Font Awesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script>
-        document.write(`<link rel="stylesheet" href="${basePath}vendors/style.css">`);
-        document.write(`<link rel="stylesheet" href="${basePath}trial/css/upgrade-modal.css">`);
+        // Only load CSS files that exist
         document.write(`<link rel="stylesheet" href="${basePath}components/trial-banner.css">`);
         document.write(`<link rel="stylesheet" href="${basePath}components/trial-restrictions.css">`);
         document.write(`<link rel="stylesheet" href="${basePath}components/sidebar.css">`);
@@ -284,6 +283,14 @@
             font-weight: 600;
             color: #1e293b;
         }
+        .subscription-list .value.overdue {
+            color: #dc2626;
+        }
+        .overdue-indicator {
+            color: #dc2626;
+            font-weight: 700;
+            margin-right: 0.5rem;
+        }
         .section {
             display: none;
             animation: fadeIn 0.3s;
@@ -383,7 +390,7 @@
                 <div class="user-menu" style="margin-left:auto;">
                     <a href="notifications.html" class="notification-bell">
                         <i class="fas fa-bell"></i>
-                        <span class="badge">3</span>
+                        <span class="badge">0</span>
                     </a>
                     
                     <div class="user-profile" id="userProfile">
@@ -409,33 +416,10 @@
             <!-- Add this after top bar section -->
             <div id="trial-banner-container"></div>
             <script>
-            // Ensure window.supabase is initialized
-            if (typeof window.supabase === 'undefined') {
-                const SUPABASE_URL = 'https://qvmtozjvjflygbkjecyj.supabase.co';
-                const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF2bXRvemp2amZseWdia2plY3lqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDYxMjc2MjMsImV4cCI6MjA2MTcwMzYyM30.DJMC1eM5_EouM1oc07JaoXsMX_bSLn2AVCozAcdfHmo';
-                window.supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-            }
+            // Supabase will be initialized in the module script below
             // Username display and dropdown logic (from js/displayname.js)
             document.addEventListener('DOMContentLoaded', async () => {
-                // Username display
-                if (typeof window.supabase !== 'undefined') {
-                    const { data: { session } } = await window.supabase.auth.getSession();
-                    if (session && session.user) {
-                        let displayName = session.user.email;
-                        try {
-                            const { data: userRecord } = await window.supabase
-                                .from('users')
-                                .select('username')
-                                .eq('id', session.user.id)
-                                .maybeSingle();
-                            if (userRecord && userRecord.username) {
-                                displayName = userRecord.username;
-                            }
-                        } catch (e) {}
-                        const userSpan = document.getElementById('user-displayname');
-                        if (userSpan) userSpan.textContent = displayName;
-                    }
-                }
+                // Username display - will be handled in the module script
                 // Dropdown open/close logic
                 const userProfile = document.getElementById('userProfile');
                 const userDropdown = document.getElementById('userDropdown');
@@ -576,15 +560,46 @@
         </main>
     </div>
     <script src="services/languageManager.js"></script>
+    <!-- Notification badge synchronization -->
+    <script src="js/notification-badge.js"></script>
     <script type="module">
         import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.0.0/+esm';
         const supabaseUrl = 'https://qvmtozjvjflygbkjecyj.supabase.co';
         const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF2bXRvemp2amZseWdia2plY3lqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDYxMjc2MjMsImV4cCI6MjA2MTcwMzYyM30.DJMC1eM5_EouM1oc07JaoXsMX_bSLn2AVCozAcdfHmo';
         const supabase = createClient(supabaseUrl, supabaseKey);
 
+        // Make supabase available globally
+        window.supabase = supabase;
+
         function capitalizePlanName(plan) {
             if (!plan) return '';
             return plan.charAt(0).toUpperCase() + plan.slice(1).toLowerCase();
+        }
+
+        // Handle username display
+        async function updateUsername() {
+            try {
+                const { data: { session } } = await supabase.auth.getSession();
+                if (session && session.user) {
+                    let displayName = session.user.email;
+                    try {
+                        const { data: userRecord } = await supabase
+                            .from('users')
+                            .select('username')
+                            .eq('id', session.user.id)
+                            .maybeSingle();
+                        if (userRecord && userRecord.username) {
+                            displayName = userRecord.username;
+                        }
+                    } catch (e) {
+                        console.log('Error fetching username:', e);
+                    }
+                    const userSpan = document.getElementById('user-displayname');
+                    if (userSpan) userSpan.textContent = displayName;
+                }
+            } catch (e) {
+                console.log('Error updating username:', e);
+            }
         }
 
         async function fetchAndDisplaySubscription() {
@@ -619,14 +634,56 @@
                 const latest = subscriptions[0];
                 planEl.textContent = capitalizePlanName(latest.plan);
                 statusEl.textContent = latest.status ? capitalizePlanName(latest.status) : '-';
-                nextBillingEl.textContent = latest.end_date ? latest.end_date.split('T')[0] : '-';
+                
+                // Handle next billing date with overdue check
+                if (latest.end_date) {
+                    const endDate = new Date(latest.end_date);
+                    const today = new Date();
+                    
+                    // Extract just the date part from the original string to avoid timezone conversion issues
+                    const endDateStr = latest.end_date.split('T')[0]; // "2025-07-05"
+                    // Use local date instead of UTC to get the correct today's date
+                    const todayStr = today.getFullYear() + '-' + 
+                                   String(today.getMonth() + 1).padStart(2, '0') + '-' + 
+                                   String(today.getDate()).padStart(2, '0'); // "2025-07-06"
+                    
+                    console.log('=== DATE DEBUG INFO ===');
+                    console.log('Current date/time (local):', new Date().toString());
+                    console.log('Current date/time (UTC):', new Date().toISOString());
+                    console.log('End date (original):', latest.end_date);
+                    console.log('End date (parsed):', endDate);
+                    console.log('End date string:', endDateStr);
+                    console.log('Today string:', todayStr);
+                    console.log('Is overdue:', endDateStr < todayStr);
+                    console.log('=== END DEBUG INFO ===');
+                    
+                    if (endDateStr < todayStr) {
+                        // Subscription is overdue
+                        nextBillingEl.innerHTML = `<span class="overdue-indicator">OVERDUE</span>${endDateStr}`;
+                        nextBillingEl.classList.add('overdue');
+                        console.log('Set overdue styling');
+                    } else {
+                        nextBillingEl.textContent = endDateStr;
+                        nextBillingEl.classList.remove('overdue');
+                        console.log('Set normal styling');
+                    }
+                } else {
+                    nextBillingEl.textContent = '-';
+                    nextBillingEl.classList.remove('overdue');
+                    console.log('No end date');
+                }
+                
                 paymentMethodEl.textContent = latest.payment_method || '-';
             } catch (err) {
                 planEl.textContent = statusEl.textContent = nextBillingEl.textContent = paymentMethodEl.textContent = '-';
             }
         }
 
-        window.addEventListener('DOMContentLoaded', () => {
+        window.addEventListener('DOMContentLoaded', async () => {
+            // Update username first
+            await updateUsername();
+            
+            // Then fetch and display subscription
             fetchAndDisplaySubscription();
 
             // Billing form submit

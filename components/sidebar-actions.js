@@ -30,7 +30,7 @@
 
     function updateSidebarLogo() {
         const basePath = getBasePath();
-        const logoImg = document.getElementById('sidebar-logo');
+        const logoImg = document.getElementById('walaka-logo');
         if (logoImg) {
             logoImg.src = basePath + 'assets/images/walaka-logo.PNG';
         }

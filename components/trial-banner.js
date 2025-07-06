@@ -200,6 +200,167 @@ function capitalizePlanName(plan) {
     return plan.charAt(0).toUpperCase() + plan.slice(1).toLowerCase();
 }
 
+// Create payment notification
+async function createPaymentNotification(userId, paymentMethod, amount, plan) {
+    console.log('[TrialBanner] createPaymentNotification called with:', { userId, paymentMethod, amount, plan });
+    try {
+        // Check if user has notification settings enabled for payment notifications
+        console.log('[TrialBanner] Checking notification settings for user:', userId);
+        const { data: notificationSettings, error: settingsError } = await supabase
+            .from('notification_settings')
+            .select('payment_received')
+            .eq('user_id', userId)
+            .single();
+
+        console.log('[TrialBanner] Notification settings result:', { notificationSettings, settingsError });
+
+        // If no settings found or payment notifications are disabled, don't create notification
+        if (settingsError || !notificationSettings || !notificationSettings.payment_received) {
+            console.log('[TrialBanner] Payment notifications disabled or no settings found, skipping notification');
+            console.log('[TrialBanner] Settings error:', settingsError);
+            console.log('[TrialBanner] Notification settings:', notificationSettings);
+            
+            // If no settings exist, create default settings for the user
+            if (settingsError && settingsError.code === 'PGRST116') {
+                console.log('[TrialBanner] No notification settings found, creating default settings...');
+                const { error: createError } = await supabase
+                    .from('notification_settings')
+                    .insert({
+                        user_id: userId,
+                        payment_received: true,
+                        invoice_created: true,
+                        invoice_due: true,
+                        invoice_overdue: true,
+                        product_low_stock: true,
+                        system_updates: true,
+                        client_activity: false,
+                        login_attempts: true
+                    });
+                
+                if (createError) {
+                    console.error('[TrialBanner] Error creating default notification settings:', createError);
+                    return;
+                } else {
+                    console.log('[TrialBanner] Default notification settings created successfully');
+                    // Now proceed with creating the notification
+                }
+            } else {
+                return;
+            }
+        }
+
+        // For payments, we'll create a notification every time since payments are unique events
+        console.log('[TrialBanner] Creating new payment notification...');
+
+                // Create payment notification
+        console.log('[TrialBanner] Creating payment notification in database...');
+        const { error } = await supabase
+            .from('notifications')
+            .insert({
+                user_id: userId,
+                type: 'payment',
+                title: 'Payment Received',
+                message: `Payment of ${amount} for ${plan} plan has been received via ${paymentMethod}. Your subscription is now active.`,
+                action_url: 'profile.html',
+                read: false
+            });
+
+        if (error) {
+            console.error('[TrialBanner] Error creating payment notification:', error);
+        } else {
+            console.log('[TrialBanner] Payment notification created successfully');
+            
+            // Verify the notification was created by fetching it
+            const { data: verifyNotification, error: verifyError } = await supabase
+                .from('notifications')
+                .select('*')
+                .eq('user_id', userId)
+                .eq('type', 'payment')
+                .order('created_at', { ascending: false })
+                .limit(1);
+            
+            if (verifyError) {
+                console.error('[TrialBanner] Error verifying notification creation:', verifyError);
+            } else {
+                console.log('[TrialBanner] Notification verification successful:', verifyNotification);
+            }
+            
+            // Dispatch event to notify other parts of the app about new notification
+            window.dispatchEvent(new CustomEvent('notificationCreated', {
+                detail: {
+                    type: 'payment',
+                    title: 'Payment Received',
+                    message: `Payment of ${amount} for ${plan} plan has been received via ${paymentMethod}. Your subscription is now active.`
+                }
+            }));
+            
+            // Update notification badge count
+            if (window.notificationBadgeManager) {
+                await window.notificationBadgeManager.refresh();
+            }
+        }
+} catch (error) {
+    console.error('[TrialBanner] Error in createPaymentNotification:', error);
+}
+
+// Create invoice notification
+async function createInvoiceNotification(userId, invoiceNumber) {
+    try {
+        // Check if user has notification settings enabled for invoice notifications
+        const { data: notificationSettings, error: settingsError } = await supabase
+            .from('notification_settings')
+            .select('invoice_created')
+            .eq('user_id', userId)
+            .single();
+
+        // If no settings found or invoice notifications are disabled, don't create notification
+        if (settingsError || !notificationSettings || !notificationSettings.invoice_created) {
+            console.log('[TrialBanner] Invoice notifications disabled or no settings found, skipping notification');
+            return;
+        }
+
+        // Check if notification already exists for this invoice
+        const { data: existingNotifications, error: checkError } = await supabase
+            .from('notifications')
+            .select('id')
+            .eq('user_id', userId)
+            .eq('type', 'invoice')
+            .eq('title', 'Invoice Created Successfully')
+            .gte('created_at', new Date().toISOString().split('T')[0] + 'T00:00:00');
+
+        if (checkError) {
+            console.error('[TrialBanner] Error checking existing invoice notifications:', checkError);
+            return;
+        }
+
+        if (existingNotifications && existingNotifications.length > 0) {
+            console.log('[TrialBanner] Invoice notification already exists for today, skipping...');
+            return;
+        }
+
+        // Create invoice notification
+        const { error } = await supabase
+            .from('notifications')
+            .insert({
+                user_id: userId,
+                type: 'invoice',
+                title: 'Invoice Created Successfully',
+                message: `Invoice ${invoiceNumber || 'INV-001'} has been created and is ready for sending to your client.`,
+                action_url: 'invoices.html',
+                read: false
+            });
+
+        if (error) {
+            console.error('[TrialBanner] Error creating invoice notification:', error);
+        } else {
+            console.log('[TrialBanner] Invoice notification created successfully');
+        }
+    } catch (error) {
+        console.error('[TrialBanner] Error in createInvoiceNotification:', error);
+    }
+}
+}
+
 // --- Upgrade Modal Logic ---
 function injectUpgradeModalCSS() {
     if (document.getElementById('upgrade-modal-css')) return;
@@ -274,8 +435,65 @@ function showUpgradeModal(currentPlan) {
                 showPaymentMethodModal(async (paymentMethod) => {
                     await simulatePaymentAndSubscribe(paymentMethod, modal);
                 });
+                }
+};
+
+// Global notification helper function
+window.createNotification = async function(type, title, message, actionUrl = null, userId = null) {
+    try {
+        // Get current user if not provided
+        if (!userId) {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (!session || !session.user) {
+                console.error('[NotificationHelper] No user session found');
+                return;
             }
+            userId = session.user.id;
+        }
+
+        // Check if user has notification settings enabled for this type
+        const notificationTypeMap = {
+            'invoice': 'invoice_created',
+            'payment': 'payment_received',
+            'system': 'system_updates',
+            'alert': 'invoice_overdue'
         };
+
+        const settingKey = notificationTypeMap[type];
+        if (settingKey) {
+            const { data: notificationSettings, error: settingsError } = await supabase
+                .from('notification_settings')
+                .select(settingKey)
+                .eq('user_id', userId)
+                .single();
+
+            if (settingsError || !notificationSettings || !notificationSettings[settingKey]) {
+                console.log(`[NotificationHelper] ${type} notifications disabled, skipping...`);
+                return;
+            }
+        }
+
+        // Create notification
+        const { error } = await supabase
+            .from('notifications')
+            .insert({
+                user_id: userId,
+                type: type,
+                title: title,
+                message: message,
+                action_url: actionUrl,
+                read: false
+            });
+
+        if (error) {
+            console.error('[NotificationHelper] Error creating notification:', error);
+        } else {
+            console.log(`[NotificationHelper] ${type} notification created successfully`);
+        }
+    } catch (error) {
+        console.error('[NotificationHelper] Error in createNotification:', error);
+    }
+};
     });
 }
 
@@ -337,6 +555,12 @@ async function simulatePaymentAndSubscribe(paymentMethod, parentModal) {
             }
         ], { onConflict: ['user_id'] });
         if (error) throw error;
+        
+        // Create payment notification
+        console.log('[TrialBanner] Attempting to create payment notification...');
+        await createPaymentNotification(userId, paymentMethod, 'MZN 300', 'Invoicing');
+        console.log('[TrialBanner] Payment notification creation completed');
+        
         parentModal.remove();
         alert('Subscription successful! Welcome to Invoicing plan.');
         // Generate and download invoice-receipt PDF
@@ -525,20 +749,72 @@ window.TrialBanner = {
     updateTrialBanner,
     showUpgradeModal,
     setupUpgradeButton,
+    createPaymentNotification,
+    createInvoiceNotification,
     // Add manual test function
     testWithValues: function(days, invoices) {
         console.log('[TrialBanner] Manual test with values:', { days, invoices });
         updateTrialUI(days, invoices, new Date());
+    },
+    // Test notification creation
+    testNotification: async function() {
+        console.log('[TrialBanner] Testing notification creation...');
+        try {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (!session || !session.user) {
+                console.error('[TrialBanner] No user session found for test');
+                return;
+            }
+            await createPaymentNotification(session.user.id, 'Test Payment', 'MZN 100', 'Test Plan');
+            console.log('[TrialBanner] Test notification completed');
+        } catch (error) {
+            console.error('[TrialBanner] Test notification failed:', error);
+        }
+    },
+    // Check existing notifications
+    checkNotifications: async function() {
+        console.log('[TrialBanner] Checking existing notifications...');
+        try {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (!session || !session.user) {
+                console.error('[TrialBanner] No user session found for check');
+                return;
+            }
+            
+            const { data: notifications, error } = await supabase
+                .from('notifications')
+                .select('*')
+                .eq('user_id', session.user.id)
+                .order('created_at', { ascending: false });
+            
+            if (error) {
+                console.error('[TrialBanner] Error checking notifications:', error);
+            } else {
+                console.log('[TrialBanner] Found notifications:', notifications);
+            }
+        } catch (error) {
+            console.error('[TrialBanner] Error in checkNotifications:', error);
+        }
     }
 };
 
 // Signal that the trial banner is ready
 window.dispatchEvent(new Event('trialBannerReady'));
 
+// Test function to verify trial banner is loaded
+console.log('[TrialBanner] Trial banner loaded successfully');
+console.log('[TrialBanner] Available functions:', Object.keys(window.TrialBanner || {}));
+
 // Listen for invoice creation to update banner in real time
 
-document.addEventListener('invoiceCreated', () => {
+document.addEventListener('invoiceCreated', async (event) => {
     console.log('[TrialBanner] Invoice created event detected, updating banner...');
+    
+    // Create invoice notification if user has it enabled
+    if (event.detail && event.detail.userId) {
+        await createInvoiceNotification(event.detail.userId, event.detail.invoiceNumber);
+    }
+    
     window.TrialBanner.updateTrialBanner();
 });
 

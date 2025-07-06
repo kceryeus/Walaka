@@ -27,7 +27,7 @@ document.addEventListener('DOMContentLoaded', () => {
             try {
                 const { error } = await window.supabase.auth.signOut();
                 if (error) throw error;
-                window.location.href = '/login.html';
+                window.location.href = '../login.html';
             } catch (error) {
                 console.error('Error signing out:', error);
                 toast.show({

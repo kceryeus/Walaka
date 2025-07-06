@@ -608,6 +608,9 @@ async function saveInvoice() {
             throw new Error('Invoice insert did not return invoiceNumber');
         }
 
+        // Create invoice notification
+        await createInvoiceNotification(session.user.id, insertedInvoice.invoiceNumber);
+
         // Show success message
         showNotification('Invoice saved successfully!');
         
@@ -1313,6 +1316,110 @@ class InvoiceForm {
                 }
             });
         }
+    }
+}
+
+// Create invoice notification
+async function createInvoiceNotification(userId, invoiceNumber) {
+    console.log('[InvoiceJS] createInvoiceNotification called with:', { userId, invoiceNumber });
+    try {
+        // Check if user has notification settings enabled for invoice notifications
+        console.log('[InvoiceJS] Checking notification settings for user:', userId);
+        const { data: notificationSettings, error: settingsError } = await window.supabase
+            .from('notification_settings')
+            .select('invoice_created')
+            .eq('user_id', userId)
+            .single();
+
+        console.log('[InvoiceJS] Notification settings result:', { notificationSettings, settingsError });
+
+        // If no settings found or invoice notifications are disabled, don't create notification
+        if (settingsError || !notificationSettings || !notificationSettings.invoice_created) {
+            console.log('[InvoiceJS] Invoice notifications disabled or no settings found, skipping notification');
+            console.log('[InvoiceJS] Settings error:', settingsError);
+            console.log('[InvoiceJS] Notification settings:', notificationSettings);
+            
+            // If no settings exist, create default settings for the user
+            if (settingsError && settingsError.code === 'PGRST116') {
+                console.log('[InvoiceJS] No notification settings found, creating default settings...');
+                const { error: createError } = await window.supabase
+                    .from('notification_settings')
+                    .insert({
+                        user_id: userId,
+                        payment_received: true,
+                        invoice_created: true,
+                        invoice_due: true,
+                        invoice_overdue: true,
+                        product_low_stock: true,
+                        system_updates: true,
+                        client_activity: false,
+                        login_attempts: true
+                    });
+                
+                if (createError) {
+                    console.error('[InvoiceJS] Error creating default notification settings:', createError);
+                    return;
+                } else {
+                    console.log('[InvoiceJS] Default notification settings created successfully');
+                    // Now proceed with creating the notification
+                }
+            } else {
+                return;
+            }
+        }
+
+        // For invoices, we'll create a notification every time since invoice creation is a unique event
+        console.log('[InvoiceJS] Creating new invoice notification...');
+        
+        // Create invoice notification
+        console.log('[InvoiceJS] Creating invoice notification in database...');
+        const { error } = await window.supabase
+            .from('notifications')
+            .insert({
+                user_id: userId,
+                type: 'invoice',
+                title: 'Invoice Created Successfully',
+                message: `Invoice ${invoiceNumber} has been created and is ready for sending to your client.`,
+                action_url: 'invoices.html',
+                read: false
+            });
+
+        if (error) {
+            console.error('[InvoiceJS] Error creating invoice notification:', error);
+        } else {
+            console.log('[InvoiceJS] Invoice notification created successfully');
+            
+            // Verify the notification was created by fetching it
+            const { data: verifyNotification, error: verifyError } = await window.supabase
+                .from('notifications')
+                .select('*')
+                .eq('user_id', userId)
+                .eq('type', 'invoice')
+                .order('created_at', { ascending: false })
+                .limit(1);
+            
+            if (verifyError) {
+                console.error('[InvoiceJS] Error verifying notification creation:', verifyError);
+            } else {
+                console.log('[InvoiceJS] Notification verification successful:', verifyNotification);
+            }
+            
+            // Dispatch event to notify other parts of the app about new notification
+            window.dispatchEvent(new CustomEvent('notificationCreated', {
+                detail: {
+                    type: 'invoice',
+                    title: 'Invoice Created Successfully',
+                    message: `Invoice ${invoiceNumber} has been created and is ready for sending to your client.`
+                }
+            }));
+            
+            // Update notification badge count
+            if (window.notificationBadgeManager) {
+                await window.notificationBadgeManager.refresh();
+            }
+        }
+    } catch (error) {
+        console.error('[InvoiceJS] Error in createInvoiceNotification:', error);
     }
 }
 

@@ -73,10 +73,10 @@
         </div>
         
         <div class="user-menu" style="margin-left:auto;">
-            <div class="notification-bell">
+            <a href="notifications.html" class="notification-bell">
                 <i class="fas fa-bell"></i>
-                <span class="badge">3</span>
-            </div>
+                <span class="badge">0</span>
+            </a>
             
             <div class="user-profile" id="userProfile">
                 <div class="avatar">
@@ -688,6 +688,8 @@
   
   <!-- Load Language Manager BEFORE settings.js -->
   <script src="services/languageManager.js"></script>
+  <!-- Notification badge synchronization -->
+  <script src="js/notification-badge.js"></script>
   <script>
     window.languageManager = new LanguageManager('./');
     document.addEventListener('DOMContentLoaded', async () => {

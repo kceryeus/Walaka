@@ -306,6 +306,12 @@ class InvoiceForm {
             }
 
             showNotification('Invoice saved successfully', 'success');
+            
+            // Create invoice notification
+            if (window.createNotification) {
+                await window.createNotification('invoice', 'Invoice Created Successfully', `Invoice ${invoice.invoiceNumber} has been created and is ready for sending to your client.`, 'invoices.html');
+            }
+            
             // Update trial banner if ready, or wait for readiness
             function updateTrialBannerIfReady() {
                 if (window.TrialBanner && typeof window.TrialBanner.updateTrialBanner === 'function') {
@@ -504,6 +510,11 @@ async function handleInvoiceSubmission(event) {
 
         // Store for PDF generation
         window.lastSavedInvoice = invoice;
+
+        // Create invoice notification
+        if (window.createNotification) {
+            await window.createNotification('invoice', 'Invoice Created Successfully', `Invoice ${invoice.invoiceNumber} has been created and is ready for sending to your client.`, 'invoices.html');
+        }
 
         showNotification('Invoice saved successfully!', 'success');
         

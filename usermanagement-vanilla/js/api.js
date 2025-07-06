@@ -1,23 +1,77 @@
 // Simple API class for user management
-import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm'
-// import { createUserWithEnvironment } from '../../js/auth-utils.js';
-
-const supabaseUrl = 'https://qvmtozjvjflygbkjecyj.supabase.co';
-const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF2bXRvemp2amZseWdia2plY3lqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDYxMjc2MjMsImV4cCI6MjA2MTcwMzYyM30.DJMC1eM5_EouM1oc07JaoXsMX_bSLn2AVCozAcdfHmo';
-const supabase = createClient(supabaseUrl, supabaseKey);
+// Use the global Supabase client instead of creating a new one
 
 class API {
     constructor() {
-        this.supabase = supabase;
+        // Initialize Supabase client reference
+        this.supabase = null;
+        this.initializeSupabase();
+    }
+
+    initializeSupabase() {
+        // Try to get the global Supabase client
+        if (window.supabase) {
+            this.supabase = window.supabase;
+        } else {
+            // Wait for it to be available
+            const checkSupabase = setInterval(() => {
+                if (window.supabase) {
+                    this.supabase = window.supabase;
+                    clearInterval(checkSupabase);
+                }
+            }, 100);
+            
+            // Stop checking after 10 seconds
+            setTimeout(() => {
+                clearInterval(checkSupabase);
+            }, 10000);
+        }
     }
 
     async fetchUsers() {
         try {
+            // Wait for Supabase client to be available
+            if (!this.supabase) {
+                console.log('Waiting for Supabase client to be available...');
+                await new Promise(resolve => {
+                    const checkSupabase = setInterval(() => {
+                        if (this.supabase) {
+                            clearInterval(checkSupabase);
+                            resolve();
+                        }
+                    }, 100);
+                    
+                    // Timeout after 10 seconds
+                    setTimeout(() => {
+                        clearInterval(checkSupabase);
+                        resolve();
+                    }, 10000);
+                });
+            }
+            
+            // Check if Supabase client is available after waiting
+            if (!this.supabase) {
+                console.error('Supabase client not available after waiting');
+                return [];
+            }
+            
+            // Check if auth is available
+            if (!this.supabase.auth) {
+                console.error('Supabase auth not available');
+                return [];
+            }
+            
             // Confirm current user session exists
             const { data: { session }, error: sessionError } = await this.supabase.auth.getSession();
-            if (sessionError) throw new Error('Could not get current session: ' + sessionError.message);
+            if (sessionError) {
+                console.error('Could not get current session:', sessionError);
+                return [];
+            }
 
-            if (!session?.user?.id) throw new Error('No current user session found.');
+            if (!session?.user?.id) {
+                console.log('No current user session found, returning empty array');
+                return [];
+            }
 
             // Fetch all rows user is authorized to see (RLS handles filtering)
             const { data, error } = await this.supabase
@@ -35,8 +89,18 @@ class API {
 
     async createUser(userData) {
         try {
+            // Check if Supabase client is available
+            if (!this.supabase) {
+                throw new Error('Supabase client not available');
+            }
+            
             const randomPassword = Math.random().toString(36).slice(-10) + 'A1!';
 
+            // Check if auth is available
+            if (!this.supabase.auth) {
+                throw new Error('Supabase auth not available');
+            }
+            
             // Get current user id from session
             const { data: { session }, error: sessionError } = await this.supabase.auth.getSession();
             if (sessionError) {
@@ -77,6 +141,11 @@ class API {
 
     async updateUser(userId, updates) {
         try {
+            // Check if Supabase client is available
+            if (!this.supabase) {
+                throw new Error('Supabase client not available');
+            }
+            
             const { data, error } = await this.supabase
                 .from('users')
                 .update(updates)
@@ -94,6 +163,11 @@ class API {
 
     async deleteUser(userId) {
         try {
+            // Check if Supabase client is available
+            if (!this.supabase) {
+                throw new Error('Supabase client not available');
+            }
+            
             const { error } = await this.supabase
                 .from('users')
                 .delete()
