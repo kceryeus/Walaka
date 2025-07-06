@@ -1198,5 +1198,459 @@
       registerHints();
     });
     </script>
-</body>
-</html>
+
+<!-- Quick Add Client Modal -->
+<div id="quickAddClientModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 data-translate="quick_add_client">Quick Add Client</h3>
+            <button type="button" class="close-modal" id="closeQuickAddModal" aria-label="Close modal">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="modal-body">
+            <form id="quickClientForm">
+                <div class="form-group">
+                    <label data-translate="client_type">Client Type</label>
+                    <div class="radio-group">
+                        <label class="radio-label">
+                            <input type="radio" name="quick-client-type" value="business" checked>
+                            <span data-translate="business">Business</span>
+                        </label>
+                        <label class="radio-label">
+                            <input type="radio" name="quick-client-type" value="individual">
+                            <span data-translate="individual">Individual</span>
+                        </label>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="quick-company-name" data-translate="company_name_label">Company Name <span class="required">*</span></label>
+                    <input type="text" id="quick-company-name" name="company_name" required data-translate-placeholder="company_name_placeholder" placeholder="Company Name">
+                </div>
+                <div class="form-group">
+                    <label for="quick-customer-tax-id" data-translate="tax_id_nuit">NIF/NUIT <span class="required">*</span></label>
+                    <input type="text" id="quick-customer-tax-id" name="customer_tax_id" required data-translate-placeholder="tax_id_placeholder" placeholder="NIF/NUIT" maxlength="9">
+                </div>
+                <div class="form-group">
+                    <label for="quick-contact" data-translate="contact">Contact <span class="required">*</span></label>
+                    <input type="text" id="quick-contact" name="contact" required data-translate-placeholder="contact_placeholder" placeholder="Contact">
+                </div>
+                <div class="form-group">
+                    <label for="quick-billing-address" data-translate="billing_address">Billing Address <span class="required">*</span></label>
+                    <input type="text" id="quick-billing-address" name="billing_address" required data-translate-placeholder="billing_address_placeholder" placeholder="Billing Address">
+                </div>
+                <div class="form-group">
+                    <label for="quick-street-name" data-translate="street_name">Street <span class="required">*</span></label>
+                    <input type="text" id="quick-street-name" name="street_name" required data-translate-placeholder="street_name_placeholder" placeholder="Street">
+                </div>
+                <div class="form-group">
+                    <label for="quick-city" data-translate="city">City <span class="required">*</span></label>
+                    <input type="text" id="quick-city" name="city" required data-translate-placeholder="city_placeholder" placeholder="City">
+                </div>
+                <div class="form-group">
+                    <label for="quick-province" data-translate="province">Province <span class="required">*</span></label>
+                    <input type="text" id="quick-province" name="province" required data-translate-placeholder="province_placeholder" placeholder="Province">
+                </div>
+                <div class="form-group">
+                    <label for="quick-country" data-translate="country">Country <span class="required">*</span></label>
+                    <input type="text" id="quick-country" name="country" required data-translate-placeholder="country_placeholder" placeholder="Country">
+                </div>
+                <div class="form-group">
+                    <label for="quick-telephone" data-translate="telephone">Telephone <span class="required">*</span></label>
+                    <input type="text" id="quick-telephone" name="telephone" required data-translate-placeholder="telephone_placeholder" placeholder="Telephone">
+                </div>
+                <div class="form-group">
+                    <label for="quick-email" data-translate="email">Email <span class="required">*</span></label>
+                    <input type="email" id="quick-email" name="email" required data-translate-placeholder="email_placeholder" placeholder="Email">
+                </div>
+            </form>
+        </div>
+        <div class="modal-footer">
+            <button type="button" id="saveQuickClientBtn" class="primary-btn" data-translate="save_client">Save Client</button>
+            <button type="button" id="cancelQuickClientBtn" class="secondary-btn" data-translate="cancel">Cancel</button>
+        </div>
+    </div>
+</div>
+
+<!-- Success Message Modal -->
+<div id="clientSuccessModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 data-translate="client_created_successfully">Client Created Successfully</h3>
+            <button type="button" class="close-modal" id="closeSuccessModal" aria-label="Close modal">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="modal-body">
+            <div class="success-message">
+                <i class="fas fa-check-circle"></i>
+                <p data-translate="client_created_message">The client has been created and is now available for selection in the invoice form.</p>
+            </div>
+            <div class="client-info-preview">
+                <h4 data-translate="client_information">Client Information</h4>
+                <div id="clientInfoPreview"></div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button type="button" id="useClientBtn" class="primary-btn" data-translate="use_this_client">Use This Client</button>
+            <button type="button" id="closeSuccessBtn" class="secondary-btn" data-translate="close">Close</button>
+        </div>
+    </div>
+</div>
+
+<script>
+// Quick Add Client Modal Logic
+let newlyCreatedClient = null;
+
+function showQuickAddClientModal() {
+    const modal = document.getElementById('quickAddClientModal');
+    modal.style.display = 'block';
+    document.getElementById('quickClientForm').reset();
+    document.querySelector('input[name="quick-client-type"][value="business"]').checked = true;
+}
+
+function hideQuickAddClientModal() {
+    const modal = document.getElementById('quickAddClientModal');
+    modal.style.display = 'none';
+}
+
+function showClientSuccessModal(clientData) {
+    const modal = document.getElementById('clientSuccessModal');
+    const previewDiv = document.getElementById('clientInfoPreview');
+    previewDiv.innerHTML = `
+        <div class="client-info-grid">
+            <div><strong>Name:</strong> ${clientData.customer_name}</div>
+            <div><strong>Tax ID:</strong> ${clientData.customer_tax_id}</div>
+            <div><strong>Contact:</strong> ${clientData.contact}</div>
+            <div><strong>Email:</strong> ${clientData.email}</div>
+            <div><strong>Phone:</strong> ${clientData.telephone}</div>
+            <div><strong>Address:</strong> ${clientData.billing_address}, ${clientData.city}, ${clientData.province}</div>
+        </div>
+    `;
+    modal.style.display = 'block';
+}
+
+function hideClientSuccessModal() {
+    const modal = document.getElementById('clientSuccessModal');
+    modal.style.display = 'none';
+}
+
+async function saveQuickClient() {
+    const form = document.getElementById('quickClientForm');
+    if (!form.checkValidity()) {
+        form.reportValidity();
+        return;
+    }
+    try {
+        const formData = {
+            customer_name: document.getElementById('quick-company-name').value,
+            customer_tax_id: document.getElementById('quick-customer-tax-id').value,
+            contact: document.getElementById('quick-contact').value,
+            billing_address: document.getElementById('quick-billing-address').value,
+            street_name: document.getElementById('quick-street-name').value,
+            city: document.getElementById('quick-city').value,
+            province: document.getElementById('quick-province').value,
+            country: document.getElementById('quick-country').value,
+            telephone: document.getElementById('quick-telephone').value,
+            email: document.getElementById('quick-email').value,
+            status: 'active',
+            client_type: document.querySelector('input[name="quick-client-type"]:checked').value,
+            user_id: (await window.supabase.auth.getUser()).data.user?.id
+        };
+        if (formData.telephone) {
+            formData.telephone = parseInt(formData.telephone.replace(/\D/g, '')) || null;
+        }
+        const { data, error } = await window.supabase
+            .from('clients')
+            .insert([formData])
+            .select();
+        if (error) throw error;
+        newlyCreatedClient = data[0];
+        hideQuickAddClientModal();
+        showClientSuccessModal(newlyCreatedClient);
+        if (typeof window.fetchClients === 'function') {
+            await window.fetchClients();
+        }
+        const clientInput = document.getElementById('client-list');
+        if (clientInput && newlyCreatedClient) {
+            clientInput.value = newlyCreatedClient.customer_name;
+            clientInput.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+    } catch (error) {
+        alert('Error saving client: ' + error.message);
+    }
+}
+
+function useNewlyCreatedClient() {
+    if (newlyCreatedClient) {
+        hideClientSuccessModal();
+        const clientInput = document.getElementById('client-list');
+        if (clientInput) {
+            clientInput.value = newlyCreatedClient.customer_name;
+            clientInput.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+    }
+}
+
+window.addEventListener('DOMContentLoaded', function() {
+    // Button triggers
+    const addClientBtn = document.getElementById('add-client-btn');
+    const closeQuickAddModal = document.getElementById('closeQuickAddModal');
+    const cancelQuickClientBtn = document.getElementById('cancelQuickClientBtn');
+    const saveQuickClientBtn = document.getElementById('saveQuickClientBtn');
+    const closeSuccessModal = document.getElementById('closeSuccessModal');
+    const closeSuccessBtn = document.getElementById('closeSuccessBtn');
+    const useClientBtn = document.getElementById('useClientBtn');
+    if (addClientBtn) addClientBtn.addEventListener('click', showQuickAddClientModal);
+    if (closeQuickAddModal) closeQuickAddModal.addEventListener('click', hideQuickAddClientModal);
+    if (cancelQuickClientBtn) cancelQuickClientBtn.addEventListener('click', hideQuickAddClientModal);
+    if (saveQuickClientBtn) saveQuickClientBtn.addEventListener('click', saveQuickClient);
+    if (closeSuccessModal) closeSuccessModal.addEventListener('click', hideClientSuccessModal);
+    if (closeSuccessBtn) closeSuccessBtn.addEventListener('click', hideClientSuccessModal);
+    if (useClientBtn) useClientBtn.addEventListener('click', useNewlyCreatedClient);
+    // Close modals when clicking outside
+    window.addEventListener('click', (event) => {
+        const quickAddModal = document.getElementById('quickAddClientModal');
+        const successModal = document.getElementById('clientSuccessModal');
+        if (event.target === quickAddModal) hideQuickAddClientModal();
+        if (event.target === successModal) hideClientSuccessModal();
+    });
+});
+</script>
+
+<!-- 1. Add "+ Add Product" button to the items section of the invoice modal -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Add the button after the Add Item button in the invoice modal
+    const addItemBtn = document.getElementById('addItemBtn');
+    if (addItemBtn && !document.getElementById('addProductBtn')) {
+        const addProductBtn = document.createElement('button');
+        addProductBtn.type = 'button';
+        addProductBtn.id = 'addProductBtn';
+        addProductBtn.className = 'btn secondary-btn';
+        addProductBtn.innerHTML = '<i class="fas fa-plus"></i> <span>Add Product</span>';
+        addItemBtn.parentNode.insertBefore(addProductBtn, addItemBtn.nextSibling);
+        addProductBtn.addEventListener('click', showQuickAddProductModal);
+    }
+});
+</script>
+
+<!-- 2. Add Quick Add Product Modal HTML -->
+<div id="quickAddProductModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>Quick Add Product</h3>
+            <button type="button" class="close-modal" id="closeQuickAddProductModal" aria-label="Close modal">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="modal-body">
+            <form id="quickProductForm">
+                <div class="form-group">
+                    <label for="quick-product-description">Description <span class="required">*</span></label>
+                    <input type="text" id="quick-product-description" name="description" required placeholder="Enter product description">
+                </div>
+                <div class="form-group">
+                    <label for="quick-product-price">Price <span class="required">*</span></label>
+                    <input type="number" id="quick-product-price" name="price" step="0.01" required placeholder="0.00">
+                </div>
+                <div class="form-group">
+                    <label for="quick-product-tax-code">Tax Code (SAT) <span class="required">*</span></label>
+                    <input type="text" id="quick-product-tax-code" name="tax_code" required placeholder="e.g. 10101">
+                </div>
+                <div class="form-group">
+                    <label for="quick-product-vat">VAT Rate <span class="required">*</span></label>
+                    <select id="quick-product-vat" name="tax_rate" required>
+                        <option value="">Select VAT rate</option>
+                        <option value="0">0%</option>
+                        <option value="0.16">16%</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+                <div id="quick-product-other-vat-container" class="form-group" style="display: none;">
+                    <label for="quick-product-other-vat">Custom VAT Rate (%)</label>
+                    <input type="number" id="quick-product-other-vat" min="0" max="100" step="1">
+                </div>
+                <div class="form-group">
+                    <label for="quick-product-industry">Industry <span class="required">*</span></label>
+                    <select id="quick-product-industry" name="industry" required>
+                        <option value="">Loading industries...</option>
+                    </select>
+                </div>
+            </form>
+        </div>
+        <div class="modal-footer">
+            <button type="button" id="saveQuickProductBtn" class="primary-btn">Save Product</button>
+            <button type="button" id="cancelQuickProductBtn" class="secondary-btn">Cancel</button>
+        </div>
+    </div>
+</div>
+
+<!-- Success Message Modal for Product -->
+<div id="productSuccessModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>Product Created Successfully</h3>
+            <button type="button" class="close-modal" id="closeProductSuccessModal" aria-label="Close modal">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="modal-body">
+            <div class="success-message">
+                <i class="fas fa-check-circle"></i>
+                <p>The product has been created and is now available for selection in the invoice form.</p>
+            </div>
+            <div class="client-info-preview">
+                <h4>Product Information</h4>
+                <div id="productInfoPreview"></div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button type="button" id="useProductBtn" class="primary-btn">Use This Product</button>
+            <button type="button" id="closeProductSuccessBtn" class="secondary-btn">Close</button>
+        </div>
+    </div>
+</div>
+
+<!-- 3. Add Quick Add Product Modal Logic -->
+<script>
+let newlyCreatedProduct = null;
+
+async function fetchAndPopulateQuickProductIndustries() {
+    const quickIndustrySelect = document.getElementById('quick-product-industry');
+    if (!quickIndustrySelect || !window.supabase) return;
+    try {
+        quickIndustrySelect.innerHTML = '<option value="">Loading industries...</option>';
+        const { data, error } = await window.supabase
+            .from('cae')
+            .select('Subclasse, Descricao')
+            .order('Descricao', { ascending: true });
+        if (error) throw error;
+        if (!data || data.length === 0) {
+            quickIndustrySelect.innerHTML = '<option value="">No industries found</option>';
+            return;
+        }
+        const validIndustries = data.filter(row => row.Subclasse && /^\d+$/.test(row.Subclasse) && row.Descricao && row.Descricao.trim() !== '');
+        validIndustries.sort((a, b) => Number(a.Subclasse) - Number(b.Subclasse));
+        quickIndustrySelect.innerHTML = '<option value="">Select industry</option>' +
+            validIndustries.map(row => `<option value="${row.Subclasse}">${row.Subclasse} - ${row.Descricao}</option>`).join('');
+    } catch (err) {
+        quickIndustrySelect.innerHTML = '<option value="">Failed to load industries</option>';
+        console.error('Error loading industries:', err);
+    }
+}
+
+function showQuickAddProductModal() {
+    const modal = document.getElementById('quickAddProductModal');
+    modal.style.display = 'block';
+    document.getElementById('quickProductForm').reset();
+    document.getElementById('quick-product-vat').value = '';
+    document.getElementById('quick-product-other-vat-container').style.display = 'none';
+    fetchAndPopulateQuickProductIndustries();
+}
+
+function hideQuickAddProductModal() {
+    const modal = document.getElementById('quickAddProductModal');
+    modal.style.display = 'none';
+}
+
+function showProductSuccessModal(productData) {
+    const modal = document.getElementById('productSuccessModal');
+    const previewDiv = document.getElementById('productInfoPreview');
+    previewDiv.innerHTML = `
+        <div class="client-info-grid">
+            <div><strong>Description:</strong> ${productData.description}</div>
+            <div><strong>Price:</strong> ${productData.price}</div>
+            <div><strong>Tax Code:</strong> ${productData.tax_code}</div>
+            <div><strong>VAT Rate:</strong> ${(productData.tax_rate * 100).toFixed(2)}%</div>
+            <div><strong>Industry:</strong> ${productData.industry}</div>
+        </div>
+    `;
+    modal.style.display = 'block';
+}
+
+function hideProductSuccessModal() {
+    const modal = document.getElementById('productSuccessModal');
+    modal.style.display = 'none';
+}
+
+document.getElementById('quick-product-vat').addEventListener('change', function() {
+    const otherContainer = document.getElementById('quick-product-other-vat-container');
+    if (this.value === 'other') {
+        otherContainer.style.display = 'block';
+    } else {
+        otherContainer.style.display = 'none';
+    }
+});
+
+document.getElementById('saveQuickProductBtn').addEventListener('click', async function() {
+    const form = document.getElementById('quickProductForm');
+    if (!form.checkValidity()) {
+        form.reportValidity();
+        return;
+    }
+    try {
+        const { data: { session } } = await window.supabase.auth.getSession();
+        if (!session?.user) {
+            alert('Please login to continue');
+            return;
+        }
+        const formData = {
+            description: document.getElementById('quick-product-description').value.trim(),
+            price: parseFloat(document.getElementById('quick-product-price').value),
+            tax_code: document.getElementById('quick-product-tax-code').value.trim(),
+            industry: document.getElementById('quick-product-industry').value,
+            tax_rate: document.getElementById('quick-product-vat').value === 'other'
+                ? parseFloat(document.getElementById('quick-product-other-vat').value) / 100
+                : parseFloat(document.getElementById('quick-product-vat').value),
+            user_id: session.user.id
+        };
+        if (!formData.description || isNaN(formData.price) || !formData.tax_code || isNaN(formData.tax_rate) || !formData.industry) {
+            alert('Please fill in all required fields correctly');
+            return;
+        }
+        const { data, error } = await window.supabase
+            .from('products')
+            .insert([formData])
+            .select();
+        if (error) throw error;
+        newlyCreatedProduct = data[0];
+        hideQuickAddProductModal();
+        showProductSuccessModal(newlyCreatedProduct);
+        if (typeof window.fetchProducts === 'function') {
+            await window.fetchProducts();
+        }
+        // Optionally, auto-select the new product in the invoice item row (if you have a product selector)
+        // You may need to implement this depending on your invoice item row UI
+    } catch (error) {
+        alert('Error saving product: ' + error.message);
+    }
+});
+
+document.getElementById('cancelQuickProductBtn').addEventListener('click', hideQuickAddProductModal);
+document.getElementById('closeQuickAddProductModal').addEventListener('click', hideQuickAddProductModal);
+document.getElementById('closeProductSuccessModal').addEventListener('click', hideProductSuccessModal);
+document.getElementById('closeProductSuccessBtn').addEventListener('click', hideProductSuccessModal);
+document.getElementById('useProductBtn').addEventListener('click', function() {
+    if (newlyCreatedProduct) {
+        hideProductSuccessModal();
+        // Optionally, auto-fill the first empty item row in the invoice form with the new product
+        // Example logic (adjust selectors as needed):
+        const itemRows = document.querySelectorAll('#itemsTable tbody tr');
+        for (const row of itemRows) {
+            const descInput = row.querySelector('.item-description');
+            const priceInput = row.querySelector('.item-price');
+            const vatSpan = row.querySelector('.item-vat');
+            if (descInput && priceInput && !descInput.value) {
+                descInput.value = newlyCreatedProduct.description;
+                priceInput.value = newlyCreatedProduct.price;
+                if (vatSpan) vatSpan.textContent = (newlyCreatedProduct.tax_rate * 100).toFixed(2);
+                // Optionally trigger change/input events if your invoice logic needs it
+                descInput.dispatchEvent(new Event('input', { bubbles: true }));
+                priceInput.dispatchEvent(new Event('input', { bubbles: true }));
+                break;
+            }
+        }
+    }
+});
+</script>

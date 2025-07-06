@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Quick Add Client</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/invoice.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+    <div class="container">
+        <h1>Test Quick Add Client Functionality</h1>
+        
+        <div class="form-group">
+            <label for="clientSelect">Client Selection</label>
+            <div class="select-wrapper" id="clientSelectWrapper">
+                <div class="select-trigger">
+                    <span>Select a client</span>
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>
+                </div>
+                <div class="select-options">
+                    <select id="clientSelect" required>
+                        <option value="" disabled selected>Select a client</option>
+                    </select>
+                    <ul>
+                    </ul>
+                </div>
+            </div>
+            <button type="button" class="btn secondary-btn" id="addClientBtn">
+                <i class="fas fa-plus"></i> Add Client
+            </button>
+        </div>
+
+        <div class="form-group">
+            <label for="clientEmail">Client Email</label>
+            <input type="email" id="clientEmail" placeholder="client@example.com">
+        </div>
+
+        <div class="form-group">
+            <label for="clientAddress">Client Address</label>
+            <textarea id="clientAddress" rows="3" placeholder="Client's full address"></textarea>
+        </div>
+
+        <div class="form-group">
+            <label for="clientTaxId">Client Tax ID</label>
+            <input type="text" id="clientTaxId" placeholder="e.g. 123456789">
+        </div>
+    </div>
+
+    <!-- Quick Add Client Modal -->
+    <div id="quickAddClientModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Quick Add Client</h3>
+                <button type="button" class="close-modal" id="closeQuickAddModal" aria-label="Close modal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="quickClientForm">
+                    <div class="form-group">
+                        <label>Client Type</label>
+                        <div class="radio-group">
+                            <label class="radio-label">
+                                <input type="radio" name="quick-client-type" value="business" checked>
+                                <span>Business</span>
+                            </label>
+                            <label class="radio-label">
+                                <input type="radio" name="quick-client-type" value="individual">
+                                <span>Individual</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="quick-company-name">Company Name <span class="required">*</span></label>
+                        <input type="text" id="quick-company-name" name="company_name" required placeholder="Company Name">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="quick-customer-tax-id">NIF/NUIT <span class="required">*</span></label>
+                        <input type="text" id="quick-customer-tax-id" name="customer_tax_id" required placeholder="NIF/NUIT" maxlength="9">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="quick-contact">Contact <span class="required">*</span></label>
+                        <input type="text" id="quick-contact" name="contact" required placeholder="Contact">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="quick-billing-address">Billing Address <span class="required">*</span></label>
+                        <input type="text" id="quick-billing-address" name="billing_address" required placeholder="Billing Address">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="quick-street-name">Street <span class="required">*</span></label>
+                        <input type="text" id="quick-street-name" name="street_name" required placeholder="Street">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="quick-city">City <span class="required">*</span></label>
+                        <input type="text" id="quick-city" name="city" required placeholder="City">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="quick-province">Province <span class="required">*</span></label>
+                        <input type="text" id="quick-province" name="province" required placeholder="Province">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="quick-country">Country <span class="required">*</span></label>
+                        <input type="text" id="quick-country" name="country" required placeholder="Country">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="quick-telephone">Telephone <span class="required">*</span></label>
+                        <input type="text" id="quick-telephone" name="telephone" required placeholder="Telephone">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="quick-email">Email <span class="required">*</span></label>
+                        <input type="email" id="quick-email" name="email" required placeholder="Email">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" id="saveQuickClientBtn" class="primary-btn">Save Client</button>
+                <button type="button" id="cancelQuickClientBtn" class="secondary-btn">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Success Message Modal -->
+    <div id="clientSuccessModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Client Created Successfully</h3>
+                <button type="button" class="close-modal" id="closeSuccessModal" aria-label="Close modal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="success-message">
+                    <i class="fas fa-check-circle"></i>
+                    <p>The client has been created and is now available for selection in the invoice form.</p>
+                </div>
+                <div class="client-info-preview">
+                    <h4>Client Information</h4>
+                    <div id="clientInfoPreview"></div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" id="useClientBtn" class="primary-btn">Use This Client</button>
+                <button type="button" id="closeSuccessBtn" class="secondary-btn">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Initialize the Supabase client
+        const SUPABASE_URL = 'https://icirwhacigwjrxisvayj.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImljaXJ3aGFjaWd3anJ4aXN2YXlqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzkyNzc5NzQsImV4cCI6MjA1NDg1Mzk3NH0.A8bVciC-NDwYoWMP8ijXBgNlEplYNTf6VGVe5G7SnFk';
+
+        let supabase;
+        
+        // Wait for Supabase to be available
+        function initializeSupabase() {
+            if (window.supabase) {
+                supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+                return true;
+            }
+            return false;
+        }
+
+        // Quick Add Client Modal Functionality
+        let newlyCreatedClient = null;
+
+        function showQuickAddClientModal() {
+            const modal = document.getElementById('quickAddClientModal');
+            modal.style.display = 'block';
+            
+            // Reset form
+            document.getElementById('quickClientForm').reset();
+            
+            // Set default values
+            document.querySelector('input[name="quick-client-type"][value="business"]').checked = true;
+        }
+
+        function hideQuickAddClientModal() {
+            const modal = document.getElementById('quickAddClientModal');
+            modal.style.display = 'none';
+        }
+
+        function showClientSuccessModal(clientData) {
+            const modal = document.getElementById('clientSuccessModal');
+            const previewDiv = document.getElementById('clientInfoPreview');
+            
+            // Populate client info preview
+            previewDiv.innerHTML = `
+                <div class="client-info-grid">
+                    <div><strong>Name:</strong> ${clientData.customer_name}</div>
+                    <div><strong>Tax ID:</strong> ${clientData.customer_tax_id}</div>
+                    <div><strong>Contact:</strong> ${clientData.contact}</div>
+                    <div><strong>Email:</strong> ${clientData.email}</div>
+                    <div><strong>Phone:</strong> ${clientData.telephone}</div>
+                    <div><strong>Address:</strong> ${clientData.billing_address}, ${clientData.city}, ${clientData.province}</div>
+                </div>
+            `;
+            
+            modal.style.display = 'block';
+        }
+
+        function hideClientSuccessModal() {
+            const modal = document.getElementById('clientSuccessModal');
+            modal.style.display = 'none';
+        }
+
+        async function saveQuickClient() {
+            const form = document.getElementById('quickClientForm');
+            
+            // Validate form
+            if (!form.checkValidity()) {
+                form.reportValidity();
+                return;
+            }
+
+            try {
+                const formData = {
+                    customer_name: document.getElementById('quick-company-name').value,
+                    customer_tax_id: document.getElementById('quick-customer-tax-id').value,
+                    contact: document.getElementById('quick-contact').value,
+                    billing_address: document.getElementById('quick-billing-address').value,
+                    street_name: document.getElementById('quick-street-name').value,
+                    city: document.getElementById('quick-city').value,
+                    province: document.getElementById('quick-province').value,
+                    country: document.getElementById('quick-country').value,
+                    telephone: document.getElementById('quick-telephone').value,
+                    email: document.getElementById('quick-email').value,
+                    status: 'active',
+                    client_type: document.querySelector('input[name="quick-client-type"]:checked').value,
+                    user_id: (await supabase.auth.getUser()).data.user?.id
+                };
+
+                // Convert string values to numbers where needed
+                if (formData.telephone) {
+                    formData.telephone = parseInt(formData.telephone.replace(/\D/g, '')) || null;
+                }
+
+                const { data, error } = await supabase
+                    .from('clients')
+                    .insert([formData])
+                    .select();
+
+                if (error) throw error;
+
+                // Store the newly created client
+                newlyCreatedClient = data[0];
+                
+                // Hide the quick add modal
+                hideQuickAddClientModal();
+                
+                // Show success modal
+                showClientSuccessModal(newlyCreatedClient);
+                
+                // Refresh the client list in the dropdown
+                await fetchClients();
+                
+                // Select the newly created client
+                const clientSelect = document.getElementById('clientSelect');
+                const selectTriggerSpan = document.querySelector('.select-trigger span');
+                
+                if (clientSelect && newlyCreatedClient) {
+                    clientSelect.value = newlyCreatedClient.customer_id;
+                    selectTriggerSpan.textContent = newlyCreatedClient.customer_name;
+                    
+                    // Populate client fields in the invoice form
+                    populateClientFields(newlyCreatedClient);
+                }
+
+            } catch (error) {
+                console.error('Error saving client:', error);
+                alert('Error saving client: ' + error.message);
+            }
+        }
+
+        function populateClientFields(client) {
+            // Populate client fields in the invoice form
+            const clientEmail = document.getElementById('clientEmail');
+            const clientAddress = document.getElementById('clientAddress');
+            const clientTaxId = document.getElementById('clientTaxId');
+            
+            if (clientEmail) clientEmail.value = client.email || '';
+            if (clientAddress) clientAddress.value = `${client.billing_address}, ${client.city}, ${client.province}` || '';
+            if (clientTaxId) clientTaxId.value = client.customer_tax_id || '';
+        }
+
+        function useNewlyCreatedClient() {
+            if (newlyCreatedClient) {
+                // The client is already selected and fields are populated
+                hideClientSuccessModal();
+            }
+        }
+
+        // Função para buscar clientes do Supabase
+        async function fetchClients() {
+            const { data: clients, error } = await supabase
+                .from('clients')
+                .select('customer_id, customer_name');
+
+            if (error) {
+                console.error('Erro ao buscar clientes:', error);
+                return;
+            }
+
+            const clientSelect = document.getElementById('clientSelect');
+            const clientSelectOptionsList = document.querySelector('.select-options ul');
+            const selectTriggerSpan = document.querySelector('.select-trigger span');
+            const selectWrapper = document.getElementById('clientSelectWrapper');
+
+            // Limpa as opções existentes
+            clientSelect.innerHTML = '<option value="" disabled selected>Selecione um cliente</option>';
+            clientSelectOptionsList.innerHTML = '';
+
+            clients.forEach(client => {
+                const option = document.createElement('option');
+                option.value = client.customer_id;
+                option.textContent = client.customer_name;
+                clientSelect.appendChild(option);
+
+                const li = document.createElement('li');
+                li.textContent = client.customer_name;
+                li.dataset.value = client.customer_id;
+                clientSelectOptionsList.appendChild(li);
+            });
+
+            // Event listeners para o dropdown interativo
+            const selectTrigger = document.querySelector('.select-trigger');
+            const selectOptions = document.querySelector('.select-options');
+
+            selectTrigger.addEventListener('click', () => {
+                selectWrapper.classList.toggle('open');
+                if (selectWrapper.classList.contains('open')) {
+                    const triggerRect = selectTrigger.getBoundingClientRect();
+                    selectOptions.style.top = triggerRect.bottom + 'px';
+                    selectOptions.style.left = triggerRect.left + 'px';
+                    selectOptions.style.width = triggerRect.width + 'px';
+                }
+            });
+
+            selectOptions.addEventListener('click', async (event) => {
+                if (event.target.tagName === 'LI') {
+                    const value = event.target.dataset.value;
+                    const text = event.target.textContent;
+
+                    clientSelect.value = value;
+                    selectTriggerSpan.textContent = text;
+                    selectWrapper.classList.remove('open');
+                    
+                    // If a client is selected, fetch and populate client details
+                    if (value) {
+                        try {
+                            const { data: client, error } = await supabase
+                                .from('clients')
+                                .select('*')
+                                .eq('customer_id', value)
+                                .single();
+                            
+                            if (error) throw error;
+                            
+                            if (client) {
+                                populateClientFields(client);
+                            }
+                        } catch (error) {
+                            console.error('Error fetching client details:', error);
+                        }
+                    }
+                }
+            });
+
+            // Fecha o dropdown quando clica fora
+            document.addEventListener('click', (event) => {
+                if (!selectWrapper.contains(event.target) && !selectOptions.contains(event.target)) {
+                    selectWrapper.classList.remove('open');
+                }
+            });
+
+            // Atualiza o texto do trigger quando o select mudado
+            clientSelect.addEventListener('change', async () => {
+                const selectedOptionText = clientSelect.options[clientSelect.selectedIndex].text;
+                selectTriggerSpan.textContent = selectedOptionText;
+                
+                // If a client is selected, fetch and populate client details
+                const selectedClientId = clientSelect.value;
+                if (selectedClientId) {
+                    try {
+                        const { data: client, error } = await supabase
+                            .from('clients')
+                            .select('*')
+                            .eq('customer_id', selectedClientId)
+                            .single();
+                        
+                        if (error) throw error;
+                        
+                        if (client) {
+                            populateClientFields(client);
+                        }
+                    } catch (error) {
+                        console.error('Error fetching client details:', error);
+                    }
+                }
+            });
+        }
+
+        // Initialize when page loads
+        window.addEventListener('load', () => {
+            // Initialize Supabase first
+            if (!initializeSupabase()) {
+                console.error('Supabase not available');
+                return;
+            }
+            
+            fetchClients();
+            
+            // Add event listeners for quick add client modal
+            const addClientBtn = document.getElementById('addClientBtn');
+            const closeQuickAddModal = document.getElementById('closeQuickAddModal');
+            const cancelQuickClientBtn = document.getElementById('cancelQuickClientBtn');
+            const saveQuickClientBtn = document.getElementById('saveQuickClientBtn');
+            const closeSuccessModal = document.getElementById('closeSuccessModal');
+            const closeSuccessBtn = document.getElementById('closeSuccessBtn');
+            const useClientBtn = document.getElementById('useClientBtn');
+
+            // Quick Add Client Modal
+            if (addClientBtn) {
+                addClientBtn.addEventListener('click', showQuickAddClientModal);
+            }
+
+            if (closeQuickAddModal) {
+                closeQuickAddModal.addEventListener('click', hideQuickAddClientModal);
+            }
+
+            if (cancelQuickClientBtn) {
+                cancelQuickClientBtn.addEventListener('click', hideQuickAddClientModal);
+            }
+
+            if (saveQuickClientBtn) {
+                saveQuickClientBtn.addEventListener('click', saveQuickClient);
+            }
+
+            // Success Modal
+            if (closeSuccessModal) {
+                closeSuccessModal.addEventListener('click', hideClientSuccessModal);
+            }
+
+            if (closeSuccessBtn) {
+                closeSuccessBtn.addEventListener('click', hideClientSuccessModal);
+            }
+
+            if (useClientBtn) {
+                useClientBtn.addEventListener('click', useNewlyCreatedClient);
+            }
+
+            // Close modals when clicking outside
+            window.addEventListener('click', (event) => {
+                const quickAddModal = document.getElementById('quickAddClientModal');
+                const successModal = document.getElementById('clientSuccessModal');
+                
+                if (event.target === quickAddModal) {
+                    hideQuickAddClientModal();
+                }
+                
+                if (event.target === successModal) {
+                    hideClientSuccessModal();
+                }
+            });
+        });
+    </script>
+</body>
+</html> 
