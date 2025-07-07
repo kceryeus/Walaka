@@ -415,8 +415,35 @@
                 const { data: { session: postLoginSession }, error: postLoginError } = await window.supabase.auth.getSession();
                 console.log('[login.html] After login: session:', postLoginSession, 'user:', postLoginSession?.user, 'error:', postLoginError);
 
-                // Fetch onboarding status and created_by from users table by id
+                // --- Insert into users table if not exists ---
                 const userId = data.user.id;
+                const userEmail = data.user.email;
+                const username = userEmail.split('@')[0];
+                // Check if user exists in users table
+                const { data: existingUser, error: checkUserError } = await window.supabase
+                    .from('users')
+                    .select('id')
+                    .eq('id', userId)
+                    .single();
+                if (checkUserError && checkUserError.code !== 'PGRST116') {
+                    throw new Error('Error checking user profile: ' + checkUserError.message);
+                }
+                if (!existingUser) {
+                    const { error: profileError } = await window.supabase
+                        .from('users')
+                        .insert([{
+                            id: userId,
+                            email: userEmail,
+                            username: username,
+                            role: 'user',
+                            created_at: new Date().toISOString(),
+                            updated_at: new Date().toISOString()
+                        }]);
+                    if (profileError) throw new Error('Error creating user profile: ' + profileError.message);
+                }
+                // --- End insert users ---
+
+                // Fetch onboarding status and created_by from users table by id
                 const { data: userRecord, error: userError } = await window.supabase
                     .from('users')
                     .select('onboarding')
@@ -483,22 +510,8 @@
 
                 if (signUpError) throw signUpError;
 
-                // 2. Create the user profile in the users table
-                // This will be protected by RLS policies, but the user can create their own profile
-                const { error: profileError } = await window.supabase
-                    .from('users')
-                    .insert([{
-                        id: user.id,
-                        email: email,
-                        username: email.split('@')[0],
-                        role: 'user',
-                        created_at: new Date().toISOString(),
-                        updated_at: new Date().toISOString()
-                    }]);
+                // Do NOT insert into users table here!
 
-                if (profileError) throw profileError;
-
-                console.log('User created successfully:', user);
                 alert('Account created successfully! Please check your email to confirm.');
                 
                 // Trigger the download of the file

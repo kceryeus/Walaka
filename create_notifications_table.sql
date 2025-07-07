@@ -55,3 +55,18 @@ CREATE TRIGGER update_notifications_updated_at
     BEFORE UPDATE ON public.notifications 
     FOR EACH ROW 
     EXECUTE FUNCTION update_updated_at_column(); 
+
+-- Add max_users column to subscriptions table
+ALTER TABLE public.subscriptions
+ADD COLUMN IF NOT EXISTS max_users integer NULL;
+
+-- Optional: Add a comment for plan options
+COMMENT ON COLUMN public.subscriptions.plan IS 'Options: trial (teste), basic (básico), standard (padrão)';
+
+-- Optional: Add a comment for max_users
+COMMENT ON COLUMN public.subscriptions.max_users IS 'Maximum number of users allowed for the plan';
+
+-- Update existing rows with correct max_users based on plan
+UPDATE public.subscriptions SET max_users = 1 WHERE plan = 'trial' OR plan = 'teste';
+UPDATE public.subscriptions SET max_users = 2 WHERE plan = 'basic' OR plan = 'básico';
+UPDATE public.subscriptions SET max_users = 5 WHERE plan = 'standard' OR plan = 'padrão'; 

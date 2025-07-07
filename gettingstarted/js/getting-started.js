@@ -21,6 +21,13 @@ let onboardingData = {
     modules: {}
 };
 
+// Plan config for onboarding
+const PLAN_CONFIG = {
+    trial: { price: 0, maxUsers: 1 },
+    basic: { price: 250, maxUsers: 2 },
+    standard: { price: 500, maxUsers: 5 }
+};
+
 // Check if user needs onboarding
 document.addEventListener('DOMContentLoaded', async function() {
     // Check authentication first
@@ -249,18 +256,18 @@ async function saveAndContinue(step) {
             const endDateObj = new Date(now);
             endDateObj.setDate(endDateObj.getDate() + 30);
             const endDate = endDateObj.toISOString();
-            console.log('[Onboarding] Submitting subscription with payment_method:', paymentMethod, 'plan:', selectedPlan, 'start_date:', startDate, 'end_date:', endDate);
+            const planConfig = PLAN_CONFIG[selectedPlan] || PLAN_CONFIG.basic;
             const subscriptionPayload = {
                 user_id: userId,
                 payment_method: paymentMethod,
                 plan: selectedPlan,
-                status: 'active', // or set as needed
+                status: 'active',
                 start_date: startDate,
                 end_date: endDate,
+                max_users: planConfig.maxUsers,
                 // Optionally set invoices_count, days_remaining if you have those values
             };
             onboardingData.subscription = subscriptionPayload;
-            // Save subscription to Supabase
             await supabase
                 .from('subscriptions')
                 .upsert(subscriptionPayload);

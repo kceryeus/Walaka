@@ -576,6 +576,17 @@
             return plan.charAt(0).toUpperCase() + plan.slice(1).toLowerCase();
         }
 
+        function getPlanDisplayName(plan) {
+            if (!plan) return '-';
+            const planMap = {
+                trial: { en: 'Trial', pt: 'Teste' },
+                basic: { en: 'Basic', pt: 'Básico' },
+                standard: { en: 'Standard', pt: 'Padrão' }
+            };
+            const lang = (localStorage.getItem('preferredLanguage') || 'pt');
+            return planMap[plan] ? planMap[plan][lang] : capitalizePlanName(plan);
+        }
+
         // Handle username display
         async function updateUsername() {
             try {
@@ -632,7 +643,7 @@
                     return;
                 }
                 const latest = subscriptions[0];
-                planEl.textContent = capitalizePlanName(latest.plan);
+                planEl.textContent = getPlanDisplayName(latest.plan);
                 statusEl.textContent = latest.status ? capitalizePlanName(latest.status) : '-';
                 
                 // Handle next billing date with overdue check

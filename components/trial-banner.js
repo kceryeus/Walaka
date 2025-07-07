@@ -5,10 +5,32 @@ const supabaseUrl = 'https://qvmtozjvjflygbkjecyj.supabase.co';
 const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF2bXRvemp2amZseWdia2plY3lqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDYxMjc2MjMsImV4cCI6MjA2MTcwMzYyM30.DJMC1eM5_EouM1oc07JaoXsMX_bSLn2AVCozAcdfHmo';
 const supabase = createClient(supabaseUrl, supabaseKey);
 
-// Trial configuration
-const TRIAL_CONFIG = {
-    totalDays: 14,
-    maxInvoices: 5
+// Plan configuration
+const PLAN_CONFIG = {
+    trial: {
+        name: { en: 'Trial', pt: 'Teste' },
+        price: 'Free',
+        priceValue: 0,
+        maxUsers: 1,
+        features: ['Limited invoices', '14 days', '1 user'],
+        recommended: false
+    },
+    basic: {
+        name: { en: 'Basic', pt: 'Básico' },
+        price: 'MZN 250/mo',
+        priceValue: 250,
+        maxUsers: 2,
+        features: ['2 users', 'Unlimited invoices'],
+        recommended: false
+    },
+    standard: {
+        name: { en: 'Standard', pt: 'Padrão' },
+        price: 'MZN 500/mo',
+        priceValue: 500,
+        maxUsers: 5,
+        features: ['5 users', 'Unlimited invoices'],
+        recommended: true
+    }
 };
 
 async function updateTrialBanner() {
@@ -117,7 +139,7 @@ async function updateTrialBanner() {
         if (trialStartDate) {
             const now = new Date();
             const daysElapsed = Math.floor((now.getTime() - trialStartDate.getTime()) / (1000 * 60 * 60 * 24));
-            daysRemaining = Math.max(0, TRIAL_CONFIG.totalDays - daysElapsed);
+            daysRemaining = Math.max(0, PLAN_CONFIG.trial.maxUsers - 1 - daysElapsed); // Adjust for maxUsers
         }
         let invoiceCount = 0;
         try {
@@ -137,7 +159,7 @@ async function updateTrialBanner() {
                 invoiceCount = count || 0;
             }
         } catch (err) {}
-        const invoicesRemaining = Math.max(0, TRIAL_CONFIG.maxInvoices - invoiceCount);
+        const invoicesRemaining = Math.max(0, PLAN_CONFIG.trial.maxUsers - 1 - invoiceCount); // Adjust for maxUsers
         updateTrialUI(daysRemaining, invoicesRemaining, trialStartDate);
         window.dispatchEvent(new CustomEvent('trialDataUpdated', {
             detail: {
@@ -180,7 +202,7 @@ function updateTrialUI(daysRemaining, invoicesRemaining, trialStartDate) {
     if (progressFill && trialStartDate) {
         const now = new Date();
         const daysElapsed = Math.floor((now.getTime() - trialStartDate.getTime()) / (1000 * 60 * 60 * 24));
-        const percent = Math.min(100, Math.max(0, (daysElapsed / TRIAL_CONFIG.totalDays) * 100));
+        const percent = Math.min(100, Math.max(0, (daysElapsed / PLAN_CONFIG.trial.maxUsers) * 100)); // Adjust for maxUsers
         
         progressFill.style.width = percent + '%';
         progressFill.classList.toggle('warning', daysRemaining <= 3);
@@ -302,7 +324,7 @@ async function createPaymentNotification(userId, paymentMethod, amount, plan) {
 } catch (error) {
     console.error('[TrialBanner] Error in createPaymentNotification:', error);
 }
-
+}
 // Create invoice notification
 async function createInvoiceNotification(userId, invoiceNumber) {
     try {
@@ -359,7 +381,6 @@ async function createInvoiceNotification(userId, invoiceNumber) {
         console.error('[TrialBanner] Error in createInvoiceNotification:', error);
     }
 }
-}
 
 // --- Upgrade Modal Logic ---
 function injectUpgradeModalCSS() {
@@ -374,21 +395,24 @@ function injectUpgradeModalCSS() {
 function showUpgradeModal(currentPlan) {
     injectUpgradeModalCSS();
     if (document.querySelector('.upgrade-modal-overlay')) return;
-    // Use global currentPlanName if not provided
     if (!currentPlan) currentPlan = window.currentPlanName || 'Trial';
 
+    // Build plans array for modal
     const plans = [
-        { 
-            name: 'Trial', 
-            price: 'Free', 
-            features: ['Limited invoices', '14 days'], 
-            recommended: false 
+        {
+            key: 'trial',
+            ...PLAN_CONFIG.trial,
+            name: PLAN_CONFIG.trial.name.en
         },
-        { 
-            name: 'Invoicing', 
-            price: 'MZN 300/mo', 
-            features: ['Unlimited invoices', 'Full support'], 
-            recommended: true 
+        {
+            key: 'basic',
+            ...PLAN_CONFIG.basic,
+            name: PLAN_CONFIG.basic.name.en
+        },
+        {
+            key: 'standard',
+            ...PLAN_CONFIG.standard,
+            name: PLAN_CONFIG.standard.name.en
         }
     ];
 
@@ -411,32 +435,27 @@ function showUpgradeModal(currentPlan) {
                         <ul style="list-style:none;padding:0;margin:0 0 1em 0;">
                             ${plan.features.map(f => `<li>✓ ${f}</li>`).join('')}
                         </ul>
-                        ${plan.name !== currentPlan ? `<button class=\"payment-btn card-btn choose-plan-btn\" data-plan=\"${plan.name}\">Choose Plan</button>` : ''}
+                        ${plan.name !== currentPlan ? `<button class=\"payment-btn card-btn choose-plan-btn\" data-plan=\"${plan.key}\">Choose Plan</button>` : ''}
                     </div>
                 `).join('')}
             </div>
         </div>
     `;
-    
     document.body.appendChild(modal);
-    
-    // Close logic
     modal.querySelector('.close-modal').onclick = () => modal.remove();
-    modal.onclick = e => { 
-        if (e.target === modal) modal.remove(); 
-    };
-
-    // Payment simulation logic
+    modal.onclick = e => { if (e.target === modal) modal.remove(); };
     modal.querySelectorAll('.choose-plan-btn').forEach(btn => {
         btn.onclick = async (e) => {
             e.preventDefault();
-            const plan = btn.getAttribute('data-plan');
-            if (plan === 'Invoicing') {
+            const planKey = btn.getAttribute('data-plan');
+            if (planKey === 'basic' || planKey === 'standard') {
                 showPaymentMethodModal(async (paymentMethod) => {
-                    await simulatePaymentAndSubscribe(paymentMethod, modal);
+                    await simulatePaymentAndSubscribe(paymentMethod, modal, planKey);
                 });
-                }
-};
+            }
+        };
+    });
+} // Properly close showUpgradeModal
 
 // Global notification helper function
 window.createNotification = async function(type, title, message, actionUrl = null, userId = null) {
@@ -494,8 +513,6 @@ window.createNotification = async function(type, title, message, actionUrl = nul
         console.error('[NotificationHelper] Error in createNotification:', error);
     }
 };
-    });
-}
 
 function showPaymentMethodModal(onSelect) {
     // Remove any existing payment modal
@@ -523,27 +540,25 @@ function showPaymentMethodModal(onSelect) {
     });
 }
 
-async function simulatePaymentAndSubscribe(paymentMethod, parentModal) {
+async function simulatePaymentAndSubscribe(paymentMethod, parentModal, planKey = 'basic') {
     // Show loading spinner
     const loading = document.createElement('div');
     loading.className = 'payment-loading';
     loading.innerHTML = '<div style="padding:2em;text-align:center;">Processing payment...<br><span class="spinner"></span></div>';
     parentModal.appendChild(loading);
-    // Simulate payment delay
     await new Promise(res => setTimeout(res, 2000));
-    // Remove loading
     loading.remove();
-    // Insert subscription into Supabase
     try {
         const { data: { session } } = await supabase.auth.getSession();
         const userId = session.user.id;
         const now = new Date();
         const endDate = new Date(now);
         endDate.setMonth(endDate.getMonth() + 1);
+        const planConfig = PLAN_CONFIG[planKey] || PLAN_CONFIG.basic;
         const { error } = await supabase.from('subscriptions').upsert([
             {
                 user_id: userId,
-                plan: 'invoicing',
+                plan: planKey,
                 status: 'active',
                 payment_method: paymentMethod,
                 start_date: now.toISOString(),
@@ -551,23 +566,18 @@ async function simulatePaymentAndSubscribe(paymentMethod, parentModal) {
                 created_at: now.toISOString(),
                 updated_at: now.toISOString(),
                 invoices_count: 0,
-                days_remaining: 30
+                days_remaining: 30,
+                max_users: planConfig.maxUsers
             }
         ], { onConflict: ['user_id'] });
         if (error) throw error;
-        
-        // Create payment notification
-        console.log('[TrialBanner] Attempting to create payment notification...');
-        await createPaymentNotification(userId, paymentMethod, 'MZN 300', 'Invoicing');
-        console.log('[TrialBanner] Payment notification creation completed');
-        
+        await createPaymentNotification(userId, paymentMethod, planConfig.price, planConfig.name.en);
         parentModal.remove();
-        alert('Subscription successful! Welcome to Invoicing plan.');
-        // Generate and download invoice-receipt PDF
+        alert('Subscription successful! Welcome to ' + planConfig.name.en + ' plan.');
         await generateSubscriptionInvoiceReceipt({
             userId,
-            plan: 'Invoicing',
-            price: 'MZN 300',
+            plan: planConfig.name.en,
+            price: planConfig.price,
             paymentMethod,
             startDate: now,
             endDate: endDate
