@@ -115,19 +115,25 @@ class LanguageManager {
         console.log('[languageManager] Language manager initialized');
     }
 
-    translate(key) {
-        return this.translations[key] || key;
+    replaceVariables(str, variables = {}) {
+        if (!str) return str;
+        return str.replace(/\{(\w+)\}/g, (match, key) => variables[key] !== undefined ? variables[key] : match);
     }
 
-    applyTranslations() {
+    translate(key, variables = {}) {
+        const str = this.translations[key] || key;
+        return this.replaceVariables(str, variables);
+    }
+
+    applyTranslations(variables = {}) {
         console.log('[languageManager] Applying translations for:', this.currentLang, this.translations);
         document.querySelectorAll('[data-translate]').forEach(element => {
             const key = element.getAttribute('data-translate');
-            element.textContent = this.translate(key);
+            element.textContent = this.translate(key, variables);
         });
         document.querySelectorAll('[data-translate-placeholder]').forEach(element => {
             const key = element.getAttribute('data-translate-placeholder');
-            element.placeholder = this.translate(key);
+            element.placeholder = this.translate(key, variables);
         });
         console.log('[languageManager] Translations applied for:', this.currentLang);
     }

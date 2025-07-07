@@ -912,11 +912,18 @@
                 // Update user display name in top bar
                 const userSpan = document.getElementById('user-displayname');
                 if (userSpan) userSpan.textContent = displayName;
-                // Update subtitle with displayName
+                // Update subtitle with translation and username
+                window.currentUsername = displayName;
                 const subtitle = document.getElementById('dashboard-subtitle');
-                if (subtitle) {
-                    subtitle.textContent = subtitle.textContent.replace(/User/g, displayName);
+                if (subtitle && window.languageManager) {
+                    subtitle.textContent = window.languageManager.translate('dashboard_welcome', { username: displayName });
                 }
+                // Listen for language changes to re-apply subtitle translation
+                window.addEventListener('languageChanged', () => {
+                    if (subtitle && window.languageManager) {
+                        subtitle.textContent = window.languageManager.translate('dashboard_welcome', { username: window.currentUsername });
+                    }
+                });
                 // --- End username logic ---
 
                 // Initialize Revenue Chart if not already initialized

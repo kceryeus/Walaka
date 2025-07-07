@@ -151,7 +151,7 @@
   "receipts": "Receipts",
   "user_management": "User Management",
   "dashboard_overview": "Dashboard Overview",
-  "dashboard_welcome": "Welcome back, User! Here's what's happening with your business today.",
+  "dashboard_welcome": "Welcome back, {username}! Here's what's happening with your business today.",
   "quick_actions": "Quick Actions",
   "new_invoice": "New Invoice",
   "create_new_invoice": "Create a new invoice",

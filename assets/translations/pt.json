@@ -151,7 +151,7 @@
     "receipts": "Recibos",
     "user_management": "Gestão de Utilizadores",
     "dashboard_overview": "Visão Geral do Painel",
-    "dashboard_welcome": "Bem-vindo de volta, User! Aqui está o que está acontecendo com o seu negócio hoje.",
+    "dashboard_welcome": "Bem-vindo de volta, {username}! Aqui está o que está acontecendo com o seu negócio hoje.",
     "quick_actions": "Ações Rápidas",
     "new_invoice": "Nova Factura",
     "create_new_invoice": "Criar uma nova factura",
