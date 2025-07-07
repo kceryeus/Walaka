@@ -895,6 +895,30 @@
                     return;
                 }
 
+                // --- Username logic moved here ---
+                let displayName = session.user.email;
+                try {
+                    const { data: userRecord, error } = await window.supabase
+                        .from('users')
+                        .select('username')
+                        .eq('id', session.user.id)
+                        .maybeSingle();
+                    if (userRecord && userRecord.username) {
+                        displayName = userRecord.username;
+                    }
+                } catch (e) {
+                    console.error('Error fetching user record:', e);
+                }
+                // Update user display name in top bar
+                const userSpan = document.getElementById('user-displayname');
+                if (userSpan) userSpan.textContent = displayName;
+                // Update subtitle with displayName
+                const subtitle = document.getElementById('dashboard-subtitle');
+                if (subtitle) {
+                    subtitle.textContent = subtitle.textContent.replace(/User/g, displayName);
+                }
+                // --- End username logic ---
+
                 // Initialize Revenue Chart if not already initialized
                 const revenueCanvas = document.getElementById('revenueChart');
                 if (!revenueCanvas) {

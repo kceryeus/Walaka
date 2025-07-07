@@ -90,8 +90,11 @@ class SettingsManager {
 
     async handleSignOut() {
         try {
+            const repoName = 'Walaka';
+            const isGitHubPages = window.location.hostname.includes('github.io');
+            const basePath = isGitHubPages ? `/${repoName}/` : '/';
             await supabase.auth.signOut();
-            window.location.href = '/login.html';
+            window.location.href = basePath + 'login.html';
         } catch (error) {
             console.error('Error signing out:', error);
             showToast('Error signing out', 'error');
@@ -1176,7 +1179,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         // In a real app, this would make an API call to logout
         showToast('info', 'Signed Out', 'You have been signed out successfully.');
         setTimeout(() => {
-          window.location.href = 'login.html';
+          const repoName = 'Walaka';
+          const isGitHubPages = window.location.hostname.includes('github.io');
+          const basePath = isGitHubPages ? `/${repoName}/` : '/';
+          window.location.href = basePath + 'login.html';
         }, 1500);
       }
     );

@@ -26,15 +26,15 @@
             if (userSpan) userSpan.textContent = displayName;
 
             // Update subtitle with displayName
-            const subtitle = document.getElementById('dashboard-subtitle');
-            if (subtitle) {
-                ['en', 'pt'].forEach(lang => {
-                    if (subtitle.dataset[lang]) {
-                        subtitle.dataset[lang] = subtitle.dataset[lang].replace(/User/g, displayName);
-                    }
-                });
-                subtitle.textContent = subtitle.textContent.replace(/User/g, displayName);
-            }
+            // const subtitle = document.getElementById('dashboard-subtitle');
+            // if (subtitle) {
+            //     ['en', 'pt'].forEach(lang => {
+            //         if (subtitle.dataset[lang]) {
+            //             subtitle.dataset[lang] = subtitle.dataset[lang].replace(/User/g, displayName);
+            //         }
+            //     });
+            //     subtitle.textContent = subtitle.textContent.replace(/User/g, displayName);
+            // }
         });
 
         // Dropdown open/close logic for user menu

@@ -156,6 +156,25 @@
         .user-profile.open .dropdown-menu {
             display: block;
         }
+        /* Loading Spinner */
+        .notifications-loading-spinner {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100px; /* Half the previous height */
+        }
+        .notifications-loading-spinner .spinner {
+            border: 3px solid #f3f3f3; /* Half the previous border width */
+            border-top: 3px solid #3498db;
+            border-radius: 50%;
+            width: 24px; /* Half the previous size */
+            height: 24px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
     </style>
 </head>
 <body>
@@ -231,7 +250,6 @@
                 <div class="search-container" style="margin-bottom: 1rem;">
                     <input type="text" placeholder="Search notifications..." id="search-notifications" style="width: 100%; padding: 0.75rem 1rem; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 0.9rem;">
                 </div>
-                
                 <!-- Notification Filters -->
                 <div class="notification-filters">
                     <button class="filter-button active" data-filter="all">
@@ -259,7 +277,11 @@
                         <i class="fas fa-trash"></i> Clear All
                     </button>
                 </div>
-
+                <!-- Loading Spinner (moved below filters) -->
+                <div id="notifications-loading" class="notifications-loading-spinner" style="display: none;">
+                    <div class="spinner"></div>
+                </div>
+                
                 <!-- Empty State -->
                 <div id="empty-notifications" class="empty-notifications" style="display: none;">
                     <i class="fas fa-bell-slash"></i>
@@ -310,6 +332,7 @@
         const clearAllBtn = document.getElementById('clear-all');
         const markAllReadBtn = document.getElementById('mark-all-read');
         const notificationBadge = document.querySelector('.notification-bell .badge');
+        const loadingSpinner = document.getElementById('notifications-loading');
 
         let notifications = [];
         let lastSubscriptionCheck = 0; // Track last subscription check time
@@ -319,10 +342,16 @@
             const { data: { user } } = await window.supabase.auth.getUser();
             if (!user) return;
 
+            // Show loading spinner
+            loadingSpinner.style.display = 'flex';
+            notificationsList.innerHTML = '';
+            emptyState.style.display = 'none';
+
             // Check for subscription expiration notifications (but not too frequently)
             const now = Date.now();
             if (now - lastSubscriptionCheck > 60000) { // Only check once per minute
                 await checkSubscriptionNotifications(user.id);
+                await checkInvoiceNotifications(user.id); // <-- Added for invoice due/overdue
                 lastSubscriptionCheck = now;
             }
 
@@ -332,6 +361,9 @@
                 .select('*')
                 .eq('user_id', user.id)
                 .order('created_at', { ascending: false });
+
+            // Hide loading spinner
+            loadingSpinner.style.display = 'none';
 
             if (error) {
                 showToast('Error loading notifications', 'error');
@@ -455,13 +487,111 @@
             }
         }
 
+        // Check and create invoice due/overdue notifications
+        async function checkInvoiceNotifications(userId) {
+            try {
+                // Get all unpaid invoices for the user
+                const { data: invoices, error: invError } = await window.supabase
+                    .from('invoices')
+                    .select('*')
+                    .eq('user_id', userId)
+                    .neq('status', 'paid');
+
+                if (invError || !invoices) return;
+
+                const today = new Date();
+                const todayMidnight = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+
+                for (const invoice of invoices) {
+                    if (!invoice.due_date) continue;
+                    const dueDate = new Date(invoice.due_date);
+                    const dueDateMidnight = new Date(dueDate.getFullYear(), dueDate.getMonth(), dueDate.getDate());
+                    const daysUntilDue = Math.ceil((dueDateMidnight - todayMidnight) / (1000 * 60 * 60 * 24));
+
+                    // Due in 3 days
+                    if (daysUntilDue === 3) {
+                        await createInvoiceNotification(
+                            userId,
+                            'invoice_due',
+                            `Invoice Due Soon: ${invoice.invoiceNumber}`,
+                            `Invoice ${invoice.invoiceNumber} is due in 3 days (${dueDate.toLocaleDateString()}).`,
+                            'invoices.html',
+                            invoice.invoiceNumber
+                        );
+                    }
+
+                    // Overdue
+                    if (daysUntilDue < 0) {
+                        await createInvoiceNotification(
+                            userId,
+                            'invoice_overdue',
+                            `Invoice Overdue: ${invoice.invoiceNumber}`,
+                            `Invoice ${invoice.invoiceNumber} is overdue (was due on ${dueDate.toLocaleDateString()}).`,
+                            'invoices.html',
+                            invoice.invoiceNumber
+                        );
+                    }
+                }
+            } catch (error) {
+                console.error('Error checking invoice notifications:', error);
+            }
+        }
+
+        // Create invoice notification (avoids duplicates)
+        async function createInvoiceNotification(userId, type, title, message, actionUrl, invoiceNumber) {
+            try {
+                // Check if notification already exists for this invoice and type
+                const { data: existing, error: checkError } = await window.supabase
+                    .from('notifications')
+                    .select('id')
+                    .eq('user_id', userId)
+                    .eq('type', type)
+                    .eq('title', title);
+
+                if (checkError) {
+                    console.error('Error checking existing invoice notifications:', checkError);
+                    return;
+                }
+
+                if (existing && existing.length > 0) {
+                    // Already exists
+                    return;
+                }
+
+                // Insert new notification
+                await window.supabase
+                    .from('notifications')
+                    .insert({
+                        user_id: userId,
+                        type: type,
+                        title: title,
+                        message: message,
+                        action_url: actionUrl,
+                        read: false
+                    });
+            } catch (error) {
+                console.error('Error creating invoice notification:', error);
+            }
+        }
+
         // Update notifications display
         function updateNotificationsDisplay(filterType = 'all', searchQuery = '') {
+            // Hide loading spinner if still visible
+            loadingSpinner.style.display = 'none';
+
             const filteredNotifications = notifications.filter(notification => {
-                const matchesFilter = filterType === 'all' || 
-                    (filterType === 'unread' && !notification.read) ||
-                    notification.type === filterType;
-                
+                let matchesFilter = false;
+                if (filterType === 'all') {
+                    matchesFilter = true;
+                } else if (filterType === 'unread') {
+                    matchesFilter = !notification.read;
+                } else if (filterType === 'invoice') {
+                    // Include all invoice-related notifications
+                    matchesFilter = ['invoice', 'invoice_due', 'invoice_overdue'].includes(notification.type);
+                } else {
+                    matchesFilter = notification.type === filterType;
+                }
+
                 const matchesSearch = searchQuery === '' ||
                     notification.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
                     notification.message.toLowerCase().includes(searchQuery.toLowerCase());
@@ -804,6 +934,7 @@
                 // Set up periodic subscription notification checks (every hour)
                 setInterval(async () => {
                     await checkSubscriptionNotifications(user.id);
+                    await checkInvoiceNotifications(user.id); // <-- Added for invoice due/overdue
                     // Refresh notifications list
                     const { data, error } = await window.supabase
                         .from('notifications')

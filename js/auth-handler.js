@@ -4,13 +4,16 @@ import { supabase } from './supabaseClient.js';
 supabase.auth.onAuthStateChange((event, session) => {
     const currentPath = window.location.pathname;
     const isLoginPage = currentPath.includes('login.html');
+    const repoName = 'Walaka';
+    const isGitHubPages = window.location.hostname.includes('github.io');
+    const basePath = isGitHubPages ? `/${repoName}/` : '/';
 
     if (event === 'SIGNED_OUT' || !session) {
         if (!isLoginPage) {
-            window.location.href = '/login.html';
+            window.location.href = basePath + 'login.html';
         }
     } else if (isLoginPage && event === 'SIGNED_IN') {
-        window.location.href = '/dashboard.html';
+        window.location.href = basePath + 'dashboard.html';
     }
 });
 

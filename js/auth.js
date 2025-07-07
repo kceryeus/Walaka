@@ -18,7 +18,10 @@ const auth = {
         try {
             const { error } = await window.supabase.auth.signOut();
             if (error) throw error;
-            window.location.href = '/login.html';
+            const repoName = 'Walaka';
+            const isGitHubPages = window.location.hostname.includes('github.io');
+            const basePath = isGitHubPages ? `/${repoName}/` : '/';
+            window.location.href = basePath + 'login.html';
         } catch (error) {
             console.error('Error signing out:', error);
             alert('Failed to sign out. Please try again.');

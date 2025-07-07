@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Help & Support - Walaka</title>
+    <script>
+        const repoName = 'Walaka';
+        const isGitHubPages = window.location.hostname.includes('github.io');
+        const basePath = isGitHubPages ? `/${repoName}/` : '/';
+    </script>
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        document.write(`<link rel="stylesheet" href="${basePath}components/sidebar.css">`);
+        document.write(`<link rel="stylesheet" href="${basePath}css/styles.css">`);
+    </script>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap">
+    <link rel="icon" type="image/png" href="assets/images/walaka-assistant.PNG">
+    <style>
+      .help-section { background: #fff; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); padding: 32px; margin-bottom: 32px; }
+      .help-section h2 { margin-top: 0; }
+      .download-btn { display: inline-block; background: var(--primary-color, #007ec7); color: #fff; padding: 12px 24px; border-radius: 6px; text-decoration: none; font-weight: 600; margin-bottom: 16px; transition: background 0.2s; }
+      .download-btn:hover { background: var(--primary-dark, #005fa3); }
+      .system-info-list { list-style: none; padding: 0; }
+      .system-info-list li { margin-bottom: 8px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div id="sidebar-container"></div>
+            <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                fetch(`${basePath}components/sidebar.html`)
+                    .then(response => response.text())
+                    .then(html => {
+                        document.getElementById('sidebar-container').innerHTML = html;
+                        var script = document.createElement('script');
+                        script.src = `${basePath}components/sidebar-actions.js`;
+                        document.body.appendChild(script);
+                    })
+                    .catch(err => {
+                        console.error('Failed to load sidebar:', err);
+                    });
+            });
+            </script>
+        </aside>
+        <main class="main-content">
+            <!-- Top Bar -->
+            <div class="top-bar">
+                <button class="menu-toggle">
+                    <i class="fas fa-bars"></i>
+                </button>
+                <div class="user-menu" style="margin-left:auto;">
+                    <a href="notifications.html" class="notification-bell">
+                        <i class="fas fa-bell"></i>
+                        <span class="badge">0</span>
+                    </a>
+                    <div class="user-profile" id="userProfile">
+                        <div class="avatar">
+                            <i class="fas fa-user"></i>
+                        </div>
+                        <span id="user-displayname">Loading...</span>
+                        <div class="dropdown-menu" id="userDropdown">
+                            <a href="profile.html">
+                                <i class="fas fa-user-circle"></i> My Profile
+                            </a>
+                            <a href="settings.html">
+                                <i class="fas fa-cog"></i> Settings
+                            </a>
+                            <a href="#">
+                                <i class="fas fa-sign-out-alt"></i> Logout
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="help-section">
+                <h2><i class="fas fa-question-circle"></i> Help & Support</h2>
+                <p>Welcome to the Walaka Help Center. Here you can find documentation, download resources, and get support.</p>
+                <a class="download-btn" href="Memoria_Descritiva_WALAKA.pdf" download><i class="fas fa-file-pdf"></i> Download System Documentation (PDF)</a>
+            </div>
+            <div class="help-section">
+                <h3><i class="fas fa-gavel"></i> Terms and Conditions</h3>
+                <p>
+                  <!-- TODO: Replace with your actual terms and conditions -->
+                  By using this system, you agree to the terms and conditions of Walaka. Please contact support for the full legal document.
+                </p>
+            </div>
+            <div class="help-section">
+                <h3><i class="fas fa-info-circle"></i> System Information</h3>
+                <ul class="system-info-list">
+                  <li><strong>System Name:</strong> WALAKA</li>
+                  <li><strong>Version:</strong> N/A <!-- TODO: Update with actual version --></li>
+                  <li><strong>Release Date:</strong> <!-- TODO: Add release date if available --></li>
+                </ul>
+            </div>
+            <div class="help-section">
+                <h3><i class="fas fa-headset"></i> Contact & Support</h3>
+                <p>
+                  For further assistance, please contact our support team:<br>
+                  <strong>Email:</strong> <a href="mailto:support@walaka.com">support@walaka.com</a><br>
+                  <strong>Phone:</strong> <a href="tel:+258000000000">+258 00 000 0000</a>
+                </p>
+            </div>
+        </main>
+    </div>
+    <script type="module" src="js/supabaseClient.js"></script>
+    <script src="js/notification-badge.js"></script>
+    <script src="js/displayname.js"></script>
+    <script>
+      // Dropdown open/close logic for user menu (copied from dashboard.html)
+      document.addEventListener('DOMContentLoaded', function() {
+        const userProfile = document.getElementById('userProfile');
+        const userDropdown = document.getElementById('userDropdown');
+        if (!userProfile || !userDropdown) return;
+        let dropdownTimeout;
+        function openDropdown() {
+          clearTimeout(dropdownTimeout);
+          userProfile.classList.add('open');
+        }
+        function closeDropdown() {
+          dropdownTimeout = setTimeout(() => {
+            userProfile.classList.remove('open');
+          }, 150);
+        }
+        userProfile.addEventListener('mouseenter', openDropdown);
+        userProfile.addEventListener('mouseleave', closeDropdown);
+        userDropdown.addEventListener('mouseenter', openDropdown);
+        userDropdown.addEventListener('mouseleave', closeDropdown);
+      });
+    </script>
+    <script src="js/topbar-menu.js"></script>
+</body>
+</html> 
