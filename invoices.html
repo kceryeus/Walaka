@@ -658,6 +658,8 @@
     <script src="js/auth.js"></script>
     <!-- Notification badge synchronization -->
     <script src="js/notification-badge.js"></script>
+    <!-- Ensure tableFilters.js is loaded before main initialization -->
+    <script src="js/invoicescripts/tableFilters.js"></script>
 
     <!-- Initialize Supabase -->
     <script type="module">
@@ -869,30 +871,24 @@
                     console.log('Invoice actions initialized successfully');
                 } else {
                     console.error('InvoiceActions class or Supabase client not found during actions initialization');
-                }            // Initialize invoice table module first
-            if (window.invoiceTable) {
-                window.invoiceTable.init();
-                console.log('Invoice table module initialized successfully');
-            } else {
-                console.error('invoiceTable not found');
-                return;
-            }
+                }
 
-            // Initialize date range filter module
-            if (window.DateRangeFilterModule) {
-                window.DateRangeFilterModule.init();
-                console.log('Date range filter initialized successfully');
-            } else {
-                console.error('DateRangeFilterModule not found');
-            }
+                // --- Only call setupTableFilters for invoice table/filter setup ---
+                if (typeof window.setupTableFilters === 'function') {
+                    window.setupTableFilters();
+                    console.log('Table filters initialized successfully');
+                } else {
+                    console.error('Table filters setup function not found');
+                }
 
-            // Initialize table filters
-            if (typeof window.setupTableFilters === 'function') {
-                window.setupTableFilters();
-                console.log('Table filters initialized successfully');
-            } else {
-                console.error('Table filters setup function not found');
-            }
+                // (Leave other initializations for items, charts, metrics, etc. as is)
+                // Initialize date range filter module
+                if (window.DateRangeFilterModule) {
+                    window.DateRangeFilterModule.init();
+                    console.log('Date range filter initialized successfully');
+                } else {
+                    console.error('DateRangeFilterModule not found');
+                }
 
                 // Initialize invoice table
                 if (window.invoiceTable && typeof window.invoiceTable.fetchAndDisplayInvoices === 'function') {

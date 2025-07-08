@@ -23,6 +23,7 @@
         document.write(`<link rel="stylesheet" href="${basePath}css/styles.css">`);
         document.write(`<link rel="stylesheet" href="${basePath}css/metrics.css">`);
         document.write(`<link rel="stylesheet" href="${basePath}css/hints.css">`);
+        document.write(`<link rel="stylesheet" href="${basePath}css/invoice.css">`); // Add this after dashboard CSS includes
     </script>
     
     <!-- Google Fonts - Inter -->
@@ -33,7 +34,7 @@
     <link rel="icon" type="image/png" href="assets/images/walaka-assistant.PNG">
 </head>
 <body>
-    <div class="container">
+    <div class="dashboard-container">
         <!-- Sidebar -->
         <aside class="sidebar">
             <div id="sidebar-container"></div>
@@ -46,7 +47,7 @@
                         document.getElementById('sidebar-container').innerHTML = html;
                         // Dynamically load the sidebar-actions.js script after sidebar is injected
                         var script = document.createElement('script');
-                        script.src = `${basePath}components/sidebar-actions.js`;
+                        script.src = `${basePath}components/sidebar-actions.js?ts=${Date.now()}`;
                         document.body.appendChild(script);
                     })
                     .catch(err => {
@@ -254,6 +255,111 @@
                 </div>
             </div>
 
+            <!-- Add a modal for viewing invoice details -->
+            <div id="dashboardViewInvoiceModal" class="modal" style="display:none;">
+              <div class="modal-content" style="max-width:500px;">
+                <div class="modal-header">
+                  <h2>Invoice Details</h2>
+                  <button class="close-modal" id="closeDashboardViewModal">&times;</button>
+                </div>
+                <div class="modal-body" id="dashboardInvoiceDetailsBody">
+                  <!-- Details will be filled by JS -->
+                </div>
+                <div class="modal-footer">
+                  <button class="btn primary-btn" id="closeDashboardViewBtn">Close</button>
+                </div>
+              </div>
+            </div>
+            <style>
+            .dashboard-dropdown-menu {
+              position: absolute;
+              min-width: 160px;
+              background: #fff;
+              box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+              border-radius: 8px;
+              z-index: 1000;
+              padding: 0.5rem 0;
+              right: 0;
+              top: 100%;
+              display: none;
+            }
+            .dashboard-dropdown-menu.show {
+              display: block;
+            }
+            .dashboard-dropdown-menu button {
+              width: 100%;
+              background: none;
+              border: none;
+              padding: 0.75rem 1.25rem;
+              text-align: left;
+              font-size: 1rem;
+              color: #333;
+              cursor: pointer;
+              transition: background 0.15s;
+            }
+            .dashboard-dropdown-menu button:hover {
+              background: #f5f5f5;
+            }
+            </style>
+            <script>
+            document.addEventListener('DOMContentLoaded', function() {
+              // Enhance more actions dropdown
+              document.querySelectorAll('.more-btn').forEach(btn => {
+                btn.addEventListener('click', function(e) {
+                  e.stopPropagation();
+                  // Remove any existing dropdowns
+                  document.querySelectorAll('.dashboard-dropdown-menu').forEach(d => d.remove());
+                  // Create dropdown
+                  const dropdown = document.createElement('div');
+                  dropdown.className = 'dashboard-dropdown-menu show';
+                  dropdown.innerHTML = `
+                    <button data-action="mark-paid"><i class="fas fa-check-circle"></i> Mark as Paid</button>
+                    <button data-action="download"><i class="fas fa-download"></i> Download PDF</button>
+                    <button data-action="email"><i class="fas fa-envelope"></i> Send Email</button>
+                  `;
+                  // Position dropdown
+                  const rect = btn.getBoundingClientRect();
+                  dropdown.style.position = 'fixed';
+                  dropdown.style.top = `${rect.bottom + 4}px`;
+                  dropdown.style.left = `${rect.left}px`;
+                  document.body.appendChild(dropdown);
+                  // Handle actions
+                  dropdown.querySelectorAll('button').forEach(actionBtn => {
+                    actionBtn.addEventListener('click', function() {
+                      // Implement action logic here
+                      alert('Action: ' + this.dataset.action);
+                      dropdown.remove();
+                    });
+                  });
+                  // Close on outside click
+                  document.addEventListener('click', function handler(ev) {
+                    if (!dropdown.contains(ev.target)) {
+                      dropdown.remove();
+                      document.removeEventListener('click', handler);
+                    }
+                  });
+                });
+              });
+              // Enhance view button to show modal
+              document.querySelectorAll('.view-btn').forEach(btn => {
+                btn.addEventListener('click', function(e) {
+                  e.preventDefault();
+                  const invoiceNumber = btn.getAttribute('data-invoice');
+                  // Fill modal with dummy data for now
+                  document.getElementById('dashboardInvoiceDetailsBody').innerHTML = `<p><strong>Invoice #:</strong> ${invoiceNumber}</p><p>More details here...</p>`;
+                  document.getElementById('dashboardViewInvoiceModal').style.display = 'flex';
+                });
+              });
+              // Close modal logic
+              document.getElementById('closeDashboardViewModal').onclick = function() {
+                document.getElementById('dashboardViewInvoiceModal').style.display = 'none';
+              };
+              document.getElementById('closeDashboardViewBtn').onclick = function() {
+                document.getElementById('dashboardViewInvoiceModal').style.display = 'none';
+              };
+            });
+            </script>
+
             <script>
                 // Initialize invoice table module
                 const invoiceTable = {
@@ -339,6 +445,13 @@
 
                             // Add invoice rows
                             invoices.forEach(invoice => {
+                                const statusMap = {
+                                    paid:   { color: 'green',  icon: 'fa-check-circle', label: 'Paid' },
+                                    pending:{ color: 'blue',   icon: 'fa-clock',        label: 'Pending' },
+                                    overdue:{ color: 'red',    icon: 'fa-exclamation-circle', label: 'Overdue' },
+                                    draft:  { color: 'gray',   icon: 'fa-file',        label: 'Draft' }
+                                };
+                                const statusInfo = statusMap[invoice.status] || statusMap.draft;
                                 const row = `
                                     <tr>
                                         <td>${invoice.invoiceNumber || ''}</td>
@@ -346,17 +459,25 @@
                                         <td>${this.formatDate(invoice.issue_date)}</td>
                                         <td>${this.formatCurrency(invoice.total_amount)}</td>
                                         <td>
-                                            <span class="status ${invoice.status.toLowerCase()}">
-                                                ${invoice.status}
-                                            </span>
+                                            <span class="status ${statusInfo.color}"><i class="fas ${statusInfo.icon}"></i> ${statusInfo.label}</span>
                                         </td>
                                         <td class="actions">
-                                            <button class="action-btn view-btn" data-invoice="${invoice.invoiceNumber}" title="View">
-                                                <i class="fas fa-eye"></i>
-                                            </button>
-                                            <button class="action-btn more-btn" title="More">
-                                                <i class="fas fa-ellipsis-v"></i>
-                                            </button>
+                                            <div class="action-menu">
+                                                <button class="action-menu-btn more-btn" title="More" tabindex="0" data-invoice="${invoice.invoiceNumber}">
+                                                    <i class="fas fa-ellipsis-v"></i>
+                                                </button>
+                                                <div class="dropdown-menu">
+                                                    <div class="dropdown-header">Invoice Actions</div>
+                                                    <div class="dropdown-content">
+                                                        <button class="dropdown-item" data-action="view"><i class="fas fa-eye"></i> View Invoice</button>
+                                                        <button class="dropdown-item" data-action="download"><i class="fas fa-download"></i> Download PDF</button>
+                                                        <button class="dropdown-item" data-action="email"><i class="fas fa-envelope"></i> Send Email</button>
+                                                        <button class="dropdown-item" data-action="duplicate"><i class="fas fa-copy"></i> Duplicate</button>
+                                                        <button class="dropdown-item" data-action="mark-paid"><i class="fas fa-check-circle"></i> Mark as Paid & Create Receipt</button>
+                                                        <button class="dropdown-item" data-action="credit-note"><i class="fas fa-file-invoice-dollar"></i> Create Credit Note</button>
+                                                    </div>
+                                                </div>
+                                            </div>
                                         </td>
                                     </tr>
                                 `;
@@ -460,7 +581,7 @@
 
                         document.querySelectorAll('.more-btn').forEach(btn => {
                             btn.addEventListener('click', (e) => {
-                                const invoiceNumber = btn.closest('tr').querySelector('.view-btn').getAttribute('data-invoice');
+                                const invoiceNumber = btn.dataset.invoice; // Use btn.dataset.invoice
                                 this.showMoreOptions(e, invoiceNumber);
                             });
                         });
@@ -518,25 +639,19 @@
                     },
 
                     async updateInvoiceStatus(invoiceNumber, status) {
-                        try {
-                            const environment_id = await window.getEffectiveEnvironmentId();
-                            const { error } = await window.supabase
-                                .from('invoices')
-                                .update({ status })
-                                .eq('invoiceNumber', invoiceNumber)
-                                .eq('environment_id', environment_id);
-
-                            if (error) throw error;
-                            this.fetchAndDisplayInvoices(this.currentPage, this.itemsPerPage, this.currentFilters);
-                        } catch (error) {
-                            console.error('Error updating invoice status:', error);
-                            this.showError('Failed to update invoice status');
+                        if (window.invoiceActions) {
+                            await window.invoiceActions.updateInvoiceStatus(invoiceNumber, status);
+                        } else {
+                            console.error('window.invoiceActions not initialized');
                         }
                     },
 
                     async downloadInvoice(invoiceNumber) {
-                        // Implement PDF download functionality
-                        console.log('Download invoice:', invoiceNumber);
+                        if (window.invoiceActions) {
+                            await window.invoiceActions.downloadPdf(invoiceNumber);
+                        } else {
+                            console.error('window.invoiceActions not initialized');
+                        }
                     },
 
                     async sendInvoice(invoiceNumber) {
@@ -857,6 +972,7 @@
     <script src="js/environment-utils.js"></script>
     <!-- Then Supabase client -->
     <script type="module" src="js/supabaseClient.js"></script>
+    <script src="js/invoicescripts/invoiceActions.js"></script>
     <!-- Notification badge synchronization -->
     <script src="js/notification-badge.js"></script>
 
@@ -1195,5 +1311,19 @@
         });
     });
   </script>
+  <script>
+document.addEventListener('DOMContentLoaded', function() {
+  function tryInitInvoiceActions() {
+    if (!window.invoiceActions && window.InvoiceActions && window.supabase) {
+      window.invoiceActions = new window.InvoiceActions(window.supabase);
+      console.log('window.invoiceActions initialized!');
+    }
+  }
+  // Try immediately
+  tryInitInvoiceActions();
+  // Try again after a short delay in case scripts are async
+  setTimeout(tryInitInvoiceActions, 200);
+});
+</script>
 </body>
 </html>

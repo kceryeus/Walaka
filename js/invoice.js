@@ -5,7 +5,29 @@ let invoiceModuleInitialized = false;
 let invoiceDistributionChartInstance = null;
 let revenueByStatusChartInstance = null;
 
-// import { getCurrentEnvironmentId } from './environment-utils.js'; // Removed, use global instead
+// Add robust global getCurrentEnvironmentId for invoice environment logic (fetch from users table)
+window.getCurrentEnvironmentId = async function() {
+    let envId = localStorage.getItem('currentEnvironmentId');
+    if (envId) return envId;
+    try {
+        const userRes = await window.supabase.auth.getUser();
+        const user_id = userRes?.data?.user?.id;
+        if (!user_id) return null;
+        const { data: userRow, error } = await window.supabase
+            .from('users')
+            .select('environment_id')
+            .eq('id', user_id)
+            .single();
+        if (!error && userRow && userRow.environment_id) {
+            envId = userRow.environment_id;
+            localStorage.setItem('currentEnvironmentId', envId);
+            return envId;
+        }
+    } catch (e) {
+        // fallback
+    }
+    return null;
+};
 
 function initializeInvoiceModule() {
     if (invoiceModuleInitialized) {
@@ -513,6 +535,41 @@ function collectInvoiceData() {
     }
 }
 
+// Utility: Fetch currency rate (MZN as base, similar to invoiceForm.js)
+async function fetchCurrencyRate(currency) {
+    if (currency === 'MZN') return 1;
+    const cacheKey = `walaka_rates_${currency}`;
+    const cached = sessionStorage.getItem(cacheKey);
+    let rate = null;
+    if (cached) {
+        const { value, timestamp } = JSON.parse(cached);
+        if (Date.now() - timestamp < 60 * 60 * 1000) {
+            rate = value;
+        }
+    }
+    if (!rate) {
+        try {
+            const res = await fetch('https://openexchangerates.org/api/latest.json?app_id=0a2208bb4ead48929a4485ae45dff65d&symbols=USD,EUR,GBP,MZN');
+            const data = await res.json();
+            if (data && data.rates && data.rates['MZN']) {
+                if (currency === 'USD') {
+                    rate = data.rates['USD'] / data.rates['MZN'];
+                } else if (currency === 'EUR') {
+                    rate = data.rates['EUR'] / data.rates['MZN'];
+                } else if (currency === 'GBP') {
+                    rate = data.rates['GBP'] / data.rates['MZN'];
+                }
+            }
+            if (rate) {
+                sessionStorage.setItem(cacheKey, JSON.stringify({ value: rate, timestamp: Date.now() }));
+            }
+        } catch (err) {
+            rate = null;
+        }
+    }
+    return rate && !isNaN(rate) ? rate : null;
+}
+
 async function saveInvoice() {
     try {
         // Prevent duplicate submissions
@@ -528,6 +585,18 @@ async function saveInvoice() {
         if (!invoiceData.invoiceNumber || !invoiceData.client.name) {
             throw new Error('Missing required fields');
         }
+
+        // --- Fetch currency rate ---
+        let currency_rate = 1;
+        if (invoiceData.currency !== 'MZN') {
+            currency_rate = await fetchCurrencyRate(invoiceData.currency);
+            if (!currency_rate) {
+                showNotification('Could not fetch currency rate. Please try again.', 'error');
+                if (submitButton) submitButton.disabled = false;
+                return;
+            }
+        }
+        console.log('Using currency_rate:', currency_rate, 'for currency:', invoiceData.currency);
 
         // Generate PDF
         const pdfBlob = await window.generatePDF(invoiceData);
@@ -591,7 +660,8 @@ async function saveInvoice() {
                 pdf_url: publicUrl,
                 customer_name: invoiceData.client.name,
                 user_id: session.user.id, // Add user_id for RLS
-                environment_id // Add environment_id for multi-tenancy
+                environment_id, // Add environment_id for multi-tenancy
+                currency_rate // <--- Add the currency rate here
             }])
             .select();
 
@@ -727,14 +797,37 @@ async function fetchInvoiceDetails(invoiceNumber) {
             previewContainer.innerHTML = '<div class="loading">Loading invoice...</div>';
         }
 
+        // Ensure invoiceNumber is a string
+        console.log('[fetchInvoiceDetails] Raw input:', invoiceNumber, 'Type:', typeof invoiceNumber);
+        const invNum = typeof invoiceNumber === 'object' ? invoiceNumber.invoiceNumber : invoiceNumber;
+        console.log('[fetchInvoiceDetails] Using invoiceNumber:', invNum);
         const environment_id = await window.getCurrentEnvironmentId();
-        // Fetch invoice data
-        const { data: invoice, error } = await window.supabase
+        console.log('[fetchInvoiceDetails] environment_id:', environment_id);
+
+        // Build query
+        let query = window.supabase
             .from('invoices')
             .select('*, clients(*)')
-            .eq('invoiceNumber', invoiceNumber)
-            .eq('environment_id', environment_id)
-            .single();
+            .eq('invoiceNumber', invNum);
+        if (environment_id) {
+            query = query.eq('environment_id', environment_id);
+            console.log('[fetchInvoiceDetails] Querying with environment_id filter');
+        } else {
+            console.log('[fetchInvoiceDetails] Querying WITHOUT environment_id filter');
+        }
+        let { data: invoice, error } = await query.single();
+        console.log('[fetchInvoiceDetails] Query result:', invoice, 'Error:', error);
+
+        // Fallback: If no rows and environment_id was used, try again without it
+        if ((error && error.code === 'PGRST116') && environment_id) {
+            console.warn('[fetchInvoiceDetails] No rows found with environment_id, retrying without environment_id...');
+            query = window.supabase
+                .from('invoices')
+                .select('*, clients(*)')
+                .eq('invoiceNumber', invNum);
+            ({ data: invoice, error } = await query.single());
+            console.log('[fetchInvoiceDetails] Fallback query result:', invoice, 'Error:', error);
+        }
 
         if (error) throw error;
         if (!invoice) throw new Error('Invoice not found');
@@ -750,7 +843,7 @@ async function fetchInvoiceDetails(invoiceNumber) {
         document.getElementById('viewInvoiceNumber').textContent = invoice.invoiceNumber;
 
         // Fetch and populate timeline
-        const timeline = await fetchInvoiceTimeline(invoiceNumber);
+        const timeline = await fetchInvoiceTimeline(invNum);
         populateTimeline(timeline);
 
         // Show/hide "Mark as Paid" button based on status
@@ -758,24 +851,75 @@ async function fetchInvoiceDetails(invoiceNumber) {
         if (markPaidBtn) {
             markPaidBtn.style.display = invoice.status === 'paid' ? 'none' : '';
             if (invoice.status !== 'paid') {
-                markPaidBtn.onclick = () => markInvoiceAsPaid(invoiceNumber);
+                markPaidBtn.onclick = () => markInvoiceAsPaid(invNum);
             }
         }
 
-        // Load PDF from storage if available
-        if (invoice.pdf_url) {
-            const previewContainer = document.getElementById('invoicePreviewContent');
-            previewContainer.innerHTML = `
-                <iframe src="${invoice.pdf_url}" width="100%" height="600px" frameborder="0"></iframe>
-            `;
+        // Build invoice details HTML (form-like layout, no items)
+        const client = invoice.clients || {};
+        const detailsHtml = `
+          <div class="invoice-details-form">
+            <div><strong>Client:</strong> ${invoice.client_name || client.customer_name || '-'}</div>
+            <div><strong>Email:</strong> ${client.email || '-'}</div>
+            <div><strong>NUIT:</strong> ${client.customer_tax_id || '-'}</div>
+            <div><strong>Address:</strong> ${client.billing_address || '-'}</div>
+            <div><strong>Invoice #:</strong> ${invoice.invoiceNumber}</div>
+            <div><strong>Issue Date:</strong> ${invoice.issue_date ? new Date(invoice.issue_date).toLocaleDateString() : '-'}</div>
+            <div><strong>Due Date:</strong> ${invoice.due_date ? new Date(invoice.due_date).toLocaleDateString() : '-'}</div>
+            <div><strong>Status:</strong> ${invoice.status || '-'}</div>
+            <div><strong>Currency:</strong> ${invoice.currency || '-'}</div>
+            <div><strong>Payment Terms:</strong> ${invoice.payment_terms || '-'}</div>
+            <div><strong>Notes:</strong> ${invoice.notes || '-'}</div>
+            <div><strong>Subtotal:</strong> ${invoice.subtotal != null ? invoice.subtotal.toFixed(2) : '-'}</div>
+            <div><strong>VAT Amount:</strong> ${invoice.vat_amount != null ? invoice.vat_amount.toFixed(2) : '-'}</div>
+            <div><strong>Total Amount:</strong> ${invoice.total_amount != null ? invoice.total_amount.toFixed(2) : '-'}</div>
+          </div>
+        `;
+        if (previewContainer) {
+            previewContainer.innerHTML = detailsHtml;
+        }
+
+        // Attach download button logic
+        const downloadBtn = document.getElementById('downloadInvoicePdfBtn');
+        if (downloadBtn) {
+            downloadBtn.onclick = async function() {
+                const fileName = `${invoice.invoiceNumber}.pdf`;
+                console.log('[Download PDF] Attempting to create signed URL for:', fileName);
+                const { data: signedUrlData, error: signedUrlError } = await window.supabase
+                    .storage
+                    .from('invoice_pdfs')
+                    .createSignedUrl(fileName, 60 * 60); // 1 hour expiry
+                if (!signedUrlError && signedUrlData && signedUrlData.signedUrl) {
+                    window.open(signedUrlData.signedUrl, '_blank');
+                    console.log('[Download PDF] Signed URL opened:', signedUrlData.signedUrl);
+                } else {
+                    console.error('[Download PDF] Could not generate signed URL:', signedUrlError, signedUrlData);
+                    showNotification('Could not generate PDF download link.', 'error');
+                }
+            };
+        }
+
+        // Attach send button logic
+        const sendBtn = document.getElementById('sendInvoiceBtn');
+        if (sendBtn) {
+            sendBtn.onclick = function() {
+                const client = invoice.clients || {};
+                const subject = `Invoice ${invoice.invoiceNumber}`;
+                const message = `Dear ${invoice.client_name || client.customer_name || 'Client'},\n\nPlease find attached invoice ${invoice.invoiceNumber} for the amount of ${invoice.total_amount != null ? invoice.total_amount.toFixed(2) : '-'} ${invoice.currency || ''}.\n\nThank you.`;
+                if (typeof openEmailModal === 'function') {
+                    openEmailModal(invoice.invoiceNumber, client.email, subject, message);
+                } else {
+                    showNotification('Email modal function not found.', 'error');
+                }
+            };
         }
 
         // Open the modal
         openModal('viewInvoiceModal');
 
     } catch (error) {
-        console.error('Error fetching invoice:', error);
-        showNotification('Error loading invoice: ' + error.message);
+        console.error('[fetchInvoiceDetails] Error fetching invoice:', error);
+        showNotification('Error loading invoice: ' + (error.message || error));
     }
 }
 

@@ -1,15 +1,13 @@
-<nav class="sidebar">
+<nav class="sidebar" id="sidebar">
     <div class="logo">
         <img id="walaka-logo" alt="WALAKA Logo" style="height: 40px; width: auto; vertical-align: middle;" />
         <span style="margin-left: 10px; font-weight: bold; font-size: 1.2em;">WALAKA</span>
     </div>
-    
     <div class="nav-menu">
         <a href="dashboard.html" class="nav-item">
             <i class="fas fa-home"></i>
             <span data-translate="dashboard">Painél</span>
         </a>
-        
         <div class="nav-section">
             <h3 class="nav-header has-submenu" data-translate="invoicing">Facturação</h3>
             <div class="submenu">
@@ -63,5 +61,33 @@
         </div>
     </div>
 </nav>
-
 <script src="components/sidebar-actions.js"></script>
+<script>
+// Minimal sidebar toggle for mobile
+const sidebar = document.getElementById('sidebar');
+const toggleBtn = document.getElementById('sidebar-toggle');
+const overlay = document.getElementById('sidebar-overlay'); // Must exist in main HTML
+function openSidebar() {
+    sidebar.classList.add('active');
+    if (overlay) overlay.classList.add('active');
+    document.body.classList.add('sidebar-open');
+    document.body.style.overflow = 'hidden'; // Prevent background scroll
+}
+function closeSidebar() {
+    sidebar.classList.remove('active');
+    if (overlay) overlay.classList.remove('active');
+    document.body.classList.remove('sidebar-open');
+    document.body.style.overflow = '';
+}
+toggleBtn.addEventListener('click', function() {
+    if (sidebar.classList.contains('active')) {
+        closeSidebar();
+    } else {
+        openSidebar();
+    }
+});
+if (overlay) overlay.addEventListener('click', closeSidebar);
+window.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') closeSidebar();
+});
+</script>

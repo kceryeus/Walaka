@@ -48,12 +48,12 @@ function initSidebar() {
  * Initialize mobile menu functionality
  */
 function initMobileMenu() {
-  const hamburgerMenu = document.getElementById('hamburger-menu');
+  const hamburgerMenu = document.getElementById('sidebar-toggle');
   const sidebar = document.querySelector('.sidebar');
   
   if (hamburgerMenu) {
     hamburgerMenu.addEventListener('click', () => {
-      sidebar.classList.toggle('show');
+      sidebar.classList.toggle('active');
     });
   }
 
@@ -61,10 +61,10 @@ function initMobileMenu() {
   document.addEventListener('click', (event) => {
     const clickedElement = event.target;
     const isSidebar = clickedElement.closest('.sidebar');
-    const isHamburger = clickedElement.closest('#hamburger-menu');
+    const isHamburger = clickedElement.closest('#sidebar-toggle');
     
-    if (!isSidebar && !isHamburger && sidebar.classList.contains('show')) {
-      sidebar.classList.remove('show');
+    if (!isSidebar && !isHamburger && sidebar.classList.contains('active')) {
+      sidebar.classList.remove('active');
     }
   });
 }

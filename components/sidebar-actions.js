@@ -9,7 +9,7 @@
     function updateSidebarLinks() {
         const basePath = getBasePath();
         // The sidebar is inside #sidebar-container, but the main element has .sidebar class
-        const sidebar = document.querySelector('.sidebar');
+        const sidebar = document.querySelector('#sidebar-container .sidebar');
         if (!sidebar) return;
 
         const links = sidebar.querySelectorAll('a');
@@ -38,7 +38,7 @@
 
     function initSidebarActions() {
         // Only target the sidebar in this component
-        const sidebar = document.querySelector('.sidebar');
+        const sidebar = document.querySelector('#sidebar-container .sidebar');
         if (!sidebar) return;
 
         updateSidebarLinks(); // Update links as soon as sidebar is present

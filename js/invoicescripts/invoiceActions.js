@@ -298,29 +298,64 @@ class InvoiceActions {
         }
     }
 
+    // Add print method
+    printInvoice() {
+        const previewContent = document.getElementById('invoicePreviewContent');
+        if (previewContent) {
+            const printWindow = window.open('', '_blank');
+            printWindow.document.write(previewContent.innerHTML);
+            printWindow.document.close();
+            printWindow.print();
+        }
+    }
+
+    // Add a stub for hideLoading
+    hideLoading() {
+        // No-op or implement your loading indicator hide logic
+    }
+
+    // Update downloadPdf to use createSignedUrl for private bucket
     async downloadPdf(invoiceNumber) {
         try {
-            // Show loading indicator
-            this.showLoading('Downloading PDF...');
-
-            // Fetch invoice data from Supabase
-            const { data: invoice, error } = await this.supabase
+            this.showLoading && this.showLoading('Downloading PDF...');
+            // Ensure invoiceNumber is a string
+            const invNum = typeof invoiceNumber === 'object' ? invoiceNumber.invoiceNumber : invoiceNumber;
+            // Fetch invoice to get the correct file name
+            const envId = await window.getCurrentEnvironmentId ? await window.getCurrentEnvironmentId() : null;
+            let query = this.supabase
                 .from('invoices')
-                .select('pdf_url')
-                .eq('invoiceNumber', invoiceNumber)
-                .single();
-
-            if (error) throw error;
-            if (!invoice?.pdf_url) throw new Error('PDF not found');
-
-            // Open PDF in new tab
-            window.open(invoice.pdf_url, '_blank');
-
-            this.hideLoading();
-            this.showNotification('PDF opened successfully', 'success');
+                .select('invoiceNumber')
+                .eq('invoiceNumber', invNum);
+            if (envId) {
+                query = query.eq('environment_id', envId);
+            }
+            const { data: invoice, error } = await query.single();
+            if (error || !invoice) throw new Error('Invoice not found');
+            // Get user ID for file name
+            const userRes = await this.supabase.auth.getUser();
+            const userId = userRes?.data?.user?.id;
+            if (!userId) throw new Error('User not authenticated');
+            // Construct the file name (match upload logic)
+            const fileName = `${invoice.invoiceNumber}_${userId}.pdf`;
+            console.log('[Download PDF] Attempting to create signed URL for:', fileName);
+            // Get a signed URL
+            const { data: signedUrlData, error: signedUrlError } = await this.supabase
+                .storage
+                .from('invoice_pdfs')
+                .createSignedUrl(fileName, 60 * 60); // 1 hour expiry
+            if (!signedUrlError && signedUrlData && signedUrlData.signedUrl) {
+                window.open(signedUrlData.signedUrl, '_blank');
+                this.hideLoading && this.hideLoading();
+                this.showNotification && this.showNotification('PDF opened successfully', 'success');
+                console.log('[Download PDF] Signed URL opened:', signedUrlData.signedUrl);
+            } else {
+                this.hideLoading && this.hideLoading();
+                this.showNotification && this.showNotification('Could not generate PDF download link.', 'error');
+                console.error('[Download PDF] Could not generate signed URL:', signedUrlError, signedUrlData);
+            }
         } catch (error) {
-            this.hideLoading();
-            this.showNotification('Failed to open PDF: ' + error.message, 'error');
+            this.hideLoading && this.hideLoading();
+            this.showNotification && this.showNotification('Failed to open PDF: ' + error.message, 'error');
         }
     }
 
@@ -376,14 +411,102 @@ class InvoiceActions {
         }
     }
 
-    // Add print method
-    printInvoice() {
-        const previewContent = document.getElementById('invoicePreviewContent');
-        if (previewContent) {
-            const printWindow = window.open('', '_blank');
-            printWindow.document.write(previewContent.innerHTML);
-            printWindow.document.close();
-            printWindow.print();
+    // Add method to preview invoice details in a modal
+    async viewInvoiceDetails(invoiceNumber) {
+        try {
+            // Fetch invoice data from Supabase with joined client data
+            const { data: invoice, error } = await this.supabase
+                .from('invoices')
+                .select(`
+                    *,
+                    client:clients (
+                        customer_name,
+                        customer_tax_id,
+                        contact,
+                        email,
+                        telephone,
+                        billing_address,
+                        city,
+                        postal_code,
+                        province,
+                        country
+                    )
+                `)
+                .eq('invoiceNumber', invoiceNumber)
+                .maybeSingle();
+
+            if (error) throw error;
+            if (!invoice) {
+                throw new Error('Invoice not found');
+            }
+
+            // Find or create the modal
+            let modal = document.getElementById('viewInvoiceModal');
+            if (!modal) {
+                modal = document.createElement('div');
+                modal.id = 'viewInvoiceModal';
+                modal.className = 'document-modal';
+                modal.innerHTML = `
+                    <div class="document-modal-content">
+                        <div class="document-modal-header">
+                            <h2>Invoice Details</h2>
+                            <button class="close-modal" type="button">&times;</button>
+                        </div>
+                        <div class="document-modal-body">
+                            <div id="invoiceDetails" class="document-details"></div>
+                        </div>
+                        <div class="document-modal-footer">
+                            <button class="btn primary-btn close-modal">Close</button>
+                        </div>
+                    </div>
+                `;
+                document.body.appendChild(modal);
+            }
+
+            // Populate the details
+            const details = modal.querySelector('#invoiceDetails');
+            details.innerHTML = `
+                <div class="detail-row"><span class="label">Invoice Number:</span><span class="value">${invoice.invoiceNumber}</span></div>
+                <div class="detail-row"><span class="label">Status:</span><span class="value">${invoice.status || '-'}</span></div>
+                <div class="detail-row"><span class="label">Issue Date:</span><span class="value">${invoice.issue_date ? new Date(invoice.issue_date).toLocaleDateString() : '-'}</span></div>
+                <div class="detail-row"><span class="label">Due Date:</span><span class="value">${invoice.due_date ? new Date(invoice.due_date).toLocaleDateString() : '-'}</span></div>
+                <div class="detail-row"><span class="label">Client:</span><span class="value">${invoice.client_name || invoice.customer_name || invoice.client?.customer_name || '-'}</span></div>
+                <div class="detail-row"><span class="label">Subtotal:</span><span class="value">${invoice.subtotal != null ? invoice.subtotal.toFixed(2) : '-'}</span></div>
+                <div class="detail-row"><span class="label">VAT Amount:</span><span class="value">${invoice.vat_amount != null ? invoice.vat_amount.toFixed(2) : '-'}</span></div>
+                <div class="detail-row"><span class="label">Total Amount:</span><span class="value">${invoice.total_amount != null ? invoice.total_amount.toFixed(2) : '-'}</span></div>
+                <div class="detail-row"><span class="label">Currency:</span><span class="value">${invoice.currency || '-'}</span></div>
+                <div class="detail-row"><span class="label">Payment Terms:</span><span class="value">${invoice.payment_terms || '-'}</span></div>
+                <div class="detail-row"><span class="label">Notes:</span><span class="value">${invoice.notes || '-'}</span></div>
+                <div class="detail-row"><span class="label">Payment Date:</span><span class="value">${invoice.payment_date ? new Date(invoice.payment_date).toLocaleDateString() : '-'}</span></div>
+                <div class="detail-row"><span class="label">Payment Method:</span><span class="value">${invoice.payment_method || '-'}</span></div>
+                <div class="detail-row"><span class="label">Payment Reference:</span><span class="value">${invoice.payment_reference || '-'}</span></div>
+                <div class="detail-row"><span class="label">Serie:</span><span class="value">${invoice.serie || '-'}</span></div>
+                <div class="detail-row"><span class="label">Numero:</span><span class="value">${invoice.numero || '-'}</span></div>
+                <div class="detail-row"><span class="label">NUIT:</span><span class="value">${invoice.nuit || '-'}</span></div>
+            `;
+
+            // Show the modal
+            modal.style.display = 'block';
+            let overlay = document.querySelector('.modal-overlay');
+            if (!overlay) {
+                overlay = document.createElement('div');
+                overlay.className = 'modal-overlay';
+                overlay.style.display = 'block';
+                document.body.appendChild(overlay);
+            } else {
+                overlay.style.display = 'block';
+            }
+
+            // Close modal logic
+            modal.querySelectorAll('.close-modal').forEach(btn => {
+                btn.onclick = () => {
+                    modal.style.display = 'none';
+                    overlay.style.display = 'none';
+                };
+            });
+        } catch (error) {
+            console.error('Error viewing invoice details:', error);
+            showNotification('Error viewing invoice details: ' + (error.message || error), 'error');
         }
     }
 }

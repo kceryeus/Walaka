@@ -1,13 +1,13 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="pt">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Help & Support - Walaka</title>
+    <title data-translate="help_support_title">Help & Support - Walaka</title>
     <script>
         const repoName = 'Walaka';
         const isGitHubPages = window.location.hostname.includes('github.io');
-        const basePath = isGitHubPages ? `/${repoName}/` : '/';
+        const basePath = isGitHubPages ? `/${repoName}/` : './';
     </script>
     <!-- Font Awesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -65,44 +65,43 @@
                         <span id="user-displayname">Loading...</span>
                         <div class="dropdown-menu" id="userDropdown">
                             <a href="profile.html">
-                                <i class="fas fa-user-circle"></i> My Profile
+                                <i class="fas fa-user-circle"></i> <span data-translate="my_profile">My Profile</span>
                             </a>
                             <a href="settings.html">
-                                <i class="fas fa-cog"></i> Settings
+                                <i class="fas fa-cog"></i> <span data-translate="settings">Settings</span>
                             </a>
                             <a href="#">
-                                <i class="fas fa-sign-out-alt"></i> Logout
+                                <i class="fas fa-sign-out-alt"></i> <span data-translate="logout">Logout</span>
                             </a>
                         </div>
                     </div>
                 </div>
             </div>
             <div class="help-section">
-                <h2><i class="fas fa-question-circle"></i> Help & Support</h2>
-                <p>Welcome to the Walaka Help Center. Here you can find documentation, download resources, and get support.</p>
-                <a class="download-btn" href="Memoria_Descritiva_WALAKA.pdf" download><i class="fas fa-file-pdf"></i> Download System Documentation (PDF)</a>
+                <h2><i class="fas fa-question-circle"></i> <span data-translate="help_support_title">Help & Support</span></h2>
+                <p data-translate="help_welcome">Welcome to the Walaka Help Center. Here you can find documentation, download resources, and get support.</p>
+                <a class="download-btn" href="Memoria_Descritiva_WALAKA.pdf" download><i class="fas fa-file-pdf"></i> <span data-translate="download_system_documentation">Download System Documentation (PDF)</span></a>
             </div>
             <div class="help-section">
-                <h3><i class="fas fa-gavel"></i> Terms and Conditions</h3>
-                <p>
-                  <!-- TODO: Replace with your actual terms and conditions -->
+                <h3><i class="fas fa-gavel"></i> <span data-translate="terms_and_conditions">Terms and Conditions</span></h3>
+                <p data-translate="terms_and_conditions_text">
                   By using this system, you agree to the terms and conditions of Walaka. Please contact support for the full legal document.
                 </p>
             </div>
             <div class="help-section">
-                <h3><i class="fas fa-info-circle"></i> System Information</h3>
+                <h3><i class="fas fa-info-circle"></i> <span data-translate="system_information">System Information</span></h3>
                 <ul class="system-info-list">
-                  <li><strong>System Name:</strong> WALAKA</li>
-                  <li><strong>Version:</strong> N/A <!-- TODO: Update with actual version --></li>
-                  <li><strong>Release Date:</strong> <!-- TODO: Add release date if available --></li>
+                  <li><strong data-translate="system_name_label">System Name:</strong> <span data-translate="system_name">WALAKA</span></li>
+                  <li><strong data-translate="version_label">Version:</strong> <span data-translate="system_version">N/A</span></li>
+                  <li><strong data-translate="release_date_label">Release Date:</strong> <span data-translate="system_release_date"></span></li>
                 </ul>
             </div>
             <div class="help-section">
-                <h3><i class="fas fa-headset"></i> Contact & Support</h3>
+                <h3><i class="fas fa-headset"></i> <span data-translate="contact_support">Contact & Support</span></h3>
                 <p>
-                  For further assistance, please contact our support team:<br>
-                  <strong>Email:</strong> <a href="mailto:support@walaka.com">support@walaka.com</a><br>
-                  <strong>Phone:</strong> <a href="tel:+258000000000">+258 00 000 0000</a>
+                  <span data-translate="contact_assistance">For further assistance, please contact our support team:</span><br>
+                  <strong data-translate="email_label">Email:</strong> <a href="mailto:support@walaka.com">support@walaka.com</a><br>
+                  <strong data-translate="phone_label">Phone:</strong> <a href="tel:+258000000000">+258 00 000 0000</a>
                 </p>
             </div>
         </main>
@@ -110,26 +109,15 @@
     <script type="module" src="js/supabaseClient.js"></script>
     <script src="js/notification-badge.js"></script>
     <script src="js/displayname.js"></script>
+    <script src="services/languageManager.js"></script>
     <script>
-      // Dropdown open/close logic for user menu (copied from dashboard.html)
-      document.addEventListener('DOMContentLoaded', function() {
-        const userProfile = document.getElementById('userProfile');
-        const userDropdown = document.getElementById('userDropdown');
-        if (!userProfile || !userDropdown) return;
-        let dropdownTimeout;
-        function openDropdown() {
-          clearTimeout(dropdownTimeout);
-          userProfile.classList.add('open');
-        }
-        function closeDropdown() {
-          dropdownTimeout = setTimeout(() => {
-            userProfile.classList.remove('open');
-          }, 150);
-        }
-        userProfile.addEventListener('mouseenter', openDropdown);
-        userProfile.addEventListener('mouseleave', closeDropdown);
-        userDropdown.addEventListener('mouseenter', openDropdown);
-        userDropdown.addEventListener('mouseleave', closeDropdown);
+      window.languageManager = new LanguageManager('./');
+      document.addEventListener('DOMContentLoaded', async () => {
+        await window.languageManager.initialize();
+        window.languageManager.applyTranslations();
+        window.addEventListener('languageChanged', () => {
+          window.languageManager.applyTranslations();
+        });
       });
     </script>
     <script src="js/topbar-menu.js"></script>

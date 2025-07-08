@@ -553,5 +553,21 @@
   "days_remaining": "Days Remaining",
   "invoices_remaining": "Invoices Remaining",
   "upgrade_now": "Upgrade Now",
-  "plan_expired": "Plan Expired"
+  "plan_expired": "Plan Expired",
+  "help_support_title": "Help & Support",
+  "help_welcome": "Welcome to the Walaka Help Center. Here you can find documentation, download resources, and get support.",
+  "download_system_documentation": "Download Memoria Descritiva (PDF)",
+  "terms_and_conditions": "Terms and Conditions",
+  "terms_and_conditions_text": "By using this system, you agree to the terms and conditions of Walaka. Please contact support for the full legal document.",
+  "system_information": "System Information",
+  "system_name_label": "System Name:",
+  "system_name": "WALAKA",
+  "version_label": "Version:",
+  "system_version": "N/A",
+  "release_date_label": "Release Date:",
+  "system_release_date": "",
+  "contact_support": "Contact & Support",
+  "contact_assistance": "For further assistance, please contact our support team:",
+  "email_label": "Email:",
+  "phone_label": "Phone:"
 }

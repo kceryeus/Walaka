@@ -256,6 +256,14 @@ class InvoiceForm {
         try {
             const invoiceData = this.collectInvoiceData();
             
+            // Always fetch the latest exchange rate for non-MZN currencies before saving
+            if (this.currentCurrency !== 'MZN') {
+                await this.updateExchangeRate(this.currentCurrency);
+            }
+
+            // Debug: Log the current currency and rate
+            console.log('Saving invoice with currency:', invoiceData.currency, 'and rate:', this.currentRate);
+
             // Format data for Supabase storage
             const formattedData = {
                 "invoiceNumber": invoiceData.invoiceNumber,
@@ -268,8 +276,12 @@ class InvoiceForm {
                 vat_amount: invoiceData.totalVat,
                 total_amount: invoiceData.total,
                 notes: invoiceData.notes || '',
-                payment_terms: invoiceData.paymentTerms || 'net30'
+                payment_terms: invoiceData.paymentTerms || 'net30',
+                currency_rate: this.currentRate || 1
             };
+
+            // Debug: Log the insert payload
+            console.log('Insert payload:', formattedData);
 
             // Insert the invoice
             const { data: invoice, error: invoiceError } = await window.supabase

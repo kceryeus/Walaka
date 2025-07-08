@@ -17,11 +17,95 @@ function setupTableFilters() {
         return;
     }
 
+    // --- Ensure invoiceTable module is initialized ---
+    if (window.invoiceTable && typeof window.invoiceTable.init === 'function') {
+        window.invoiceTable.init();
+    }
+
+    // Add event listeners for filters
+    if (statusFilter) {
+        statusFilter.addEventListener('change', function() {
+            console.log('[DEBUG] Status filter changed:', statusFilter.value);
+            updateAndApplyFilters();
+        });
+    }
+    if (dateRangeFilter) {
+        dateRangeFilter.addEventListener('change', function() {
+            console.log('[DEBUG] Date range filter changed:', dateRangeFilter.value);
+            if (dateRangeFilter.value === 'custom') {
+                // Show the date range modal
+                $('#dateRangeModal').modal('show');
+            } else {
+                updateAndApplyFilters();
+            }
+        });
+    }
+    if (clientFilter) {
+        clientFilter.addEventListener('change', function() {
+            console.log('[DEBUG] Client filter changed:', clientFilter.value);
+            updateAndApplyFilters();
+        });
+    }
+    if (searchInput) {
+        searchInput.addEventListener('input', function() {
+            console.log('[DEBUG] Search input changed:', searchInput.value);
+            updateAndApplyFilters();
+        });
+    }
+
+    // --- Unified function to update invoiceTable filters and refresh table ---
+    function updateAndApplyFilters() {
+        if (!window.invoiceTable) {
+            console.log('[DEBUG] window.invoiceTable not found');
+            return;
+        }
+        // Always use the correct keys for the table module
+        const filterState = {
+            status: statusFilter ? statusFilter.value : 'all',
+            dateRange: dateRangeFilter ? dateRangeFilter.value : 'all',
+            client: clientFilter ? clientFilter.value : 'all',
+            search: searchInput ? searchInput.value.trim() : ''
+        };
+        console.log('[DEBUG] updateAndApplyFilters called. Current filter state:', filterState);
+        window.invoiceTable.currentFilters = filterState;
+        if (typeof window.invoiceTable.fetchAndDisplayInvoices === 'function') {
+            console.log('[DEBUG] Calling fetchAndDisplayInvoices with:', filterState);
+            window.invoiceTable.fetchAndDisplayInvoices(1, 10, filterState);
+        } else {
+            console.log('[DEBUG] fetchAndDisplayInvoices function not found on window.invoiceTable');
+        }
+    }
+
+    // Function to reset filters
+    function resetFilters() {
+        if (statusFilter) statusFilter.value = 'all';
+        if (dateRangeFilter) dateRangeFilter.value = 'all';
+        if (clientFilter) clientFilter.value = 'all';
+        if (searchInput) searchInput.value = '';
+        console.log('[DEBUG] Reset filters called');
+        updateAndApplyFilters();
+    }
+
+    // Add event listeners for reset buttons
+    if (clearFiltersBtn) {
+        clearFiltersBtn.addEventListener('click', function() {
+            console.log('[DEBUG] Clear filters button clicked');
+            resetFilters();
+        });
+    }
+    if (resetFiltersLink) {
+        resetFiltersLink.addEventListener('click', function(e) {
+            e.preventDefault();
+            console.log('[DEBUG] Reset filters link clicked');
+            resetFilters();
+        });
+    }
+
     // Populate client filter with data from Supabase
     async function populateClientFilter() {
         try {
             if (!window.supabase) {
-                console.error('Supabase client not initialized');
+                console.error('[DEBUG] Supabase client not initialized');
                 return;
             }
 
@@ -31,13 +115,13 @@ function setupTableFilters() {
                 .order('customer_name', { ascending: true });
 
             if (error) {
-                console.error('Error fetching clients:', error);
+                console.error('[DEBUG] Error fetching clients:', error);
                 showNotification('Error loading clients: ' + error.message);
                 return;
             }
 
             if (!clientFilter) {
-                console.error('Client filter element not found');
+                console.error('[DEBUG] Client filter element not found');
                 return;
             }
 
@@ -45,7 +129,7 @@ function setupTableFilters() {
             clientFilter.innerHTML = '<option value="all">All Clients</option>';
 
             if (!clients || clients.length === 0) {
-                console.log('No clients found');
+                console.log('[DEBUG] No clients found');
                 return;
             }
 
@@ -57,9 +141,9 @@ function setupTableFilters() {
                 clientFilter.appendChild(option);
             });
 
-            console.log('Client filter populated with', clients.length, 'clients');
+            console.log('[DEBUG] Client filter populated with', clients.length, 'clients');
         } catch (err) {
-            console.error('Error populating client filter:', err);
+            console.error('[DEBUG] Error populating client filter:', err);
             showNotification('Error loading clients: ' + err.message);
         }
     }
@@ -75,7 +159,7 @@ function setupTableFilters() {
                 .on('postgres_changes', 
                     { event: '*', schema: 'public', table: 'clients' },
                     async () => {
-                        console.log('Clients table changed, updating filter...');
+                        console.log('[DEBUG] Clients table changed, updating filter...');
                         await populateClientFilter();
                     }
                 )
@@ -86,92 +170,11 @@ function setupTableFilters() {
         }
     }
 
-    // Function to get current filter values
-    function getFilterValues() {
-        return {
-            status: statusFilter ? statusFilter.value : 'all',
-            dateRange: dateRangeFilter ? dateRangeFilter.value : 'all',
-            clientId: clientFilter ? clientFilter.value : 'all',
-            search: searchInput ? searchInput.value.trim() : ''
-        };
-    }
-
-    // Function to apply filters
-    async function applyFilters() {
-        try {
-            const filters = getFilterValues();
-            console.log('Applying filters:', filters);
-            
-            // Always reset to page 1 when filters change
-            if (window.invoiceTable && typeof window.invoiceTable.fetchAndDisplayInvoices === 'function') {
-                await window.invoiceTable.fetchAndDisplayInvoices(1, 10, filters);
-            } else {
-                console.error('invoiceTable or fetchAndDisplayInvoices function not found');
-            }
-        } catch (error) {
-            console.error('Error applying filters:', error);
-            showNotification('Error applying filters: ' + error.message);
-        }
-    }
-
-    // Add event listeners for filters
-    if (statusFilter) {
-        statusFilter.addEventListener('change', () => {
-            console.log('Status filter changed:', statusFilter.value);
-            applyFilters();
-        });
-    }
-
-    if (dateRangeFilter) {
-        dateRangeFilter.addEventListener('change', () => {
-            console.log('Date range filter changed:', dateRangeFilter.value);
-            if (dateRangeFilter.value === 'custom') {
-                // Show the date range modal
-                $('#dateRangeModal').modal('show');
-            } else {
-                applyFilters();
-            }
-        });
-    }
-
-    if (clientFilter) {
-        clientFilter.addEventListener('change', () => {
-            console.log('Client filter changed:', clientFilter.value);
-            applyFilters();
-        });
-    }
-
-    if (searchInput) {
-        searchInput.addEventListener('input', debounce(() => {
-            console.log('Search input changed:', searchInput.value);
-            applyFilters();
-        }, 300));
-    }
-
-    // Function to reset filters
-    function resetFilters() {
-        if (statusFilter) statusFilter.value = 'all';
-        if (dateRangeFilter) dateRangeFilter.value = 'all';
-        if (clientFilter) clientFilter.value = 'all';
-        if (searchInput) searchInput.value = '';
-        applyFilters();
-    }
-
-    // Add event listeners for reset buttons
-    if (clearFiltersBtn) {
-        clearFiltersBtn.addEventListener('click', resetFilters);
-    }
-    
-    if (resetFiltersLink) {
-        resetFiltersLink.addEventListener('click', function(e) {
-            e.preventDefault();
-            resetFilters();
-        });
-    }
-
-    // Initialize filters
-    initializeClientFilter();
-    
+    // Initialize filters and trigger initial fetch
+    initializeClientFilter().then(() => {
+        console.log('[DEBUG] Initial filter setup complete, triggering first fetch');
+        updateAndApplyFilters();
+    });
     // Setup table sorting
     setupTableSorting(table);
 }

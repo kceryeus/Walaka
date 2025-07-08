@@ -31,6 +31,7 @@
 </script>
 
 <body>
+  <div id="sidebar-overlay" class="sidebar-overlay"></div>
   <div class="dashboard-container">
     <!-- Sidebar Menu -->
     <div id="sidebar-container"></div>
@@ -58,76 +59,60 @@
         <div class="hamburger-menu" id="hamburger-menu">
           <i class="fas fa-bars"></i>
         </div>
-             <!-- Top Bar -->
-            <div class="top-bar">
-                <button class="menu-toggle">
-                    <i class="fas fa-bars"></i>
-                </button>
-                
-            <!-- Top Bar -->
-        <div class="main-content">
-            <!-- Top Bar -->
-            <div class="top-bar">
-                <button class="menu-toggle">
-                    <i class="fas fa-bars"></i>
-                </button>
-                
-                <div class="user-menu" style="margin-left:auto;">
-                    <a href="../notifications.html" class="notification-bell">
-                        <i class="fas fa-bell"></i>
-                        <span class="badge">0</span>
-                    </a>
-                    
-                    <div class="user-profile" id="userProfile">
-                        <div class="avatar">
-                            <i class="fas fa-user"></i>
-                        </div>
-                        <span id="user-displayname">Loading...</span>
-                        <div class="dropdown-menu" id="userDropdown">
-                            <a href="#">
-                                <i class="fas fa-user-circle"></i> My Profile
-                            </a>
-                            <a href="../settings.html">
-                                <i class="fas fa-cog"></i> Settings
-                            </a>
-                            <a href="#">
-                                <i class="fas fa-sign-out-alt"></i> Logout
-                            </a>
-                        </div>
-                    </div>
-                </div>
+        <div class="user-menu" style="margin-left:auto;">
+          <a href="../notifications.html" class="notification-bell">
+            <i class="fas fa-bell"></i>
+            <span class="badge">0</span>
+          </a>
+          <div class="user-profile" id="userProfile">
+            <div class="avatar">
+              <i class="fas fa-user"></i>
             </div>
-     </header>
-              <!-- Add trial banner and restrictions system -->
-              <div id="trial-banner-container"></div>
-              <script>
-              document.addEventListener('DOMContentLoaded', function() {
-                  fetch(`${basePath}components/trial-banner.html`)
-                      .then(response => {
-                          if (!response.ok) {
-                              throw new Error('Network response was not ok');
-                          }
-                          return response.text();
-                      })
-                      .then(html => {
-                          document.getElementById('trial-banner-container').innerHTML = html;
-                          
-                          // Load the banner script
-                          const bannerScript = document.createElement('script');
-                          bannerScript.type = 'module';
-                          bannerScript.src = `${basePath}components/trial-banner.js`;
-                          document.body.appendChild(bannerScript);
-                          
-                          // Load the restrictions script immediately after
-                          const restrictionsScript = document.createElement('script');
-                          restrictionsScript.src = `${basePath}components/trial-restrictions.js`;
-                          document.body.appendChild(restrictionsScript);
-                      })
-                      .catch(error => {
-                          console.error('Failed to load trial banner component:', error);
-                      });
+            <span id="user-displayname">Loading...</span>
+            <div class="dropdown-menu" id="userDropdown">
+              <a href="#">
+                <i class="fas fa-user-circle"></i> My Profile
+              </a>
+              <a href="../settings.html">
+                <i class="fas fa-cog"></i> Settings
+              </a>
+              <a href="#">
+                <i class="fas fa-sign-out-alt"></i> Logout
+              </a>
+            </div>
+          </div>
+        </div>
+      </header>
+      <!-- Add trial banner and restrictions system -->
+      <div id="trial-banner-container"></div>
+      <script>
+      document.addEventListener('DOMContentLoaded', function() {
+          fetch(`${basePath}components/trial-banner.html`)
+              .then(response => {
+                  if (!response.ok) {
+                      throw new Error('Network response was not ok');
+                  }
+                  return response.text();
+              })
+              .then(html => {
+                  document.getElementById('trial-banner-container').innerHTML = html;
+                  
+                  // Load the banner script
+                  const bannerScript = document.createElement('script');
+                  bannerScript.type = 'module';
+                  bannerScript.src = `${basePath}components/trial-banner.js`;
+                  document.body.appendChild(bannerScript);
+                  
+                  // Load the restrictions script immediately after
+                  const restrictionsScript = document.createElement('script');
+                  restrictionsScript.src = `${basePath}components/trial-restrictions.js`;
+                  document.body.appendChild(restrictionsScript);
+              })
+              .catch(error => {
+                  console.error('Failed to load trial banner component:', error);
               });
-              </script>
+      });
+      </script>
       <div class="content-wrapper">
         <div class="container">
           <div class="page-header">

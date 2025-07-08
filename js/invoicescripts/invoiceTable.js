@@ -133,15 +133,31 @@ const InvoiceTableModule = {
             // Add invoice rows
             invoices.forEach(invoice => {
                 const clientName = invoice.clients?.customer_name || invoice.customer_name || 'N/A';
+                // Always show MZN value with code
+                let mznValue = invoice.total_amount.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' MZN';
+                let amountDisplay = mznValue;
+                if (invoice.currency && invoice.currency !== 'MZN' && invoice.currency_rate && !isNaN(invoice.currency_rate)) {
+                    const converted = invoice.total_amount * invoice.currency_rate;
+                    amountDisplay = `
+                        <div>${mznValue}</div>
+                        <div style="font-size:0.95em;color:#1976d2;">${converted.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} ${invoice.currency}</div>
+                    `;
+                }
+                const statusConfig = window.InvoiceStatusManager ? window.InvoiceStatusManager.getStatusConfig(invoice.status) : null;
+                const statusClass = statusConfig ? statusConfig.color : invoice.status.toLowerCase();
+                const statusIcon = statusConfig ? statusConfig.icon : '';
+                const statusLabel = statusConfig ? statusConfig.label : invoice.status;
                 const row = `
                     <tr>
                         <td>${invoice.invoiceNumber || ''}</td>
                         <td>${clientName}</td>
                         <td>${this.formatDate(invoice.issue_date)}</td>
                         <td>${this.formatDate(invoice.due_date)}</td>
-                        <td>${this.formatCurrency(invoice.total_amount, invoice.currency)}</td>
+                        <td>${amountDisplay}</td>
                         <td>
-                            <span class="status-badge ${invoice.status}">${invoice.status}</span>
+                            <span class="status ${statusClass}">
+                                <i class="fas ${statusIcon}"></i> ${statusLabel}
+                            </span>
                         </td>
                         <td>
                             <div class="action-menu">

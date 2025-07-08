@@ -543,5 +543,21 @@
     "days_remaining": "Dias Restantes",
     "invoices_remaining": "Facturas Restantes",
     "upgrade_now": "Actualizar Agora",
-    "plan_expired": "Plano Expirado"
+    "plan_expired": "Plano Expirado",
+    "help_support_title": "Ajuda & Suporte",
+    "help_welcome": "Bem-vindo ao Centro de Ajuda Walaka. Aqui pode encontrar documentação, descarregar recursos e obter suporte.",
+    "download_system_documentation": "Descarregar Memória Descritiva (PDF)",
+    "terms_and_conditions": "Termos e Condições",
+    "terms_and_conditions_text": "Ao utilizar este sistema, concorda com os termos e condições do Walaka. Por favor, contacte o suporte para obter o documento legal completo.",
+    "system_information": "Informação do Sistema",
+    "system_name_label": "Nome do Sistema:",
+    "system_name": "WALAKA",
+    "version_label": "Versão:",
+    "system_version": "N/A",
+    "release_date_label": "Data de Lançamento:",
+    "system_release_date": "",
+    "contact_support": "Contacto & Suporte",
+    "contact_assistance": "Para mais assistência, por favor contacte a nossa equipa de suporte:",
+    "email_label": "Email:",
+    "phone_label": "Telefone:"
 }
