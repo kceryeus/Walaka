@@ -54,6 +54,9 @@
         .main-content {
             flex: 1;
             padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
         }
         .top-bar {
             display: flex;
@@ -250,14 +253,28 @@
             background: #e0e7ef;
         }
         .subscription-content {
-            max-width: 700px;
-            margin: 0 auto;
+            width: 100%;
+            max-width: 900px;
+            margin: 0 auto 2.5rem auto;
             background: #fff;
             border-radius: var(--card-radius, 16px);
-            box-shadow: 0 2px 8px rgba(0,0,0,0.07);
-            padding: 2rem 2rem 1.5rem 2rem;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.09);
+            padding: 2.5rem 2.5rem 2rem 2.5rem;
             min-height: 320px;
-            transition: box-shadow 0.2s;
+            transition: box-shadow 0.2s, max-width 0.2s;
+        }
+        @media (min-width: 1200px) {
+            .subscription-content {
+                max-width: 1000px;
+                padding: 3rem 3rem 2.5rem 3rem;
+            }
+        }
+        @media (max-width: 900px) {
+            .subscription-content {
+                margin: 2rem 0.5rem;
+                padding: 1.5rem 0.5rem;
+                max-width: 100vw;
+            }
         }
         .subscription-list {
             list-style: none;
@@ -353,6 +370,33 @@
         }
         .cancel-section .danger:hover {
             background: #dc2626;
+        }
+        .plan-modal-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            background: rgba(0,0,0,0.25);
+            z-index: 10000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .plan-modal {
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 2px 16px rgba(0,0,0,0.15);
+            padding: 2em 2em 1.5em 2em;
+            min-width: 320px;
+            max-width: 95vw;
+            text-align: center;
+        }
+        .plan-modal h2 {
+            margin-top: 0;
+            font-size: 1.3em;
+            margin-bottom: 1em;
+        }
+        .plan-modal .filter-btn {
+            margin-top: 0.5em;
+            min-width: 120px;
         }
     </style>
     <script src="assets/js/sidebar.js"></script>
@@ -506,9 +550,16 @@
                 </div>
                 <!-- Plan Section -->
                 <div class="section" id="section-plan">
-                    <div style="margin-bottom:1.5rem;">
-                        <strong data-translate="current_plan_label_strong">Current Plan:</strong> <span id="plan-current">-</span><br>
-                        <strong data-translate="status_label_strong">Status:</strong> <span id="plan-status">-</span>
+                    <div style="margin-bottom:1.5rem; display:flex; align-items:center; gap:2em; flex-wrap:wrap;">
+                        <div style="display:flex; align-items:center; gap:0.5em;">
+                            <strong data-translate="current_plan_label_strong">Current Plan:</strong>
+                            <span id="plan-current">-</span>
+                            <span id="plan-current-price" style="color:#2563eb; font-weight:600; margin-left:0.5em;">-</span>
+                        </div>
+                        <div style="display:flex; align-items:center; gap:0.5em;">
+                            <strong data-translate="status_label_strong">Status:</strong>
+                            <span id="plan-status">-</span>
+                        </div>
                     </div>
                     <div>
                         <button class="filter-btn" id="upgrade-pay-btn" style="margin-right:1rem;">
@@ -619,14 +670,22 @@
             const statusEl = document.getElementById('overview-status');
             const nextBillingEl = document.getElementById('overview-next-billing');
             const paymentMethodEl = document.getElementById('overview-payment-method');
-
+            // Elements for Plan section
+            const planCurrentEl = document.getElementById('plan-current');
+            const planCurrentPriceEl = document.getElementById('plan-current-price');
+            const planSectionStatusEl = document.getElementById('plan-status');
             // Set loading state
             planEl.textContent = statusEl.textContent = nextBillingEl.textContent = paymentMethodEl.textContent = '...';
-
+            if (planCurrentEl) planCurrentEl.textContent = '...';
+            if (planCurrentPriceEl) planCurrentPriceEl.textContent = '...';
+            if (planSectionStatusEl) planSectionStatusEl.textContent = '...';
             try {
                 const { data: { session }, error: sessionError } = await supabase.auth.getSession();
                 if (sessionError || !session || !session.user) {
                     planEl.textContent = statusEl.textContent = nextBillingEl.textContent = paymentMethodEl.textContent = '-';
+                    if (planCurrentEl) planCurrentEl.textContent = '-';
+                    if (planCurrentPriceEl) planCurrentPriceEl.textContent = '-';
+                    if (planSectionStatusEl) planSectionStatusEl.textContent = '-';
                     return;
                 }
                 const userId = session.user.id;
@@ -635,16 +694,20 @@
                     .select('*')
                     .eq('user_id', userId)
                     .order('end_date', { ascending: false });
+                let planKey = 'trial';
+                let planStatus = 'Trial';
+                let planPrice = '';
                 if (subError || !subscriptions || subscriptions.length === 0) {
                     planEl.textContent = 'Trial';
                     statusEl.textContent = 'Trial';
                     nextBillingEl.textContent = '-';
                     paymentMethodEl.textContent = '-';
-                    return;
-                }
+                    planKey = 'trial';
+                    planStatus = 'Trial';
+                } else {
                 const latest = subscriptions[0];
-                planEl.textContent = getPlanDisplayName(latest.plan);
-                statusEl.textContent = latest.status ? capitalizePlanName(latest.status) : '-';
+                    planKey = latest.plan ? latest.plan.toLowerCase() : 'trial';
+                    planStatus = latest.status ? capitalizePlanName(latest.status) : '-';
                 
                 // Handle next billing date with overdue check
                 if (latest.end_date) {
@@ -685,10 +748,138 @@
                 }
                 
                 paymentMethodEl.textContent = latest.payment_method || '-';
+                }
+                // Set plan price using translation keys
+                const t = key => (window.languageManager && typeof window.languageManager.translate === 'function') ? window.languageManager.translate(key) : key;
+                planPrice = t(planKey + '_plan_price');
+                // Set Plan section values
+                if (planCurrentEl) planCurrentEl.textContent = t(planKey + '_plan_name');
+                if (planCurrentPriceEl) planCurrentPriceEl.textContent = planPrice;
+                if (planSectionStatusEl) planSectionStatusEl.textContent = planStatus;
             } catch (err) {
                 planEl.textContent = statusEl.textContent = nextBillingEl.textContent = paymentMethodEl.textContent = '-';
+                if (planCurrentEl) planCurrentEl.textContent = '-';
+                if (planCurrentPriceEl) planCurrentPriceEl.textContent = '-';
+                if (planSectionStatusEl) planSectionStatusEl.textContent = '-';
             }
         }
+
+        // --- Plan Change Modal Logic ---
+        function showPlanChangeModal(currentPlanKey) {
+            const t = key => (window.languageManager && typeof window.languageManager.translate === 'function') ? window.languageManager.translate(key) : key;
+            const plans = [
+                {
+                    key: 'basic',
+                    name: t('basic_plan_name'),
+                    price: t('basic_plan_price'),
+                    features: t('basic_plan_features')
+                },
+                {
+                    key: 'standard',
+                    name: t('standard_plan_name'),
+                    price: t('standard_plan_price'),
+                    features: t('standard_plan_features')
+                }
+            ];
+            // Remove any existing modal overlays first (prevent duplicates)
+            document.querySelectorAll('.plan-modal-overlay').forEach(el => el.remove());
+            const modal = document.createElement('div');
+            modal.className = 'plan-modal-overlay';
+            modal.innerHTML = `
+              <div class="plan-modal">
+                <h2>
+                  ${t('choose_plan_modal_title')}
+                </h2>
+                <div style="margin-bottom:1em;"><strong>${t('current_plan_label_modal')}:</strong> ${t(currentPlanKey + '_plan_name')} (${t(currentPlanKey + '_plan_price')})</div>
+                <div style="margin-bottom:1em;">${t('choose_new_plan_label')}</div>
+                ${plans.map(plan => `
+                  <div style="margin-bottom:1em;">
+                    <strong>${plan.name}</strong> (${plan.price})<br>
+                    <span>${plan.features}</span><br>
+                    <button class="select-plan-btn filter-btn" data-plan="${plan.key}" ${plan.key === currentPlanKey ? 'disabled' : ''}>
+                      ${t('select_' + plan.key + '_button')}
+                    </button>
+                  </div>
+                `).join('')}
+                <button class="cancel-plan-modal filter-btn danger" style="margin-top:1em;">${t('cancel_button')}</button>
+              </div>
+            `;
+            Object.assign(modal.style, {position:'fixed',top:0,left:0,width:'100vw',height:'100vh',background:'rgba(0,0,0,0.25)',zIndex:10000,display:'flex',alignItems:'center',justifyContent:'center'});
+            document.body.appendChild(modal);
+            modal.querySelectorAll('.select-plan-btn').forEach(btn => {
+                btn.onclick = async () => {
+                    const newPlan = btn.getAttribute('data-plan');
+                    await changePlan(newPlan, modal);
+                };
+            });
+            modal.querySelector('.cancel-plan-modal').onclick = () => modal.remove();
+        }
+
+        // --- Plan Change Logic ---
+        async function changePlan(newPlan, modal) {
+            try {
+                const { data: { session } } = await supabase.auth.getSession();
+                if (!session || !session.user) return;
+                const userId = session.user.id;
+                const { data: subscriptions } = await supabase
+                    .from('subscriptions')
+                    .select('id')
+                    .eq('user_id', userId)
+                    .order('end_date', { ascending: false });
+                if (!subscriptions || subscriptions.length === 0) return;
+                const latestId = subscriptions[0].id;
+                // Set new start_date/end_date for new plan
+                const now = new Date();
+                const endDate = new Date(now);
+                endDate.setMonth(endDate.getMonth() + 1);
+                // Get plan config for maxUsers, etc.
+                const PLAN_CONFIG = {
+                    basic: { price: 'MZN 250/mo', maxUsers: 2 },
+                    standard: { price: 'MZN 500/mo', maxUsers: 5 }
+                };
+                const { error } = await supabase
+                    .from('subscriptions')
+                    .update({
+                        plan: newPlan,
+                        status: 'active',
+                        start_date: now.toISOString(),
+                        end_date: endDate.toISOString(),
+                        max_users: PLAN_CONFIG[newPlan].maxUsers
+                    })
+                    .eq('id', latestId);
+                if (!error) {
+                    alert((window.languageManager ? window.languageManager.translate('settings_updated_successfully') : 'Plan changed!'));
+                    if (modal) modal.remove();
+                    fetchAndDisplaySubscription();
+                    updatePlanSectionUI(newPlan);
+                } else {
+                    alert((window.languageManager ? window.languageManager.translate('failed_to_update_settings') : 'Failed to change plan.'));
+                }
+            } catch (err) {
+                alert('Error changing plan.');
+            }
+        }
+
+        // --- Update Plan Section UI ---
+        function updatePlanSectionUI(planKey) {
+            const t = key => (window.languageManager && typeof window.languageManager.translate === 'function') ? window.languageManager.translate(key) : key;
+            const planName = t(planKey + '_plan_name');
+            const planPrice = t(planKey + '_plan_price');
+            const planEl = document.getElementById('plan-current');
+            const priceEl = document.getElementById('plan-current-price');
+            if (planEl) planEl.textContent = planName;
+            if (priceEl) priceEl.textContent = planPrice;
+        }
+
+        // Set plan section UI
+        fetchAndDisplaySubscription().then(() => {
+            // Try to get plan from overview section
+            const planText = document.getElementById('overview-current-plan')?.textContent?.toLowerCase();
+            const statusText = document.getElementById('overview-status')?.textContent;
+            if (planText === 'basic' || planText === 'standard') {
+                setPlanSection(planText, statusText);
+            }
+        });
 
         window.addEventListener('DOMContentLoaded', async () => {
             // Update username first
@@ -795,14 +986,33 @@
                 }
             });
 
-            // Upgrade/Pay button logic (placeholder for now)
+            // --- Plan Section Logic ---
             const upgradeBtn = document.getElementById('upgrade-pay-btn');
-            if (upgradeBtn) {
-                upgradeBtn.addEventListener('click', function() {
-                    alert('Upgrade/Pay functionality coming soon!');
-                    // Here you would trigger your payment/upgrade flow and interact with Supabase as needed
-                });
+            const downgradeBtn = document.getElementById('downgrade-btn');
+            function setPlanSection(planKey, status) {
+                const t = key => (window.languageManager && typeof window.languageManager.translate === 'function') ? window.languageManager.translate(key) : key;
+                if (planCurrentEl) planCurrentEl.textContent = t(planKey + '_plan_name');
+                if (planCurrentPriceEl) planCurrentPriceEl.textContent = t(planKey + '_plan_price');
+                if (planSectionStatusEl) planSectionStatusEl.textContent = status ? status : '-';
             }
+            // After fetchAndDisplaySubscription() call, add:
+            fetchAndDisplaySubscription().then(() => {
+                // Try to get plan from overview section
+                const planText = document.getElementById('overview-current-plan')?.textContent?.toLowerCase();
+                const statusText = document.getElementById('overview-status')?.textContent;
+                if (planText === 'basic' || planText === 'standard') {
+                    setPlanSection(planText, statusText);
+                }
+            });
+            // Hook up upgrade/downgrade buttons
+            if (upgradeBtn) upgradeBtn.onclick = () => {
+                const planText = document.getElementById('overview-current-plan')?.textContent?.toLowerCase();
+                showPlanChangeModal(planText === 'basic' || planText === 'standard' ? planText : 'basic');
+            };
+            if (downgradeBtn) downgradeBtn.onclick = () => {
+                const planText = document.getElementById('overview-current-plan')?.textContent?.toLowerCase();
+                showPlanChangeModal(planText === 'basic' || planText === 'standard' ? planText : 'standard');
+            };
         });
     </script>
      <script>

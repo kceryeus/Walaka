@@ -36,6 +36,7 @@
 
     <script src="js/invoicescripts/dateRangeFilter.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="js/invoicescripts/export.js"></script>
 </head>
 
 <body>
@@ -190,21 +191,16 @@
             <div class="chart-grid">
                 <div class="chart-card">
                     <h3>
-                        <span data-translate="invoice_distribution">Invoices Sent</span>
+                        <span data-translate="invoice_distribution">Invoices Created Over Time</span>
                         <div class="chart-actions">
-                            <select id="invoiceDistributionPeriod" class="chart-period-select">
+                            <select id="invoiceDistributionPeriod" class="chart-period-select styled-select">
                                 <option value="last30" selected>Last 30 Days</option>
                                 <option value="week">This Week</option>
                                 <option value="month">This Month</option>
                                 <option value="quarter">This Quarter</option>
                                 <option value="year">This Year</option>
-                                <option value="custom">Custom Range</option>
                             </select>
-                            <div id="invoiceDistributionCustomRange" class="custom-date-range" style="display: none; margin-left: 10px;">
-                                <input type="date" id="invoiceDistributionStartDate" class="date-input">
-                                <input type="date" id="invoiceDistributionEndDate" class="date-input">
-                                <button id="applyInvoiceDistributionRange" class="btn btn-primary btn-sm">Apply</button>
-                            </div>
+                            <!-- Removed custom range date pickers and Apply button for chart period -->
                         </div>
                     </h3>
                     <div class="chart-container">
@@ -1650,3 +1646,7 @@ document.getElementById('useProductBtn').addEventListener('click', function() {
     }
 });
 </script>
+<!-- Add user-restrictions.js at the very end -->
+<script src="components/user-restrictions.js"></script>
+</body>
+</html>

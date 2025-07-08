@@ -229,7 +229,7 @@
   "create_invoice": "Create Invoice",
   "pending_payments": "Pending Payments",
   "percent_of_total": "% of Total",
-  "invoice_distribution": "Invoice Distribution",
+  "invoice_distribution": "Invoice Trends",
   "revenue_by_status": "Revenue by Status",
   "yearly": "Yearly",
   "unfinished": "Unfinished",
@@ -569,5 +569,17 @@
   "contact_support": "Contact & Support",
   "contact_assistance": "For further assistance, please contact our support team:",
   "email_label": "Email:",
-  "phone_label": "Phone:"
+  "phone_label": "Phone:",
+  "choose_plan_modal_title": "Upgrade or Change Plan",
+  "current_plan_label_modal": "Current Plan",
+  "choose_new_plan_label": "Choose your new plan:",
+  "basic_plan_name": "Basic",
+  "standard_plan_name": "Standard",
+  "basic_plan_price": "MZN 250/mo",
+  "standard_plan_price": "MZN 500/mo",
+  "basic_plan_features": "2 users, Unlimited invoices",
+  "standard_plan_features": "5 users, Unlimited invoices",
+  "select_basic_button": "Select Basic",
+  "select_standard_button": "Select Standard",
+  "cancel_button": "Cancel"
 }

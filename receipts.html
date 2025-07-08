@@ -258,6 +258,15 @@
                                     </select>
                                 </div>
                             </div>
+                            <!-- Receiving Account Dropdown -->
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="bankAccount" data-translate="bank_account_label">Receiving Account</label>
+                                    <select id="bankAccount" name="bankAccount" required>
+                                        <option value="" data-translate="select_account_option">Select Account</option>
+                                    </select>
+                                </div>
+                            </div>
                             <div class="form-row">
                                 <div class="form-group" style="flex:2;">
                                     <label for="notes" data-translate="notes_label">Notes</label>
@@ -354,6 +363,7 @@
                     document.getElementById('createReceiptModal').style.display = 'block';
                     var overlay = document.querySelector('.modal-overlay');
                     if (overlay) overlay.style.display = 'block';
+                    populateBankAccountsDropdown();
                 });
             }
 
@@ -423,8 +433,32 @@
                 showNotification('Erro ao marcar como pago ou criar recibo');
             }
         }
-    </script>
 
+        async function populateBankAccountsDropdown() {
+            const user = await window.supabase.auth.getUser();
+            if (!user || !user.data || !user.data.user) return;
+
+            const { data: accounts, error } = await window.supabase
+                .from('bank_accounts')
+                .select('id, account_type, account_holder, account_number, currency')
+                .eq('user_id', user.data.user.id);
+
+            const dropdown = document.getElementById('bankAccount');
+            if (!dropdown) return;
+
+            dropdown.innerHTML = '<option value="">Select Account</option>';
+            if (accounts && accounts.length) {
+                accounts.forEach(acc => {
+                    const label = `${acc.account_type.toUpperCase()}: ${acc.account_holder} (${acc.account_number}) [${acc.currency}]`;
+                    const option = document.createElement('option');
+                    option.value = acc.id;
+                    option.textContent = label;
+                    dropdown.appendChild(option);
+                });
+            }
+        }
+    </script>
+    <script src="components/user-restrictions.js"></script>
 </body>
 
 </html>

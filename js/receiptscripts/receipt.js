@@ -488,6 +488,7 @@ async function createReceipt() {
         // Use the receipt number from the input field
         const receipt_number = document.getElementById('receiptNumber').value;
         const enteredAmount = parseFloat(formData.get('amount'));
+        const bank_account_id = document.getElementById('bankAccount')?.value || null;
         const receiptData = {
             receipt_number,
             client_id,
@@ -499,7 +500,8 @@ async function createReceipt() {
             related_invoice: related_invoice_numbers, // Set to invoice number(s)
             notes: formData.get('notes'),
             status: 'paid',
-            user_id
+            user_id,
+            bank_account_id
         };
         // Use insert (or upsert if you want to avoid duplicates)
         const { data, error } = await supabase

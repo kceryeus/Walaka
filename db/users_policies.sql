@@ -104,3 +104,35 @@ CREATE TRIGGER set_created_by_before_insert
 BEFORE INSERT ON public.users
 FOR EACH ROW
 EXECUTE FUNCTION set_created_by();
+
+-- Backend enforcement: Prevent user insert if max_users reached for environment
+CREATE OR REPLACE FUNCTION check_user_limit_on_insert()
+RETURNS TRIGGER AS $$
+DECLARE
+    env_id uuid;
+    user_count integer;
+    max_users integer;
+BEGIN
+    env_id := NEW.environment_id;
+    IF env_id IS NULL THEN
+        RETURN NEW; -- Allow if no environment_id (should not happen in normal flow)
+    END IF;
+    SELECT COUNT(*) INTO user_count FROM public.users WHERE environment_id = env_id;
+    SELECT max_users INTO max_users FROM public.subscriptions
+        WHERE environment_id = env_id AND status = 'active'
+        ORDER BY end_date DESC LIMIT 1;
+    IF max_users IS NULL THEN
+        max_users := 1; -- Default to 1 if no subscription found
+    END IF;
+    IF user_count >= max_users THEN
+        RAISE EXCEPTION 'User limit reached for this subscription plan (%). Please upgrade your plan to add more users.', max_users;
+    END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS check_user_limit_before_insert ON public.users;
+CREATE TRIGGER check_user_limit_before_insert
+BEFORE INSERT ON public.users
+FOR EACH ROW
+EXECUTE FUNCTION check_user_limit_on_insert();

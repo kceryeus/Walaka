@@ -1,3 +1,15 @@
+// Helper to robustly parse amounts in European/Portuguese format (e.g., '29 000,00' -> 29000.00)
+function parseAmount(str) {
+    if (typeof str !== 'string') str = String(str);
+    // Remove all spaces (thousands separator)
+    str = str.replace(/\s/g, '');
+    // Replace the last comma with a dot (decimal separator)
+    const lastComma = str.lastIndexOf(',');
+    if (lastComma !== -1) {
+        str = str.slice(0, lastComma).replace(/,/g, '') + '.' + str.slice(lastComma + 1);
+    }
+    return parseFloat(str);
+}
 // Invoice Management Module JavaScript
 
 // Add module state tracking
@@ -245,8 +257,8 @@ function formatCurrency(amount) {
 }
 
 function calculateRowTotal(row) {
-    const quantity = parseFloat(row.querySelector('.item-quantity').value) || 0;
-    const price = parseFloat(row.querySelector('.item-price').value) || 0;
+    const quantity = parseAmount(row.querySelector('.item-quantity').value) || 0;
+    const price = parseAmount(row.querySelector('.item-price').value) || 0;
     
     const subtotal = quantity * price;
     const vat = subtotal * 0.16; // 16% VAT
@@ -261,8 +273,8 @@ function updateInvoiceTotals() {
     let totalVat = 0;
     
     rows.forEach(row => {
-        const quantity = parseFloat(row.querySelector('.item-quantity').value) || 0;
-        const price = parseFloat(row.querySelector('.item-price').value) || 0;
+        const quantity = parseAmount(row.querySelector('.item-quantity').value) || 0;
+        const price = parseAmount(row.querySelector('.item-price').value) || 0;
         
         const rowSubtotal = quantity * price;
         const rowVat = rowSubtotal * 0.16;
@@ -492,9 +504,9 @@ function collectInvoiceData() {
             status: 'pending', // Default status for new invoices
             items: [],
             // Ensure these are numbers, not text content
-            subtotal: parseFloat(subtotalSpan.textContent) || 0,
-            totalVat: parseFloat(totalVatSpan.textContent) || 0,
-            total: parseFloat(invoiceTotalSpan.textContent) || 0
+            subtotal: parseAmount(subtotalSpan.textContent) || 0,
+            totalVat: parseAmount(totalVatSpan.textContent) || 0,
+            total: parseAmount(invoiceTotalSpan.textContent) || 0
         };
 
         // Validate required fields have values
@@ -506,11 +518,11 @@ function collectInvoiceData() {
         const itemRows = document.querySelectorAll('.item-row');
         itemRows.forEach(row => {
             const description = row.querySelector('.item-description')?.value;
-            const quantity = parseFloat(row.querySelector('.item-quantity')?.value) || 0;
-            const price = parseFloat(row.querySelector('.item-price')?.value) || 0;
+            const quantity = parseAmount(row.querySelector('.item-quantity')?.value) || 0;
+            const price = parseAmount(row.querySelector('.item-price')?.value) || 0;
             // Get VAT and Total directly from calculated spans
-            const vat = parseFloat(row.querySelector('.item-vat')?.textContent) || 0; // Assuming item-vat is a span with text content
-            const total = parseFloat(row.querySelector('.item-total')?.textContent) || 0; // Assuming item-total is a span with text content
+            const vat = parseAmount(row.querySelector('.item-vat')?.textContent) || 0; // Assuming item-vat is a span with text content
+            const total = parseAmount(row.querySelector('.item-total')?.textContent) || 0; // Assuming item-total is a span with text content
 
             if (description && quantity > 0 && price >= 0) { // Ensure price is not negative and description/quantity are present
                 invoiceData.items.push({
@@ -1033,9 +1045,9 @@ function getInvoiceData() {
             address: document.getElementById('clientAddress').value
         },
         items: items,
-        subtotal: parseFloat(document.getElementById('subtotal').textContent) || 0,
-        taxAmount: parseFloat(document.getElementById('totalVat').textContent) || 0,
-        total: parseFloat(document.getElementById('invoiceTotal').textContent) || 0,
+        subtotal: parseAmount(document.getElementById('subtotal').textContent) || 0,
+        taxAmount: parseAmount(document.getElementById('totalVat').textContent) || 0,
+        total: parseAmount(document.getElementById('invoiceTotal').textContent) || 0,
         notes: document.getElementById('notes').value,
         currency: document.getElementById('currency').value,
         paymentTerms: document.getElementById('paymentTerms').value
@@ -1123,7 +1135,7 @@ document.addEventListener('DOMContentLoaded', async function() {
       let valid = false;
       itemRows.forEach(row => {
         const desc = row.querySelector('.item-description').value.trim();
-        const qty = parseFloat(row.querySelector('.item-quantity').value);
+        const qty = parseAmount(row.querySelector('.item-quantity').value);
         if (desc && qty > 0) valid = true;
       });
       if (!valid) {
@@ -1162,8 +1174,8 @@ document.addEventListener('DOMContentLoaded', async function() {
     let itemsHtml = '';
     itemRows.forEach(row => {
       const desc = row.querySelector('.item-description').value;
-      const qty = row.querySelector('.item-quantity').value;
-      const price = row.querySelector('.item-price').value;
+      const qty = parseAmount(row.querySelector('.item-quantity').value);
+      const price = parseAmount(row.querySelector('.item-price').value);
       const vat = row.querySelector('.item-vat').textContent;
       const total = row.querySelector('.item-total').textContent;
       if (desc && qty > 0) {
@@ -1431,9 +1443,9 @@ class InvoiceForm {
         const subtotalElem = document.getElementById('reviewSubtotal');
         const vatElem = document.getElementById('reviewTotalVat');
         const totalElem = document.getElementById('reviewInvoiceTotal');
-        const mainSubtotal = parseFloat(document.getElementById('subtotal')?.textContent.replace(/[^\d.\-]/g, '') || '0');
-        const mainVat = parseFloat(document.getElementById('totalVat')?.textContent.replace(/[^\d.\-]/g, '') || '0');
-        const mainTotal = parseFloat(document.getElementById('invoiceTotal')?.textContent.replace(/[^\d.\-]/g, '') || '0');
+        const mainSubtotal = parseAmount(document.getElementById('subtotal')?.textContent.replace(/[^\d.\-]/g, '') || '0');
+        const mainVat = parseAmount(document.getElementById('totalVat')?.textContent.replace(/[^\d.\-]/g, '') || '0');
+        const mainTotal = parseAmount(document.getElementById('invoiceTotal')?.textContent.replace(/[^\d.\-]/g, '') || '0');
         if (subtotalElem && vatElem && totalElem) {
             subtotalElem.textContent = new Intl.NumberFormat('pt-MZ', { style: 'currency', currency: 'MZN' }).format(mainSubtotal);
             vatElem.textContent = new Intl.NumberFormat('pt-MZ', { style: 'currency', currency: 'MZN' }).format(mainVat);

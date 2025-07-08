@@ -312,7 +312,7 @@ body.sidebar-collapsed .main-content {
     padding: 1.5rem;
     box-shadow: var(--box-shadow);
     transition: transform var(--transition-speed) ease;
-    position: relative;
+    position: relative; /* Ensure drilldown-content is positioned correctly */
     overflow: hidden;
 }
 
@@ -836,4 +836,23 @@ body.sidebar-collapsed .main-content {
   .frame-right {
     max-width: 100%;
   }
+}
+
+.chart-card .drilldown-content {
+    position: static;
+    width: 100%;
+    background-color: white;
+    border-radius: var(--card-radius);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    transition: max-height 0.3s ease;
+    z-index: 1;
+    padding: 1rem;
+    display: none;
+    max-height: 0;
+    overflow: hidden;
+}
+.chart-card .drilldown-content.active {
+    display: block;
+    max-height: 600px;
+    overflow-y: auto;
 }

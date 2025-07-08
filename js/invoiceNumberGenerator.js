@@ -18,23 +18,20 @@ class InvoiceNumberGenerator {
         this.lock = true;
 
         try {
-            // Get the authenticated user
-            const { data: { user }, error: authError } = await this.supabase.auth.getUser();
-
-            if (authError) {
-                console.error('Error fetching authenticated user:', authError);
-                throw authError;
+            // Get the current environment_id
+            if (!window.getCurrentEnvironmentId) {
+                throw new Error('getCurrentEnvironmentId is not available on window.');
             }
-            if (!user) {
-                throw new Error('User not authenticated. Cannot generate invoice number.');
+            const environment_id = await window.getCurrentEnvironmentId();
+            if (!environment_id) {
+                throw new Error('Environment ID not found. Cannot generate invoice number.');
             }
-            const userId = user.id;
 
-            // Get the latest invoice number for the current year AND the authenticated user
+            // Get the latest invoice number for the current year AND the environment_id
             const { data: lastInvoiceData, error: fetchLastError } = await this.supabase
                 .from('invoices')
                 .select('invoiceNumber')
-                .eq('user_id', userId) // Filter by the authenticated user's ID
+                .eq('environment_id', environment_id) // Filter by environment_id
                 .ilike('invoiceNumber', `${this.prefix}-${this.year}-%`) // Filter by prefix and year
                 .order('invoiceNumber', { ascending: false })
                 .limit(1);
@@ -56,11 +53,11 @@ class InvoiceNumberGenerator {
             // Generate the new invoice number
             const newInvoiceNumber = `${this.prefix}-${this.year}-${String(sequence).padStart(5, '0')}`;
 
-            // Verify this number is unique for the current user
+            // Verify this number is unique for the current environment
             const { data: existingInvoice, error: checkError } = await this.supabase
                 .from('invoices')
                 .select('invoiceNumber')
-                .eq('user_id', userId) // Only check for the current user
+                .eq('environment_id', environment_id) // Only check for the current environment
                 .eq('invoiceNumber', newInvoiceNumber)
                 .maybeSingle();
 
@@ -70,10 +67,12 @@ class InvoiceNumberGenerator {
             }
 
             if (existingInvoice) {
-                // If the number exists for this user, increment and try again
-                console.warn(`Invoice number ${newInvoiceNumber} already exists for user ${userId}. Incrementing sequence.`);
+                // If the number exists for this environment, increment and try again
+                console.warn(`Invoice number ${newInvoiceNumber} already exists for environment_id ${environment_id}. Incrementing sequence.`);
                 sequence++;
-                return this.getNextNumber(); // Recursively try with next sequence
+                // Recursively try with next sequence
+                // To avoid infinite recursion, pass sequence as an argument (optional improvement)
+                return this.getNextNumber();
             }
 
             return newInvoiceNumber;

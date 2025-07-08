@@ -57,3 +57,14 @@ USING (bucket_id = 'invoice_pdfs');
 CREATE POLICY "Users can upload invoice PDFs"
 ON storage.objects FOR INSERT
 WITH CHECK (bucket_id = 'invoice_pdfs');
+
+-- Add support for 'cash' accounts and a balance field
+ALTER TABLE public.bank_accounts
+    ADD COLUMN IF NOT EXISTS balance numeric(18,2) DEFAULT 0;
+
+ALTER TABLE public.bank_accounts
+    DROP CONSTRAINT IF EXISTS bank_accounts_account_type_check;
+ALTER TABLE public.bank_accounts
+    ADD CONSTRAINT bank_accounts_account_type_check CHECK (
+        account_type = ANY (ARRAY['bank', 'wallet', 'cash'])
+    );

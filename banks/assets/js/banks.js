@@ -1,3 +1,5 @@
+console.log("BANKS.JS LOADED - DEBUG VERSION", new Date().toISOString());
+console.error("BANKS.JS DEBUG: If you see this, you are running the intended debug version.");
 //import { supabase } from '../../../../js/supabaseClient.js';
 //import { auth } from '../../../../js/auth.js';
 
@@ -25,6 +27,7 @@ const accountIdInput = document.getElementById('account-id');
 const accountTypeSelect = document.getElementById('account-type');
 const bankFields = document.getElementById('bank-fields');
 const walletFields = document.getElementById('wallet-fields');
+const cashFields = document.getElementById('cash-fields');
 const bankNameSelect = document.getElementById('bank-name');
 const bankNameOther = document.getElementById('bank-name-other');
 const operatorNameSelect = document.getElementById('operator-name');
@@ -66,42 +69,19 @@ let currentAccountId = null;
 // Initialize the app when DOM is ready
 document.addEventListener('DOMContentLoaded', async () => {
     try {
-/*       // Check if supabase is available globally
-        if (typeof window.supabase === 'undefined') {
-            console.error('Supabase client not found');
-            window.location.href = '/login.html';
-            return;
-        }
-*/
-        // Check authentication status
-        /* Commented out authentication check to prevent redirect
+        // Use Supabase Auth to get the real user ID, as in dashboard.html/invoices.html
         const { data: { session }, error: sessionError } = await window.supabase.auth.getSession();
-        console.log('Supabase session:', session, 'Error:', sessionError);
-        const debugDiv = document.getElementById('debug-session');
-        if (sessionError || !session) {
-            if (debugDiv) {
-                debugDiv.style.display = 'block';
-                debugDiv.textContent = 'Supabase session: ' + JSON.stringify(session) + ' | Error: ' + JSON.stringify(sessionError);
-                setTimeout(() => { window.location.href = '/login.html'; }, 4000);
-                return;
-            }
+        if (sessionError || !session || !session.user) {
             window.location.href = '/login.html';
             return;
         }
-        
         userId = session.user.id;
-        */
-        
-        // For testing purposes, set a dummy user ID
-        userId = '123e4567-e89b-12d3-a456-426614174000';
-        
         // Initialize the application
         await displayUserName();
         await loadAccounts();
         initEventListeners();
-
-        // Set up auth state change listener
-        /* Commented out auth state change listener to prevent redirect
+        // Optionally, set up auth state change listener as in dashboard.html
+        /*
         window.supabase.auth.onAuthStateChange((event, session) => {
             if (event === 'SIGNED_OUT' || !session) {
                 window.location.href = '/login.html';
@@ -126,13 +106,23 @@ function initEventListeners() {
     if (accountTypeSelect) accountTypeSelect.addEventListener('change', toggleAccountTypeFields);
     
     // Other field for custom bank/operator names
-    if (bankNameSelect) bankNameSelect.addEventListener('change', () => {
-        bankNameOther.style.display = bankNameSelect.value === 'other' ? 'block' : 'none';
-    });
+    if (bankNameSelect && bankNameOther) {
+        bankNameSelect.addEventListener('change', () => {
+            bankNameOther.style.display = bankNameSelect.value === 'other' ? 'block' : 'none';
+        });
+    } else {
+        if (!bankNameSelect) console.error('bankNameSelect missing');
+        if (!bankNameOther) console.error('bankNameOther missing');
+    }
     
-    if (operatorNameSelect) operatorNameSelect.addEventListener('change', () => {
-        operatorNameOther.style.display = operatorNameSelect.value === 'other' ? 'block' : 'none';
-    });
+    if (operatorNameSelect && operatorNameOther) {
+        operatorNameSelect.addEventListener('change', () => {
+            operatorNameOther.style.display = operatorNameSelect.value === 'other' ? 'block' : 'none';
+        });
+    } else {
+        if (!operatorNameSelect) console.error('operatorNameSelect missing');
+        if (!operatorNameOther) console.error('operatorNameOther missing');
+    }
     
     // Cancel account form
     if (cancelAccountBtn) cancelAccountBtn.addEventListener('click', closeAccountModal);
@@ -228,32 +218,41 @@ function updateAccountsUI() {
  * Update the table view with the current accounts
  */
 function updateTableView() {
+    // Update table header to include Balance column
+    const tableHeader = document.querySelector('.accounts-table thead tr');
+    if (tableHeader && !tableHeader.querySelector('.balance-col')) {
+        const balanceTh = document.createElement('th');
+        balanceTh.className = 'balance-col';
+        balanceTh.textContent = 'Balance';
+        tableHeader.insertBefore(balanceTh, tableHeader.children[5]); // Before Actions
+    }
     tableBody.innerHTML = '';
     
     filteredAccounts.forEach(account => {
+        let typeLabel = '';
+        if (account.account_type === 'bank') typeLabel = 'Bank';
+        else if (account.account_type === 'wallet') typeLabel = 'Wallet';
+        else if (account.account_type === 'cash') typeLabel = 'Cash';
+        let name = '';
+        if (account.account_type === 'bank') name = account.bank_name;
+        else if (account.account_type === 'wallet') name = account.operator_name;
+        else if (account.account_type === 'cash') name = account.account_holder;
+        let number = '';
+        if (account.account_type === 'bank' || account.account_type === 'wallet') number = account.account_number;
+        else if (account.account_type === 'cash') number = '-';
+        let balanceCell = '';
+        if (account.account_type === 'cash') balanceCell = `${account.balance != null ? account.balance.toFixed(2) : '0.00'}`;
+        else balanceCell = '-';
+        // Create row as DOM element
         const row = document.createElement('tr');
-        
-        // Format account type badge
-        const typeBadge = `
-            <span class="type-badge ${account.account_type === 'bank' ? 'bank-badge' : 'wallet-badge'}">
-                <i class="fas fa-${account.account_type === 'bank' ? 'university' : 'wallet'}"></i>
-                ${account.account_type === 'bank' ? 'Bank' : 'Wallet'}
-            </span>
-        `;
-        
-        // Format account name
-        const accountName = account.account_type === 'bank' 
-            ? account.bank_name 
-            : account.operator_name;
-            
-        // Create the row HTML
         row.innerHTML = `
-            <td>${typeBadge}</td>
-            <td>${accountName}</td>
-            <td>${account.account_holder}</td>
-            <td class="account-number">${account.account_number}</td>
-            <td><span class="currency-badge">${account.currency}</span></td>
-            <td>
+            <td class="type-col">${typeLabel}</td>
+            <td class="name-col">${name}</td>
+            <td class="holder-col">${account.account_holder}</td>
+            <td class="number-col">${number}</td>
+            <td class="currency-col">${account.currency}</td>
+            <td class="balance-col">${balanceCell}</td>
+            <td class="action-col">
                 <div class="action-buttons">
                     <button class="action-btn star-btn ${account.is_primary ? 'active' : ''}" data-id="${account.id}" title="Set as primary">
                         <i class="fas fa-star"></i>
@@ -267,24 +266,17 @@ function updateTableView() {
                 </div>
             </td>
         `;
-        
-        // Add event listeners to action buttons
-        tableBody.appendChild(row);
-        
-        // Edit button
+        // Attach event listeners
         row.querySelector('.edit-btn').addEventListener('click', () => {
             openEditAccountModal(account.id);
         });
-        
-        // Delete button
         row.querySelector('.delete-btn').addEventListener('click', () => {
             openDeleteModal(account.id);
         });
-        
-        // Star button (set as primary)
         row.querySelector('.star-btn').addEventListener('click', () => {
             setAsPrimary(account.id);
         });
+        tableBody.appendChild(row);
     });
 }
 
@@ -293,47 +285,31 @@ function updateTableView() {
  */
 function updateCardsView() {
     cardsContainer.innerHTML = '';
-    
     filteredAccounts.forEach(account => {
+        let typeLabel = '';
+        if (account.account_type === 'bank') typeLabel = 'Bank';
+        else if (account.account_type === 'wallet') typeLabel = 'Wallet';
+        else if (account.account_type === 'cash') typeLabel = 'Cash';
+        let name = '';
+        if (account.account_type === 'bank') name = account.bank_name;
+        else if (account.account_type === 'wallet') name = account.operator_name;
+        else if (account.account_type === 'cash') name = account.account_holder;
+        let number = '';
+        if (account.account_type === 'bank' || account.account_type === 'wallet') number = account.account_number;
+        else if (account.account_type === 'cash') number = '-';
+        let balanceInfo = '';
+        if (account.account_type === 'cash') balanceInfo = `<div class='account-balance'><strong>Balance:</strong> ${account.balance != null ? account.balance.toFixed(2) : '0.00'} ${account.currency}</div>`;
+        // Create card as DOM element
         const card = document.createElement('div');
         card.className = 'account-card';
-        
-        // Determine icon and name based on account type
-        const icon = account.account_type === 'bank' ? 'university' : 'wallet';
-        const iconClass = account.account_type === 'bank' ? 'bank-icon-card' : 'wallet-icon-card';
-        const name = account.account_type === 'bank' ? account.bank_name : account.operator_name;
-        
         card.innerHTML = `
-            <div class="account-card-header">
-                <div class="account-card-type">
-                    <div class="account-card-icon ${iconClass}">
-                        <i class="fas fa-${icon}"></i>
-                    </div>
-                    <h3>${name}</h3>
-                </div>
-                ${account.is_primary ? '<span class="primary-badge"><i class="fas fa-star"></i> Primary</span>' : ''}
-            </div>
-            <div class="account-card-body">
-                <div class="account-card-row">
-                    <div class="account-card-label">Account Holder</div>
-                    <div class="account-card-value">${account.account_holder}</div>
-                </div>
-                <div class="account-card-row">
-                    <div class="account-card-label">${account.account_type === 'bank' ? 'Account Number' : 'Mobile Number'}</div>
-                    <div class="account-card-value account-card-number">${account.account_number}</div>
-                </div>
-                <div class="account-card-row">
-                    <div class="account-card-label">Currency</div>
-                    <div class="account-card-value">${account.currency}</div>
-                </div>
-                ${account.branch ? `
-                <div class="account-card-row">
-                    <div class="account-card-label">Branch</div>
-                    <div class="account-card-value">${account.branch}</div>
-                </div>
-                ` : ''}
-            </div>
-            <div class="account-card-footer">
+            <div class="account-type">${typeLabel}</div>
+            <div class="account-name">${name}</div>
+            <div class="account-holder">${account.account_holder}</div>
+            <div class="account-number">${number}</div>
+            <div class="account-currency">${account.currency}</div>
+            ${balanceInfo}
+            <div class="account-actions">
                 <button class="secondary-btn edit-card-btn" data-id="${account.id}">
                     <i class="fas fa-edit"></i> Edit
                 </button>
@@ -342,17 +318,13 @@ function updateCardsView() {
                 </button>
             </div>
         `;
-        
-        cardsContainer.appendChild(card);
-        
-        // Add event listeners to buttons
         card.querySelector('.edit-card-btn').addEventListener('click', () => {
             openEditAccountModal(account.id);
         });
-        
         card.querySelector('.delete-card-btn').addEventListener('click', () => {
             openDeleteModal(account.id);
         });
+        cardsContainer.appendChild(card);
     });
 }
 
@@ -360,28 +332,30 @@ function updateCardsView() {
  * Update metrics based on all accounts
  */
 function updateMetrics() {
-    // Count bank accounts
-    const bankCount = accounts.filter(account => account.account_type === 'bank').length;
-    bankCountEl.textContent = bankCount;
-    
-    // Count mobile wallets
-    const walletCount = accounts.filter(account => account.account_type === 'wallet').length;
-    walletCountEl.textContent = walletCount;
-    
-    // Count unique currencies
-    const currencies = [...new Set(accounts.map(account => account.currency))];
-    currencyCountEl.textContent = currencies.length;
-    
-    // Get primary account
-    const primaryAccount = accounts.find(account => account.is_primary);
-    if (primaryAccount) {
-        const name = primaryAccount.account_type === 'bank' 
-            ? primaryAccount.bank_name 
-            : primaryAccount.operator_name;
-        primaryAccountEl.textContent = name;
-    } else {
-        primaryAccountEl.textContent = 'None';
-    }
+    // Refactored for clarity and extensibility
+    const counts = {
+        bank: 0,
+        wallet: 0,
+        cash: 0
+    };
+    const currencySet = new Set();
+    let primaryAccountName = 'None';
+    accounts.forEach(account => {
+        if (counts[account.account_type] !== undefined) counts[account.account_type]++;
+        if (account.currency) currencySet.add(account.currency);
+        if (account.is_primary) {
+            if (account.account_type === 'bank') primaryAccountName = account.bank_name;
+            else if (account.account_type === 'wallet') primaryAccountName = account.operator_name;
+            else if (account.account_type === 'cash') primaryAccountName = account.account_holder;
+        }
+    });
+    bankCountEl.textContent = counts.bank;
+    walletCountEl.textContent = counts.wallet;
+    // If you have a cashCountEl, update it here
+    const cashCountEl = document.getElementById('cash-count');
+    if (cashCountEl) cashCountEl.textContent = counts.cash;
+    currencyCountEl.textContent = currencySet.size;
+    primaryAccountEl.textContent = primaryAccountName;
 }
 
 /**
@@ -481,7 +455,7 @@ async function openEditAccountModal(accountId) {
         } else {
             bankNameOther.style.display = 'none';
         }
-    } else {
+    } else if (account.account_type === 'wallet') {
         operatorNameSelect.value = account.operator_name;
         // Check if it's a custom operator name
         if (!Array.from(operatorNameSelect.options).some(opt => opt.value === account.operator_name)) {
@@ -492,6 +466,15 @@ async function openEditAccountModal(accountId) {
             operatorNameOther.style.display = 'none';
         }
         walletInstructions.value = account.instructions || '';
+    } else if (account.account_type === 'cash') {
+        document.getElementById('cash-name').value = account.account_holder;
+        document.getElementById('cash-balance').value = account.balance || 0;
+        cashFields.style.display = 'block';
+        bankNameSelect.required = false;
+        operatorNameSelect.required = false;
+        bankNameOther.style.display = 'none';
+        operatorNameOther.style.display = 'none';
+        walletInstructions.value = ''; // Clear wallet instructions for cash
     }
     
     // Toggle fields based on account type
@@ -532,24 +515,87 @@ function closeAccountModal() {
  * Toggle form fields based on selected account type
  */
 function toggleAccountTypeFields() {
-    const accountType = accountTypeSelect.value;
-    if (accountType === 'bank') {
+    const type = accountTypeSelect.value;
+    const bankAccountHolder = document.querySelector('#bank-fields #account-holder');
+    const walletAccountHolder = document.querySelector('#wallet-fields #account-holder');
+    const bankAccountNumber = document.getElementById('bank-account-number');
+    const walletAccountNumber = document.getElementById('wallet-account-number');
+    if (type === 'bank') {
         bankFields.style.display = 'block';
         walletFields.style.display = 'none';
-        document.querySelector('.bank-additional-fields').style.display = 'block';
-        document.querySelector('.wallet-instructions').style.display = 'none';
-        accountNumberLabel.textContent = 'Account Number';
-        accountNumberHint.textContent = 'Enter your bank account number';
-        operatorNameSelect.disabled = true;
-    } else {
+        cashFields.style.display = 'none';
+        bankNameSelect.required = true;
+        bankAccountNumber.required = true;
+        operatorNameSelect.required = false;
+        walletAccountNumber.required = false;
+        if (bankAccountHolder) bankAccountHolder.required = true;
+        if (walletAccountHolder) walletAccountHolder.required = false;
+    } else if (type === 'wallet') {
         bankFields.style.display = 'none';
         walletFields.style.display = 'block';
-        document.querySelector('.bank-additional-fields').style.display = 'none';
-        document.querySelector('.wallet-instructions').style.display = 'block';
-        accountNumberLabel.textContent = 'Mobile Number';
-        accountNumberHint.textContent = 'Enter mobile number (e.g., 84xxxxxxx)';
-        operatorNameSelect.disabled = false;
+        cashFields.style.display = 'none';
+        bankNameSelect.required = false;
+        bankAccountNumber.required = false;
+        operatorNameSelect.required = true;
+        walletAccountNumber.required = true;
+        if (bankAccountHolder) bankAccountHolder.required = false;
+        if (walletAccountHolder) walletAccountHolder.required = true;
+    } else if (type === 'cash') {
+        bankFields.style.display = 'none';
+        walletFields.style.display = 'none';
+        cashFields.style.display = 'block';
+        bankNameSelect.required = false;
+        bankAccountNumber.required = false;
+        operatorNameSelect.required = false;
+        walletAccountNumber.required = false;
+        if (bankAccountHolder) bankAccountHolder.required = false;
+        if (walletAccountHolder) walletAccountHolder.required = false;
     }
+    updateRequiredFields(type);
+}
+
+// Helper to get field by ID, with error logging
+function getField(id) {
+    const el = document.getElementById(id);
+    if (!el) {
+        console.error(`[banks.js] Field with id '${id}' not found in DOM.`);
+    }
+    return el;
+}
+
+function updateRequiredFields(selectedType) {
+    // Remove required from all
+    getField('bank-account-holder')?.removeAttribute('required');
+    getField('bank-account-number')?.removeAttribute('required');
+    getField('bank-name')?.removeAttribute('required');
+    getField('wallet-account-holder')?.removeAttribute('required');
+    getField('wallet-account-number')?.removeAttribute('required');
+    getField('operator-name')?.removeAttribute('required');
+    getField('cash-name')?.removeAttribute('required');
+    getField('cash-balance')?.removeAttribute('required');
+    // Add required to visible fields
+    if (selectedType === 'bank') {
+        getField('bank-account-holder')?.setAttribute('required', 'required');
+        getField('bank-account-number')?.setAttribute('required', 'required');
+        getField('bank-name')?.setAttribute('required', 'required');
+    } else if (selectedType === 'wallet') {
+        getField('wallet-account-holder')?.setAttribute('required', 'required');
+        getField('wallet-account-number')?.setAttribute('required', 'required');
+        getField('operator-name')?.setAttribute('required', 'required');
+    } else if (selectedType === 'cash') {
+        getField('cash-name')?.setAttribute('required', 'required');
+        getField('cash-balance')?.setAttribute('required', 'required');
+    }
+}
+
+// Listen for account type changes
+const accountTypeSelector = getField('account-type', 'init');
+if (accountTypeSelector) {
+    accountTypeSelector.addEventListener('change', function() {
+        toggleAccountTypeFields();
+    });
+    // On page load, set correct fields
+    toggleAccountTypeFields();
 }
 
 /**
@@ -557,105 +603,106 @@ function toggleAccountTypeFields() {
  */
 async function handleAccountFormSubmit(e) {
     e.preventDefault();
-    
     try {
-        // Get form values
-        const accountType = accountTypeSelect.value;
-        const accountHolder = accountHolderInput.value.trim();
-        const accountNumber = accountNumberInput.value.trim();
-        const currency = currencySelect.value;
-        const isPrimary = isPrimaryCheckbox.checked;
-        
-        // Account type specific values
-        let bankName = '';
-        let operatorName = '';
-        let branch = '';
-        let swiftCode = '';
-        let bankAddress = '';
-        let instructions = '';
-        
-        if (accountType === 'bank') {
-            bankName = bankNameSelect.value === 'other' 
-                ? bankNameOther.value.trim() 
-                : bankNameSelect.value;
-            branch = branchInput.value.trim();
-            swiftCode = swiftCodeInput.value.trim();
-            bankAddress = bankAddressInput.value.trim();
-        } else {
-            operatorName = operatorNameSelect.value === 'other' 
-                ? operatorNameOther.value.trim() 
-                : operatorNameSelect.value;
-            instructions = walletInstructions.value.trim();
+        const type = accountTypeSelect.value;
+        // Always provide required values for NOT NULL columns
+        let accountData = {
+            account_type: type,
+            user_id: userId,
+            currency: getField('currency')?.value || 'MZN',
+            is_primary: getField('is-primary')?.checked || false,
+        };
+
+        let holderValue = '', numberValue = '';
+        if (type === 'bank') {
+            holderValue = getField('bank-account-holder')?.value.trim();
+            numberValue = getField('bank-account-number')?.value.trim();
+            accountData = {
+                ...accountData,
+                account_holder: holderValue || '',
+                account_number: numberValue || '',
+                bank_name: getField('bank-name')?.value || '',
+                branch: getField('branch')?.value || null,
+                swift_code: getField('swift-code')?.value || null,
+                bank_address: getField('bank-address')?.value || null,
+                operator_name: null,
+                instructions: null,
+                balance: null,
+            };
+        } else if (type === 'wallet') {
+            holderValue = getField('wallet-account-holder')?.value.trim();
+            numberValue = getField('wallet-account-number')?.value.trim();
+            accountData = {
+                ...accountData,
+                account_holder: holderValue || '',
+                account_number: numberValue || '',
+                bank_name: null,
+                branch: null,
+                swift_code: null,
+                bank_address: null,
+                operator_name: getField('operator-name')?.value || '',
+                instructions: getField('wallet-instructions')?.value || null,
+                balance: null,
+            };
+        } else if (type === 'cash') {
+            holderValue = getField('cash-name')?.value.trim();
+            let balanceValue = parseFloat(getField('cash-balance')?.value || '0');
+            if (isNaN(balanceValue)) balanceValue = 0;
+            accountData = {
+                ...accountData,
+                account_holder: holderValue || '',
+                account_number: '-', // Always provide a value for NOT NULL
+                bank_name: null,
+                branch: null,
+                swift_code: null,
+                bank_address: null,
+                operator_name: null,
+                instructions: null,
+                balance: balanceValue,
+            };
+            numberValue = 'N/A'; // Not required for cash
         }
-        
-        // Basic validation
-        if (!accountHolder) {
-            throw new Error('Account holder name is required');
-        }
-        
-        if (!accountNumber) {
-            throw new Error(`${accountType === 'bank' ? 'Account number' : 'Mobile number'} is required`);
-        }
-        
-        if (accountType === 'bank' && !bankName) {
+
+        // Validate required fields
+        if (!holderValue) throw new Error('Account holder name is required');
+        if (type !== 'cash' && !numberValue) throw new Error(`${type === 'bank' ? 'Account number' : 'Mobile number'} is required`);
+        if (!accountData.currency) throw new Error('Currency is required');
+
+        // Debug log for accountData
+        console.log('Submitting accountData:', accountData);
+
+        // Basic validation for bank/wallet fields
+        if (type === 'bank' && !getField('bank-name')?.value.trim()) {
             throw new Error('Bank name is required');
         }
-        
-        if (accountType === 'wallet' && !operatorName) {
+        if (type === 'wallet' && !getField('operator-name')?.value.trim()) {
             throw new Error('Mobile operator is required');
         }
-        
         // Validate mobile number format (Mozambique)
-        if (accountType === 'wallet') {
-            // Basic validation for Mozambique mobile numbers
+        if (type === 'wallet') {
             const mobileRegex = /^(84|85|86|87)\d{7}$/;
-            if (!mobileRegex.test(accountNumber)) {
+            if (!mobileRegex.test(numberValue)) {
                 throw new Error('Invalid mobile number format. Use format: 84xxxxxxx');
             }
         }
-        
         // If setting as primary, update all other accounts
-        if (isPrimary) {
+        if (isPrimaryCheckbox.checked) {
             await unsetAllPrimary();
         }
-        
         // Build the account object
-        const accountData = {
-            user_id: userId,
-            account_type: accountType,
-            account_holder: accountHolder,
-            account_number: accountNumber,
-            currency: currency,
-            is_primary: isPrimary,
-            bank_name: accountType === 'bank' ? bankName : null,
-            operator_name: accountType === 'wallet' ? operatorName : null,
-            branch: accountType === 'bank' ? branch : null,
-            swift_code: accountType === 'bank' ? swiftCode : null,
-            bank_address: accountType === 'bank' ? bankAddress : null,
-            instructions: accountType === 'wallet' ? instructions : null
-        };
-        
-        // Save or update the account
-        if (currentAccountId) {
-            await updateAccount(currentAccountId, accountData);
+        if (accountIdInput?.value) {
+            await updateAccount(accountIdInput.value, accountData);
+            showToast('Account updated successfully', 'success');
         } else {
             await createAccount(accountData);
+            showToast('Account created successfully', 'success');
         }
-        
         // Close modal and refresh
         closeAccountModal();
         await loadAccounts();
-        
-        // Show success message
-        showToast(
-            currentAccountId 
-                ? 'Account updated successfully' 
-                : 'Account created successfully', 
-            'success'
-        );
     } catch (error) {
         console.error('Form submission error:', error);
-        showToast(error.message, 'error');
+        showToast(error.message || 'Failed to save account', 'error');
     }
 }
 

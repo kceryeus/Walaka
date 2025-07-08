@@ -20,7 +20,7 @@ function setupCharts() {
             data: {
                 labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
                 datasets: [{
-                    label: 'Invoices Created',
+                    label: 'Invoices Created Over Time',
                     data: Array(7).fill(0),
                     borderColor: '#007ec7',
                     backgroundColor: 'rgba(0, 126, 199, 0.1)',
@@ -43,6 +43,13 @@ function setupCharts() {
                 }
             }
         });
+        // Ensure the select is set to 'last30' and chart loads by default
+        const periodSelect = document.getElementById('invoiceDistributionPeriod');
+        if (periodSelect) {
+            periodSelect.value = 'last30';
+        }
+        // Load default data
+        updateInvoiceDistributionChart('last30');
     }
 
     // Setup Revenue by Status Chart
@@ -77,30 +84,9 @@ function setupCharts() {
 
 function setupChartPeriodControls() {
     const periodSelect = document.getElementById('invoiceDistributionPeriod');
-    const customRangeDiv = document.getElementById('invoiceDistributionCustomRange');
-    const startDateInput = document.getElementById('invoiceDistributionStartDate');
-    const endDateInput = document.getElementById('invoiceDistributionEndDate');
-    const applyBtn = document.getElementById('applyInvoiceDistributionRange');
-
     if (periodSelect) {
         periodSelect.addEventListener('change', function() {
-            if (this.value === 'custom') {
-                customRangeDiv.style.display = 'inline-block';
-            } else {
-                customRangeDiv.style.display = 'none';
-                updateInvoiceDistributionChart(this.value);
-            }
-        });
-    }
-    if (applyBtn && startDateInput && endDateInput) {
-        applyBtn.addEventListener('click', function() {
-            const start = startDateInput.value;
-            const end = endDateInput.value;
-            if (!start || !end) {
-                alert('Please select both start and end dates.');
-                return;
-            }
-            updateInvoiceDistributionChart('custom', { startDate: start, endDate: end });
+            updateInvoiceDistributionChart(this.value);
         });
     }
 }
@@ -110,50 +96,135 @@ function updateChartPeriodButtons(activeButton, inactiveButtons) {
     inactiveButtons.forEach(button => button.classList.remove('active'));
 }
 
-function updateInvoiceDistributionChart(period, customRange = null) {
+// Utility to fetch invoice counts per period from Supabase
+async function fetchInvoiceCountsByPeriod(period, customRange = null) {
+    let query = window.supabase.from('invoices').select('issue_date', { count: 'exact' });
+    let labels = [], counts = [];
+    const today = new Date();
+    if (period === 'last30') {
+        // Last 30 days
+        const start = new Date(today);
+        start.setDate(today.getDate() - 29);
+        query = query.gte('issue_date', start.toISOString().slice(0, 10)).lte('issue_date', today.toISOString().slice(0, 10));
+        // We'll group by day
+        labels = [];
+        for (let i = 29; i >= 0; i--) {
+            const d = new Date(today);
+            d.setDate(today.getDate() - i);
+            labels.push(d.toISOString().slice(5, 10));
+        }
+    } else if (period === 'week') {
+        // This week (Mon-Sun)
+        const start = new Date(today);
+        const day = start.getDay();
+        const diff = start.getDate() - day + (day === 0 ? -6 : 1); // adjust when day is sunday
+        start.setDate(diff);
+        const end = new Date(start);
+        end.setDate(start.getDate() + 6);
+        query = query.gte('issue_date', start.toISOString().slice(0, 10)).lte('issue_date', end.toISOString().slice(0, 10));
+        labels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+    } else if (period === 'month') {
+        // This month, group by week
+        const year = today.getFullYear();
+        const month = today.getMonth();
+        const start = new Date(year, month, 1);
+        const end = new Date(year, month + 1, 0);
+        query = query.gte('issue_date', start.toISOString().slice(0, 10)).lte('issue_date', end.toISOString().slice(0, 10));
+        labels = ['Week 1', 'Week 2', 'Week 3', 'Week 4'];
+    } else if (period === 'quarter') {
+        // This quarter, group by month
+        const year = today.getFullYear();
+        const quarter = Math.floor(today.getMonth() / 3);
+        const start = new Date(year, quarter * 3, 1);
+        const end = new Date(year, quarter * 3 + 3, 0);
+        query = query.gte('issue_date', start.toISOString().slice(0, 10)).lte('issue_date', end.toISOString().slice(0, 10));
+        labels = ['Month 1', 'Month 2', 'Month 3'];
+    } else if (period === 'year') {
+        // This year, group by month
+        const year = today.getFullYear();
+        const start = new Date(year, 0, 1);
+        const end = new Date(year, 11, 31);
+        query = query.gte('issue_date', start.toISOString().slice(0, 10)).lte('issue_date', end.toISOString().slice(0, 10));
+        labels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    } else if (period === 'custom' && customRange) {
+        const start = new Date(customRange.startDate);
+        const end = new Date(customRange.endDate);
+        query = query.gte('issue_date', start.toISOString().slice(0, 10)).lte('issue_date', end.toISOString().slice(0, 10));
+        // Group by day
+        const days = Math.floor((end - start) / (1000 * 60 * 60 * 24)) + 1;
+        labels = [];
+        for (let i = 0; i < days; i++) {
+            const d = new Date(start);
+            d.setDate(start.getDate() + i);
+            labels.push(d.toISOString().slice(5, 10));
+        }
+    }
+    // Fetch all invoices in the range
+    const { data: invoices, error } = await query;
+    if (error) {
+        console.error('Error fetching invoices for chart:', error);
+        return { labels, counts: Array(labels.length).fill(0) };
+    }
+    // Count per label
+    let countsMap = {};
+    if (period === 'last30' || period === 'custom') {
+        labels.forEach(lab => { countsMap[lab] = 0; });
+        invoices.forEach(inv => {
+            const d = new Date(inv.issue_date);
+            const label = d.toISOString().slice(5, 10);
+            if (countsMap[label] !== undefined) countsMap[label]++;
+        });
+        counts = labels.map(lab => countsMap[lab] || 0);
+    } else if (period === 'week') {
+        labels.forEach(lab => { countsMap[lab] = 0; });
+        invoices.forEach(inv => {
+            const d = new Date(inv.issue_date);
+            const day = d.getDay();
+            const idx = day === 0 ? 6 : day - 1; // Sunday is last
+            countsMap[labels[idx]]++;
+        });
+        counts = labels.map(lab => countsMap[lab] || 0);
+    } else if (period === 'month') {
+        // Group by week of month
+        labels.forEach(lab => { countsMap[lab] = 0; });
+        invoices.forEach(inv => {
+            const d = new Date(inv.issue_date);
+            const week = Math.floor((d.getDate() - 1) / 7);
+            countsMap[labels[week]]++;
+        });
+        counts = labels.map(lab => countsMap[lab] || 0);
+    } else if (period === 'quarter') {
+        // Group by month in quarter
+        labels.forEach(lab => { countsMap[lab] = 0; });
+        invoices.forEach(inv => {
+            const d = new Date(inv.issue_date);
+            const monthInQuarter = d.getMonth() % 3;
+            countsMap[labels[monthInQuarter]]++;
+        });
+        counts = labels.map(lab => countsMap[lab] || 0);
+    } else if (period === 'year') {
+        labels.forEach(lab => { countsMap[lab] = 0; });
+        invoices.forEach(inv => {
+            const d = new Date(inv.issue_date);
+            const month = d.getMonth();
+            countsMap[labels[month]]++;
+        });
+        counts = labels.map(lab => countsMap[lab] || 0);
+    }
+    return { labels, counts };
+}
+
+async function updateInvoiceDistributionChart(period, customRange = null) {
     try {
         const chart = window.invoiceDistributionChart;
-        if (!chart) throw new Error('Chart instance not found');
-        let labels = [];
-        let values = [];
-        if (period === 'last30') {
-            // Last 30 days
-            const today = new Date();
-            for (let i = 29; i >= 0; i--) {
-                const d = new Date(today);
-                d.setDate(today.getDate() - i);
-                labels.push(d.toISOString().slice(5, 10)); // MM-DD
-                values.push(Math.floor(Math.random() * 5)); // MOCK: Replace with real data
-            }
-        } else if (period === 'week') {
-            labels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-            values = [5, 7, 10, 8, 12, 3, 1]; // MOCK
-        } else if (period === 'month') {
-            labels = Array.from({length: 4}, (_, i) => `Week ${i+1}`);
-            values = [20, 30, 25, 15]; // MOCK
-        } else if (period === 'quarter') {
-            labels = ['Jan-Mar', 'Apr-Jun', 'Jul-Sep', 'Oct-Dec'];
-            values = [60, 80, 70, 50]; // MOCK
-        } else if (period === 'year') {
-            labels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-            values = Array(12).fill(0).map(() => Math.floor(Math.random() * 50)); // MOCK
-        } else if (period === 'custom' && customRange) {
-            // Calculate days between start and end
-            const start = new Date(customRange.startDate);
-            const end = new Date(customRange.endDate);
-            const days = Math.floor((end - start) / (1000 * 60 * 60 * 24)) + 1;
-            for (let i = 0; i < days; i++) {
-                const d = new Date(start);
-                d.setDate(start.getDate() + i);
-                labels.push(d.toISOString().slice(5, 10));
-                values.push(Math.floor(Math.random() * 5)); // MOCK
-            }
-        } else {
-            labels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-            values = Array(7).fill(0);
+        if (!chart) {
+            console.error('Chart instance not found');
+            return;
         }
+        // Fetch real data
+        const { labels, counts } = await fetchInvoiceCountsByPeriod(period, customRange);
         chart.data.labels = labels;
-        chart.data.datasets[0].data = values;
+        chart.data.datasets[0].data = counts;
         chart.update();
     } catch (error) {
         console.error('Error updating distribution chart:', error);

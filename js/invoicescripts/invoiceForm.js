@@ -173,9 +173,9 @@ class InvoiceForm {
             console.log('Company data:', companyData);
 
             // Calculate totals
-            const subtotal = parseFloat(document.getElementById('subtotal')?.textContent || '0');
-            const totalVat = parseFloat(document.getElementById('totalVat')?.textContent || '0');
-            const total = parseFloat(document.getElementById('invoiceTotal')?.textContent || '0');
+            const subtotal = parseAmount(document.getElementById('subtotal')?.textContent || '0');
+            const totalVat = parseAmount(document.getElementById('totalVat')?.textContent || '0');
+            const total = parseAmount(document.getElementById('invoiceTotal')?.textContent || '0');
 
             console.log('Totals calculated:', { subtotal, totalVat, total });
 
@@ -186,10 +186,10 @@ class InvoiceForm {
 
             itemRows.forEach((row, index) => {
                 const description = row.querySelector('.item-description')?.value;
-                const quantity = parseFloat(row.querySelector('.item-quantity')?.value) || 0;
-                const price = parseFloat(row.querySelector('.item-price')?.value) || 0;
-                const vat = parseFloat(row.querySelector('.item-vat')?.textContent) || 0;
-                const total = parseFloat(row.querySelector('.item-total')?.textContent) || 0;
+                const quantity = parseAmount(row.querySelector('.item-quantity')?.value) || 0;
+                const price = parseAmount(row.querySelector('.item-price')?.value) || 0;
+                const vat = parseAmount(row.querySelector('.item-vat')?.textContent) || 0;
+                const total = parseAmount(row.querySelector('.item-total')?.textContent) || 0;
 
                 console.log(`Item ${index + 1}:`, {
                     description,
@@ -441,9 +441,9 @@ class InvoiceForm {
         const subtotalElem = document.getElementById('reviewSubtotal');
         const vatElem = document.getElementById('reviewTotalVat');
         const totalElem = document.getElementById('reviewInvoiceTotal');
-        const mainSubtotal = parseFloat(document.getElementById('subtotal')?.textContent.replace(/[^\d.\-]/g, '') || '0');
-        const mainVat = parseFloat(document.getElementById('totalVat')?.textContent.replace(/[^\d.\-]/g, '') || '0');
-        const mainTotal = parseFloat(document.getElementById('invoiceTotal')?.textContent.replace(/[^\d.\-]/g, '') || '0');
+        const mainSubtotal = parseAmount(document.getElementById('subtotal')?.textContent || '0');
+        const mainVat = parseAmount(document.getElementById('totalVat')?.textContent || '0');
+        const mainTotal = parseAmount(document.getElementById('invoiceTotal')?.textContent || '0');
         if (subtotalElem && vatElem && totalElem) {
             subtotalElem.textContent = new Intl.NumberFormat('pt-MZ', { style: 'currency', currency: 'MZN' }).format(mainSubtotal);
             vatElem.textContent = new Intl.NumberFormat('pt-MZ', { style: 'currency', currency: 'MZN' }).format(mainVat);
@@ -478,6 +478,19 @@ class InvoiceForm {
 const invoiceForm = new InvoiceForm();
 window.invoiceForm = invoiceForm;
 
+// Helper to robustly parse amounts in European/Portuguese format (e.g., '29 000,00' -> 29000.00)
+function parseAmount(str) {
+    if (typeof str !== 'string') str = String(str);
+    // Remove all spaces (thousands separator)
+    str = str.replace(/\s/g, '');
+    // Replace the last comma with a dot (decimal separator)
+    const lastComma = str.lastIndexOf(',');
+    if (lastComma !== -1) {
+        str = str.slice(0, lastComma).replace(/,/g, '') + '.' + str.slice(lastComma + 1);
+    }
+    return parseFloat(str);
+}
+
 function getCurrentFormData() {
     const form = document.getElementById('invoiceForm');
     if (!form) return null;
@@ -486,10 +499,10 @@ function getCurrentFormData() {
     document.querySelectorAll('#itemsTable .item-row').forEach(row => {
         items.push({
             description: row.querySelector('.item-description').value,
-            quantity: parseFloat(row.querySelector('.item-quantity').value) || 0,
-            unit_price: parseFloat(row.querySelector('.item-price').value) || 0,
-            vat_amount: parseFloat(row.querySelector('.item-vat').textContent) || 0,
-            total: parseFloat(row.querySelector('.item-total').textContent) || 0
+            quantity: parseAmount(row.querySelector('.item-quantity').value) || 0,
+            unit_price: parseAmount(row.querySelector('.item-price').value) || 0,
+            vat_amount: parseAmount(row.querySelector('.item-vat').textContent) || 0,
+            total: parseAmount(row.querySelector('.item-total').textContent) || 0
         });
     });
 
@@ -503,9 +516,9 @@ function getCurrentFormData() {
         due_date: dueDate.toISOString(),
         client_name: document.getElementById('client-list').value,
         status: 'pending',
-        subtotal: parseFloat(document.getElementById('subtotal').textContent) || 0,
-        vat_amount: parseFloat(document.getElementById('totalVat').textContent) || 0,
-        total_amount: parseFloat(document.getElementById('invoiceTotal').textContent) || 0,
+        subtotal: parseAmount(document.getElementById('subtotal').textContent) || 0,
+        vat_amount: parseAmount(document.getElementById('totalVat').textContent) || 0,
+        total_amount: parseAmount(document.getElementById('invoiceTotal').textContent) || 0,
         currency: document.getElementById('currency').value,
         payment_terms: document.getElementById('paymentTerms').value,
         notes: document.getElementById('notes').value,
@@ -591,7 +604,7 @@ document.getElementById('invoiceForm')?.addEventListener('submit', handleInvoice
       let valid = false;
       itemRows.forEach(row => {
         const desc = row.querySelector('.item-description').value.trim();
-        const qty = parseFloat(row.querySelector('.item-quantity').value);
+        const qty = parseAmount(row.querySelector('.item-quantity').value);
         if (desc && qty > 0) valid = true;
       });
       if (!valid) {
@@ -630,10 +643,10 @@ document.getElementById('invoiceForm')?.addEventListener('submit', handleInvoice
     let itemsHtml = '';
     itemRows.forEach(row => {
       const desc = row.querySelector('.item-description').value;
-      const qty = row.querySelector('.item-quantity').value;
-      const price = row.querySelector('.item-price').value;
-      const vat = row.querySelector('.item-vat').textContent;
-      const total = row.querySelector('.item-total').textContent;
+      const qty = parseAmount(row.querySelector('.item-quantity').value);
+      const price = parseAmount(row.querySelector('.item-price').value);
+      const vat = parseAmount(row.querySelector('.item-vat').textContent);
+      const total = parseAmount(row.querySelector('.item-total').textContent);
       if (desc && qty > 0) {
         itemsHtml += `<tr><td>${desc}</td><td>${qty}</td><td>${price}</td><td>${vat}</td><td>${total}</td></tr>`;
       }

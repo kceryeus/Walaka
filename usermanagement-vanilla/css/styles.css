@@ -449,3 +449,25 @@ input:disabled, select:disabled {
     0% { transform: scale(0.95) translateY(20px); opacity: 0; }
     100% { transform: scale(1) translateY(0); opacity: 1; }
 }
+
+.status-toggle-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5em;
+  border-radius: 999px;
+  font-size: 1.3rem;
+  border: none;
+  cursor: pointer;
+  background: transparent;
+  transition: background 0.2s, color 0.2s, box-shadow 0.2s;
+}
+.status-toggle-btn:hover {
+  background: #f3f4f6;
+}
+.status-toggle-btn .status-active {
+  color: #16a34a;
+}
+.status-toggle-btn .status-inactive {
+  color: #dc2626;
+}

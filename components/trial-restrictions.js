@@ -8,7 +8,13 @@ class TrialRestrictions {
             'invoices.html',
             'clients/clients.html',
             'products.html',
-            'banks/banks.html'
+            'banks/banks.html',
+            'usermanagement-vanilla/index.html',
+            'usermanagement-vanilla/js/app.js',
+            'usermanagement-vanilla/js/ui.js',
+            'usermanagement-vanilla/js/api.js',
+            'usermanagement-vanilla/setup-password.html',
+            'usermanagement-vanilla/supabase/',
         ]);
         this.restrictedSelectors = new Set([
             '#createInvoiceBtn',
@@ -16,7 +22,13 @@ class TrialRestrictions {
             '#add-new-product-btn',
             '#add-account-btn',
             '#empty-add-btn',
-            '.btn.primary-btn'
+            '.btn.primary-btn',
+            '#addUserBtn', // Ensure Add User button is always restricted for non-admins
+            '#edit-user-btn',
+            '.user-create-btn',
+            '.user-edit-btn',
+            '.usermanagement-create',
+            '.usermanagement-edit',
         ]);
         this.spinnerClass = 'trial-spinner-overlay';
         this.init();
@@ -56,6 +68,27 @@ class TrialRestrictions {
         document.body.addEventListener('click', (event) => {
             const element = event.target;
 
+            // --- User Management Vanilla: Block add/edit user modal for non-admins ---
+            // Block Add User button
+            if (element.closest('#addUserBtn')) {
+                if (this.trialData === null || this.trialData.isRestricted) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    this.showRestrictionModal('add user');
+                    return;
+                }
+            }
+            // Block edit user buttons in the users table (look for a button or icon in the Manage column)
+            if (element.closest('.edit-user-btn')) {
+                if (this.trialData === null || this.trialData.isRestricted) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    this.showRestrictionModal('edit user');
+                    return;
+                }
+            }
+            // --- End User Management Vanilla ---
+
             // Check for a click inside a restricted action card link
             const actionLink = element.closest('.action-card a');
             if (actionLink) {
@@ -66,7 +99,6 @@ class TrialRestrictions {
                     event.stopPropagation();
                     return;
                 }
-                
                 // If the link is restricted, show the modal.
                 if (this.isActionRestricted(actionLink.getAttribute('href'))) {
                     console.log('[TrialRestrictions] Restricted action link clicked.');
@@ -76,7 +108,6 @@ class TrialRestrictions {
                 }
                 return;
             }
-
             // Check for a click on a restricted button
             for (const selector of this.restrictedSelectors) {
                 const button = element.closest(selector);
@@ -97,6 +128,18 @@ class TrialRestrictions {
                 }
             }
         }, true);
+
+        // Also, if the user modal is shown and the user is not admin, immediately close it and show restriction modal
+        const userModal = document.getElementById('userModal');
+        if (userModal) {
+            const observer = new MutationObserver(() => {
+                if (!userModal.classList.contains('hidden') && this.trialData && this.trialData.isRestricted) {
+                    userModal.classList.add('hidden');
+                    this.showRestrictionModal('user management');
+                }
+            });
+            observer.observe(userModal, { attributes: true, attributeFilter: ['class'] });
+        }
     }
 
     showLoadingSpinners() {
@@ -200,7 +243,7 @@ class TrialRestrictions {
             return true;
         }
         const buttonText = button.textContent.toLowerCase();
-        const createKeywords = ['create', 'add', 'new', 'generate', 'salvar'];
+        const createKeywords = ['create', 'add', 'new', 'generate', 'salvar', 'user', 'utilizador', 'editar', 'edit'];
         return createKeywords.some(keyword => buttonText.includes(keyword));
     }
 
@@ -220,7 +263,7 @@ class TrialRestrictions {
         // Restrict buttons
         this.restrictedSelectors.forEach(selector => {
             document.querySelectorAll(selector).forEach(button => {
-                if (this.shouldRestrictButton(button)) {
+                if (this.shouldRestrictButton(button) || selector === '#addUserBtn') {
                     this.makeButtonRestricted(button);
                 }
             });

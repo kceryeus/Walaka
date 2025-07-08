@@ -180,6 +180,33 @@ class API {
             throw error;
         }
     }
+
+    async toggleUserStatus(userId) {
+        try {
+            if (!this.supabase) {
+                throw new Error('Supabase client not available');
+            }
+            // Get current user status
+            const { data: user, error: fetchError } = await this.supabase
+                .from('users')
+                .select('status')
+                .eq('id', userId)
+                .single();
+            if (fetchError) throw fetchError;
+            const newStatus = user.status === 'active' ? 'inactive' : 'active';
+            const { data: updatedUser, error: updateError } = await this.supabase
+                .from('users')
+                .update({ status: newStatus })
+                .eq('id', userId)
+                .select()
+                .single();
+            if (updateError) throw updateError;
+            return updatedUser;
+        } catch (error) {
+            console.error('Error toggling user status:', error);
+            throw error;
+        }
+    }
 }
 
 // Note: If you see a GoTrueClient warning, ensure you only create the Supabase client once and reuse it across your app.

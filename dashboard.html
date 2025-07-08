@@ -173,6 +173,22 @@
                     <div class="chart-container">
                         <canvas id="revenueChart"></canvas>
                     </div>
+                    <button class="drilldown-btn" data-target="revenueDetail" aria-expanded="false" aria-label="Show revenue details">
+                        <i class="fas fa-chevron-down"></i>
+                    </button>
+                    <div class="drilldown-content" id="revenueDetail">
+                        <div class="drilldown-header">
+                            <h4 data-translate="revenue_breakdown">Revenue Breakdown</h4>
+                            <div class="drilldown-actions">
+                                <button class="drilldown-tab active" data-view="category" data-translate="by_category">By Category</button>
+                                <button class="drilldown-tab" data-view="client" data-translate="by_client">By Client</button>
+                            </div>
+                        </div>
+                        <div class="drilldown-data">
+                            <!-- Drilldown items go here -->
+                        </div>
+                        <!-- Removed the financial report link -->
+                    </div>
                 </div>
                 
                 <div class="chart-card">
@@ -832,20 +848,14 @@
                     </div>
                 </div>
                 
-                <div class="metric-card" id="revenueCard" onclick="window.location.href='banks/banks.html'" style="cursor: pointer;">
+                <div class="metric-card" id="revenueCard">
                     <div class="metric-header">
                         <i class="fas fa-money-bill"></i>
-                        <span data-translate="revenue">Revenue</span>
-                        <select id="currency-selector" class="currency-select" onchange="changeCurrency(this.value); event.stopPropagation();">
-                            <option value="MZN">MZN</option>
-                            <option value="USD">USD</option>
-                            <option value="EUR">EUR</option>
-                            <option value="ZAR">ZAR</option>
-                        </select>
+                        <span data-translate="revenue">Receita</span>
                     </div>
                     <div class="metric-value">MZN 0.00</div>
                     <div class="metric-footer">
-                        <span class="metric-label" data-translate="this_month">This Month</span>
+                        <span class="metric-label" data-translate="this_month">Este Mês</span>
                         <span class="metric-change positive">0%</span>
                     </div>
                     <button class="drilldown-btn" data-target="revenueDetail" aria-expanded="false" aria-label="Show revenue details">
@@ -853,73 +863,25 @@
                     </button>
                     <div class="drilldown-content" id="revenueDetail">
                         <div class="drilldown-header">
-                            <h4 data-translate="revenue_breakdown">Revenue Breakdown</h4>
+                            <h4 data-translate="revenue_breakdown">Detalhes da Receita</h4>
                             <div class="drilldown-actions">
-                                <button class="drilldown-tab active" data-view="category" data-translate="by_category">By Category</button>
-                                <button class="drilldown-tab" data-view="client" data-translate="by_client">By Client</button>
+                                <button class="drilldown-tab active" data-view="category" data-translate="by_category">Por Categoria</button>
+                                <button class="drilldown-tab" data-view="client" data-translate="by_client">Por Cliente</button>
                             </div>
                         </div>
                         <div class="drilldown-data">
                             <div class="drilldown-item">
-                                <span data-translate="products">Products</span>
-                                <span>MZN 18,250</span>
+                                <span data-translate="products">Produtos</span>
+                                <span>MZN 18 250,00</span>
                             </div>
                             <div class="drilldown-item">
-                                <span data-translate="services">Services</span>
-                                <span>MZN 15,330</span>
+                                <span data-translate="services">Serviços</span>
+                                <span>MZN 15 330,00</span>
                             </div>
                             <div class="drilldown-item">
-                                <span data-translate="subscriptions">Subscriptions</span>
-                                <span>MZN 9,000</span>
+                                <span data-translate="subscriptions">Assinaturas</span>
+                                <span>MZN 9 000,00</span>
                             </div>
-                        </div>
-                        <div class="drilldown-footer">
-                            <a href="#" class="drilldown-link" data-translate="view_financial_report">View Financial Report <i class="fas fa-arrow-right"></i></a>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="metric-card" id="expensesCard">
-                    <div class="metric-header">
-                        <i class="fas fa-credit-card"></i>
-                        <span data-translate="expenses">Expenses</span>
-                    </div>
-                    <div class="metric-value">MZN 0.00</div>
-                    <div class="metric-footer">
-                        <span class="metric-label" data-translate="this_month">This Month</span>
-                        <span class="metric-change negative">0%</span>
-                    </div>
-                    <button class="drilldown-btn" data-target="expensesDetail" aria-expanded="false" aria-label="Show expenses details">
-                        <i class="fas fa-chevron-down"></i>
-                    </button>
-                    <div class="drilldown-content" id="expensesDetail">
-                        <div class="drilldown-header">
-                            <h4 data-translate="expenses_breakdown">Expenses Breakdown</h4>
-                            <div class="drilldown-actions">
-                                <button class="drilldown-tab active" data-view="category" data-translate="by_category">By Category</button>
-                                <button class="drilldown-tab" data-view="vendor" data-translate="by_vendor">By Vendor</button>
-                            </div>
-                        </div>
-                        <div class="drilldown-data">
-                            <div class="drilldown-item">
-                                <span data-translate="operations">Operations</span>
-                                <span>MZN 5,240</span>
-                            </div>
-                            <div class="drilldown-item">
-                                <span data-translate="marketing">Marketing</span>
-                                <span>MZN 3,150</span>
-                            </div>
-                            <div class="drilldown-item">
-                                <span data-translate="payroll">Payroll</span>
-                                <span>MZN 2,800</span>
-                            </div>
-                            <div class="drilldown-item">
-                                <span data-translate="other">Other</span>
-                                <span>MZN 1,290</span>
-                            </div>
-                        </div>
-                        <div class="drilldown-footer">
-                            <a href="#" class="drilldown-link" data-translate="view_all_expenses">View All Expenses <i class="fas fa-arrow-right"></i></a>
                         </div>
                     </div>
                 </div>
@@ -1042,6 +1004,25 @@
                 });
                 // --- End username logic ---
 
+                // Add this function before chart creation so it is in scope
+                let lastRevenueDrilldownIndex = null;
+                function populateRevenueDrilldown(label, value) {
+                    const drilldownData = document.querySelector('#revenueDetail .drilldown-data');
+                    if (drilldownData) {
+                        const formattedValue = new Intl.NumberFormat('pt-MZ', {
+                            style: 'currency',
+                            currency: 'MZN',
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 2
+                        }).format(value);
+                        drilldownData.innerHTML = `
+                            <div class="drilldown-item">
+                                <span>${label}</span>
+                                <span>${formattedValue}</span>
+                            </div>
+                        `;
+                    }
+                }
                 // Initialize Revenue Chart if not already initialized
                 const revenueCanvas = document.getElementById('revenueChart');
                 if (!revenueCanvas) {
@@ -1066,9 +1047,63 @@
                             scales: {
                                 y: { beginAtZero: true, grid: { color: 'rgba(0, 0, 0, 0.05)' } },
                                 x: { grid: { display: false } }
+                            },
+                            onClick: function(evt, elements) {
+                                console.log('[DEBUG] Chart.js onClick fired', {evt, elements});
+                                const drilldownBtn = document.querySelector('.drilldown-btn[data-target="revenueDetail"]');
+                                const drilldownContent = document.getElementById('revenueDetail');
+                                if (elements && elements.length > 0) {
+                                    const element = elements[0];
+                                    const index = element.index;
+                                    const label = this.data.labels[index];
+                                    const value = this.data.datasets[0].data[index];
+                                    console.log(`[DEBUG] Bar clicked: index=${index}, label=${label}, value=${value}`);
+                                    if (lastRevenueDrilldownIndex === index && drilldownContent && drilldownContent.classList.contains('active')) {
+                                        // Hide the drilldown if clicking the same bar again
+                                        drilldownContent.classList.remove('active');
+                                        if (drilldownBtn) {
+                                            drilldownBtn.setAttribute('aria-expanded', 'false');
+                                            const icon = drilldownBtn.querySelector('i');
+                                            if (icon) icon.className = 'fas fa-chevron-down';
+                                        }
+                                        lastRevenueDrilldownIndex = null;
+                                        console.log('[DEBUG] Drilldown closed for revenueDetail');
+                                    } else {
+                                        // Populate and show the drilldown
+                                        populateRevenueDrilldown(label, value);
+                                        if (drilldownBtn && drilldownContent) {
+                                            drilldownBtn.setAttribute('aria-expanded', 'true');
+                                            drilldownContent.classList.add('active');
+                                            const icon = drilldownBtn.querySelector('i');
+                                            if (icon) icon.className = 'fas fa-chevron-up';
+                                            lastRevenueDrilldownIndex = index;
+                                            console.log('[DEBUG] Drilldown opened for revenueDetail');
+                                        } else {
+                                            console.log('[DEBUG] Drilldown button or content not found');
+                                        }
+                                    }
+                                } else {
+                                    console.log('[DEBUG] No chart element clicked');
+                                }
                             }
                         }
                     });
+                    // Add drilldown button click handler with debug log
+                    const revenueDrilldownBtn = document.querySelector('.drilldown-btn[data-target="revenueDetail"]');
+                    if (revenueDrilldownBtn) {
+                        revenueDrilldownBtn.addEventListener('click', function() {
+                            const drilldownContent = document.getElementById('revenueDetail');
+                            if (drilldownContent) {
+                                const isActive = drilldownContent.classList.contains('active');
+                                drilldownContent.classList.toggle('active');
+                                this.setAttribute('aria-expanded', !isActive);
+                                // Toggle chevron
+                                const icon = this.querySelector('i');
+                                if (icon) icon.className = !isActive ? 'fas fa-chevron-down' : 'fas fa-chevron-up';
+                                console.log('[DEBUG] Drilldown button clicked. Now active:', !isActive);
+                            }
+                        });
+                    }
                 }
                 // Initialize Invoice Status Chart if not already initialized
                 const statusCanvas = document.getElementById('invoiceStatusChart');
@@ -1290,27 +1325,6 @@
   </script>
   <script src="js/metricsData.js"></script>
   <script src="js/dashboard.js"></script>
-  <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        document.body.addEventListener('click', function(e) {
-            if (e.target.closest('.drilldown-btn')) {
-                const button = e.target.closest('.drilldown-btn');
-                const targetId = button.getAttribute('data-target');
-                const content = document.getElementById(targetId);
-                const isExpanded = button.getAttribute('aria-expanded') === 'true';
-                button.setAttribute('aria-expanded', !isExpanded);
-                if (content) {
-                    content.classList.toggle('active', !isExpanded);
-                }
-            }
-            if (e.target.classList.contains('drilldown-tab')) {
-                const parent = e.target.closest('.drilldown-actions');
-                parent.querySelectorAll('.drilldown-tab').forEach(t => t.classList.remove('active'));
-                e.target.classList.add('active');
-            }
-        });
-    });
-  </script>
   <script>
 document.addEventListener('DOMContentLoaded', function() {
   function tryInitInvoiceActions() {

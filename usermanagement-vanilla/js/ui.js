@@ -237,6 +237,7 @@ class UI {
                     break;
             }
             this.hideConfirmationModal();
+            // Always refresh user list after action
             app.loadUsers();
         } catch (error) {
             console.error('Error in handleConfirmation:', error);
@@ -288,26 +289,19 @@ class UI {
                 <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                     <div class="flex justify-end space-x-2">
                         <button 
-                            class="text-indigo-600 hover:text-indigo-900 edit-user"
+                            class="edit-user"
                             data-user='${JSON.stringify(user)}'
                             title="Edit user"
                         >
-                            <i class="fas fa-edit"></i>
+                            <i class="fas fa-edit text-indigo-600"></i>
                         </button>
                         ${user.created_by ? `
                             <button 
-                                class="text-yellow-600 hover:text-yellow-900 toggle-user"
+                                class="toggle-user status-toggle-btn"
                                 data-user='${JSON.stringify(user)}'
                                 title="${user.status === 'active' ? 'Deactivate' : 'Activate'} user"
                             >
-                                <i class="fas fa-power-off"></i>
-                            </button>
-                            <button 
-                                class="text-red-600 hover:text-red-900 delete-user"
-                                data-user='${JSON.stringify(user)}'
-                                title="Delete user"
-                            >
-                                <i class="fas fa-trash"></i>
+                                <i class="fas ${user.status === 'active' ? 'fa-toggle-on status-active' : 'fa-toggle-off status-inactive'}"></i>
                             </button>
                         ` : ''}
                     </div>
@@ -317,21 +311,15 @@ class UI {
             // Add event listeners
             const editBtn = tr.querySelector('.edit-user');
             const toggleBtn = tr.querySelector('.toggle-user');
-            const deleteBtn = tr.querySelector('.delete-user');
 
             editBtn?.addEventListener('click', () => {
                 const userData = JSON.parse(editBtn.dataset.user);
                 this.showUserModal(userData);
             });
 
-            toggleBtn?.addEventListener('click', () => {
+            toggleBtn?.addEventListener('click', async () => {
                 const userData = JSON.parse(toggleBtn.dataset.user);
                 this.showConfirmationModal(userData, 'toggle');
-            });
-
-            deleteBtn?.addEventListener('click', () => {
-                const userData = JSON.parse(deleteBtn.dataset.user);
-                this.showConfirmationModal(userData, 'delete');
             });
 
             this.usersTableBody.appendChild(tr);

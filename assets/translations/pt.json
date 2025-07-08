@@ -229,7 +229,7 @@
     "create_invoice": "Criar Factura",
     "pending_payments": "Pagamentos Pendentes",
     "percent_of_total": "% do Total",
-    "invoice_distribution": "Distribuição de Facturas",
+    "invoice_distribution": "Tendência de Facturas",
     "revenue_by_status": "Receita por Estado",
     "yearly": "Anual",
     "unfinished": "Inacabada",
@@ -559,5 +559,16 @@
     "contact_support": "Contacto & Suporte",
     "contact_assistance": "Para mais assistência, por favor contacte a nossa equipa de suporte:",
     "email_label": "Email:",
-    "phone_label": "Telefone:"
+    "phone_label": "Telefone:",
+    "choose_plan_modal_title": "Actualizar ou Mudar de Plano",
+    "current_plan_label_modal": "Plano Actual",
+    "choose_new_plan_label": "Escolha o novo plano:",
+    "basic_plan_name": "Básico",
+    "standard_plan_name": "Padrão",
+    "basic_plan_price": "MZN 250/mês",
+    "standard_plan_price": "MZN 500/mês",
+    "basic_plan_features": "2 utilizadores, Facturas ilimitadas",
+    "standard_plan_features": "5 utilizadores, Facturas ilimitadas",
+    "select_basic_button": "Seleccionar Básico",
+    "select_standard_button": "Seleccionar Padrão"
 }

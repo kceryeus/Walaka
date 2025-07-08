@@ -188,6 +188,7 @@
                                 <option value="all">All Types</option>
                                 <option value="bank">Bank Accounts</option>
                                 <option value="wallet">Mobile Wallets</option>
+                                <option value="cash">Cash</option>
                             </select>
                         </div>
                         <div class="filter-group">
@@ -269,14 +270,15 @@
                                 <select id="account-type" required>
                                     <option value="bank">Bank Account</option>
                                     <option value="wallet">Mobile Wallet</option>
+                                    <option value="cash">Cash</option>
                                 </select>
                             </div>
 
                             <!-- Bank Fields - Only visible when type is 'bank' -->
-                            <div id="bank-fields">
+                            <div id="bank-fields" style="display:none;">
                                 <div class="form-group">
                                     <label for="bank-name">Bank Name <span class="required">*</span></label>
-                                    <select id="bank-name" required>
+                                    <select id="bank-name">
                                         <option value="">Select Bank</option>
                                         <option value="Millennium BIM">Millennium BIM</option>
                                         <option value="BCI">BCI</option>
@@ -289,85 +291,89 @@
                                         <option value="United Bank for Africa">United Bank for Africa</option>
                                         <option value="other">Other</option>
                                     </select>
-                                    <input type="text" id="bank-name-other" placeholder="Enter Bank Name" style="display: none;">
                                 </div>
-                            </div>
-
-                            <!-- Wallet Fields - Only visible when type is 'wallet' -->
-                            <div id="wallet-fields" style="display: none;">
+                                <div class="form-group" id="bank-name-other-group" style="display:none;">
+                                    <label for="bank-name-other">Other Bank Name</label>
+                                    <input type="text" id="bank-name-other" placeholder="Enter other bank name">
+                                </div>
                                 <div class="form-group">
-                                    <label for="operator-name">Operator Name <span class="required">*</span></label>
-                                    <select id="operator-name" required>
-                                        <option value="" disabled selected>Select Operator</option>
-                                        <option value="M-PESA">M-PESA</option>
-                                        <option value="EMOLA">EMOLA</option>
-                                        <option value="mKesh">mKesh</option>
-                                        <option value="e-Mola">e-Mola</option>
-                                        <option value="other">Other</option>
-                                    </select>
-                                    <input type="text" id="operator-name-other" placeholder="Enter Operator Name" style="display: none;">
+                                    <label for="bank-account-number">Account Number <span class="required">*</span></label>
+                                    <input type="text" id="bank-account-number" placeholder="Enter account number">
                                 </div>
-                            </div>
-
-                            <div class="form-group">
-                                <label for="account-holder">Account Holder Name <span class="required">*</span></label>
-                                <input type="text" id="account-holder" placeholder="Your full name or business name" required>
-                            </div>
-
-                            <div class="form-row">
                                 <div class="form-group">
-                                    <label for="account-number" id="account-number-label">Account Number <span class="required">*</span></label>
-                                    <input type="text" id="account-number" placeholder="Enter account number" required>
-                                    <small id="account-number-hint" class="form-hint">Enter your bank account number</small>
+                                    <label for="bank-account-holder">Account Holder Name <span class="required">*</span></label>
+                                    <input type="text" id="bank-account-holder" placeholder="Your full name or business name">
                                 </div>
-
-                                <div class="form-group">
-                                    <label for="currency">Currency <span class="required">*</span></label>
-                                    <select id="currency" required>
-                                        <option value="MZN">MZN</option>
-                                        <option value="USD">USD</option>
-                                        <option value="ZAR">ZAR</option>
-                                        <option value="EUR">EUR</option>
-                                    </select>
-                                </div>
-                            </div>
-
-                            <!-- Additional Bank Fields -->
-                            <div class="bank-additional-fields">
                                 <div class="form-group">
                                     <label for="branch">Branch (Optional)</label>
                                     <input type="text" id="branch" placeholder="Enter bank branch">
                                 </div>
-
-                                <div class="form-row">
-                                    <div class="form-group">
-                                        <label for="swift-code">SWIFT Code (Optional)</label>
-                                        <input type="text" id="swift-code" placeholder="Enter SWIFT/BIC code">
-                                    </div>
-
-                                    <div class="form-group">
-                                        <label for="is-primary">Make Primary Account</label>
-                                        <div class="toggle-switch">
-                                            <input type="checkbox" id="is-primary">
-                                            <label for="is-primary"></label>
-                                        </div>
-                                    </div>
+                                <div class="form-group">
+                                    <label for="swift-code">SWIFT Code (Optional)</label>
+                                    <input type="text" id="swift-code" placeholder="Enter SWIFT/BIC code">
                                 </div>
-
                                 <div class="form-group">
                                     <label for="bank-address">Bank Address (Optional)</label>
                                     <textarea id="bank-address" rows="2" placeholder="Enter bank address"></textarea>
                                 </div>
                             </div>
 
-                            <!-- Wallet Additional Instructions -->
-                            <div class="wallet-instructions" style="display: none;">
+                            <!-- Wallet Fields - Only visible when type is 'wallet' -->
+                            <div id="wallet-fields" style="display:none;">
+                                <div class="form-group">
+                                    <label for="operator-name">Operator Name <span class="required">*</span></label>
+                                    <select id="operator-name">
+                                        <option value="">Select Operator</option>
+                                        <option value="M-PESA">M-PESA</option>
+                                        <option value="EMOLA">EMOLA</option>
+                                        <option value="mKesh">mKesh</option>
+                                        <option value="e-Mola">e-Mola</option>
+                                        <option value="other">Other</option>
+                                    </select>
+                                </div>
+                                <div class="form-group" id="operator-name-other-group" style="display:none;">
+                                    <label for="operator-name-other">Other Operator Name</label>
+                                    <input type="text" id="operator-name-other" placeholder="Enter other operator name">
+                                </div>
+                                <div class="form-group">
+                                    <label for="wallet-account-number">Mobile Number <span class="required">*</span></label>
+                                    <input type="text" id="wallet-account-number" placeholder="Enter mobile number">
+                                </div>
+                                <div class="form-group">
+                                    <label for="wallet-account-holder">Account Holder Name <span class="required">*</span></label>
+                                    <input type="text" id="wallet-account-holder" placeholder="Your full name or business name">
+                                </div>
                                 <div class="form-group">
                                     <label for="wallet-instructions">Payment Instructions</label>
-                                    <textarea id="wallet-instructions" rows="2" placeholder="Additional instructions for clients (displayed on invoices)"></textarea>
+                                    <textarea id="wallet-instructions" rows="2" placeholder="Instructions for clients"></textarea>
                                 </div>
                             </div>
 
+                            <!-- Cash Fields - Only visible when type is 'cash' -->
+                            <div id="cash-fields" style="display:none;">
+                                <div class="form-group">
+                                    <label for="cash-name">Cash Location/Name <span class="required">*</span></label>
+                                    <input type="text" id="cash-name" placeholder="e.g. Office Safe, Petty Cash">
+                                </div>
+                                <div class="form-group">
+                                    <label for="cash-balance">Balance <span class="required">*</span></label>
+                                    <input type="number" id="cash-balance" placeholder="Enter cash amount" min="0" step="0.01">
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="currency">Currency <span class="required">*</span></label>
+                                <select id="currency" required>
+                                    <option value="MZN">MZN</option>
+                                    <option value="USD">USD</option>
+                                    <option value="ZAR">ZAR</option>
+                                    <option value="EUR">EUR</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="is-primary">Make Primary Account</label>
+                                <input type="checkbox" id="is-primary">
+                            </div>
                             <div class="form-actions">
                                 <button type="button" class="secondary-btn" id="cancel-account">Cancel</button>
                                 <button type="submit" class="primary-btn" id="save-account">Save Account</button>
