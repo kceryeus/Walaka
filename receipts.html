@@ -440,7 +440,7 @@
 
             const { data: accounts, error } = await window.supabase
                 .from('bank_accounts')
-                .select('id, account_type, account_holder, account_number, currency')
+                .select('id, account_type, bank_name, operator_name, account_holder, account_number, currency')
                 .eq('user_id', user.data.user.id);
 
             const dropdown = document.getElementById('bankAccount');
@@ -449,7 +449,11 @@
             dropdown.innerHTML = '<option value="">Select Account</option>';
             if (accounts && accounts.length) {
                 accounts.forEach(acc => {
-                    const label = `${acc.account_type.toUpperCase()}: ${acc.account_holder} (${acc.account_number}) [${acc.currency}]`;
+                    let name = '';
+                    if (acc.account_type === 'bank') name = acc.bank_name;
+                    else if (acc.account_type === 'wallet') name = acc.operator_name;
+                    else if (acc.account_type === 'cash') name = acc.account_holder;
+                    const label = `${name} (${acc.account_number}) [${acc.currency}]`;
                     const option = document.createElement('option');
                     option.value = acc.id;
                     option.textContent = label;

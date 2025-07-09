@@ -12,21 +12,25 @@ class WalakaAssistant {
 
   // Função para chamada à API OpenRouter
   async callOpenRouter(messages) {
-    const apiKey = "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";
+    // Detect if running locally (localhost:3000 or 127.0.0.1:3000)
+    let url;
+    if (
+      window.location.hostname === "localhost" ||
+      window.location.hostname === "127.0.0.1"
+    ) {
+      url = "http://localhost:54321/functions/v1/walaka-assistant";
+    } else {
+      // For production, use relative path (works on Supabase hosting and most static hosts)
+      url = "/functions/v1/walaka-assistant";
+    }
+
     try {
-      const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+      const response = await fetch(url, {
         method: "POST",
         headers: {
-          "Authorization": `Bearer ${apiKey}`,
-          "Content-Type": "application/json",
-          // Cabeçalhos extras para funcionar online e ranquear no OpenRouter
-          "HTTP-Referer": window.location.origin, // URL do seu site
-          "X-Title": "WALAKA ERP" // Nome do seu site
+          "Content-Type": "application/json"
         },
-        body: JSON.stringify({
-          model: "qwen/qwen3-30b-a3b:free",
-          messages: messages
-        })
+        body: JSON.stringify({ messages })
       });
       const data = await response.json();
       if (data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content) {

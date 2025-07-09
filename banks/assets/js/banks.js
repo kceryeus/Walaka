@@ -184,6 +184,13 @@ async function loadAccounts() {
         }
         
         accounts = data || [];
+        // Fetch balances for all accounts
+        const accountIds = accounts.map(acc => acc.id);
+        const balanceMap = await fetchAccountBalances(accountIds);
+        // Attach computed balances to accounts
+        accounts.forEach(acc => {
+            acc._computed_balance = balanceMap[acc.id] || 0;
+        });
         filteredAccounts = [...accounts];
         
         updateAccountsUI();
@@ -241,8 +248,7 @@ function updateTableView() {
         if (account.account_type === 'bank' || account.account_type === 'wallet') number = account.account_number;
         else if (account.account_type === 'cash') number = '-';
         let balanceCell = '';
-        if (account.account_type === 'cash') balanceCell = `${account.balance != null ? account.balance.toFixed(2) : '0.00'}`;
-        else balanceCell = '-';
+        balanceCell = `${account._computed_balance != null ? account._computed_balance.toFixed(2) : '0.00'}`;
         // Create row as DOM element
         const row = document.createElement('tr');
         row.innerHTML = `
@@ -297,8 +303,7 @@ function updateCardsView() {
         let number = '';
         if (account.account_type === 'bank' || account.account_type === 'wallet') number = account.account_number;
         else if (account.account_type === 'cash') number = '-';
-        let balanceInfo = '';
-        if (account.account_type === 'cash') balanceInfo = `<div class='account-balance'><strong>Balance:</strong> ${account.balance != null ? account.balance.toFixed(2) : '0.00'} ${account.currency}</div>`;
+        let balanceInfo = `<div class='account-balance'><strong>Balance:</strong> ${account._computed_balance != null ? account._computed_balance.toFixed(2) : '0.00'} ${account.currency}</div>`;
         // Create card as DOM element
         const card = document.createElement('div');
         card.className = 'account-card';
@@ -955,3 +960,21 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 });
+
+/**
+ * Fetch balances for all accounts from bank_account_transactions
+ */
+async function fetchAccountBalances(accountIds) {
+    if (!accountIds.length) return {};
+    const { data, error } = await window.supabase
+        .rpc('get_account_balances', { account_ids: accountIds });
+    if (error) {
+        console.error('Error fetching balances:', error);
+        return {};
+    }
+    const balanceMap = {};
+    data.forEach(row => {
+        balanceMap[row.bank_account_id] = parseFloat(row.balance) || 0;
+    });
+    return balanceMap;
+}
