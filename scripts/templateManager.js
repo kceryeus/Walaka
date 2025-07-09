@@ -409,52 +409,83 @@ async function populateTemplate(templateContent, invoiceData) {
     setDataField(doc, 'company-nuit', invoiceData.company?.nuit || '');
     setDataField(doc, 'company-website', invoiceData.company?.website || '');
 
-    // Invoice Details (fetch from invoice object for consistency)
-    setDataField(doc, 'invoice-number', invoiceData.invoice?.number || '');
-    setDataField(doc, 'issue-date', formatDate(invoiceData.invoice?.issueDate));
-    setDataField(doc, 'due-date', formatDate(invoiceData.invoice?.dueDate));
+    // Invoice Details
+    let serie = invoiceData.invoice?.serie || invoiceData.serie || 'A';
+    let invoiceNumber = invoiceData.invoice?.number || invoiceData.invoice_number || 'Draft Invoice';
+    setDataField(doc, 'invoice-number', `${serie}/${invoiceNumber}`);
+    setDataField(doc, 'issue-date', formatDate(invoiceData.invoice?.issueDate || invoiceData.issue_date));
+    setDataField(doc, 'due-date', formatDate(invoiceData.invoice?.dueDate || invoiceData.due_date));
 
     // Client Information
-    setDataField(doc, 'client-name', invoiceData.client?.name || '');
-    setDataField(doc, 'client-address', invoiceData.client?.address || '');
-    setDataField(doc, 'client-nuit', invoiceData.client?.nuit || '');
-    setDataField(doc, 'client-email', invoiceData.client?.email || '');
-    setDataField(doc, 'client-contact', invoiceData.client?.phone || '');
+    setDataField(doc, 'client-name', invoiceData.client?.name || invoiceData.client_name || '');
+    setDataField(doc, 'client-address', invoiceData.client?.address || invoiceData.client_address || '');
+    setDataField(doc, 'client-nuit', invoiceData.client?.nuit || invoiceData.client_nuit || '');
+    setDataField(doc, 'client-email', invoiceData.client?.email || invoiceData.client_email || '');
+    setDataField(doc, 'client-contact', invoiceData.client?.phone || invoiceData.client_contact || '');
 
     // Calculate totals
-    const subtotal = calculateSubtotal(invoiceData.items || []);
-    const totalVat = calculateVAT(subtotal);
-    const total = subtotal + totalVat;
+    const subtotal = Number(invoiceData.subtotal || invoiceData.invoice?.subtotal || 0);
+    const discount = Number(invoiceData.discount || invoiceData.invoice?.discount || 0);
+    const subtotalAfterDiscount = subtotal - discount;
+    let totalVat = 0;
+    let hasExempt = false;
 
-    // Totals with proper number formatting
-    setDataField(doc, 'subtotal', formatCurrency(subtotal, invoiceData.currency));
-    setDataField(doc, 'total-vat', formatCurrency(totalVat, invoiceData.currency));
-    setDataField(doc, 'total', formatCurrency(total, invoiceData.currency));
-
-    // Notes
-    setDataField(doc, 'notes', invoiceData.notes || '');
-
-    // Populate Items (correct VAT and total calculations per row)
+    // Populate Items (with VAT asterisk for exempt)
     const itemsContainer = doc.getElementById('invoice-items-body');
     if (itemsContainer && invoiceData.items && Array.isArray(invoiceData.items)) {
         itemsContainer.innerHTML = invoiceData.items.map(item => {
             const quantity = Number(item.quantity ?? 1);
             const unitPrice = Number(item.price ?? item.unit_price ?? 0);
-            const vatRate = 0.16; // Always use 16% VAT for display
+            let vatRate = item.vat ?? item.vat_rate ?? 16;
+            let vatCell = '';
+            let isExempt = false;
+            if (vatRate === 0 || vatRate === '0' || vatRate === 'other') {
+                vatCell = `${vatRate}<sup>*</sup>`;
+                isExempt = true;
+                hasExempt = true;
+            } else {
+                vatCell = `${vatRate}%`;
+            }
             const lineSubtotal = quantity * unitPrice;
-            const vatAmount = lineSubtotal * vatRate;
+            const vatAmount = isExempt ? 0 : (lineSubtotal * (Number(vatRate) / 100));
+            totalVat += vatAmount;
             const lineTotal = lineSubtotal + vatAmount;
             return `
                 <tr>
                     <td>${item.description || ''}</td>
                     <td>${quantity}</td>
                     <td>${formatCurrency(unitPrice, invoiceData.currency)}</td>
-                    <td>${formatCurrency(vatAmount, invoiceData.currency)}</td>
+                    <td>${vatCell}</td>
                     <td>${formatCurrency(lineTotal, invoiceData.currency)}</td>
                 </tr>
             `;
         }).join('');
     }
+
+    // Totals section
+    const totalsContainer = doc.querySelector('.invoice-totals');
+    if (totalsContainer) {
+        let totalsHtml = `<div class="total-row"><span>Subtotal:</span> <span>${formatCurrency(subtotal, invoiceData.currency)}</span></div>`;
+        if (discount > 0) {
+            totalsHtml += `<div class="total-row"><span>Discount:</span> <span>${formatCurrency(discount, invoiceData.currency)}</span></div>`;
+            totalsHtml += `<div class="total-row"><span>Subtotal after Discount:</span> <span>${formatCurrency(subtotalAfterDiscount, invoiceData.currency)}</span></div>`;
+        }
+        totalsHtml += `<div class="total-row"><span>VAT:</span> <span>${formatCurrency(totalVat, invoiceData.currency)}</span></div>`;
+        totalsHtml += `<div class="grand-total"><span>Total:</span> <span>${formatCurrency(subtotalAfterDiscount + totalVat, invoiceData.currency)}</span></div>`;
+        totalsContainer.innerHTML = totalsHtml;
+    }
+    // Remove any extra VAT/TOTAL lines outside the main totals section (if present in template, clear them)
+    const extraVat = doc.getElementById('extra-vat');
+    if (extraVat) extraVat.textContent = '';
+    const extraTotal = doc.getElementById('extra-total');
+    if (extraTotal) extraTotal.textContent = '';
+
+    // Notes section with exemption reason
+    let notes = invoiceData.notes || invoiceData.invoice?.notes || '';
+    if (hasExempt) {
+        notes += '<br>Items marked with * are VAT exempt for the following reason: [Legal VAT exemption]';
+    }
+    setDataField(doc, 'notes', notes);
 
     return doc.documentElement.outerHTML;
 }
@@ -689,7 +720,7 @@ window.invoiceTemplateManager = {
     }
 };
 
-// Template Manager class for handling template loading and processing
+// --- BEGIN: Uncomment legacy TemplateManager class (for compatibility) ---
 class TemplateManager {
     constructor() {
         this.templates = new Map();
@@ -697,57 +728,54 @@ class TemplateManager {
             <div class="invoice-template">
                 <div class="invoice-header">
                     <div class="company-info">
-                        <h2>\${company_name}</h2>
-                        <p>\${company_address}</p>
+                        <h2>${company_name}</h2>
+                        <p>${company_address}</p>
                     </div>
                     <div class="invoice-info">
                         <h1>INVOICE</h1>
-                        <p>Invoice #: \${invoice_number}</p>
-                        <p>Date: \${issue_date}</p>
-                        <p>Due Date: \${due_date}</p>
+                        <p>Invoice #: ${invoice_number}</p>
+                        <p>Date: ${issue_date}</p>
+                        <p>Due Date: ${due_date}</p>
                     </div>
                 </div>
                 <div class="client-info">
                     <h3>Bill To:</h3>
-                    <p>\${client_name}</p>
-                    <p>\${client_address}</p>
-                    <p>Tax ID: \${client_tax_id}</p>
+                    <p>${client_name}</p>
+                    <p>${client_address}</p>
+                    <p>Tax ID: ${client_tax_id}</p>
                 </div>
                 <div class="invoice-items">
-                    \${items_table}
+                    ${items_table}
                 </div>
                 <div class="invoice-summary">
                     <div class="summary-row">
                         <span>Subtotal:</span>
-                        <span>\${subtotal}</span>
+                        <span>${subtotal}</span>
                     </div>
                     <div class="summary-row">
                         <span>VAT (16%):</span>
-                        <span>\${vat}</span>
+                        <span>${vat}</span>
                     </div>
                     <div class="summary-row total">
                         <span>Total:</span>
-                        <span>\${total}</span>
+                        <span>${total}</span>
                     </div>
                 </div>
                 <div class="invoice-notes">
-                    <p>\${notes}</p>
+                    <p>${notes}</p>
                 </div>
             </div>`;
     }
-
     async getTemplate(name) {
         try {
             if (this.templates.has(name)) {
                 return this.templates.get(name);
             }
-
             const response = await fetch(`templates/${name}.html`);
             if (!response.ok) {
                 console.warn(`Template ${name} not found, using default template`);
                 return this.defaultTemplate;
             }
-
             const template = await response.text();
             this.templates.set(name, template);
             return template;
@@ -756,12 +784,11 @@ class TemplateManager {
             return this.defaultTemplate;
         }
     }
-
     processTemplate(template, data) {
         return template.replace(/\${(.*?)}/g, (match, key) => {
             return data[key.trim()] ?? '';
         });
     }
 }
-
 window.templateManager = new TemplateManager();
+// --- END: Uncomment legacy TemplateManager class ---

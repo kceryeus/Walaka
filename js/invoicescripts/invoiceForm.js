@@ -129,6 +129,10 @@ class InvoiceForm {
             const currency = document.getElementById('currency');
             const notes = document.getElementById('notes');
             const paymentTerms = document.getElementById('paymentTerms');
+            const serie = document.getElementById('serie')?.value || '';
+            if (!serie) serie = 'A';
+            const discountType = document.getElementById('discountType')?.value || 'none';
+            const discountValue = parseFloat(document.getElementById('discountValue')?.value) || 0;
 
             console.log('Form elements found:', {
                 clientList: !!clientList,
@@ -137,7 +141,10 @@ class InvoiceForm {
                 dueDate: !!dueDate,
                 currency: !!currency,
                 notes: !!notes,
-                paymentTerms: !!paymentTerms
+                paymentTerms: !!paymentTerms,
+                serie: !!serie,
+                discountType: !!discountType,
+                discountValue: !!discountValue
             });
 
             // Validate all required fields exist
@@ -172,13 +179,6 @@ class InvoiceForm {
 
             console.log('Company data:', companyData);
 
-            // Calculate totals
-            const subtotal = parseAmount(document.getElementById('subtotal')?.textContent || '0');
-            const totalVat = parseAmount(document.getElementById('totalVat')?.textContent || '0');
-            const total = parseAmount(document.getElementById('invoiceTotal')?.textContent || '0');
-
-            console.log('Totals calculated:', { subtotal, totalVat, total });
-
             // Collect items
             const items = [];
             const itemRows = document.querySelectorAll('.item-row');
@@ -188,13 +188,25 @@ class InvoiceForm {
                 const description = row.querySelector('.item-description')?.value;
                 const quantity = parseAmount(row.querySelector('.item-quantity')?.value) || 0;
                 const price = parseAmount(row.querySelector('.item-price')?.value) || 0;
-                const vat = parseAmount(row.querySelector('.item-vat')?.textContent) || 0;
-                const total = parseAmount(row.querySelector('.item-total')?.textContent) || 0;
+                // VAT rate logic
+                let vatRate = 0.16; // default
+                const vatSelect = row.querySelector('.item-vat-rate');
+                if (vatSelect) {
+                    if (vatSelect.value === 'other') {
+                        const vatOther = row.querySelector('.item-vat-other');
+                        vatRate = vatOther && vatOther.value ? parseFloat(vatOther.value) / 100 : 0;
+                    } else {
+                        vatRate = parseFloat(vatSelect.value);
+                    }
+                }
+                const vat = price * quantity * vatRate;
+                const total = price * quantity + vat;
 
                 console.log(`Item ${index + 1}:`, {
                     description,
                     quantity,
                     price,
+                    vatRate,
                     vat,
                     total
                 });
@@ -204,11 +216,32 @@ class InvoiceForm {
                         description,
                         quantity,
                         price,
+                        vatRate,
                         vat,
                         total
                     });
                 }
             });
+
+            // Calculate subtotal
+            const subtotal = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
+            // Calculate discount
+            let discountAmount = 0;
+            let discountPercent = 0;
+            if (discountType === 'percent') {
+                discountPercent = discountValue;
+                discountAmount = subtotal * (discountPercent / 100);
+            } else if (discountType === 'fixed') {
+                discountAmount = discountValue;
+            }
+            // Subtotal after discount
+            const subtotalAfterDiscount = Math.max(subtotal - discountAmount, 0);
+            // Calculate total VAT
+            const totalVat = items.reduce((sum, item) => sum + (item.price * item.quantity - (discountType === 'percent' ? item.price * item.quantity * (discountPercent / 100) : 0)) * item.vatRate, 0);
+            // Calculate total
+            const total = subtotalAfterDiscount + totalVat;
+
+            console.log('Totals calculated:', { subtotal, discountAmount, discountPercent, subtotalAfterDiscount, totalVat, total });
 
             // Validate invoice has items
             if (items.length === 0) {
@@ -218,6 +251,7 @@ class InvoiceForm {
             // Construct the complete invoice data object
             const invoiceData = {
                 invoiceNumber: invoiceNumber.value,
+                serie,
                 issueDate: issueDate.value,
                 dueDate: dueDate.value,
                 currency: currency.value || 'MZN',
@@ -234,8 +268,13 @@ class InvoiceForm {
                 notes: notes?.value || '',
                 items: items,
                 subtotal: subtotal,
-                totalVat: totalVat,
-                total: total
+                discountType,
+                discountValue,
+                discountAmount,
+                discountPercent,
+                subtotalAfterDiscount,
+                totalVat,
+                total
             };
 
             console.log('Complete invoice data:', invoiceData);
@@ -255,30 +294,66 @@ class InvoiceForm {
     async saveInvoice() {
         try {
             const invoiceData = this.collectInvoiceData();
-            
+
             // Always fetch the latest exchange rate for non-MZN currencies before saving
             if (this.currentCurrency !== 'MZN') {
                 await this.updateExchangeRate(this.currentCurrency);
             }
 
-            // Debug: Log the current currency and rate
-            console.log('Saving invoice with currency:', invoiceData.currency, 'and rate:', this.currentRate);
+            // Fetch user_id from Supabase session
+            let userId = null;
+            try {
+                const session = await window.supabase.auth.getSession();
+                userId = session.data?.session?.user?.id;
+            } catch (e) {
+                console.error('Could not fetch user session:', e);
+            }
+            if (!userId) {
+                throw new Error('User not authenticated. Please log in.');
+            }
+
+            // Find client_id from the selected client name (must match clients.customer_id)
+            let clientId = null;
+            if (window.clients && Array.isArray(window.clients)) {
+                const selectedClient = window.clients.find(c => c.customer_name === invoiceData.client.name);
+                if (selectedClient) {
+                    clientId = selectedClient.customer_id || selectedClient.id || null;
+                }
+            }
+            if (!clientId) {
+                throw new Error('Client not found or missing client_id. Please select a valid client.');
+            }
+
+            // Optionally, get environment_id if available
+            let environmentId = null;
+            if (window.environmentId) {
+                environmentId = window.environmentId;
+            }
 
             // Format data for Supabase storage
             const formattedData = {
                 "invoiceNumber": invoiceData.invoiceNumber,
+                serie: invoiceData.serie,
                 issue_date: invoiceData.issueDate,
                 due_date: invoiceData.dueDate,
                 status: invoiceData.status || 'pending',
                 currency: invoiceData.currency || 'MZN',
+                client_id: clientId,
                 client_name: invoiceData.client.name,
                 subtotal: invoiceData.subtotal,
+                desconto: invoiceData.discountType === 'fixed' ? invoiceData.discountValue : null,
+                desconto_percent: invoiceData.discountType === 'percent' ? invoiceData.discountValue : null,
+                subtotal_sem_iva: invoiceData.subtotalAfterDiscount,
                 vat_amount: invoiceData.totalVat,
                 total_amount: invoiceData.total,
                 notes: invoiceData.notes || '',
                 payment_terms: invoiceData.paymentTerms || 'net30',
-                currency_rate: this.currentRate || 1
+                currency_rate: this.currentRate || 1,
+                user_id: userId
             };
+            if (environmentId) {
+                formattedData.environment_id = environmentId;
+            }
 
             // Debug: Log the insert payload
             console.log('Insert payload:', formattedData);
@@ -638,6 +713,9 @@ document.getElementById('invoiceForm')?.addEventListener('submit', handleInvoice
     const currency = document.getElementById('currency').value;
     const paymentTerms = document.getElementById('paymentTerms').options[document.getElementById('paymentTerms').selectedIndex].text;
     const notes = document.getElementById('notes').value;
+    const serie = document.getElementById('serie')?.value || '';
+    const discountType = document.getElementById('discountType')?.value || 'none';
+    const discountValue = parseFloat(document.getElementById('discountValue')?.value) || 0;
     // Items
     const itemRows = document.querySelectorAll('#itemsTable .item-row');
     let itemsHtml = '';
@@ -656,6 +734,8 @@ document.getElementById('invoiceForm')?.addEventListener('submit', handleInvoice
       <div><strong>Invoice #:</strong> ${invoiceNumber} | <strong>Issue:</strong> ${issueDate} | <strong>Due:</strong> ${dueDate}</div>
       <div><strong>Currency:</strong> ${currency} | <strong>Terms:</strong> ${paymentTerms}</div>
       <div><strong>Notes:</strong> ${notes || '—'}</div>
+      <div><strong>Serie:</strong> ${serie}</div>
+      <div><strong>Discount:</strong> ${discountType === 'percent' ? `${discountValue}%` : `R$ ${discountValue.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}</div>
       <table class="items-table" style="margin-top:12px;width:100%"><thead><tr><th>Description</th><th>Qty</th><th>Unit Price</th><th>VAT</th><th>Total</th></tr></thead><tbody>${itemsHtml}</tbody></table>
       <div style="margin-top:16px;text-align:right;">
         <button type="button" class="btn secondary-btn" id="previewInvoiceBtn">

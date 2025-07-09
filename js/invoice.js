@@ -1176,17 +1176,26 @@ document.addEventListener('DOMContentLoaded', async function() {
       const desc = row.querySelector('.item-description').value;
       const qty = parseAmount(row.querySelector('.item-quantity').value);
       const price = parseAmount(row.querySelector('.item-price').value);
-      const vat = row.querySelector('.item-vat').textContent;
-      const total = row.querySelector('.item-total').textContent;
+      const vat = row.querySelector('.item-vat') ? row.querySelector('.item-vat').textContent : '0.00';
+      const total = row.querySelector('.item-total') ? row.querySelector('.item-total').textContent : '0.00';
       if (desc && qty > 0) {
         itemsHtml += `<tr><td>${desc}</td><td>${qty}</td><td>${price}</td><td>${vat}</td><td>${total}</td></tr>`;
       }
     });
+    const serie = document.getElementById('serie')?.value || '';
+    const discountType = document.getElementById('discountType')?.value || 'none';
+    const discountValue = parseFloat(document.getElementById('discountValue')?.value) || 0;
+    const discountAmount = document.getElementById('discountTotal')?.textContent || '0.00';
+    const subtotalAfterDiscount = document.getElementById('subtotalAfterDiscount')?.textContent || '0.00';
+    // Invoice number display
+    let invoiceNumberDisplay = invoiceNumber;
+    if (serie) invoiceNumberDisplay = `${serie}/${invoiceNumber}`;
     const reviewHtml = `
       <div><strong>Client:</strong> ${clientName} (${clientEmail}, NUIT: ${clientTaxId})<br><strong>Address:</strong> ${clientAddress}</div>
-      <div><strong>Invoice #:</strong> ${invoiceNumber} | <strong>Issue:</strong> ${issueDate} | <strong>Due:</strong> ${dueDate}</div>
+      <div><strong>Invoice #:</strong> ${invoiceNumberDisplay} | <strong>Issue:</strong> ${issueDate} | <strong>Due:</strong> ${dueDate}</div>
       <div><strong>Currency:</strong> ${currency} | <strong>Terms:</strong> ${paymentTerms}</div>
-      <div><strong>Notes:</strong> ${notes || '—'}</div>
+      <div><strong>Discount:</strong> ${discountType === 'percent' ? discountValue + '%' : discountAmount} | <strong>Subtotal after Discount:</strong> ${subtotalAfterDiscount}</div>
+      <div><strong>Notes:</strong> ${notes || '\u2014'}</div>
       <table class="items-table" style="margin-top:12px;width:100%"><thead><tr><th>Description</th><th>Qty</th><th>Unit Price</th><th>VAT</th><th>Total</th></tr></thead><tbody>${itemsHtml}</tbody></table>
       <div style="margin-top:16px;text-align:right;">
         <button type="button" class="btn secondary-btn" id="previewInvoiceBtn">

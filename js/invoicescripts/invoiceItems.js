@@ -220,34 +220,90 @@ class InvoiceItems {
     calculateRowTotal(row) {
         const quantity = parseFloat(row.querySelector('.item-quantity').value) || 0;
         const price = parseFloat(row.querySelector('.item-price').value) || 0;
-        
+        let vatRate = 0.16;
+        const vatSelect = row.querySelector('.item-vat-rate');
+        if (vatSelect) {
+            if (vatSelect.value === 'other') {
+                const vatOther = row.querySelector('.item-vat-other');
+                vatRate = vatOther && vatOther.value ? parseFloat(vatOther.value) / 100 : 0;
+            } else {
+                vatRate = parseFloat(vatSelect.value);
+            }
+        }
         const subtotal = quantity * price;
-        const vat = subtotal * 0.16; // 16% VAT
-        
-        row.querySelector('.item-vat').textContent = this.formatCurrency(vat);
-        row.querySelector('.item-total').textContent = this.formatCurrency(subtotal + vat);
+        const vat = subtotal * vatRate;
+        const itemVatSpan = row.querySelector('.item-vat');
+        const itemTotalSpan = row.querySelector('.item-total');
+        if (itemVatSpan) itemVatSpan.textContent = vat.toFixed(2);
+        if (itemTotalSpan) itemTotalSpan.textContent = (subtotal + vat).toFixed(2);
     }
 
     updateInvoiceTotals() {
         const rows = document.querySelectorAll('.item-row');
         let subtotal = 0;
         let totalVat = 0;
-        
+        // Gather discount info
+        const discountType = document.getElementById('discountType')?.value || 'none';
+        const discountValue = parseFloat(document.getElementById('discountValue')?.value) || 0;
+        // Calculate subtotal
         rows.forEach(row => {
             const quantity = parseFloat(row.querySelector('.item-quantity').value) || 0;
             const price = parseFloat(row.querySelector('.item-price').value) || 0;
-            
             const rowSubtotal = quantity * price;
-            const rowVat = rowSubtotal * 0.16;
-            
             subtotal += rowSubtotal;
-            totalVat += rowVat;
         });
-        
-        const grandTotal = subtotal + totalVat;
-        document.getElementById('subtotal').textContent = this.formatCurrency(subtotal);
-        document.getElementById('totalVat').textContent = this.formatCurrency(totalVat);
-        document.getElementById('invoiceTotal').textContent = this.formatCurrency(grandTotal);
+        // Calculate discount
+        let discountAmount = 0;
+        let discountPercent = 0;
+        if (discountType === 'percent') {
+            discountPercent = discountValue;
+            discountAmount = subtotal * (discountPercent / 100);
+        } else if (discountType === 'fixed') {
+            discountAmount = discountValue;
+        }
+        // Subtotal after discount
+        const subtotalAfterDiscount = Math.max(subtotal - discountAmount, 0);
+        // Calculate VAT for each item based on discounted price
+        rows.forEach(row => {
+            const quantity = parseFloat(row.querySelector('.item-quantity').value) || 0;
+            const price = parseFloat(row.querySelector('.item-price').value) || 0;
+            let vatRate = 0.16;
+            const vatSelect = row.querySelector('.item-vat-rate');
+            if (vatSelect) {
+                if (vatSelect.value === 'other') {
+                    const vatOther = row.querySelector('.item-vat-other');
+                    vatRate = vatOther && vatOther.value ? parseFloat(vatOther.value) / 100 : 0;
+                } else {
+                    vatRate = parseFloat(vatSelect.value);
+                }
+            }
+            // Proportional discount for percent, or fixed distributed by item share
+            let itemDiscount = 0;
+            if (discountType === 'percent') {
+                itemDiscount = price * quantity * (discountPercent / 100);
+            } else if (discountType === 'fixed' && subtotal > 0) {
+                itemDiscount = discountAmount * ((price * quantity) / subtotal);
+            }
+            const discountedSubtotal = Math.max(price * quantity - itemDiscount, 0);
+            const vat = discountedSubtotal * vatRate;
+            const itemVatSpan = row.querySelector('.item-vat');
+            const itemTotalSpan = row.querySelector('.item-total');
+            if (itemVatSpan) itemVatSpan.textContent = vat.toFixed(2);
+            if (itemTotalSpan) itemTotalSpan.textContent = (discountedSubtotal + vat).toFixed(2);
+            totalVat += vat;
+        });
+        const grandTotal = subtotalAfterDiscount + totalVat;
+        // Update displayed totals
+        const subtotalSpan = document.getElementById('subtotal');
+        const discountSpan = document.getElementById('discountTotal');
+        const subtotalAfterDiscountSpan = document.getElementById('subtotalAfterDiscount');
+        const totalVatSpan = document.getElementById('totalVat');
+        const invoiceTotalSpan = document.getElementById('invoiceTotal');
+        if (subtotalSpan) subtotalSpan.textContent = subtotal.toFixed(2);
+        if (discountSpan) discountSpan.textContent = discountAmount.toFixed(2);
+        if (subtotalAfterDiscountSpan) subtotalAfterDiscountSpan.textContent = subtotalAfterDiscount.toFixed(2);
+        if (totalVatSpan) totalVatSpan.textContent = totalVat.toFixed(2);
+        if (invoiceTotalSpan) invoiceTotalSpan.textContent = grandTotal.toFixed(2);
 
         // Show converted total if not MZN
         const currency = window.invoiceForm?.currentCurrency || 'MZN';

@@ -1,4 +1,4 @@
-// Map template names to file paths 
+/* Map template names to file paths 
 const TEMPLATE_PATHS = {
     'classic': 'template01.html',
     'modern': 'template02.html', 
@@ -9,7 +9,7 @@ const TEMPLATE_PATHS = {
  * Load a template by name
  * @param {string} templateName - The name of the template to load
  * @returns {Promise<string>} The template HTML content
- */
+ 
 function loadTemplate(templateName) {
     const templateFile = TEMPLATE_PATHS[templateName] || 'template01.html'; // Default to classic
     
@@ -28,7 +28,7 @@ function loadTemplate(templateName) {
 /**
  * Fallback template in case loading fails
  * @returns {string} The fallback template HTML
- */
+ 
 function fallbackTemplate() {
     return `
         <!DOCTYPE html>
@@ -120,7 +120,7 @@ function fallbackTemplate() {
 /**
  * Load company logo from settings
  * @returns {Promise<string>} The logo URL
- */
+ 
 async function loadCompanyLogo() {
     try {
         const { data, error } = await supabase
@@ -141,7 +141,7 @@ async function loadCompanyLogo() {
  * @param {Document} doc - The document to populate
  * @param {string} templateContent - The template HTML content
  * @param {Object} invoiceData - The invoice data to populate with
- */
+ 
 async function populateTemplate(templateContent, invoiceData) {
     const parser = new DOMParser();
     const doc = parser.parseFromString(templateContent, 'text/html');
@@ -149,7 +149,7 @@ async function populateTemplate(templateContent, invoiceData) {
     // Convert string values to numbers for calculations
     const subtotal = parseFloat(invoiceData.subtotal) || 0;
     const totalVat = parseFloat(invoiceData.totalVat) || 0;
-    const discount = parseFloat(invoiceData.discount) || 0;
+    const discount = parseFloat(invoiceData.discountAmount || invoiceData.discount || 0);
     const total = parseFloat(invoiceData.total) || 0;
 
     // Company Information 
@@ -160,7 +160,8 @@ async function populateTemplate(templateContent, invoiceData) {
     setDataField(doc, 'display-company-nuit', invoiceData.company?.nuit);
 
     // Invoice Details
-    setDataField(doc, 'display-invoice-number', invoiceData.invoiceNumber);
+    let invoiceNumberDisplay = invoiceData.serie ? `${invoiceData.serie}/${invoiceData.invoiceNumber}` : invoiceData.invoiceNumber;
+    setDataField(doc, 'display-invoice-number', invoiceNumberDisplay);
     setDataField(doc, 'display-issue-date', invoiceData.issueDate);
     setDataField(doc, 'display-due-date', invoiceData.dueDate);
     setDataField(doc, 'display-project-name', invoiceData.projectName);
@@ -178,22 +179,40 @@ async function populateTemplate(templateContent, invoiceData) {
     setDataField(doc, 'display-discount', `${invoiceData.currency} ${discount.toFixed(2)}`);
     setDataField(doc, 'display-total', `${invoiceData.currency} ${total.toFixed(2)}`);
 
-    // Notes
-    setDataField(doc, 'display-notes', invoiceData.notes);
-
+    // Notes (append VAT exemption note if needed)
+    let notes = invoiceData.notes || '';
+    let hasExempt = false;
+    let exemptionReason = invoiceData.exemptionReason || 'Legal VAT exemption';
     // Populate Items
     const itemsContainer = doc.getElementById('display-items');
     if (itemsContainer && invoiceData.items) {
-        itemsContainer.innerHTML = invoiceData.items.map(item => `
-            <tr>
+        itemsContainer.innerHTML = invoiceData.items.map(item => {
+            let isExempt = false;
+            let vatDisplay = '';
+            if (parseFloat(item.vatRate) === 0 || item.vatRate === '0' || item.vatRate === 0) {
+                isExempt = true;
+                hasExempt = true;
+                vatDisplay = '0%<sup>*</sup>';
+            } else if (item.vatRate === 'other' || item.vatRate === undefined) {
+                isExempt = true;
+                hasExempt = true;
+                vatDisplay = `${item.vat || 'Other'}<sup>*</sup>`;
+            } else {
+                vatDisplay = `${(parseFloat(item.vatRate) * 100).toFixed(2)}%`;
+            }
+            return `<tr>
                 <td>${item.description}</td>
                 <td>${item.quantity}</td>
                 <td>${invoiceData.currency} ${parseFloat(item.price).toFixed(2)}</td>
-                <td>${parseFloat(item.vat).toFixed(2)}%</td>
+                <td>${vatDisplay}</td>
                 <td>${invoiceData.currency} ${parseFloat(item.total).toFixed(2)}</td>
-            </tr>
-        `).join('');
+            </tr>`;
+        }).join('');
     }
+    if (hasExempt) {
+        notes = (notes ? notes + '\n' : '') + 'Items marked with * are VAT exempt for the following reason: ' + exemptionReason;
+    }
+    setDataField(doc, 'display-notes', notes);
 
     return doc.documentElement.outerHTML;
 }
@@ -209,7 +228,7 @@ function setDataField(doc, id, value) {
  * Generate invoice HTML from data
  * @param {Object} invoiceData - The invoice data
  * @returns {Promise<string>} The generated HTML
- */
+ 
 async function generateInvoiceHTML(invoiceData) {
     try {
         // Get selected template
@@ -234,11 +253,11 @@ async function generateInvoiceHTML(invoiceData) {
  * Preview invoice in modal
  * @param {Object} invoiceData - The invoice data to preview
  * @returns {Promise<void>}
- */
+ 
 async function previewInvoice(invoiceData) {
     try {
         // Load template based on selected template or default
-        const templateName = invoiceData.template?.name || 'template01';
+        const templateName = invoiceData.template?.name || 'classic';
         const templateContent = await loadTemplate(templateName);
         
         // Create temporary container
@@ -246,7 +265,7 @@ async function previewInvoice(invoiceData) {
         container.innerHTML = templateContent;
         
         // Populate template with data
-        populateTemplate(container, templateContent, invoiceData);
+        populateTemplate(container, invoiceData);
         
         // Insert into preview container
         const previewContainer = document.getElementById('invoicePreviewContent');
@@ -267,3 +286,4 @@ window.invoiceTemplateManager = {
     populateTemplate,
     previewInvoice
 };
+*/
