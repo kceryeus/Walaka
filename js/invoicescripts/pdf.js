@@ -148,7 +148,7 @@ function formatClientInfo(client) {
  * @param {Object} invoiceData - The invoice data
  * @returns {Promise<Blob>} - The generated PDF blob
  */
-async function generatePDF(invoiceData) {
+async function generatePDF(invoiceData, options = {}) {
     try {
         console.log('Generating PDF with data:', invoiceData);
 
@@ -233,6 +233,39 @@ async function generatePDF(invoiceData) {
             };
         }) || [];
 
+        // If we have pagination and no items from invoiceData, get them from pagination module
+        if (formattedItems.length === 0 && window.invoiceItemsPagination && typeof window.invoiceItemsPagination.getAllItemsForPDF === 'function') {
+            const paginatedItems = window.invoiceItemsPagination.getAllItemsForPDF();
+            if (paginatedItems.length > 0) {
+                // Convert DOM elements to formatted items
+                formattedItems.push(...paginatedItems.map(row => {
+                    const description = row.querySelector('.item-description')?.value || '';
+                    const quantity = parseFloat(row.querySelector('.item-quantity')?.value) || 0;
+                    const price = parseFloat(row.querySelector('.item-price')?.value) || 0;
+                    let vatRate = 0.16; // default
+                    const vatSelect = row.querySelector('.item-vat-rate');
+                    if (vatSelect) {
+                        if (vatSelect.value === 'other') {
+                            const vatOther = row.querySelector('.item-vat-other');
+                            vatRate = vatOther && vatOther.value ? parseFloat(vatOther.value) / 100 : 0;
+                        } else {
+                            vatRate = parseFloat(vatSelect.value);
+                        }
+                    }
+                    const subtotal = quantity * price;
+                    const vatAmount = subtotal * vatRate;
+                    return {
+                        description,
+                        quantity,
+                        price,
+                        vatRate,
+                        vat: vatAmount,
+                        total: subtotal + vatAmount
+                    };
+                }).filter(item => item.description && item.quantity > 0));
+            }
+        }
+
         // Calculate discount
         let discountType = invoiceData.discountType || 'none';
         let discountValue = invoiceData.discountValue || 0;
@@ -268,6 +301,11 @@ async function generatePDF(invoiceData) {
         // Get business profile
         const businessProfile = await getBusinessProfile();
         // Format the data for the template (flattened, not nested under 'invoice')
+        const serie = invoiceData.serie || invoiceData.invoiceSerie || '';
+        let invoiceNumber = invoiceData.invoiceNumber || invoiceData.invoice_number || '';
+        if (!invoiceNumber) invoiceNumber = await getNextInvoiceNumber();
+        // Only combine if both are present
+        const displayInvoiceNumber = serie && invoiceNumber ? `${serie}/${invoiceNumber}` : invoiceNumber || serie || 'Draft Invoice';
         const formattedData = {
             // Company info
             company: {
@@ -280,11 +318,15 @@ async function generatePDF(invoiceData) {
                 website: businessProfile.website || ''
             },
             // Invoice details (flattened)
-            invoiceNumber: invoiceData.invoiceNumber || await getNextInvoiceNumber(),
+            invoice: {
+                serie: serie,
+                number: invoiceNumber,
+                displayNumber: displayInvoiceNumber,
                 issueDate: invoiceData.issueDate || invoiceData.issue_date || new Date().toISOString().split('T')[0],
                 dueDate: invoiceData.dueDate || invoiceData.due_date || new Date(Date.now() + 30*24*60*60*1000).toISOString().split('T')[0],
                 status: invoiceData.status || 'draft',
-                projectName: invoiceData.projectName || '',
+                projectName: invoiceData.projectName || ''
+            },
             subtotal,
             discountType,
             discountValue,
@@ -292,7 +334,7 @@ async function generatePDF(invoiceData) {
             subtotalAfterDiscount,
             totalVat,
             total,
-                notes: invoiceData.notes || '',
+            notes: invoiceData.notes || '',
             paymentTerms: invoiceData.paymentTerms || 'net30',
             // Client info
             client: client,
@@ -315,7 +357,7 @@ async function generatePDF(invoiceData) {
             <head>
                 <meta charset="UTF-8">
                 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                <title>Invoice ${formattedData.invoiceNumber}</title>
+                <title>Invoice ${formattedData.invoice.displayNumber}</title>
                 <style>
                     ${template.styles}
                 </style>
@@ -328,6 +370,29 @@ async function generatePDF(invoiceData) {
         
         // Populate template with data
         let populatedHtml = await window.invoiceTemplateManager.populateTemplate(html, formattedData);
+
+        // --- Watermark injection for preview/proforma ---
+        if (options.watermark) {
+            const watermarkStyle = `
+                <style>
+                .pdf-watermark {
+                    position: fixed;
+                    top: 40%;
+                    left: 50%;
+                    transform: translate(-50%, -50%) rotate(-30deg);
+                    font-size: 5.75em;
+                    color: rgba(200, 200, 200, 0.25);
+                    z-index: 9999;
+                    pointer-events: none;
+                    user-select: none;
+                    font-weight: bold;
+                    white-space: nowrap;
+                }
+                </style>
+                <div class="pdf-watermark">${options.watermark}</div>
+            `;
+            populatedHtml = populatedHtml.replace('<body>', `<body>${watermarkStyle}`);
+        }
 
         // Determine if conversion is needed
         let showConversion = false;
@@ -376,7 +441,7 @@ async function generatePDF(invoiceData) {
         // PDF Options
         const opt = {
             margin: 10,
-            filename: `Invoice-${formattedData.invoiceNumber}.pdf`,
+            filename: `Invoice-${formattedData.invoice.displayNumber}.pdf`,
             image: { type: 'jpeg', quality: 0.98 },
             html2canvas: { 
                 scale: 2,

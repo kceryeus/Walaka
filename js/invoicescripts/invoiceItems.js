@@ -20,17 +20,6 @@ class InvoiceItems {
         this.handleClick = this.handleClick.bind(this);
         document.addEventListener('input', this.handleInput);
         document.addEventListener('click', this.handleClick);
-        // Setup add item button (for adding new rows, but not calculation)
-        const addItemBtn = document.getElementById('addItemBtn');
-        if (addItemBtn) {
-            console.log('Add item button found, setting up click handler');
-            addItemBtn.addEventListener('click', () => {
-                console.log('Add item button clicked');
-                this.addInvoiceItem();
-            });
-        } else {
-            console.warn('Add item button not found');
-        }
         // Setup initial remove buttons (for removing rows, but not calculation)
         this.setupRemoveButtons();
     }

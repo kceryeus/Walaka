@@ -4,6 +4,7 @@ class InvoiceNumberGenerator {
         this.prefix = 'INV';
         this.year = new Date().getFullYear();
         this.lock = false; // Prevent concurrent calls for the same instance
+        console.log('[InvoiceNumberGenerator] Initialized with year:', this.year, 'prefix:', this.prefix, 'supabase:', !!this.supabase);
     }
 
     /**
@@ -13,12 +14,14 @@ class InvoiceNumberGenerator {
      * @returns {Promise<string>} - The next invoice number
      */
     async getNextNumber(userId, serie) {
+        console.log('[InvoiceNumberGenerator] getNextNumber called with userId:', userId, 'serie:', serie);
         if (!this.supabase) throw new Error('Supabase client not found.');
         if (this.lock) throw new Error('Invoice number generation is already in progress for this instance.');
         this.lock = true;
         try {
             if (!userId) throw new Error('User ID is required for invoice number generation.');
             if (!serie) serie = 'A';
+            console.log('[InvoiceNumberGenerator] Querying latest invoice for user:', userId, 'year:', this.year, 'serie:', serie);
             // Query latest invoice for this user, year, and serie
             const { data: lastInvoiceData, error: fetchLastError } = await this.supabase
                 .from('invoices')
@@ -28,16 +31,27 @@ class InvoiceNumberGenerator {
                 .ilike('invoiceNumber', `${serie}/INV-${this.year}-%`)
                 .order('invoiceNumber', { ascending: false })
                 .limit(1);
-            if (fetchLastError) throw fetchLastError;
+            console.log('[InvoiceNumberGenerator] Supabase query result:', { lastInvoiceData, fetchLastError });
             let sequence = 1;
+            if (fetchLastError) {
+                console.error('[InvoiceNumberGenerator] Error fetching last invoice:', fetchLastError);
+                throw fetchLastError;
+            }
             if (lastInvoiceData && lastInvoiceData.length > 0) {
                 const lastNumber = lastInvoiceData[0].invoiceNumber;
+                console.log('[InvoiceNumberGenerator] Last invoice number found:', lastNumber);
                 const matches = lastNumber.match(/INV-\d{4}-(\d+)$/);
                 if (matches && matches[1]) {
                     sequence = parseInt(matches[1], 10) + 1;
+                    console.log('[InvoiceNumberGenerator] Extracted sequence from last invoice:', matches[1], 'Next sequence:', sequence);
+                } else {
+                    console.warn('[InvoiceNumberGenerator] Could not extract sequence from last invoice number:', lastNumber);
                 }
+            } else {
+                console.log('[InvoiceNumberGenerator] No previous invoice found. Starting sequence at 1.');
             }
             const newInvoiceNumber = `${serie}/INV-${this.year}-${String(sequence).padStart(5, '0')}`;
+            console.log('[InvoiceNumberGenerator] Generated new invoice number:', newInvoiceNumber);
             // Ensure uniqueness
             const { data: existingInvoice, error: checkError } = await this.supabase
                 .from('invoices')
@@ -46,17 +60,27 @@ class InvoiceNumberGenerator {
                 .eq('serie', serie)
                 .eq('invoiceNumber', newInvoiceNumber)
                 .maybeSingle();
-            if (checkError && checkError.code !== 'PGRST116') throw checkError;
+            console.log('[InvoiceNumberGenerator] Uniqueness check result:', { existingInvoice, checkError });
+            if (checkError && checkError.code !== 'PGRST116') {
+                console.error('[InvoiceNumberGenerator] Error checking uniqueness:', checkError);
+                throw checkError;
+            }
             if (existingInvoice) {
+                console.warn('[InvoiceNumberGenerator] Invoice number already exists, incrementing sequence and retrying.');
                 sequence++;
+                // Log recursive call
+                console.log('[InvoiceNumberGenerator] Recursively calling getNextNumber with sequence:', sequence);
+                this.lock = false; // Release lock before recursion
                 return this.getNextNumber(userId, serie);
             }
+            console.log('[InvoiceNumberGenerator] Returning new unique invoice number:', newInvoiceNumber);
             return newInvoiceNumber;
         } catch (error) {
-            console.error('Error generating invoice number:', error.message || error);
+            console.error('[InvoiceNumberGenerator] Error generating invoice number:', error.message || error);
             throw error;
         } finally {
             this.lock = false;
+            console.log('[InvoiceNumberGenerator] Lock released.');
         }
     }
 }

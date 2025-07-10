@@ -23,6 +23,14 @@ class InvoiceEventListeners {
                     return;
                 }
                 await window.openModal('invoiceModal');
+                // --- Ensure form is reset and invoice number is generated ---
+                if (window.invoiceForm && typeof window.invoiceForm.resetInvoiceForm === 'function') {
+                    console.log('[EventListeners] Calling resetInvoiceForm after opening invoiceModal');
+                    await window.invoiceForm.resetInvoiceForm();
+                    console.log('[EventListeners] resetInvoiceForm completed');
+                } else {
+                    console.warn('[EventListeners] window.invoiceForm.resetInvoiceForm not found');
+                }
             });
         }
 

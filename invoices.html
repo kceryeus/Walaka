@@ -510,6 +510,25 @@
                                     </tr>
                                 </tbody>
                             </table>
+                            
+                            <!-- Items Pagination Controls -->
+                            <div class="items-pagination">
+                                <div class="pagination-info">
+                                    <span id="items-page-info">Showing 1-1 of 1 items</span>
+                                </div>
+                                <div class="pagination-controls">
+                                    <button type="button" id="prev-items-page" class="pagination-btn" disabled>
+                                        <i class="fas fa-chevron-left"></i> Previous
+                                    </button>
+                                    <span id="items-page-numbers"></span>
+                                    <button type="button" id="next-items-page" class="pagination-btn">
+                                        Next <i class="fas fa-chevron-right"></i>
+                                    </button>
+                                </div>
+                                <div class="items-limit-info">
+                                    <small>Maximum 50 items (10 per page) to ensure PDF quality</small>
+                                </div>
+                            </div>
                         </div>
                         <button type="button" id="addItemBtn" class="btn secondary-btn">
                             <i class="fas fa-plus"></i> <span data-translate="add_item">Add Item</span>
@@ -695,6 +714,8 @@
     <script src="js/notification-badge.js"></script>
     <!-- Ensure tableFilters.js is loaded before main initialization -->
     <script src="js/invoicescripts/tableFilters.js"></script>
+    <!-- Invoice Items Pagination -->
+    <script src="js/invoicescripts/invoiceItemsPagination.js"></script>
 
     <!-- Initialize Supabase -->
     <script type="module">
@@ -927,11 +948,12 @@
                 }
 
                 // Initialize invoice table
-                if (window.invoiceTable && typeof window.invoiceTable.fetchAndDisplayInvoices === 'function') {
+                if (window.invoiceTable && typeof window.invoiceTable.init === 'function') {
+                    window.invoiceTable.init();
                     await window.invoiceTable.fetchAndDisplayInvoices(1, 10, {});
-                    console.log('Invoice table initialized successfully');
+                    console.log('Invoice table initialized successfully with real-time subscription');
                 } else {
-                    console.error('Invoice table functions not found');
+                    console.error('Invoice table module not found');
                 }
 
                 // Initialize invoice items
@@ -976,6 +998,24 @@
                 await fetchClients();
                 await fetchProducts();
                 await fetchInvoices(); // Fetch invoices
+
+                // Setup cleanup on page unload
+                window.addEventListener('beforeunload', () => {
+                    if (window.invoiceTable && typeof window.invoiceTable.cleanup === 'function') {
+                        window.invoiceTable.cleanup();
+                    }
+                });
+
+                // Add global function to test real-time functionality
+                window.testRealtimeInvoiceUpdate = () => {
+                    console.log('Testing real-time invoice update...');
+                    if (window.invoiceTable && typeof window.invoiceTable.refreshTable === 'function') {
+                        window.invoiceTable.refreshTable();
+                        console.log('Manual refresh triggered');
+                    } else {
+                        console.error('Invoice table module not available');
+                    }
+                };
 
             } catch (error) {
                 console.error('Error during initialization:', error);

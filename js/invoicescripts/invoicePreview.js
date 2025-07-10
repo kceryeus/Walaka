@@ -246,7 +246,8 @@ async function previewInvoice(invoiceData) {
                             throw new Error('No valid invoice data found');
                         }
                         showNotification('Generating PDF...', 'info');
-                        const pdfBlob = await window.generatePDF(currentInvoiceData);
+                        // Pass watermark for preview
+                        const pdfBlob = await window.generatePDF(currentInvoiceData, { watermark: 'DRAFT' });
                         const downloadLink = document.createElement('a');
                         downloadLink.href = URL.createObjectURL(pdfBlob);
                         downloadLink.download = `Invoice-${currentInvoiceData.invoice.number}.pdf`;

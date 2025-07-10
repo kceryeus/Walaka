@@ -4,6 +4,7 @@ const InvoiceTableModule = {
     currentSortDirection: 'asc', // 'asc' or 'desc'
     currentFilters: {},
     isInitialized: false,
+    subscription: null, // Add subscription property
 
     init() {
         if (this.isInitialized) return;
@@ -19,8 +20,78 @@ const InvoiceTableModule = {
         // Initialize sorting functionality
         this.setupSorting();
         
+        // Setup real-time subscription
+        this.setupRealtimeSubscription();
+        
         this.isInitialized = true;
         console.log('Invoice table module initialized');
+    },
+
+    // Add real-time subscription setup
+    setupRealtimeSubscription() {
+        if (!window.supabase) {
+            console.error('Supabase client not available for real-time subscription');
+            return;
+        }
+
+        // Clean up existing subscription if any
+        if (this.subscription) {
+            this.subscription.unsubscribe();
+        }
+
+        // Create new subscription
+        this.subscription = window.supabase
+            .channel('invoice-table-updates')
+            .on('postgres_changes', 
+                {
+                    event: '*',
+                    schema: 'public',
+                    table: 'invoices'
+                }, 
+                (payload) => {
+                    console.log('Invoice table real-time update received:', payload);
+                    console.log('Event type:', payload.eventType);
+                    console.log('Table:', payload.table);
+                    console.log('New record:', payload.new);
+                    console.log('Old record:', payload.old);
+                    
+                    // Add a small delay to ensure the database change is fully committed
+                    setTimeout(() => {
+                        // Refresh the table with current filters
+                        this.fetchAndDisplayInvoices(1, 10, this.currentFilters);
+                    }, 100);
+                }
+            )
+            .subscribe((status) => {
+                if (status === 'SUBSCRIBED') {
+                    console.log('Invoice table real-time subscription established successfully');
+                } else if (status === 'CHANNEL_ERROR') {
+                    console.error('Invoice table real-time subscription failed');
+                }
+            });
+
+        console.log('Invoice table real-time subscription setup completed');
+    },
+
+    // Add cleanup method
+    cleanup() {
+        if (this.subscription) {
+            this.subscription.unsubscribe();
+            this.subscription = null;
+            console.log('Invoice table real-time subscription cleaned up');
+        }
+    },
+
+    // Add method to manually refresh table
+    async refreshTable() {
+        console.log('Manually refreshing invoice table...');
+        await this.fetchAndDisplayInvoices(1, 10, this.currentFilters);
+    },
+
+    // Add method to re-establish subscription if needed
+    reestablishSubscription() {
+        console.log('Re-establishing invoice table real-time subscription...');
+        this.setupRealtimeSubscription();
     },
 
     applyFilters() {

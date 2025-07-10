@@ -726,15 +726,25 @@ async function saveInvoice() {
 // Add refresh function
 async function refreshInvoiceList() {
     try {
-        const currentPage = 1; // Get current page from state if needed
-        const currentLimit = 10; // Get current limit from state if needed
-        await fetchAndDisplayInvoices(currentPage, currentLimit);
+        // Use the invoice table module if available
+        if (window.invoiceTable && typeof window.invoiceTable.refreshTable === 'function') {
+            await window.invoiceTable.refreshTable();
+        } else {
+            // Fallback to direct function call
+            const currentPage = 1;
+            const currentLimit = 10;
+            await fetchAndDisplayInvoices(currentPage, currentLimit);
+        }
         
         // Refresh metrics
-        await updateMetricsDisplay();
+        if (typeof window.updateMetricsDisplay === 'function') {
+            await window.updateMetricsDisplay();
+        }
         
         // Refresh charts
-        await updateCharts();
+        if (typeof window.updateCharts === 'function') {
+            await window.updateCharts();
+        }
     } catch (error) {
         console.error('Error refreshing invoice list:', error);
         showNotification('Error refreshing data');

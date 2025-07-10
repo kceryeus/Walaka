@@ -99,9 +99,21 @@ class InvoiceForm {
             document.getElementById('totalVat').textContent = '0.00';
             document.getElementById('invoiceTotal').textContent = '0.00';
             this.initializeDateFields();
-            // Generate a new unique invoice number only once
+            
+            // Reset pagination if available
+            if (window.invoiceItemsPagination && typeof window.invoiceItemsPagination.resetPagination === 'function') {
+                window.invoiceItemsPagination.resetPagination();
+            }
+            
+            // --- Always generate a new unique invoice number for new invoice ---
             const invoiceNumberField = document.getElementById('invoiceNumber');
-            if (invoiceNumberField && !invoiceNumberField.dataset.generated) {
+            // Placeholder: check for edit mode (replace with your real edit mode check)
+            const isEditMode = form.dataset.editMode === 'true';
+            console.log('[InvoiceForm] resetInvoiceForm called. isEditMode:', isEditMode);
+            if (invoiceNumberField && !isEditMode) {
+                invoiceNumberField.value = '';
+                invoiceNumberField.dataset.generated = '';
+                console.log('[InvoiceForm] About to generate new invoice number...');
                 try {
                     const generator = new window.InvoiceNumberGenerator();
                     // Fetch user_id from Supabase session
@@ -109,20 +121,29 @@ class InvoiceForm {
                     try {
                         const session = await window.supabase.auth.getSession();
                         userId = session.data?.session?.user?.id;
+                        console.log('[InvoiceForm] Got userId:', userId);
                     } catch (e) {
-                        console.error('Could not fetch user session:', e);
+                        console.error('[InvoiceForm] Could not fetch user session:', e);
                     }
-                    // Get serie from form (default to 'A')
                     let serie = document.getElementById('serie')?.value || 'A';
+                    console.log('[InvoiceForm] Using serie:', serie);
                     if (!userId) throw new Error('User not authenticated. Please log in.');
-                    const newInvoiceNumber = await generator.getNextNumber(userId, serie);
-                    invoiceNumberField.value = newInvoiceNumber;
-                    invoiceNumberField.dataset.generated = true; // Mark as generated
+                    generator.getNextNumber(userId, serie).then(newInvoiceNumber => {
+                        console.log('[InvoiceForm] Setting invoice number to:', newInvoiceNumber);
+                        invoiceNumberField.value = newInvoiceNumber;
+                        invoiceNumberField.dataset.generated = true;
+                    }).catch(err => {
+                        console.error('[InvoiceForm] Error generating invoice number:', err);
+                        invoiceNumberField.value = '';
+                        window.showNotification('Error generating invoice number');
+                    });
                 } catch (err) {
-                    console.error('Error generating invoice number:', err);
+                    console.error('[InvoiceForm] Error in invoice number generation block:', err);
                     invoiceNumberField.value = '';
                     window.showNotification('Error generating invoice number');
                 }
+            } else if (invoiceNumberField && isEditMode) {
+                console.log('[InvoiceForm] Edit mode detected, not generating new invoice number.');
             }
         }
     }
@@ -189,9 +210,20 @@ class InvoiceForm {
 
             console.log('Company data:', companyData);
 
-            // Collect items
+            // Collect items - use pagination module if available
             const items = [];
-            const itemRows = document.querySelectorAll('.item-row');
+            let itemRows = [];
+            
+            if (window.invoiceItemsPagination && typeof window.invoiceItemsPagination.getAllItemsForPDF === 'function') {
+                // Use pagination module to get all items
+                itemRows = window.invoiceItemsPagination.getAllItemsForPDF();
+                console.log('Using pagination module, found items:', itemRows.length);
+            } else {
+                // Fallback to direct DOM query
+                itemRows = document.querySelectorAll('.item-row');
+                console.log('Using direct DOM query, found items:', itemRows.length);
+            }
+
             console.log('Found item rows:', itemRows.length);
 
             itemRows.forEach((row, index) => {
@@ -665,6 +697,14 @@ function getCurrentFormData() {
 
 async function handleInvoiceSubmission(event) {
     event.preventDefault();
+    
+    // Validate item limits before submission
+    if (window.invoiceItemsPagination && typeof window.invoiceItemsPagination.validateItemLimits === 'function') {
+        if (!window.invoiceItemsPagination.validateItemLimits()) {
+            return; // Stop submission if limits exceeded
+        }
+    }
+    
     const submitBtn = document.querySelector('#invoiceForm button[type="submit"]');
     if (submitBtn) submitBtn.disabled = true;
     try {
@@ -773,8 +813,15 @@ document.getElementById('invoiceForm')?.addEventListener('submit', handleInvoice
     const paymentTerms = document.getElementById('paymentTerms').options[document.getElementById('paymentTerms').selectedIndex].text;
     const notes = document.getElementById('notes').value;
     const serie = document.getElementById('serie')?.value || '';
-    // Items
-    const itemRows = document.querySelectorAll('#itemsTable .item-row');
+    
+    // Get all items - use pagination module if available
+    let itemRows = [];
+    if (window.invoiceItemsPagination && typeof window.invoiceItemsPagination.getAllItemsForPDF === 'function') {
+        itemRows = window.invoiceItemsPagination.getAllItemsForPDF();
+    } else {
+        itemRows = document.querySelectorAll('#itemsTable .item-row');
+    }
+    
     let itemsHtml = '';
     itemRows.forEach(row => {
       const desc = row.querySelector('.item-description').value;
@@ -796,7 +843,12 @@ document.getElementById('invoiceForm')?.addEventListener('submit', handleInvoice
       }
     });
     // Always render all columns in the table header and use .items-table for styling
+    let warningHtml = '';
+    if (itemRows.length > 50) {
+      warningHtml = `<div style="color:#dc3545;font-weight:bold;margin-bottom:8px;">You have more than 50 items. Please remove excess items to publish the invoice.</div>`;
+    }
     const reviewHtml = `
+      ${warningHtml}
       <div><strong>Client:</strong> ${clientName} (${clientEmail}, NUIT: ${clientTaxId})<br><strong>Address:</strong> ${clientAddress}</div>
       <div><strong>Invoice #:</strong> ${invoiceNumber} | <strong>Issue:</strong> ${issueDate} | <strong>Due:</strong> ${dueDate}</div>
       <div><strong>Currency:</strong> ${currency} | <strong>Terms:</strong> ${paymentTerms}</div>

@@ -26,17 +26,7 @@ async function exportInvoicesAsCsv(period = 'all') {
         let queryBuilder = window.supabase
             .from('invoices')
             .select(`
-                invoiceNumber,
-                client:clients(customer_name),
-                issue_date,
-                due_date,
-                currency,
-                subtotal,
-                vat_amount,
-                total_amount,
-                status,
-                payment_terms,
-                notes
+                *
             `);
 
         // Apply date filter if not 'all'
@@ -55,36 +45,83 @@ async function exportInvoicesAsCsv(period = 'all') {
             return;
         }
 
-        // Prepare CSV data
+        // Prepare CSV data (Portuguese/SAFT headers and order)
         const headers = [
-            'Invoice Number',
-            'Client Name',
-            'Issue Date',
-            'Due Date',
-            'Currency',
-            'Subtotal',
-            'VAT',
+            'NUIT',
+            'MÊS',
+            'ID Documento',
+            'Tipo',
+            'Série',
+            'Número',
+            'Série/Número',
+            'Estado',
+            'Referência a Documento de Origem',
+            'Referência a Factura',
+            'Data Emissão',
+            'Data Vencimento',
+            'NUIT Cliente',
+            'Nome do Cliente',
+            'Subtotal S/IVA',
+            'Outro S/IVA',
+            'IVA',
+            'Razão de Isenção de IVA',
+            'Total Retenção',
+            'Total Desconto',
             'Total',
-            'Status',
-            'Payment Terms',
-            'Notes'
+            'Valor Recebido',
+            'IVA (%)',
+            'Valor do Imposto',
+            'Desconto',
+            'Valor Total sem Imposto',
+            'Total Incluindo Imposto',
+            'Moeda',
+            'Taxa Câmbio'
         ];
 
+        function formatDatePt(date) {
+            if (!date) return '';
+            const d = new Date(date);
+            if (isNaN(d)) return '';
+            return d.toISOString().slice(0, 10);
+        }
+
+        function safe(val, def = '') {
+            return val === undefined || val === null ? def : val;
+        }
+
         const csvContent = [
-            headers.join(','),
-            ...invoices.map(invoice => [
-                invoice.invoiceNumber,
-                invoice.client?.customer_name || '',
-                formatDate(invoice.issue_date),
-                formatDate(invoice.due_date),
-                invoice.currency,
-                invoice.subtotal,
-                invoice.vat_amount,
-                invoice.total_amount,
-                invoice.status,
-                invoice.payment_terms,
-                `"${(invoice.notes || '').replace(/"/g, '""')}"`
-            ].join(','))
+            headers.join(';'),
+            ...invoices.map(inv => [
+                safe(inv.nuit, ''), // NUIT
+                safe(inv.mes, ''), // MÊS
+                safe(inv.id_documento, ''), // ID Documento
+                safe(inv.tipo, ''), // Tipo
+                safe(inv.serie, ''), // Série
+                safe(inv.numero, ''), // Número
+                (safe(inv.serie, '') && safe(inv.numero, '')) ? `${inv.serie}/${String(inv.numero).padStart(4, '0')}` : '', // Série/Número
+                safe(inv.estado, ''), // Estado
+                safe(inv.referencia_origem, ''), // Referência a Documento de Origem
+                safe(inv.referencia_factura, ''), // Referência a Factura
+                formatDatePt(inv.issue_date), // Data Emissão
+                formatDatePt(inv.due_date), // Data Vencimento
+                safe(inv.nuit_cliente, ''), // NUIT Cliente
+                safe(inv.customer_name, inv.client_name || ''), // Nome do Cliente
+                safe(inv.subtotal_sem_iva, ''), // Subtotal S/IVA
+                safe(inv.outro_sem_iva, ''), // Outro S/IVA
+                safe(inv.iva, ''), // IVA
+                safe(inv.razao_isencao_iva, ''), // Razão de Isenção de IVA
+                safe(inv.total_retencao, ''), // Total Retenção
+                safe(inv.total_desconto, ''), // Total Desconto
+                safe(inv.total, inv.total_amount || ''), // Total
+                safe(inv.valor_recebido, ''), // Valor Recebido
+                safe(inv.iva_percent, ''), // IVA (%)
+                safe(inv.valor_imposto, ''), // Valor do Imposto
+                safe(inv.desconto, ''), // Desconto
+                safe(inv.valor_total_sem_imposto, ''), // Valor Total sem Imposto
+                safe(inv.total_incluindo_imposto, ''), // Total Incluindo Imposto
+                safe(inv.currency, ''), // Moeda
+                safe(inv.currency_rate, '') // Taxa Câmbio
+            ].join(';'))
         ].join('\n');
 
         // Create and download file
@@ -92,7 +129,7 @@ async function exportInvoicesAsCsv(period = 'all') {
         const url = URL.createObjectURL(blob);
         const link = document.createElement('a');
         link.href = url;
-        link.download = `Invoices_${formatDate(new Date())}.csv`;
+        link.download = `Invoices_SAFT_${formatDate(new Date())}.csv`;
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
@@ -198,7 +235,19 @@ async function exportInvoicesAsSaft(period = 'all') {
 }
 
 function generateSaftXml(invoices, startDate, endDate) {
-    // This is a basic SAFT-MOZ XML structure
+    // Helper function for safe values (same as CSV export)
+    function safe(val, def = '') {
+        return val === undefined || val === null ? def : val;
+    }
+
+    function formatDatePt(date) {
+        if (!date) return '';
+        const d = new Date(date);
+        if (isNaN(d)) return '';
+        return d.toISOString().slice(0, 10);
+    }
+
+    // This is a basic SAFT-MOZ XML structure with Portuguese/SAFT fields
     // You should implement the full SAFT-MOZ schema according to official documentation
     return `<?xml version="1.0" encoding="UTF-8"?>
 <AuditFile xmlns="urn:OECD:StandardAuditFile-Tax:PT_1.04_01">
@@ -216,15 +265,47 @@ function generateSaftXml(invoices, startDate, endDate) {
         <SalesInvoices>
             ${invoices.map(invoice => `
             <Invoice>
-                <InvoiceNo>${invoice.invoiceNumber}</InvoiceNo>
-                <InvoiceDate>${formatDate(invoice.issue_date)}</InvoiceDate>
-                <CustomerID>${invoice.client?.customer_id || ''}</CustomerID>
-                <CustomerName>${invoice.client?.customer_name || ''}</CustomerName>
-                <TaxRegistrationNumber>${invoice.client?.customer_tax_id || ''}</TaxRegistrationNumber>
-                <DocumentStatus>${invoice.status}</DocumentStatus>
-                <TotalNet>${invoice.subtotal}</TotalNet>
-                <TotalTax>${invoice.total_vat}</TotalTax>
-                <TotalGross>${invoice.total_amount}</TotalGross>
+                <!-- Portuguese/SAFT Fields -->
+                <NUIT>${safe(invoice.nuit, '')}</NUIT>
+                <MES>${safe(invoice.mes, '')}</MES>
+                <IDDocumento>${safe(invoice.id_documento, '')}</IDDocumento>
+                <Tipo>${safe(invoice.tipo, '')}</Tipo>
+                <Serie>${safe(invoice.serie, '')}</Serie>
+                <Numero>${safe(invoice.numero, '')}</Numero>
+                <SerieNumero>${(safe(invoice.serie, '') && safe(invoice.numero, '')) ? `${invoice.serie}/${String(invoice.numero).padStart(4, '0')}` : ''}</SerieNumero>
+                <Estado>${safe(invoice.estado, '')}</Estado>
+                <ReferenciaDocumentoOrigem>${safe(invoice.referencia_origem, '')}</ReferenciaDocumentoOrigem>
+                <ReferenciaFactura>${safe(invoice.referencia_factura, '')}</ReferenciaFactura>
+                <DataEmissao>${formatDatePt(invoice.issue_date)}</DataEmissao>
+                <DataVencimento>${formatDatePt(invoice.due_date)}</DataVencimento>
+                <NUITCliente>${safe(invoice.nuit_cliente, '')}</NUITCliente>
+                <NomeCliente>${safe(invoice.customer_name, invoice.client_name || '')}</NomeCliente>
+                <SubtotalSemIVA>${safe(invoice.subtotal_sem_iva, '')}</SubtotalSemIVA>
+                <OutroSemIVA>${safe(invoice.outro_sem_iva, '')}</OutroSemIVA>
+                <IVA>${safe(invoice.iva, '')}</IVA>
+                <RazaoIsencaoIVA>${safe(invoice.razao_isencao_iva, '')}</RazaoIsencaoIVA>
+                <TotalRetencao>${safe(invoice.total_retencao, '')}</TotalRetencao>
+                <TotalDesconto>${safe(invoice.total_desconto, '')}</TotalDesconto>
+                <Total>${safe(invoice.total, invoice.total_amount || '')}</Total>
+                <ValorRecebido>${safe(invoice.valor_recebido, '')}</ValorRecebido>
+                <IVAPercent>${safe(invoice.iva_percent, '')}</IVAPercent>
+                <ValorImposto>${safe(invoice.valor_imposto, '')}</ValorImposto>
+                <Desconto>${safe(invoice.desconto, '')}</Desconto>
+                <ValorTotalSemImposto>${safe(invoice.valor_total_sem_imposto, '')}</ValorTotalSemImposto>
+                <TotalIncluindoImposto>${safe(invoice.total_incluindo_imposto, '')}</TotalIncluindoImposto>
+                <Moeda>${safe(invoice.currency, '')}</Moeda>
+                <TaxaCambio>${safe(invoice.currency_rate, '')}</TaxaCambio>
+                
+                <!-- Legacy fields for backward compatibility -->
+                <InvoiceNo>${safe(invoice.invoiceNumber, '')}</InvoiceNo>
+                <InvoiceDate>${formatDatePt(invoice.issue_date)}</InvoiceDate>
+                <CustomerID>${safe(invoice.client_id, '')}</CustomerID>
+                <CustomerName>${safe(invoice.customer_name, invoice.client_name || '')}</CustomerName>
+                <TaxRegistrationNumber>${safe(invoice.nuit_cliente, '')}</TaxRegistrationNumber>
+                <DocumentStatus>${safe(invoice.status, '')}</DocumentStatus>
+                <TotalNet>${safe(invoice.subtotal, '')}</TotalNet>
+                <TotalTax>${safe(invoice.vat_amount, '')}</TotalTax>
+                <TotalGross>${safe(invoice.total_amount, '')}</TotalGross>
             </Invoice>
             `).join('')}
         </SalesInvoices>

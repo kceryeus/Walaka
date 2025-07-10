@@ -203,23 +203,8 @@ const TEMPLATES = {
                     <p>Contact: <span id="client-contact"></span></p>
                 </div>
                 
-                <table class="invoice-items">
-                    <thead>
-                        <tr>
-                            <th>Description</th>
-                            <th>Quantity</th>
-                            <th>Unit Price</th>
-                            <th>Discount Type</th>
-                            <th>Discount</th>
-                            <th>Discounted Subtotal</th>
-                            <th>VAT (16%)</th>
-                            <th>Total</th>
-                        </tr>
-                    </thead>
-                    <tbody id="invoice-items-body">
-                        <!-- Items will be inserted here -->
-                    </tbody>
-                </table>
+                <!-- Items Table Placeholder -->
+                <div id="invoice-items-body"></div>
                
                 <div class="invoice-totals">
                 </div>
@@ -344,23 +329,8 @@ const TEMPLATES = {
                     <p>Contact: <span id="client-contact"></span></p>
                 </div>
                 
-                <table class="invoice-items">
-                    <thead>
-                        <tr>
-                            <th>Description</th>
-                            <th>Quantity</th>
-                            <th>Unit Price</th>
-                            <th>Discount Type</th>
-                            <th>Discount</th>
-                            <th>Discounted Subtotal</th>
-                            <th>VAT (16%)</th>
-                            <th>Total</th>
-                        </tr>
-                    </thead>
-                    <tbody id="invoice-items-body">
-                        <!-- Items will be inserted here -->
-                    </tbody>
-                </table>
+                <!-- Items Table Placeholder -->
+                <div id="invoice-items-body"></div>
                 
                 <div class="invoice-totals">
                 </div>
@@ -430,9 +400,13 @@ async function populateTemplate(templateContent, invoiceData) {
     setDataField(doc, 'company-website', invoiceData.company?.website || '');
 
     // Invoice Details
-    let serie = invoiceData.invoice?.serie || invoiceData.serie || 'A';
-    let invoiceNumber = invoiceData.invoice?.number || invoiceData.invoice_number || 'Draft Invoice';
-    setDataField(doc, 'invoice-number', `${serie}/${invoiceNumber}`);
+    let displayInvoiceNumber = invoiceData.invoice?.displayNumber || null;
+    if (!displayInvoiceNumber) {
+        let serie = invoiceData.invoice?.serie || invoiceData.serie || '';
+        let invoiceNumber = invoiceData.invoice?.number || invoiceData.invoice_number || 'Draft Invoice';
+        displayInvoiceNumber = serie && invoiceNumber ? `${serie}/${invoiceNumber}` : invoiceNumber || serie || 'Draft Invoice';
+    }
+    setDataField(doc, 'invoice-number', displayInvoiceNumber);
     setDataField(doc, 'issue-date', formatDate(invoiceData.invoice?.issueDate || invoiceData.issue_date));
     setDataField(doc, 'due-date', formatDate(invoiceData.invoice?.dueDate || invoiceData.due_date));
 
@@ -453,34 +427,105 @@ async function populateTemplate(templateContent, invoiceData) {
     const total = Number(invoiceData.total || 0);
     let hasExempt = false;
 
+    // Get all items for PDF generation (including paginated items)
+    let allItems = invoiceData.items || [];
+    
+    // If we have pagination info, get all items from the pagination module
+    if (window.invoiceItemsPagination && typeof window.invoiceItemsPagination.getAllItemsForPDF === 'function') {
+        const paginatedItems = window.invoiceItemsPagination.getAllItemsForPDF();
+        if (paginatedItems.length > 0) {
+            // Convert DOM elements to item data
+            allItems = paginatedItems.map(row => {
+                const description = row.querySelector('.item-description')?.value || '';
+                const quantity = parseAmount(row.querySelector('.item-quantity')?.value) || 0;
+                const price = parseAmount(row.querySelector('.item-price')?.value) || 0;
+                const discountType = row.querySelector('.item-discount-type')?.value || 'none';
+                const discountValue = parseAmount(row.querySelector('.item-discount-value')?.value) || 0;
+                const discountedSubtotal = parseAmount(row.querySelector('.item-discounted-subtotal')?.textContent) || 0;
+                const vat = parseAmount(row.querySelector('.item-vat')?.textContent) || 0;
+                const total = parseAmount(row.querySelector('.item-total')?.textContent) || 0;
+                
+                return {
+                    description,
+                    quantity,
+                    price,
+                    discountType,
+                    discountValue,
+                    discountedSubtotal,
+                    vat,
+                    total
+                };
+            }).filter(item => item.description && item.quantity > 0);
+        }
+    }
+
     // Populate Items (with VAT asterisk for exempt)
     const itemsContainer = doc.getElementById('invoice-items-body');
-    if (itemsContainer && invoiceData.items && Array.isArray(invoiceData.items)) {
-        itemsContainer.innerHTML = invoiceData.items.map(item => {
-            const quantity = Number(item.quantity ?? 1);
-            const unitPrice = Number(item.price ?? item.unit_price ?? 0);
-            const discountType = item.discountType || 'none';
-            const discountValue = typeof item.discountValue !== 'undefined' ? item.discountValue : 0;
-            const discountedSubtotal = typeof item.discountedSubtotal !== 'undefined' ? item.discountedSubtotal : quantity * unitPrice;
-            const vatAmount = typeof item.vat !== 'undefined' ? item.vat : 0;
-            const lineTotal = typeof item.total !== 'undefined' ? item.total : discountedSubtotal + vatAmount;
-            let discountDisplay = '';
-            if (discountType === 'percent') discountDisplay = discountValue + '%';
-            else if (discountType === 'fixed') discountDisplay = discountValue;
-            else discountDisplay = '—';
-            return `
-                <tr>
-                    <td>${item.description || ''}</td>
-                    <td>${quantity}</td>
-                    <td>${formatCurrency(unitPrice, invoiceData.currency)}</td>
-                    <td>${discountType}</td>
-                    <td>${discountDisplay}</td>
-                    <td>${formatCurrency(discountedSubtotal, invoiceData.currency)}</td>
-                    <td>${formatCurrency(vatAmount, invoiceData.currency)}</td>
-                    <td>${formatCurrency(lineTotal, invoiceData.currency)}</td>
-                </tr>
+    // Center the invoice container
+    const styleTag = doc.querySelector('style');
+    if (styleTag) {
+        styleTag.textContent += `\n.invoice-container { margin: 0 auto !important; max-width: 800px !important; }`;
+    }
+
+    // PDF PAGINATION: Split items into groups of 10, each group is a table with headers, with a page break after each except the last
+    if (itemsContainer && allItems && Array.isArray(allItems)) {
+        let paginatedHtml = '';
+        const itemsPerPage = 10;
+        const totalPages = Math.ceil(allItems.length / itemsPerPage) || 1;
+        for (let page = 0; page < totalPages; page++) {
+            const i = page * itemsPerPage;
+            const pageItems = allItems.slice(i, i + itemsPerPage);
+            paginatedHtml += `
+                <table class="invoice-items" style="width:100%;border-collapse:collapse;margin-bottom:16px;">
+                    <thead>
+                        <tr>
+                            <th>Description</th>
+                            <th>Quantity</th>
+                            <th>Unit Price</th>
+                            <th>Discount Type</th>
+                            <th>Discount</th>
+                            <th>Discounted Subtotal</th>
+                            <th>VAT</th>
+                            <th>Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${pageItems.map(item => {
+                            const quantity = Number(item.quantity ?? 1);
+                            const unitPrice = Number(item.price ?? item.unit_price ?? 0);
+                            const discountType = item.discountType || 'none';
+                            const discountValue = typeof item.discountValue !== 'undefined' ? item.discountValue : 0;
+                            const discountedSubtotal = typeof item.discountedSubtotal !== 'undefined' ? item.discountedSubtotal : quantity * unitPrice;
+                            const vatAmount = typeof item.vat !== 'undefined' ? item.vat : 0;
+                            const lineTotal = typeof item.total !== 'undefined' ? item.total : discountedSubtotal + vatAmount;
+                            let discountDisplay = '';
+                            if (discountType === 'percent') discountDisplay = discountValue + '%';
+                            else if (discountType === 'fixed') discountDisplay = discountValue;
+                            else discountDisplay = '—';
+                            return `
+                                <tr>
+                                    <td>${item.description || ''}</td>
+                                    <td>${quantity}</td>
+                                    <td>${formatCurrency(unitPrice, invoiceData.currency)}</td>
+                                    <td>${discountType}</td>
+                                    <td>${discountDisplay}</td>
+                                    <td>${formatCurrency(discountedSubtotal, invoiceData.currency)}</td>
+                                    <td>${formatCurrency(vatAmount, invoiceData.currency)}</td>
+                                    <td>${formatCurrency(lineTotal, invoiceData.currency)}</td>
+                                </tr>
+                            `;
+                        }).join('')}
+                    </tbody>
+                </table>
             `;
-        }).join('');
+            // Add centered page number at the bottom of each page
+            paginatedHtml += `<div style="text-align:center;font-size:14px;margin:24px 0 0 0;">Page ${page+1}/${totalPages}</div>`;
+            // Add page break after each table except the last
+            if (page + 1 < totalPages) {
+                paginatedHtml += '<div style="page-break-after: always;"></div>';
+            }
+        }
+        itemsContainer.innerHTML = paginatedHtml;
     }
     // Totals section
     const totalsContainer = doc.querySelector('.invoice-totals');
