@@ -461,10 +461,13 @@ async function populateTemplate(templateContent, invoiceData) {
 
     // Populate Items (with VAT asterisk for exempt)
     const itemsContainer = doc.getElementById('invoice-items-body');
-    // Center the invoice container
+    // True centering for invoice container
     const styleTag = doc.querySelector('style');
     if (styleTag) {
-        styleTag.textContent += `\n.invoice-container { margin: 0 auto !important; max-width: 800px !important; }`;
+        styleTag.textContent += `
+.invoice-container { margin-left: auto !important; margin-right: auto !important; margin-top: 20px; margin-bottom: 20px; max-width: 700px !important; background: #fff; }
+.pdf-footer { position: fixed; left: 0; right: 0; bottom: 20px; text-align: center; font-size: 14px; color: #333; width: 100%; }
+@media print { .pdf-footer { position: fixed; } }`;
     }
 
     // PDF PAGINATION: Split items into groups of 10, each group is a table with headers, with a page break after each except the last
@@ -518,11 +521,13 @@ async function populateTemplate(templateContent, invoiceData) {
                     </tbody>
                 </table>
             `;
-            // Add centered page number at the bottom of each page
-            paginatedHtml += `<div style="text-align:center;font-size:14px;margin:24px 0 0 0;">Page ${page+1}/${totalPages}</div>`;
             // Add page break after each table except the last
             if (page + 1 < totalPages) {
-                paginatedHtml += '<div style="page-break-after: always;"></div>';
+                // Add footer before page break
+                paginatedHtml += `<div class="pdf-footer">Page ${page+1}/${totalPages}</div><div style="page-break-after: always;"></div>`;
+            } else {
+                // Last page: add footer at the end
+                paginatedHtml += `<div class="pdf-footer">Page ${page+1}/${totalPages}</div>`;
             }
         }
         itemsContainer.innerHTML = paginatedHtml;
