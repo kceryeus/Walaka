@@ -59,7 +59,7 @@ async function updateTrialBanner() {
                 .single();
             userRow = userResult.data;
             const userRowError = userResult.error;
-            console.log('[TrialBanner][DEBUG] userRow:', userRow, 'userRowError:', userRowError);
+            // console.log('[TrialBanner][DEBUG] userRow:', userRow, 'userRowError:', userRowError);
             if (!userRowError && userRow) {
                 if (userRow.created_by) {
                     parentId = userRow.created_by;
@@ -70,7 +70,7 @@ async function updateTrialBanner() {
                         .single();
                     parentRow = parentResult.data;
                     const parentRowError = parentResult.error;
-                    console.log('[TrialBanner][DEBUG] parentRow:', parentRow, 'parentRowError:', parentRowError);
+                    // console.log('[TrialBanner][DEBUG] parentRow:', parentRow, 'parentRowError:', parentRowError);
                     if (!parentRowError && parentRow) {
                         if (parentRow.created_at) userCreatedAt = parentRow.created_at;
                         if (parentRow.environment_id) {
@@ -89,7 +89,7 @@ async function updateTrialBanner() {
                 }
             }
         } catch (e) { console.error('[TrialBanner][DEBUG] Error fetching user/parent row:', e); }
-        console.log('[TrialBanner][DEBUG] Using parentId:', parentId, 'userCreatedAt:', userCreatedAt, 'environmentId:', environmentId);
+        // console.log('[TrialBanner][DEBUG] Using parentId:', parentId, 'userCreatedAt:', userCreatedAt, 'environmentId:', environmentId);
         // --- Use environmentId for all subscription/trial queries ---
         let subscriptions = [];
         let subscriptionError = null;
@@ -102,7 +102,7 @@ async function updateTrialBanner() {
             subscriptions = subResult.data;
             subscriptionError = subResult.error;
         }
-        console.log('[TrialBanner][DEBUG] subscriptions:', subscriptions, 'subscriptionError:', subscriptionError);
+        // console.log('[TrialBanner][DEBUG] subscriptions:', subscriptions, 'subscriptionError:', subscriptionError);
         let currentPlan = 'Trial';
         let validSubscription = false;
         if (!subscriptionError && subscriptions && subscriptions.length > 0) {
@@ -119,7 +119,7 @@ async function updateTrialBanner() {
                 validSubscription = true;
             }
         }
-        console.log('[TrialBanner][DEBUG] validSubscription:', validSubscription, 'currentPlan:', currentPlan);
+        // console.log('[TrialBanner][DEBUG] validSubscription:', validSubscription, 'currentPlan:', currentPlan);
         planBadge.textContent = currentPlan;
         if (validSubscription) {
             banner.style.display = 'none';
@@ -175,16 +175,16 @@ async function updateTrialBanner() {
 }
 
 function updateTrialUI(daysRemaining, invoicesRemaining, trialStartDate) {
-    console.log('[TrialBanner] Updating UI with:', { daysRemaining, invoicesRemaining });
+    // console.log('[TrialBanner] Updating UI with:', { daysRemaining, invoicesRemaining });
     
     // Update days remaining - always show the value, even if 0
     const daysElem = document.getElementById('days-remaining');
     if (daysElem) {
         daysElem.textContent = daysRemaining;
         daysElem.classList.toggle('warning', daysRemaining <= 3);
-        console.log('[TrialBanner] Updated days remaining element:', daysRemaining);
+        // console.log('[TrialBanner] Updated days remaining element:', daysRemaining);
     } else {
-        console.warn('[TrialBanner] #days-remaining element not found.');
+        // console.warn('[TrialBanner] #days-remaining element not found.');
     }
 
     // Update invoices remaining - always show the value, even if 0
@@ -192,9 +192,9 @@ function updateTrialUI(daysRemaining, invoicesRemaining, trialStartDate) {
     if (invoicesElem) {
         invoicesElem.textContent = invoicesRemaining;
         invoicesElem.classList.toggle('warning', invoicesRemaining <= 1);
-        console.log('[TrialBanner] Updated invoices remaining element:', invoicesRemaining);
+        // console.log('[TrialBanner] Updated invoices remaining element:', invoicesRemaining);
     } else {
-        console.warn('[TrialBanner] #invoices-remaining element not found.');
+        // console.warn('[TrialBanner] #invoices-remaining element not found.');
     }
 
     // Update progress bar
@@ -206,9 +206,9 @@ function updateTrialUI(daysRemaining, invoicesRemaining, trialStartDate) {
         
         progressFill.style.width = percent + '%';
         progressFill.classList.toggle('warning', daysRemaining <= 3);
-        console.log('[TrialBanner] Progress bar updated:', percent + '%');
+        // console.log('[TrialBanner] Progress bar updated:', percent + '%');
     } else {
-        console.warn('[TrialBanner] #trial-progress element not found.');
+        // console.warn('[TrialBanner] #trial-progress element not found.');
     }
 
     // After updating UI, apply translations if languageManager is available
@@ -224,27 +224,27 @@ function capitalizePlanName(plan) {
 
 // Create payment notification
 async function createPaymentNotification(userId, paymentMethod, amount, plan) {
-    console.log('[TrialBanner] createPaymentNotification called with:', { userId, paymentMethod, amount, plan });
+    // console.log('[TrialBanner] createPaymentNotification called with:', { userId, paymentMethod, amount, plan });
     try {
         // Check if user has notification settings enabled for payment notifications
-        console.log('[TrialBanner] Checking notification settings for user:', userId);
+        // console.log('[TrialBanner] Checking notification settings for user:', userId);
         const { data: notificationSettings, error: settingsError } = await supabase
             .from('notification_settings')
             .select('payment_received')
             .eq('user_id', userId)
             .single();
 
-        console.log('[TrialBanner] Notification settings result:', { notificationSettings, settingsError });
+        // console.log('[TrialBanner] Notification settings result:', { notificationSettings, settingsError });
 
         // If no settings found or payment notifications are disabled, don't create notification
         if (settingsError || !notificationSettings || !notificationSettings.payment_received) {
-            console.log('[TrialBanner] Payment notifications disabled or no settings found, skipping notification');
-            console.log('[TrialBanner] Settings error:', settingsError);
-            console.log('[TrialBanner] Notification settings:', notificationSettings);
+            // console.log('[TrialBanner] Payment notifications disabled or no settings found, skipping notification');
+            // console.log('[TrialBanner] Settings error:', settingsError);
+            // console.log('[TrialBanner] Notification settings:', notificationSettings);
             
             // If no settings exist, create default settings for the user
             if (settingsError && settingsError.code === 'PGRST116') {
-                console.log('[TrialBanner] No notification settings found, creating default settings...');
+                // console.log('[TrialBanner] No notification settings found, creating default settings...');
                 const { error: createError } = await supabase
                     .from('notification_settings')
                     .insert({
@@ -263,7 +263,7 @@ async function createPaymentNotification(userId, paymentMethod, amount, plan) {
                     console.error('[TrialBanner] Error creating default notification settings:', createError);
                     return;
                 } else {
-                    console.log('[TrialBanner] Default notification settings created successfully');
+                    // console.log('[TrialBanner] Default notification settings created successfully');
                     // Now proceed with creating the notification
                 }
             } else {
@@ -272,10 +272,10 @@ async function createPaymentNotification(userId, paymentMethod, amount, plan) {
         }
 
         // For payments, we'll create a notification every time since payments are unique events
-        console.log('[TrialBanner] Creating new payment notification...');
+        // console.log('[TrialBanner] Creating new payment notification...');
 
                 // Create payment notification
-        console.log('[TrialBanner] Creating payment notification in database...');
+        // console.log('[TrialBanner] Creating payment notification in database...');
         const { error } = await supabase
             .from('notifications')
             .insert({
@@ -290,7 +290,7 @@ async function createPaymentNotification(userId, paymentMethod, amount, plan) {
         if (error) {
             console.error('[TrialBanner] Error creating payment notification:', error);
         } else {
-            console.log('[TrialBanner] Payment notification created successfully');
+            // console.log('[TrialBanner] Payment notification created successfully');
             
             // Verify the notification was created by fetching it
             const { data: verifyNotification, error: verifyError } = await supabase
@@ -304,7 +304,7 @@ async function createPaymentNotification(userId, paymentMethod, amount, plan) {
             if (verifyError) {
                 console.error('[TrialBanner] Error verifying notification creation:', verifyError);
             } else {
-                console.log('[TrialBanner] Notification verification successful:', verifyNotification);
+                // console.log('[TrialBanner] Notification verification successful:', verifyNotification);
             }
             
             // Dispatch event to notify other parts of the app about new notification
@@ -321,9 +321,9 @@ async function createPaymentNotification(userId, paymentMethod, amount, plan) {
                 await window.notificationBadgeManager.refresh();
             }
         }
-} catch (error) {
-    console.error('[TrialBanner] Error in createPaymentNotification:', error);
-}
+    } catch (error) {
+        console.error('[TrialBanner] Error in createPaymentNotification:', error);
+    }
 }
 // Create invoice notification
 async function createInvoiceNotification(userId, invoiceNumber) {
@@ -337,7 +337,7 @@ async function createInvoiceNotification(userId, invoiceNumber) {
 
         // If no settings found or invoice notifications are disabled, don't create notification
         if (settingsError || !notificationSettings || !notificationSettings.invoice_created) {
-            console.log('[TrialBanner] Invoice notifications disabled or no settings found, skipping notification');
+            // console.log('[TrialBanner] Invoice notifications disabled or no settings found, skipping notification');
             return;
         }
 
@@ -356,7 +356,7 @@ async function createInvoiceNotification(userId, invoiceNumber) {
         }
 
         if (existingNotifications && existingNotifications.length > 0) {
-            console.log('[TrialBanner] Invoice notification already exists for today, skipping...');
+            // console.log('[TrialBanner] Invoice notification already exists for today, skipping...');
             return;
         }
 
@@ -375,7 +375,7 @@ async function createInvoiceNotification(userId, invoiceNumber) {
         if (error) {
             console.error('[TrialBanner] Error creating invoice notification:', error);
         } else {
-            console.log('[TrialBanner] Invoice notification created successfully');
+            // console.log('[TrialBanner] Invoice notification created successfully');
         }
     } catch (error) {
         console.error('[TrialBanner] Error in createInvoiceNotification:', error);
@@ -487,7 +487,7 @@ window.createNotification = async function(type, title, message, actionUrl = nul
                 .single();
 
             if (settingsError || !notificationSettings || !notificationSettings[settingKey]) {
-                console.log(`[NotificationHelper] ${type} notifications disabled, skipping...`);
+                // console.log(`[NotificationHelper] ${type} notifications disabled, skipping...`);
                 return;
             }
         }
@@ -507,7 +507,7 @@ window.createNotification = async function(type, title, message, actionUrl = nul
         if (error) {
             console.error('[NotificationHelper] Error creating notification:', error);
         } else {
-            console.log(`[NotificationHelper] ${type} notification created successfully`);
+            // console.log(`[NotificationHelper] ${type} notification created successfully`);
         }
     } catch (error) {
         console.error('[NotificationHelper] Error in createNotification:', error);
@@ -729,13 +729,13 @@ function setupUpgradeButton() {
     if (btn) {
         btn.addEventListener('click', async (e) => {
             e.preventDefault();
-            console.log('[TrialBanner] Upgrade button clicked. Showing upgrade modal.');
+            // console.log('[TrialBanner] Upgrade button clicked. Showing upgrade modal.');
             // Always use the latest plan from global
             const currentPlan = window.currentPlanName || 'Trial';
             showUpgradeModal(currentPlan);
         });
     } else {
-        console.warn('[TrialBanner] #upgrade-btn not found.');
+        // console.warn('[TrialBanner] #upgrade-btn not found.');
     }
 }
 
@@ -743,13 +743,13 @@ function setupUpgradeButton() {
 // Wait for DOM to be ready before initializing
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', () => {
-        console.log('[TrialBanner] DOM loaded, initializing...');
+        // console.log('[TrialBanner] DOM loaded, initializing...');
         updateTrialBanner();
         setupUpgradeButton();
     });
 } else {
     // DOM is already ready
-    console.log('[TrialBanner] DOM already ready, initializing...');
+    // console.log('[TrialBanner] DOM already ready, initializing...');
     updateTrialBanner();
     setupUpgradeButton();
 }
@@ -763,12 +763,12 @@ window.TrialBanner = {
     createInvoiceNotification,
     // Add manual test function
     testWithValues: function(days, invoices) {
-        console.log('[TrialBanner] Manual test with values:', { days, invoices });
+        // console.log('[TrialBanner] Manual test with values:', { days, invoices });
         updateTrialUI(days, invoices, new Date());
     },
     // Test notification creation
     testNotification: async function() {
-        console.log('[TrialBanner] Testing notification creation...');
+        // console.log('[TrialBanner] Testing notification creation...');
         try {
             const { data: { session } } = await supabase.auth.getSession();
             if (!session || !session.user) {
@@ -776,14 +776,14 @@ window.TrialBanner = {
                 return;
             }
             await createPaymentNotification(session.user.id, 'Test Payment', 'MZN 100', 'Test Plan');
-            console.log('[TrialBanner] Test notification completed');
+            // console.log('[TrialBanner] Test notification completed');
         } catch (error) {
             console.error('[TrialBanner] Test notification failed:', error);
         }
     },
     // Check existing notifications
     checkNotifications: async function() {
-        console.log('[TrialBanner] Checking existing notifications...');
+        // console.log('[TrialBanner] Checking existing notifications...');
         try {
             const { data: { session } } = await supabase.auth.getSession();
             if (!session || !session.user) {
@@ -800,7 +800,7 @@ window.TrialBanner = {
             if (error) {
                 console.error('[TrialBanner] Error checking notifications:', error);
             } else {
-                console.log('[TrialBanner] Found notifications:', notifications);
+                // console.log('[TrialBanner] Found notifications:', notifications);
             }
         } catch (error) {
             console.error('[TrialBanner] Error in checkNotifications:', error);
@@ -812,13 +812,13 @@ window.TrialBanner = {
 window.dispatchEvent(new Event('trialBannerReady'));
 
 // Test function to verify trial banner is loaded
-console.log('[TrialBanner] Trial banner loaded successfully');
-console.log('[TrialBanner] Available functions:', Object.keys(window.TrialBanner || {}));
+// console.log('[TrialBanner] Trial banner loaded successfully');
+// console.log('[TrialBanner] Available functions:', Object.keys(window.TrialBanner || {}));
 
 // Listen for invoice creation to update banner in real time
 
 document.addEventListener('invoiceCreated', async (event) => {
-    console.log('[TrialBanner] Invoice created event detected, updating banner...');
+    // console.log('[TrialBanner] Invoice created event detected, updating banner...');
     
     // Create invoice notification if user has it enabled
     if (event.detail && event.detail.userId) {

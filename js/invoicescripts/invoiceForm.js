@@ -99,13 +99,23 @@ class InvoiceForm {
             document.getElementById('totalVat').textContent = '0.00';
             document.getElementById('invoiceTotal').textContent = '0.00';
             this.initializeDateFields();
-            
             // Generate a new unique invoice number only once
             const invoiceNumberField = document.getElementById('invoiceNumber');
             if (invoiceNumberField && !invoiceNumberField.dataset.generated) {
                 try {
                     const generator = new window.InvoiceNumberGenerator();
-                    const newInvoiceNumber = await generator.getNextNumber();
+                    // Fetch user_id from Supabase session
+                    let userId = null;
+                    try {
+                        const session = await window.supabase.auth.getSession();
+                        userId = session.data?.session?.user?.id;
+                    } catch (e) {
+                        console.error('Could not fetch user session:', e);
+                    }
+                    // Get serie from form (default to 'A')
+                    let serie = document.getElementById('serie')?.value || 'A';
+                    if (!userId) throw new Error('User not authenticated. Please log in.');
+                    const newInvoiceNumber = await generator.getNextNumber(userId, serie);
                     invoiceNumberField.value = newInvoiceNumber;
                     invoiceNumberField.dataset.generated = true; // Mark as generated
                 } catch (err) {
@@ -188,6 +198,16 @@ class InvoiceForm {
                 const description = row.querySelector('.item-description')?.value;
                 const quantity = parseAmount(row.querySelector('.item-quantity')?.value) || 0;
                 const price = parseAmount(row.querySelector('.item-price')?.value) || 0;
+                // Discount logic
+                let discountType = row.querySelector('.item-discount-type')?.value || 'none';
+                let discountValue = parseAmount(row.querySelector('.item-discount-value')?.value) || 0;
+                let itemDiscount = 0;
+                if (discountType === 'percent') {
+                    itemDiscount = price * quantity * (discountValue / 100);
+                } else if (discountType === 'fixed') {
+                    itemDiscount = discountValue;
+                }
+                const discountedSubtotal = Math.max(price * quantity - itemDiscount, 0);
                 // VAT rate logic
                 let vatRate = 0.16; // default
                 const vatSelect = row.querySelector('.item-vat-rate');
@@ -199,8 +219,8 @@ class InvoiceForm {
                         vatRate = parseFloat(vatSelect.value);
                     }
                 }
-                const vat = price * quantity * vatRate;
-                const total = price * quantity + vat;
+                const vat = discountedSubtotal * vatRate;
+                const total = discountedSubtotal + vat;
 
                 console.log(`Item ${index + 1}:`, {
                     description,
@@ -216,6 +236,9 @@ class InvoiceForm {
                         description,
                         quantity,
                         price,
+                        discountType,
+                        discountValue,
+                        discountedSubtotal,
                         vatRate,
                         vat,
                         total
@@ -294,12 +317,10 @@ class InvoiceForm {
     async saveInvoice() {
         try {
             const invoiceData = this.collectInvoiceData();
-
             // Always fetch the latest exchange rate for non-MZN currencies before saving
             if (this.currentCurrency !== 'MZN') {
                 await this.updateExchangeRate(this.currentCurrency);
             }
-
             // Fetch user_id from Supabase session
             let userId = null;
             try {
@@ -311,28 +332,41 @@ class InvoiceForm {
             if (!userId) {
                 throw new Error('User not authenticated. Please log in.');
             }
-
-            // Find client_id from the selected client name (must match clients.customer_id)
+            // Find client_id from the selected client name (must match clients.customer_id or id)
             let clientId = null;
             if (window.clients && Array.isArray(window.clients)) {
-                const selectedClient = window.clients.find(c => c.customer_name === invoiceData.client.name);
+                // Try to match by id, customer_id, name, or email
+                const selectedClientName = invoiceData.client.name?.trim();
+                const selectedClientEmail = invoiceData.client.email?.trim();
+                // Debug: log available clients and selected value
+                console.log('[InvoiceForm] Looking for client:', selectedClientName, selectedClientEmail);
+                console.log('[InvoiceForm] Available clients:', window.clients);
+                const selectedClient = window.clients.find(c =>
+                    (c.customer_id && c.customer_id === selectedClientName) ||
+                    (c.id && c.id === selectedClientName) ||
+                    (c.customer_name && c.customer_name === selectedClientName) ||
+                    (c.email && c.email === selectedClientEmail)
+                );
                 if (selectedClient) {
                     clientId = selectedClient.customer_id || selectedClient.id || null;
+                    console.log('[InvoiceForm] Matched client:', selectedClient);
+                } else {
+                    console.error('[InvoiceForm] No client match found for:', selectedClientName, selectedClientEmail);
+                    console.error('[InvoiceForm] Clients available for matching:', window.clients);
                 }
             }
             if (!clientId) {
-                throw new Error('Client not found or missing client_id. Please select a valid client.');
+                showNotification('Client not found or missing client_id. Please select a valid client from the suggestions/autocomplete list.', 'error');
+                throw new Error('Client not found or missing client_id. Please select a valid client from the suggestions/autocomplete list.');
             }
-
             // Optionally, get environment_id if available
             let environmentId = null;
             if (window.environmentId) {
                 environmentId = window.environmentId;
             }
-
-            // Format data for Supabase storage
+            // --- Map all relevant fields to DB schema ---
             const formattedData = {
-                "invoiceNumber": invoiceData.invoiceNumber,
+                invoiceNumber: invoiceData.invoiceNumber,
                 serie: invoiceData.serie,
                 issue_date: invoiceData.issueDate,
                 due_date: invoiceData.dueDate,
@@ -340,33 +374,66 @@ class InvoiceForm {
                 currency: invoiceData.currency || 'MZN',
                 client_id: clientId,
                 client_name: invoiceData.client.name,
-                subtotal: invoiceData.subtotal,
-                desconto: invoiceData.discountType === 'fixed' ? invoiceData.discountValue : null,
-                desconto_percent: invoiceData.discountType === 'percent' ? invoiceData.discountValue : null,
-                subtotal_sem_iva: invoiceData.subtotalAfterDiscount,
-                vat_amount: invoiceData.totalVat,
-                total_amount: invoiceData.total,
-                notes: invoiceData.notes || '',
+                customer_name: invoiceData.client.name, // Add this for compatibility
+                subtotal: invoiceData.subtotal ?? null,
+                desconto: invoiceData.totalDiscount ?? null,
+                total_desconto: invoiceData.totalDiscount ?? null,
+                subtotal_sem_iva: invoiceData.subtotalAfterDiscount ?? null,
+                iva: invoiceData.totalVat ?? null,
+                vat_amount: invoiceData.totalVat ?? null,
+                valor_total_sem_imposto: invoiceData.subtotalAfterDiscount ?? null,
+                total_incluindo_imposto: invoiceData.total ?? null,
+                total_amount: invoiceData.total ?? null,
+                iva_percent: (() => {
+                    const uniqueRates = Array.from(new Set(invoiceData.items.map(i => i.vatRate)));
+                    if (uniqueRates.length === 1) return uniqueRates[0] * 100;
+                    return null;
+                })(),
+                valor_imposto: invoiceData.totalVat ?? null,
                 payment_terms: invoiceData.paymentTerms || 'net30',
+                notes: invoiceData.notes || '',
                 currency_rate: this.currentRate || 1,
-                user_id: userId
+                user_id: userId,
+                environment_id: environmentId ?? null,
+                pdf_url: null, // Will be updated after PDF is generated
+                // Add any other fields you want to save
             };
-            if (environmentId) {
-                formattedData.environment_id = environmentId;
-            }
-
             // Debug: Log the insert payload
             console.log('Insert payload:', formattedData);
-
             // Insert the invoice
             const { data: invoice, error: invoiceError } = await window.supabase
                 .from('invoices')
                 .insert([formattedData])
                 .select()
                 .single();
-
             if (invoiceError) throw invoiceError;
-
+            // Generate and upload PDF, get pdfUrl
+            let pdfUrl = null;
+            if (typeof window.generateAndUploadPDF === 'function') {
+                pdfUrl = await window.generateAndUploadPDF(invoiceData);
+            } else {
+                console.warn('generateAndUploadPDF function not implemented. PDF URL will not be saved.');
+            }
+            // Update invoice with pdf_url
+            if (pdfUrl) {
+                await window.supabase
+                    .from('invoices')
+                    .update({ pdf_url: pdfUrl })
+                    .eq('id', invoice.id);
+            }
+            // --- Trigger PDF download for the user ---
+            if (typeof window.generatePDF === 'function') {
+                const pdfBlob = await window.generatePDF(invoiceData);
+                const pdfFileName = `Invoice-${invoiceData.invoiceNumber}.pdf`;
+                const downloadUrl = URL.createObjectURL(pdfBlob);
+                const link = document.createElement('a');
+                link.href = downloadUrl;
+                link.download = pdfFileName;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                URL.revokeObjectURL(downloadUrl);
+            }
             // For each item, first check if it exists in products table
             for (const item of invoiceData.items) {
                 // Check if product exists
@@ -375,7 +442,6 @@ class InvoiceForm {
                     .select('id')
                     .eq('description', item.description)
                     .single();
-
                 if (!existingProduct) {
                     // If product doesn't exist, create it
                     const { error: productError } = await window.supabase
@@ -384,21 +450,17 @@ class InvoiceForm {
                             description: item.description,
                             price: item.price,
                             tax_code: 'VAT',
-                            tax_rate: 16.00, // Default VAT rate
+                            tax_rate: item.vatRate * 100, // Store as percent
                             industry: 'General' // Default industry
                         }]);
-
                     if (productError) throw productError;
                 }
             }
-
             showNotification('Invoice saved successfully', 'success');
-            
             // Create invoice notification
             if (window.createNotification) {
                 await window.createNotification('invoice', 'Invoice Created Successfully', `Invoice ${invoice.invoiceNumber} has been created and is ready for sending to your client.`, 'invoices.html');
             }
-            
             // Update trial banner if ready, or wait for readiness
             function updateTrialBannerIfReady() {
                 if (window.TrialBanner && typeof window.TrialBanner.updateTrialBanner === 'function') {
@@ -603,30 +665,25 @@ function getCurrentFormData() {
 
 async function handleInvoiceSubmission(event) {
     event.preventDefault();
-    
+    const submitBtn = document.querySelector('#invoiceForm button[type="submit"]');
+    if (submitBtn) submitBtn.disabled = true;
     try {
         // Use the InvoiceForm's saveInvoice method
         const invoice = await window.invoiceForm.saveInvoice();
-
-        // Store for PDF generation
         window.lastSavedInvoice = invoice;
-
-        // Create invoice notification
         if (window.createNotification) {
             await window.createNotification('invoice', 'Invoice Created Successfully', `Invoice ${invoice.invoiceNumber} has been created and is ready for sending to your client.`, 'invoices.html');
         }
-
         showNotification('Invoice saved successfully!', 'success');
-        
-        // Close modal and refresh table
         window.modalManager.closeModal('invoiceModal');
-        if (window.invoiceTable) {
-            window.invoiceTable.refresh();
+        if (window.invoiceTable && typeof window.invoiceTable.fetchAndDisplayInvoices === 'function') {
+            await window.invoiceTable.fetchAndDisplayInvoices(1, 10, {});
         }
-
     } catch (error) {
         console.error('Error saving invoice:', error);
         showNotification(`Error saving invoice: ${error.message}`, 'error');
+    } finally {
+        if (submitBtn) submitBtn.disabled = false;
     }
 }
 
@@ -701,8 +758,10 @@ document.getElementById('invoiceForm')?.addEventListener('submit', handleInvoice
     if (currentStep > 0) showStep(currentStep - 1);
   }
 
+  // --- Update review step to show per-item discount breakdown ---
   function populateReview() {
     // Fill the review summary with entered data
+    console.log('[populateReview] Called, generating review table with all columns.');
     const clientName = document.getElementById('client-list').value;
     const clientEmail = document.getElementById('clientEmail').value;
     const clientTaxId = document.getElementById('clientTaxId').value;
@@ -714,8 +773,6 @@ document.getElementById('invoiceForm')?.addEventListener('submit', handleInvoice
     const paymentTerms = document.getElementById('paymentTerms').options[document.getElementById('paymentTerms').selectedIndex].text;
     const notes = document.getElementById('notes').value;
     const serie = document.getElementById('serie')?.value || '';
-    const discountType = document.getElementById('discountType')?.value || 'none';
-    const discountValue = parseFloat(document.getElementById('discountValue')?.value) || 0;
     // Items
     const itemRows = document.querySelectorAll('#itemsTable .item-row');
     let itemsHtml = '';
@@ -723,31 +780,70 @@ document.getElementById('invoiceForm')?.addEventListener('submit', handleInvoice
       const desc = row.querySelector('.item-description').value;
       const qty = parseAmount(row.querySelector('.item-quantity').value);
       const price = parseAmount(row.querySelector('.item-price').value);
+      const discountType = row.querySelector('.item-discount-type').value;
+      // Always treat discountValue as 0 if type is 'none' or field is empty
+      let discountValue = parseAmount(row.querySelector('.item-discount-value').value);
+      if (discountType === 'none' || isNaN(discountValue) || discountValue === null) discountValue = 0;
+      const discountedSubtotal = parseAmount(row.querySelector('.item-discounted-subtotal').textContent);
       const vat = parseAmount(row.querySelector('.item-vat').textContent);
       const total = parseAmount(row.querySelector('.item-total').textContent);
+      let discountDisplay = '';
+      if (discountType === 'percent') discountDisplay = `${discountValue}%`;
+      else if (discountType === 'fixed') discountDisplay = `${discountValue}`;
+      else discountDisplay = '—';
       if (desc && qty > 0) {
-        itemsHtml += `<tr><td>${desc}</td><td>${qty}</td><td>${price}</td><td>${vat}</td><td>${total}</td></tr>`;
+        itemsHtml += `<tr><td>${desc}</td><td>${qty}</td><td>${price}</td><td>${discountType}</td><td>${discountDisplay}</td><td>${discountedSubtotal}</td><td>${vat}</td><td>${total}</td></tr>`;
       }
     });
+    // Always render all columns in the table header and use .items-table for styling
     const reviewHtml = `
       <div><strong>Client:</strong> ${clientName} (${clientEmail}, NUIT: ${clientTaxId})<br><strong>Address:</strong> ${clientAddress}</div>
       <div><strong>Invoice #:</strong> ${invoiceNumber} | <strong>Issue:</strong> ${issueDate} | <strong>Due:</strong> ${dueDate}</div>
       <div><strong>Currency:</strong> ${currency} | <strong>Terms:</strong> ${paymentTerms}</div>
       <div><strong>Notes:</strong> ${notes || '—'}</div>
-      <div><strong>Serie:</strong> ${serie}</div>
-      <div><strong>Discount:</strong> ${discountType === 'percent' ? `${discountValue}%` : `R$ ${discountValue.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}</div>
-      <table class="items-table" style="margin-top:12px;width:100%"><thead><tr><th>Description</th><th>Qty</th><th>Unit Price</th><th>VAT</th><th>Total</th></tr></thead><tbody>${itemsHtml}</tbody></table>
+      <div class="items-table-container">
+        <table class="items-table" style="margin-top:12px;width:100%"><thead><tr><th>Description</th><th>Quantity</th><th>Unit Price</th><th>Discount Type</th><th>Discount</th><th>Discounted Subtotal</th><th>VAT</th><th>Total</th></tr></thead><tbody>
+          ${Array.from(itemRows).map(row => {
+            const desc = row.querySelector('.item-description').value;
+            const qty = parseAmount(row.querySelector('.item-quantity').value);
+            const price = parseAmount(row.querySelector('.item-price').value);
+            const discountType = row.querySelector('.item-discount-type').value;
+            let discountValue = parseAmount(row.querySelector('.item-discount-value').value);
+            if (discountType === 'none' || isNaN(discountValue) || discountValue === null) discountValue = 0;
+            const discountedSubtotal = parseAmount(row.querySelector('.item-discounted-subtotal').textContent);
+            const vat = parseAmount(row.querySelector('.item-vat').textContent);
+            const total = parseAmount(row.querySelector('.item-total').textContent);
+            let discountDisplay = '';
+            if (discountType === 'percent') discountDisplay = `${discountValue}%`;
+            else if (discountType === 'fixed') discountDisplay = `${discountValue}`;
+            else discountDisplay = '—';
+            if (desc && qty > 0) {
+              return `<tr><td>${desc}</td><td>${qty}</td><td>${price.toFixed(2)}</td><td>${discountType}</td><td>${discountDisplay}</td><td>${discountedSubtotal.toFixed(2)}</td><td>${vat.toFixed(2)}</td><td>${total.toFixed(2)}</td></tr>`;
+            } else {
+              return '';
+            }
+          }).join('')}
+        </tbody></table>
+      </div>
       <div style="margin-top:16px;text-align:right;">
         <button type="button" class="btn secondary-btn" id="previewInvoiceBtn">
           <i class="fas fa-eye"></i> <span data-translate="preview">Preview</span>
         </button>
       </div>
     `;
-    document.getElementById('invoiceReviewSummary').innerHTML = reviewHtml;
-    // Copy totals
-    document.getElementById('reviewSubtotal').textContent = document.getElementById('subtotal').textContent;
-    document.getElementById('reviewTotalVat').textContent = document.getElementById('totalVat').textContent;
-    document.getElementById('reviewInvoiceTotal').textContent = document.getElementById('invoiceTotal').textContent;
+    const reviewSummary = document.getElementById('invoiceReviewSummary');
+    if (reviewSummary) reviewSummary.innerHTML = reviewHtml;
+    // Copy totals with null checks
+    const reviewSubtotal = document.getElementById('reviewSubtotal');
+    const reviewTotalDiscount = document.getElementById('reviewTotalDiscount');
+    const reviewSubtotalAfterDiscount = document.getElementById('reviewSubtotalAfterDiscount');
+    const reviewTotalVat = document.getElementById('reviewTotalVat');
+    const reviewInvoiceTotal = document.getElementById('reviewInvoiceTotal');
+    if (reviewSubtotal && document.getElementById('subtotal')) reviewSubtotal.textContent = document.getElementById('subtotal').textContent;
+    if (reviewTotalDiscount && document.getElementById('totalDiscount')) reviewTotalDiscount.textContent = document.getElementById('totalDiscount').textContent;
+    if (reviewSubtotalAfterDiscount && document.getElementById('subtotalAfterDiscount')) reviewSubtotalAfterDiscount.textContent = document.getElementById('subtotalAfterDiscount').textContent;
+    if (reviewTotalVat && document.getElementById('totalVat')) reviewTotalVat.textContent = document.getElementById('totalVat').textContent;
+    if (reviewInvoiceTotal && document.getElementById('invoiceTotal')) reviewInvoiceTotal.textContent = document.getElementById('invoiceTotal').textContent;
     // Attach preview button event
     setTimeout(() => {
       const previewBtn = document.getElementById('previewInvoiceBtn');
@@ -794,6 +890,235 @@ document.getElementById('invoiceForm')?.addEventListener('submit', handleInvoice
     btn.addEventListener('click', function() {
       showStep(0);
       maxStepReached = 0;
+      window.modalManager.closeModal('invoiceModal');
     });
   });
 })();
+
+// --- Per-item discount logic ---
+document.addEventListener('input', function(e) {
+    // Discount type change
+    if (e.target.classList.contains('item-discount-type')) {
+        const row = e.target.closest('.item-row');
+        const discountInput = row.querySelector('.item-discount-value');
+        if (!discountInput) return;
+        if (e.target.value === 'none') {
+            discountInput.style.display = 'none';
+            discountInput.value = '';
+        } else {
+            discountInput.style.display = 'block'; // Use block for table cell
+            discountInput.removeAttribute('disabled');
+            discountInput.classList.remove('hidden');
+            // If value is empty, set to 0 for immediate calculation
+            if (discountInput.value === '' || isNaN(parseAmount(discountInput.value))) {
+                discountInput.value = 0;
+            }
+            discountInput.focus();
+        }
+        console.log('[DISCOUNT] Discount type changed:', e.target.value, 'Input display:', discountInput.style.display);
+        window.invoiceForm.updateItemRow(row);
+    }
+    // Discount value input (update on every keystroke)
+    if (e.target.classList.contains('item-discount-value')) {
+        const row = e.target.closest('.item-row');
+        console.log('[DISCOUNT] Discount value input:', e.target.value);
+        window.invoiceForm.updateItemRow(row);
+    }
+    // VAT selector change
+    if (e.target.classList.contains('item-vat-rate')) {
+        const row = e.target.closest('.item-row');
+        const vatOtherInput = row.querySelector('.item-vat-other');
+        if (e.target.value === 'other') {
+            vatOtherInput.style.display = 'inline-block';
+            vatOtherInput.focus();
+        } else {
+            vatOtherInput.style.display = 'none';
+            vatOtherInput.value = '';
+        }
+        window.invoiceForm.updateItemRow(row);
+    }
+    // Custom VAT value change
+    if (e.target.classList.contains('item-vat-other')) {
+        const row = e.target.closest('.item-row');
+        window.invoiceForm.updateItemRow(row);
+    }
+    // Quantity or price change
+    if (e.target.classList.contains('item-quantity') || e.target.classList.contains('item-price')) {
+        const row = e.target.closest('.item-row');
+        window.invoiceForm.updateItemRow(row);
+    }
+});
+document.addEventListener('change', function(e) {
+    // Also update on change for all relevant fields
+    if (e.target.classList.contains('item-discount-type') || e.target.classList.contains('item-discount-value')) {
+        const row = e.target.closest('.item-row');
+        console.log('[DISCOUNT] Change event on discount field:', e.target.className, e.target.value);
+        window.invoiceForm.updateItemRow(row);
+    }
+});
+
+// --- Update item row calculation for per-item discount ---
+InvoiceForm.prototype.updateItemRow = function(row) {
+    const quantity = parseAmount(row.querySelector('.item-quantity')?.value) || 0;
+    const price = parseAmount(row.querySelector('.item-price')?.value) || 0;
+    // Discount logic
+    let discountType = row.querySelector('.item-discount-type')?.value || 'none';
+    let discountValue = parseAmount(row.querySelector('.item-discount-value')?.value);
+    if (isNaN(discountValue) || discountValue === null) discountValue = 0;
+    let itemDiscount = 0;
+    if (discountType === 'percent') {
+        itemDiscount = price * quantity * (discountValue / 100);
+    } else if (discountType === 'fixed') {
+        itemDiscount = discountValue;
+    }
+    // Prevent over-discounting
+    if (itemDiscount > price * quantity) itemDiscount = price * quantity;
+    const discountedSubtotal = Math.max(price * quantity - itemDiscount, 0);
+    // VAT logic
+    let vatRate = 0.16;
+    const vatSelect = row.querySelector('.item-vat-rate');
+    if (vatSelect) {
+        if (vatSelect.value === 'other') {
+            const vatOther = row.querySelector('.item-vat-other');
+            vatRate = vatOther && vatOther.value ? parseFloat(vatOther.value) / 100 : 0;
+        } else {
+            vatRate = parseFloat(vatSelect.value);
+        }
+    }
+    const vat = discountedSubtotal * vatRate;
+    const total = discountedSubtotal + vat;
+    console.log('[DISCOUNT] updateItemRow:', {
+        quantity,
+        price,
+        discountType,
+        discountValue,
+        itemDiscount,
+        discountedSubtotal,
+        vatRate,
+        vat,
+        total
+    });
+    row.querySelector('.item-discounted-subtotal').textContent = discountedSubtotal.toFixed(2);
+    row.querySelector('.item-vat').textContent = vat.toFixed(2);
+    row.querySelector('.item-total').textContent = total.toFixed(2);
+    // Optionally trigger totals update
+    if (typeof this.updateReviewTotals === 'function') this.updateReviewTotals();
+};
+
+// --- Update invoice totals for per-item discount ---
+InvoiceForm.prototype.updateReviewTotals = function() {
+    const itemRows = document.querySelectorAll('.item-row');
+    let subtotal = 0, totalDiscount = 0, subtotalAfterDiscount = 0, totalVat = 0, grandTotal = 0;
+    itemRows.forEach(row => {
+        const quantity = parseAmount(row.querySelector('.item-quantity')?.value) || 0;
+        const price = parseAmount(row.querySelector('.item-price')?.value) || 0;
+        let discountType = row.querySelector('.item-discount-type')?.value || 'none';
+        let discountValue = parseAmount(row.querySelector('.item-discount-value')?.value) || 0;
+        let itemDiscount = 0;
+        if (discountType === 'percent') {
+            itemDiscount = price * quantity * (discountValue / 100);
+        } else if (discountType === 'fixed') {
+            itemDiscount = discountValue;
+        }
+        const discountedSubtotal = Math.max(price * quantity - itemDiscount, 0);
+        let vatRate = 0.16;
+        const vatSelect = row.querySelector('.item-vat-rate');
+        if (vatSelect) {
+            if (vatSelect.value === 'other') {
+                const vatOther = row.querySelector('.item-vat-other');
+                vatRate = vatOther && vatOther.value ? parseFloat(vatOther.value) / 100 : 0;
+            } else {
+                vatRate = parseFloat(vatSelect.value);
+            }
+        }
+        const vat = discountedSubtotal * vatRate;
+        const total = discountedSubtotal + vat;
+        subtotal += price * quantity;
+        totalDiscount += itemDiscount;
+        subtotalAfterDiscount += discountedSubtotal;
+        totalVat += vat;
+        grandTotal += total;
+    });
+    document.getElementById('subtotal').textContent = subtotal.toFixed(2);
+    document.getElementById('totalDiscount').textContent = totalDiscount.toFixed(2);
+    document.getElementById('subtotalAfterDiscount').textContent = subtotalAfterDiscount.toFixed(2);
+    document.getElementById('totalVat').textContent = totalVat.toFixed(2);
+    document.getElementById('invoiceTotal').textContent = grandTotal.toFixed(2);
+    // Also update review step if present
+    if (document.getElementById('reviewSubtotal')) document.getElementById('reviewSubtotal').textContent = subtotal.toFixed(2);
+    if (document.getElementById('reviewTotalVat')) document.getElementById('reviewTotalVat').textContent = totalVat.toFixed(2);
+    if (document.getElementById('reviewInvoiceTotal')) document.getElementById('reviewInvoiceTotal').textContent = grandTotal.toFixed(2);
+};
+
+// --- Ensure serie field always defaults to 'A' ---
+document.addEventListener('DOMContentLoaded', function() {
+    const serieInput = document.getElementById('serie');
+    if (serieInput && !serieInput.value) serieInput.value = 'A';
+});
+
+// Patch: When a new item row is added, immediately trigger updateItemRow for that row
+const origAddInvoiceItem = window.invoiceItems && window.invoiceItems.addInvoiceItem;
+if (origAddInvoiceItem) {
+  window.invoiceItems.addInvoiceItem = function() {
+    origAddInvoiceItem.apply(this, arguments);
+    // Get the last row and trigger calculation
+    const itemsTableBody = document.querySelector('#itemsTable tbody');
+    const newRow = itemsTableBody && itemsTableBody.lastElementChild;
+    if (newRow && typeof window.invoiceForm.updateItemRow === 'function') {
+      // If discount type is 'none', always treat discount value as 0
+      const discountType = newRow.querySelector('.item-discount-type')?.value;
+      if (discountType === 'none') {
+        const discountInput = newRow.querySelector('.item-discount-value');
+        if (discountInput) discountInput.value = '';
+      }
+      window.invoiceForm.updateItemRow(newRow);
+    }
+  };
+}
+// When switching discount type, always trigger calculation update for the row
+// (already handled by event listeners, but ensure updateItemRow is always called)
+document.addEventListener('change', function(e) {
+    if (e.target.classList.contains('item-discount-type')) {
+        const row = e.target.closest('.item-row');
+        window.invoiceForm.updateItemRow(row);
+    }
+});
+
+document.addEventListener('DOMContentLoaded', function() {
+    const serieInput = document.getElementById('serie');
+    const invoiceNumberField = document.getElementById('invoiceNumber');
+    if (serieInput && invoiceNumberField) {
+        serieInput.addEventListener('input', async function() {
+            try {
+                const generator = new window.InvoiceNumberGenerator();
+                // Fetch user_id from Supabase session
+                let userId = null;
+                try {
+                    const session = await window.supabase.auth.getSession();
+                    userId = session.data?.session?.user?.id;
+                } catch (e) {
+                    console.error('Could not fetch user session:', e);
+                }
+                let serie = serieInput.value || 'A';
+                if (!userId) throw new Error('User not authenticated. Please log in.');
+                const newInvoiceNumber = await generator.getNextNumber(userId, serie);
+                invoiceNumberField.value = newInvoiceNumber;
+            } catch (err) {
+                console.error('Error generating invoice number:', err);
+                invoiceNumberField.value = '';
+                window.showNotification('Error generating invoice number');
+            }
+        });
+    }
+});
+
+// Ensure the close-modal button in #invoiceModal closes the modal via modalManager and logs the event
+const invoiceModalCloseBtn = document.querySelector('#invoiceModal .close-modal');
+if (invoiceModalCloseBtn) {
+  invoiceModalCloseBtn.addEventListener('click', function() {
+    console.log('[InvoiceForm] Close button clicked for invoiceModal');
+    console.log('[InvoiceForm] Modal stack before close:', window.modalManager.modalStack.map(m => m.id));
+    window.modalManager.closeModal('invoiceModal');
+    console.log('[InvoiceForm] Modal stack after close:', window.modalManager.modalStack.map(m => m.id));
+  });
+}

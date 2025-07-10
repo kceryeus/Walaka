@@ -35,7 +35,7 @@
     <!-- Custom JS -->
 
     <script src="js/invoicescripts/dateRangeFilter.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.3/html2pdf.bundle.min.js"></script>
     <script src="js/invoicescripts/export.js"></script>
 </head>
 
@@ -342,7 +342,7 @@
     </div>
     
     <!-- Create Invoice Modal -->
-    <div id="invoiceModal" class="modal">
+    <div id="invoiceModal" class="modal modal-invoice">
         <div class="modal-content">
             <!-- Stepper/Progress Bar -->
             <div class="modal-stepper">
@@ -402,7 +402,7 @@
                             </div>
                             <div class="form-group">
                                 <label for="serie" data-translate="serie">Série</label>
-                                <input type="text" id="serie" placeholder="e.g. A" autocomplete="off">
+                                <input type="text" id="serie" value="A" autocomplete="off">
                             </div>
                             <div class="form-group">
                                 <label for="issueDate" data-translate="issue_date">Issue Date</label>
@@ -423,16 +423,6 @@
                                     <option value="GBP">GBP - British Pound</option>
                                 </select>
                                 <div id="exchangeRateInfo" style="margin-top: 4px; font-size: 0.95em; color: #555;"></div>
-                            </div>
-                            <div class="form-group">
-                                <label for="discountType">Discount Type</label>
-                                <select id="discountType">
-                                    <option value="none">None</option>
-                                    <option value="percent">Percent (%)</option>
-                                    <option value="fixed">Fixed Amount</option>
-                                </select>
-                                <label for="discountValue" id="discountValueLabel" style="margin-top:4px;">Discount</label>
-                                <input type="number" id="discountValue" placeholder="Discount" min="0" step="0.01">
                             </div>
                         </div>
                         <div class="form-row">
@@ -458,11 +448,15 @@
                             <table id="itemsTable" class="items-table">
                                 <thead>
                                     <tr>
-                                        <th width="40%" data-translate="description">Description</th>
-                                        <th width="15%" data-translate="quantity">Quantity</th>
-                                        <th width="15%" data-translate="unit_price">Unit Price</th>
+                                        <th width="30%" data-translate="description">Description</th>
+                                        <th width="10%" data-translate="quantity">Quantity</th>
+                                        <th width="10%" data-translate="unit_price">Unit Price</th>
+                                        <th width="10%">Discount Type</th>
+                                        <th width="10%">Discount</th>
+                                        <th width="10%">Discounted Subtotal</th>
                                         <th width="10%" data-translate="vat_16">VAT Rate</th>
-                                        <th width="15%" data-translate="total">Total</th>
+                                        <th width="10%">VAT</th>
+                                        <th width="10%" data-translate="total">Total</th>
                                         <th width="5%"></th>
                                     </tr>
                                 </thead>
@@ -481,6 +475,19 @@
                                             <input type="number" class="item-price" value="0.00" min="0" step="0.01">
                                         </td>
                                         <td>
+                                            <select class="item-discount-type">
+                                                <option value="none">None</option>
+                                                <option value="percent">Percent (%)</option>
+                                                <option value="fixed">Fixed</option>
+                                            </select>
+                                        </td>
+                                        <td>
+                                            <input type="number" class="item-discount-value" min="0" step="0.01" style="display:none;" placeholder="Discount">
+                                        </td>
+                                        <td>
+                                            <span class="item-discounted-subtotal">0.00</span>
+                                        </td>
+                                        <td>
                                             <select class="item-vat-rate">
                                                 <option value="0.16">16%</option>
                                                 <option value="0.05">5%</option>
@@ -488,6 +495,8 @@
                                                 <option value="other">Other</option>
                                             </select>
                                             <input type="number" class="item-vat-other" min="0" max="100" step="0.01" placeholder="VAT %" style="display:none;width:60px;">
+                                        </td>
+                                        <td>
                                             <span class="item-vat">0.00</span>
                                         </td>
                                         <td>
@@ -512,7 +521,7 @@
                             </div>
                             <div class="totals-row">
                                 <span>Discount:</span>
-                                <span id="discountTotal">0.00</span>
+                                <span id="totalDiscount">0.00</span>
                             </div>
                             <div class="totals-row">
                                 <span>Subtotal after Discount:</span>
@@ -573,7 +582,7 @@
     </div>
 
     <!-- View Invoice Modal -->
-    <div id="viewInvoiceModal" class="modal">
+    <div id="viewInvoiceModal" class="modal modal-preview">
         <div class="modal-content">
             <div class="modal-header">
                 <h2 data-translate="invoice_details_title">Invoice Details</h2>
@@ -611,7 +620,7 @@
     </div>
     
     <!-- Email Invoice Modal -->
-    <div id="emailInvoiceModal" class="modal">
+    <div id="emailInvoiceModal" class="modal modal-email">
         <div class="modal-content">
             <div class="modal-header">
                 <h2>Send Invoice</h2>
@@ -660,7 +669,7 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="scripts/templateManager.js"></script>
+    <script src="scripts/templatemanager.js"></script>
     <script src="js/topbar-menu.js"></script>
     <script src="js/invoicescripts/notifications.js"></script>
     <!-- Core invoice modules -->
@@ -669,6 +678,7 @@
     <script src="js/invoicescripts/invoiceStatus.js"></script>
     <script src="js/invoicescripts/invoicePreview.js"></script>
     <script src="js/invoicescripts/invoiceItems.js"></script>
+    <script src="js/invoicescripts/invoiceForm.js"></script>
     <script src="js/invoicescripts/metrics.js"></script>
     <script src="js/invoicescripts/charts.js"></script>
     <script src="js/invoicescripts/eventListeners.js"></script>
@@ -720,6 +730,7 @@
                 if (error) throw error;
                 
                 clients = data;
+                window.clients = clients;
                 updateClientDatalist();
                 console.log('Clients loaded successfully:', clients.length);
             } catch (error) {

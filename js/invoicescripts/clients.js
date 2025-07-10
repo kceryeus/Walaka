@@ -107,3 +107,20 @@ if (typeof window !== 'undefined') {
     window.saveNewClient = saveNewClient;
     window.setupClientAutocomplete = setupClientAutocomplete;
 }
+
+// Fetch all clients on page load and store in window.clients
+if (typeof window !== 'undefined') {
+    document.addEventListener('DOMContentLoaded', async function() {
+        try {
+            const { data: clients, error } = await window.supabase
+                .from('clients')
+                .select('*');
+            if (error) throw error;
+            window.clients = clients || [];
+            console.log('[clients.js] Loaded clients:', window.clients.length);
+        } catch (err) {
+            window.clients = [];
+            console.error('[clients.js] Error loading clients:', err);
+        }
+    });
+}

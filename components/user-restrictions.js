@@ -1,14 +1,14 @@
 // components/user-restrictions.js
 // Restrict admin-only actions in usermanagement-vanilla for non-admins
 
-console.log('[UserRestrictions] Script loaded!');
+// console.log('[UserRestrictions] Script loaded!');
 
 (async function() {
-    console.log('[UserRestrictions] Waiting for Supabase...');
+    // console.log('[UserRestrictions] Waiting for Supabase...');
     while (!window.supabase || !window.supabase.auth) {
         await new Promise(resolve => setTimeout(resolve, 100));
     }
-    console.log('[UserRestrictions] Supabase ready!');
+    // console.log('[UserRestrictions] Supabase ready!');
     // Get current user role
     let userRole = null;
     try {
@@ -20,18 +20,18 @@ console.log('[UserRestrictions] Script loaded!');
                 .eq('id', session.user.id)
                 .maybeSingle();
             userRole = userData?.role || null;
-            console.log('[UserRestrictions] Detected user role:', userRole);
+            // console.log('[UserRestrictions] Detected user role:', userRole);
             if (!userRole) {
-                console.warn('[UserRestrictions] No role found for user in users table:', session.user.id, userData);
+                // console.warn('[UserRestrictions] No role found for user in users table:', session.user.id, userData);
             }
         } else {
-            console.warn('[UserRestrictions] No session or user found.');
+            // console.warn('[UserRestrictions] No session or user found.');
         }
     } catch (e) {
-        console.warn('[UserRestrictions] Could not determine user role:', e);
+        // console.warn('[UserRestrictions] Could not determine user role:', e);
     }
     if (userRole === 'admin') {
-        console.log('[UserRestrictions] User is admin, no restrictions applied.');
+        // console.log('[UserRestrictions] User is admin, no restrictions applied.');
         return;
     }
 
@@ -56,10 +56,10 @@ console.log('[UserRestrictions] Script loaded!');
         btn.addEventListener('click', function(e) {
             e.preventDefault();
             e.stopPropagation();
-            console.log(`[UserRestrictions] Blocked action: ${action}`);
+            // console.log(`[UserRestrictions] Blocked action: ${action}`);
             showUserRestrictionModal(action);
         }, true);
-        console.log(`[UserRestrictions] Restricted button: ${action}`, btn);
+        // console.log(`[UserRestrictions] Restricted button: ${action}`, btn);
     }
 
     // Helper to check if user is editor
@@ -104,7 +104,7 @@ console.log('[UserRestrictions] Script loaded!');
             e.stopPropagation();
             showUserRestrictionModal('edit');
         }, true);
-        console.log('[UserRestrictions] Restricted edit icon', icon);
+        // console.log('[UserRestrictions] Restricted edit icon', icon);
     });
     document.querySelectorAll('i.fa-trash, i.fa-trash-alt').forEach(icon => {
         icon.classList.add('user-restricted');
@@ -116,7 +116,7 @@ console.log('[UserRestrictions] Script loaded!');
             e.stopPropagation();
             showUserRestrictionModal('delete');
         }, true);
-        console.log('[UserRestrictions] Restricted delete icon', icon);
+        // console.log('[UserRestrictions] Restricted delete icon', icon);
     });
 
     // Restrict Edit buttons (no lock icon, just block action)
@@ -227,7 +227,7 @@ console.log('[UserRestrictions] Script loaded!');
                 showUserRestrictionModal('change user status');
             }, true);
         });
-        console.log('[UserRestrictions] Re-applied restrictions after delay.');
+        // console.log('[UserRestrictions] Re-applied restrictions after delay.');
 
         // Re-apply settings restrictions after delay
         if (window.location.pathname.endsWith('settings.html')) {

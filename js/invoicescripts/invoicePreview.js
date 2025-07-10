@@ -199,7 +199,7 @@ async function previewInvoice(invoiceData) {
         const viewInvoiceModal = document.getElementById('viewInvoiceModal');
         if (viewInvoiceModal) {
             console.log('View invoice modal element found.');
-            viewInvoiceModal.style.display = 'block';
+            window.modalManager.openModal('viewInvoiceModal');
             document.body.classList.add('modal-open');
             console.log('Modal activated');
         } else {

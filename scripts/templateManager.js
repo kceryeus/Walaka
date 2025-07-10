@@ -1,3 +1,4 @@
+
 // Map template names to file paths 
 const TEMPLATE_PATHS = {
     'template01': 'template01.html',
@@ -137,17 +138,24 @@ const TEMPLATES = {
             }
             .invoice-items {
                 width: 100%;
-                border-collapse: collapse;
-                margin: 20px 0;
+                max-width: 100%;
+                table-layout: fixed;
+                font-size: 0.75em; /* 25% smaller */
+            }
+            .invoice-items th,
+            .invoice-items td {
+                padding: 8px;
+                border-bottom: 1px solid #eee;
+                word-break: break-word;
+                font-size: 0.75em; /* 25% smaller */
             }
             .invoice-items th {
                 background: #f5f5f5;
-                padding: 12px;
+                padding: 12px 8px;
                 text-align: left;
             }
             .invoice-items td {
-                padding: 12px;
-                border-bottom: 1px solid #eee;
+                padding: 8px;
             }
             .invoice-totals {
                 text-align: right;
@@ -201,6 +209,9 @@ const TEMPLATES = {
                             <th>Description</th>
                             <th>Quantity</th>
                             <th>Unit Price</th>
+                            <th>Discount Type</th>
+                            <th>Discount</th>
+                            <th>Discounted Subtotal</th>
                             <th>VAT (16%)</th>
                             <th>Total</th>
                         </tr>
@@ -258,19 +269,25 @@ const TEMPLATES = {
             }
             .invoice-items {
                 width: 100%;
-                border-collapse: separate;
-                border-spacing: 0;
-                margin: 20px 0;
+                max-width: 100%;
+                table-layout: fixed;
+                font-size: 0.75em; /* 25% smaller */
+            }
+            .invoice-items th,
+            .invoice-items td {
+                padding: 8px;
+                border-bottom: 1px solid #eee;
+                word-break: break-word;
+                font-size: 0.75em; /* 25% smaller */
             }
             .invoice-items th {
                 background: #007ec7;
                 color: white;
-                padding: 15px;
+                padding: 12px 8px;
                 text-align: left;
             }
             .invoice-items td {
-                padding: 15px;
-                border-bottom: 1px solid #eee;
+                padding: 8px;
             }
             .invoice-items tr:hover {
                 background: #f8f9fa;
@@ -333,6 +350,9 @@ const TEMPLATES = {
                             <th>Description</th>
                             <th>Quantity</th>
                             <th>Unit Price</th>
+                            <th>Discount Type</th>
+                            <th>Discount</th>
+                            <th>Discounted Subtotal</th>
                             <th>VAT (16%)</th>
                             <th>Total</th>
                         </tr>
@@ -346,7 +366,7 @@ const TEMPLATES = {
                 </div>
                 
                 <div class="notes">
-                    <h4>Notes:</h4>
+                    <h4>TESTE:</h4>
                     <p id="notes"></p>
                 </div>
             </div>
@@ -424,10 +444,13 @@ async function populateTemplate(templateContent, invoiceData) {
     setDataField(doc, 'client-contact', invoiceData.client?.phone || invoiceData.client_contact || '');
 
     // Calculate totals
-    const subtotal = Number(invoiceData.subtotal || invoiceData.invoice?.subtotal || 0);
-    const discount = Number(invoiceData.discount || invoiceData.invoice?.discount || 0);
-    const subtotalAfterDiscount = subtotal - discount;
-    let totalVat = 0;
+    const subtotal = Number(invoiceData.subtotal || 0);
+    const discountAmount = Number(invoiceData.discountAmount || 0);
+    const discountType = invoiceData.discountType || 'none';
+    const discountValue = invoiceData.discountValue || 0;
+    const subtotalAfterDiscount = Number(invoiceData.subtotalAfterDiscount || (subtotal - discountAmount));
+    const totalVat = Number(invoiceData.totalVat || 0);
+    const total = Number(invoiceData.total || 0);
     let hasExempt = false;
 
     // Populate Items (with VAT asterisk for exempt)
@@ -436,54 +459,55 @@ async function populateTemplate(templateContent, invoiceData) {
         itemsContainer.innerHTML = invoiceData.items.map(item => {
             const quantity = Number(item.quantity ?? 1);
             const unitPrice = Number(item.price ?? item.unit_price ?? 0);
-            let vatRate = item.vat ?? item.vat_rate ?? 16;
-            let vatCell = '';
-            let isExempt = false;
-            if (vatRate === 0 || vatRate === '0' || vatRate === 'other') {
-                vatCell = `${vatRate}<sup>*</sup>`;
-                isExempt = true;
-                hasExempt = true;
-            } else {
-                vatCell = `${vatRate}%`;
-            }
-            const lineSubtotal = quantity * unitPrice;
-            const vatAmount = isExempt ? 0 : (lineSubtotal * (Number(vatRate) / 100));
-            totalVat += vatAmount;
-            const lineTotal = lineSubtotal + vatAmount;
+            const discountType = item.discountType || 'none';
+            const discountValue = typeof item.discountValue !== 'undefined' ? item.discountValue : 0;
+            const discountedSubtotal = typeof item.discountedSubtotal !== 'undefined' ? item.discountedSubtotal : quantity * unitPrice;
+            const vatAmount = typeof item.vat !== 'undefined' ? item.vat : 0;
+            const lineTotal = typeof item.total !== 'undefined' ? item.total : discountedSubtotal + vatAmount;
+            let discountDisplay = '';
+            if (discountType === 'percent') discountDisplay = discountValue + '%';
+            else if (discountType === 'fixed') discountDisplay = discountValue;
+            else discountDisplay = '—';
             return `
                 <tr>
                     <td>${item.description || ''}</td>
                     <td>${quantity}</td>
                     <td>${formatCurrency(unitPrice, invoiceData.currency)}</td>
-                    <td>${vatCell}</td>
+                    <td>${discountType}</td>
+                    <td>${discountDisplay}</td>
+                    <td>${formatCurrency(discountedSubtotal, invoiceData.currency)}</td>
+                    <td>${formatCurrency(vatAmount, invoiceData.currency)}</td>
                     <td>${formatCurrency(lineTotal, invoiceData.currency)}</td>
                 </tr>
             `;
         }).join('');
     }
-
     // Totals section
     const totalsContainer = doc.querySelector('.invoice-totals');
     if (totalsContainer) {
         let totalsHtml = `<div class="total-row"><span>Subtotal:</span> <span>${formatCurrency(subtotal, invoiceData.currency)}</span></div>`;
-        if (discount > 0) {
-            totalsHtml += `<div class="total-row"><span>Discount:</span> <span>${formatCurrency(discount, invoiceData.currency)}</span></div>`;
+        if (discountAmount > 0) {
+            let discountLabel = 'Discount';
+            if (discountType === 'percent') {
+                discountLabel = `Discount (${discountValue}%)`;
+            }
+            totalsHtml += `<div class="total-row"><span>${discountLabel}:</span> <span>- ${formatCurrency(discountAmount, invoiceData.currency)}</span></div>`;
             totalsHtml += `<div class="total-row"><span>Subtotal after Discount:</span> <span>${formatCurrency(subtotalAfterDiscount, invoiceData.currency)}</span></div>`;
         }
         totalsHtml += `<div class="total-row"><span>VAT:</span> <span>${formatCurrency(totalVat, invoiceData.currency)}</span></div>`;
-        totalsHtml += `<div class="grand-total"><span>Total:</span> <span>${formatCurrency(subtotalAfterDiscount + totalVat, invoiceData.currency)}</span></div>`;
+        totalsHtml += `<div class="grand-total"><span>Total:</span> <span>${formatCurrency(total, invoiceData.currency)}</span></div>`;
         totalsContainer.innerHTML = totalsHtml;
     }
     // Remove any extra VAT/TOTAL lines outside the main totals section (if present in template, clear them)
-    const extraVat = doc.getElementById('extra-vat');
-    if (extraVat) extraVat.textContent = '';
-    const extraTotal = doc.getElementById('extra-total');
-    if (extraTotal) extraTotal.textContent = '';
+//    const extraVat = doc.getElementById('extra-vat');
+//    if (extraVat) extraVat.textContent = '';
+//    const extraTotal = doc.getElementById('extra-total');
+//    if (extraTotal) extraTotal.textContent = '';
 
     // Notes section with exemption reason
     let notes = invoiceData.notes || invoiceData.invoice?.notes || '';
     if (hasExempt) {
-        notes += '<br>Items marked with * are VAT exempt for the following reason: [Legal VAT exemption]';
+        notes += 'Items marked with * are VAT exempt for the following reason: [Legal VAT exemption]';
     }
     setDataField(doc, 'notes', notes);
 
@@ -719,7 +743,6 @@ window.invoiceTemplateManager = {
         }
     }
 };
-
 // --- BEGIN: Uncomment legacy TemplateManager class (for compatibility) ---
 class TemplateManager {
     constructor() {
@@ -728,41 +751,41 @@ class TemplateManager {
             <div class="invoice-template">
                 <div class="invoice-header">
                     <div class="company-info">
-                        <h2>${company_name}</h2>
-                        <p>${company_address}</p>
+                        <h2 id="company-name"></h2>
+                        <p id="company-address"></p>
                     </div>
                     <div class="invoice-info">
                         <h1>INVOICE</h1>
-                        <p>Invoice #: ${invoice_number}</p>
-                        <p>Date: ${issue_date}</p>
-                        <p>Due Date: ${due_date}</p>
+                        <p>Invoice #: <span id="invoice-number"></span></p>
+                        <p>Date: <span id="issue-date"></span></p>
+                        <p>Due Date: <span id="due-date"></span></p>
                     </div>
                 </div>
                 <div class="client-info">
                     <h3>Bill To:</h3>
-                    <p>${client_name}</p>
-                    <p>${client_address}</p>
-                    <p>Tax ID: ${client_tax_id}</p>
+                    <p id="client-name"></p>
+                    <p id="client-address"></p>
+                    <p>Tax ID: <span id="client-tax-id"></span></p>
                 </div>
                 <div class="invoice-items">
-                    ${items_table}
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Description</th>
+                                <th>Quantity</th>
+                                <th>Unit Price</th>
+                                <th>VAT</th>
+                                <th>Total</th>
+                            </tr>
+                        </thead>
+                        <tbody id="invoice-items-body"></tbody>
+                    </table>
                 </div>
-                <div class="invoice-summary">
-                    <div class="summary-row">
-                        <span>Subtotal:</span>
-                        <span>${subtotal}</span>
-                    </div>
-                    <div class="summary-row">
-                        <span>VAT (16%):</span>
-                        <span>${vat}</span>
-                    </div>
-                    <div class="summary-row total">
-                        <span>Total:</span>
-                        <span>${total}</span>
-                    </div>
+                <div class="invoice-summary invoice-totals">
+                    <!-- Totals will be populated by JS -->
                 </div>
                 <div class="invoice-notes">
-                    <p>${notes}</p>
+                    <p id="notes"></p>
                 </div>
             </div>`;
     }

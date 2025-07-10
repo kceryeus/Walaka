@@ -1218,3 +1218,10 @@
     padding: 6px 0;
   }
 }
+
+.item-discount-value {
+  display: block !important;
+  width: 80px;
+  min-width: 60px;
+  max-width: 120px;
+}

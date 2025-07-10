@@ -23,7 +23,7 @@ class NotificationBadgeManager {
         await this.updateBadgeCount();
         
         this.isInitialized = true;
-        console.log('NotificationBadgeManager initialized');
+        // console.log('NotificationBadgeManager initialized');
     }
 
     // Find all notification badge elements on the page
@@ -47,7 +47,7 @@ class NotificationBadgeManager {
             });
         });
 
-        console.log(`Found ${this.badgeElements.length} notification badge elements`);
+        // console.log(`Found ${this.badgeElements.length} notification badge elements`);
     }
 
     // Check if an element is actually a notification badge
@@ -68,7 +68,7 @@ class NotificationBadgeManager {
         try {
             // Check if Supabase is available
             if (!window.supabase) {
-                console.log('Supabase not available yet, skipping badge update');
+                // console.log('Supabase not available yet, skipping badge update');
                 return;
             }
 
@@ -77,7 +77,7 @@ class NotificationBadgeManager {
             try {
                 // Check if auth is available
                 if (!window.supabase.auth) {
-                    console.log('Supabase auth not available yet');
+                    // console.log('Supabase auth not available yet');
                     this.setBadgeCount(0);
                     return;
                 }
@@ -85,13 +85,13 @@ class NotificationBadgeManager {
                 // Try to get session with error handling
                 const { data, error } = await window.supabase.auth.getSession();
                 if (error) {
-                    console.log('Error getting auth session:', error);
+                    // console.log('Error getting auth session:', error);
                     this.setBadgeCount(0);
                     return;
                 }
                 session = data.session;
             } catch (authError) {
-                console.log('Auth session not available:', authError);
+                // console.log('Auth session not available:', authError);
                 this.setBadgeCount(0);
                 return;
             }
@@ -116,7 +116,7 @@ class NotificationBadgeManager {
             const unreadCount = notifications ? notifications.length : 0;
             this.setBadgeCount(unreadCount);
             
-            console.log(`Updated notification badge count: ${unreadCount}`);
+            // console.log(`Updated notification badge count: ${unreadCount}`);
         } catch (error) {
             console.error('Error updating notification badge count:', error);
         }
@@ -193,7 +193,7 @@ class NotificationBadgeManager {
             if (error) {
                 console.error('Error creating test notification:', error);
             } else {
-                console.log('Test notification created successfully');
+                // console.log('Test notification created successfully');
                 await this.refresh();
             }
         } catch (error) {
@@ -223,7 +223,7 @@ class NotificationBadgeManager {
             if (error) {
                 console.error('Error clearing notifications:', error);
             } else {
-                console.log('All notifications cleared successfully');
+                // console.log('All notifications cleared successfully');
                 await this.refresh();
             }
         } catch (error) {
@@ -264,7 +264,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         // Stop checking after 10 seconds to avoid infinite loop
         setTimeout(() => {
             clearInterval(checkSupabase);
-            console.log('Supabase not available after 10 seconds, notification badge will not be initialized');
+            // console.log('Supabase not available after 10 seconds, notification badge will not be initialized');
         }, 10000);
     }
 });
@@ -286,10 +286,10 @@ window.testNotificationBadge = {
     // Check the status of the notification badge manager
     status: () => {
         if (window.notificationBadgeManager) {
-            console.log('Notification Badge Status:', window.notificationBadgeManager.getStatus());
+            // console.log('Notification Badge Status:', window.notificationBadgeManager.getStatus());
             return window.notificationBadgeManager.getStatus();
         } else {
-            console.log('Notification badge manager not available');
+            // console.log('Notification badge manager not available');
             return null;
         }
     },
@@ -299,7 +299,7 @@ window.testNotificationBadge = {
         if (window.notificationBadgeManager) {
             await window.notificationBadgeManager.createTestNotification();
         } else {
-            console.log('Notification badge manager not available');
+            // console.log('Notification badge manager not available');
         }
     },
     
@@ -308,7 +308,7 @@ window.testNotificationBadge = {
         if (window.notificationBadgeManager) {
             await window.notificationBadgeManager.clearAllNotifications();
         } else {
-            console.log('Notification badge manager not available');
+            // console.log('Notification badge manager not available');
         }
     },
     
@@ -317,17 +317,17 @@ window.testNotificationBadge = {
         if (window.notificationBadgeManager) {
             await window.notificationBadgeManager.refresh();
         } else {
-            console.log('Notification badge manager not available');
+            // console.log('Notification badge manager not available');
         }
     },
     
     // Test Supabase connection
     testSupabase: () => {
-        console.log('Supabase available:', !!window.supabase);
-        console.log('Supabase auth available:', !!(window.supabase && window.supabase.auth));
-        if (window.supabase) {
-            console.log('Supabase client:', window.supabase);
-        }
+        // console.log('Supabase available:', !!window.supabase);
+        // console.log('Supabase auth available:', !!(window.supabase && window.supabase.auth));
+        // if (window.supabase) {
+        //     console.log('Supabase client:', window.supabase);
+        // }
         return {
             supabaseAvailable: !!window.supabase,
             supabaseAuthAvailable: !!(window.supabase && window.supabase.auth)

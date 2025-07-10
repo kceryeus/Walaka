@@ -54,19 +54,7 @@ function initializeInvoiceModule() {
 }
 
 function openModal(modalId) {
-    const modal = document.getElementById(modalId);
-    const overlay = document.querySelector('.modal-overlay');
-    
-    if (modal && overlay) {
-        modal.style.display = 'block';
-        overlay.style.display = 'block';
-        document.body.style.overflow = 'hidden'; // Prevent scrolling
-        
-        // Initialize or reset form if it's the invoice creation modal
-        if (modalId === 'invoiceModal') {
-            resetInvoiceForm();
-        }
-    }
+    window.modalManager.openModal(modalId);
 }
 
 function closeAllModals() {
@@ -431,13 +419,23 @@ async function resetInvoiceForm() {
         document.getElementById('totalVat').textContent = '0.00';
         document.getElementById('invoiceTotal').textContent = '0.00';
         initializeDateFields();
-        
         // Generate a new unique invoice number
         const invoiceNumberField = document.getElementById('invoiceNumber');
         if (invoiceNumberField) {
             try {
                 const generator = new window.InvoiceNumberGenerator();
-                const newInvoiceNumber = await generator.getNextNumber();
+                // Fetch user_id from Supabase session
+                let userId = null;
+                try {
+                    const session = await window.supabase.auth.getSession();
+                    userId = session.data?.session?.user?.id;
+                } catch (e) {
+                    console.error('Could not fetch user session:', e);
+                }
+                // Get serie from form (default to 'A')
+                let serie = document.getElementById('serie')?.value || 'A';
+                if (!userId) throw new Error('User not authenticated. Please log in.');
+                const newInvoiceNumber = await generator.getNextNumber(userId, serie);
                 invoiceNumberField.value = newInvoiceNumber;
             } catch (err) {
                 console.error('Error generating invoice number:', err);
@@ -707,7 +705,7 @@ async function saveInvoice() {
         URL.revokeObjectURL(downloadUrl);
 
         // Close modal and refresh list
-        closeAllModals();
+        window.modalManager.closeModal('invoiceModal');
         await refreshInvoiceList();
 
         // Enable the submit button after processing
@@ -927,7 +925,7 @@ async function fetchInvoiceDetails(invoiceNumber) {
         }
 
         // Open the modal
-        openModal('viewInvoiceModal');
+        window.modalManager.openModal('viewInvoiceModal');
 
     } catch (error) {
         console.error('[fetchInvoiceDetails] Error fetching invoice:', error);
@@ -1189,7 +1187,6 @@ document.addEventListener('DOMContentLoaded', async function() {
     const subtotalAfterDiscount = document.getElementById('subtotalAfterDiscount')?.textContent || '0.00';
     // Invoice number display
     let invoiceNumberDisplay = invoiceNumber;
-    if (serie) invoiceNumberDisplay = `${serie}/${invoiceNumber}`;
     const reviewHtml = `
       <div><strong>Client:</strong> ${clientName} (${clientEmail}, NUIT: ${clientTaxId})<br><strong>Address:</strong> ${clientAddress}</div>
       <div><strong>Invoice #:</strong> ${invoiceNumberDisplay} | <strong>Issue:</strong> ${issueDate} | <strong>Due:</strong> ${dueDate}</div>
@@ -1278,211 +1275,6 @@ document.addEventListener('DOMContentLoaded', async function() {
 // Remove any global let currentCurrency, currentRate, fetchingRate, setupCurrencyListener, getConvertedAmount, updateExchangeRate, updateExchangeRateInfo, updateReviewTotals ...
 
 // Insert the class-based InvoiceForm implementation
-
-class InvoiceForm {
-    constructor() {
-        this.supabase = window.supabase;
-        this.exchangeRates = { MZN: 1 };
-        this.currentCurrency = 'MZN';
-        this.currentRate = 1;
-        this.fetchingRate = false;
-        this.initializeDateFields();
-        this.setupCurrencyListener();
-    }
-
-    initializeDateFields() {
-        const issueDate = document.getElementById('issueDate');
-        const dueDate = document.getElementById('dueDate');
-        if (issueDate && dueDate) {
-            if (!issueDate.value) {
-                const today = new Date();
-                const formattedDate = today.toISOString().split('T')[0];
-                issueDate.value = formattedDate;
-            }
-            this.updateDueDate();
-        }
-    }
-
-    updateDueDate() {
-        const issueDate = document.getElementById('issueDate');
-        const dueDate = document.getElementById('dueDate');
-        const paymentTerms = document.getElementById('paymentTerms');
-        if (issueDate && dueDate && paymentTerms) {
-            const selectedDate = new Date(issueDate.value);
-            if (isNaN(selectedDate.getTime())) return;
-            let daysToAdd = 30;
-            switch (paymentTerms.value) {
-                case 'net15': daysToAdd = 15; break;
-                case 'net30': daysToAdd = 30; break;
-                case 'net60': daysToAdd = 60; break;
-                case 'custom': return;
-            }
-            const newDueDate = new Date(selectedDate);
-            newDueDate.setDate(newDueDate.getDate() + daysToAdd);
-            dueDate.value = newDueDate.toISOString().split('T')[0];
-        }
-    }
-
-    async resetInvoiceForm() {
-        const form = document.getElementById('invoiceForm');
-        if (form) {
-            form.reset();
-            const currencySelect = document.getElementById('currency');
-            if (currencySelect) currencySelect.value = 'MZN';
-            const itemsTableBody = document.querySelector('#itemsTable tbody');
-            const rows = itemsTableBody.querySelectorAll('.item-row');
-            for (let i = 1; i < rows.length; i++) rows[i].remove();
-            const firstRow = itemsTableBody.querySelector('.item-row');
-            if (firstRow) {
-                const inputs = firstRow.querySelectorAll('input');
-                inputs.forEach(input => {
-                    if (input.classList.contains('item-quantity')) input.value = '1';
-                    else if (input.classList.contains('item-price')) input.value = '0.00';
-                    else input.value = '';
-                });
-                firstRow.querySelector('.item-vat').textContent = '0.00';
-                firstRow.querySelector('.item-total').textContent = '0.00';
-            }
-            document.getElementById('subtotal').textContent = '0.00';
-            document.getElementById('totalVat').textContent = '0.00';
-            document.getElementById('invoiceTotal').textContent = '0.00';
-            this.initializeDateFields();
-            const invoiceNumberField = document.getElementById('invoiceNumber');
-            if (invoiceNumberField && !invoiceNumberField.dataset.generated) {
-                try {
-                    const generator = new window.InvoiceNumberGenerator();
-                    const newInvoiceNumber = await generator.getNextNumber();
-                    invoiceNumberField.value = newInvoiceNumber;
-                    invoiceNumberField.dataset.generated = true;
-                } catch (err) {
-                    console.error('Error generating invoice number:', err);
-                    invoiceNumberField.value = '';
-                    window.showNotification('Error generating invoice number');
-                }
-            }
-        }
-    }
-
-    setupCurrencyListener() {
-        const currencySelect = document.getElementById('currency');
-        if (!currencySelect) return;
-        currencySelect.addEventListener('change', async (e) => {
-            const newCurrency = e.target.value;
-            await this.updateExchangeRate(newCurrency);
-            if (window.invoiceItems && typeof window.invoiceItems.updateInvoiceTotals === 'function') {
-                window.invoiceItems.updateInvoiceTotals();
-            }
-            this.updateReviewTotals();
-        });
-        if (currencySelect.value !== 'MZN') {
-            this.updateExchangeRate(currencySelect.value);
-        }
-    }
-
-    getConvertedAmount(mznAmount) {
-        if (this.currentCurrency === 'MZN') return mznAmount;
-        if (!this.currentRate || isNaN(this.currentRate) || this.currentRate === 1) return null;
-        return mznAmount * this.currentRate;
-    }
-
-    async updateExchangeRate(currency) {
-        if (currency === 'MZN') {
-            this.currentCurrency = 'MZN';
-            this.currentRate = 1;
-            this.updateExchangeRateInfo();
-            return;
-        }
-        const cacheKey = `walaka_rates_${currency}`;
-        const cached = sessionStorage.getItem(cacheKey);
-        let rate = null;
-        if (cached) {
-            const { value, timestamp } = JSON.parse(cached);
-            if (Date.now() - timestamp < 60 * 60 * 1000) {
-                rate = value;
-            }
-        }
-        if (!rate) {
-            this.fetchingRate = true;
-            try {
-                const res = await fetch(`https://openexchangerates.org/api/latest.json?app_id=0a2208bb4ead48929a4485ae45dff65d&symbols=USD,EUR,GBP,MZN`);
-                const data = await res.json();
-                if (data && data.rates && data.rates['MZN']) {
-                    if (currency === 'USD') {
-                        rate = data.rates['USD'] / data.rates['MZN'];
-                    } else if (currency === 'EUR') {
-                        rate = data.rates['EUR'] / data.rates['MZN'];
-                    } else if (currency === 'GBP') {
-                        rate = data.rates['GBP'] / data.rates['MZN'];
-                    }
-                }
-                if (rate) {
-                    sessionStorage.setItem(cacheKey, JSON.stringify({ value: rate, timestamp: Date.now() }));
-                }
-            } catch (err) {
-                rate = null;
-            }
-            this.fetchingRate = false;
-        }
-        this.currentCurrency = currency;
-        if (rate && !isNaN(rate)) {
-            this.currentRate = rate;
-        } else {
-            this.currentRate = null;
-        }
-        this.updateExchangeRateInfo();
-    }
-
-    updateExchangeRateInfo() {
-        const infoDiv = document.getElementById('exchangeRateInfo');
-        if (!infoDiv) return;
-        if (this.currentCurrency === 'MZN') {
-            infoDiv.textContent = 'Base currency: Mozambican Metical (MZN)';
-        } else if (this.fetchingRate) {
-            infoDiv.textContent = 'Fetching latest exchange rate...';
-        } else if (this.currentRate && !isNaN(this.currentRate)) {
-            infoDiv.textContent = `1 MZN ≈ ${this.currentRate.toFixed(4)} ${this.currentCurrency}`;
-        } else {
-            infoDiv.textContent = 'Exchange rate unavailable. Showing MZN only.';
-        }
-    }
-
-    updateReviewTotals() {
-        const currency = this.currentCurrency || 'MZN';
-        const rate = this.currentRate || 1;
-        const subtotalElem = document.getElementById('reviewSubtotal');
-        const vatElem = document.getElementById('reviewTotalVat');
-        const totalElem = document.getElementById('reviewInvoiceTotal');
-        const mainSubtotal = parseAmount(document.getElementById('subtotal')?.textContent.replace(/[^\d.\-]/g, '') || '0');
-        const mainVat = parseAmount(document.getElementById('totalVat')?.textContent.replace(/[^\d.\-]/g, '') || '0');
-        const mainTotal = parseAmount(document.getElementById('invoiceTotal')?.textContent.replace(/[^\d.\-]/g, '') || '0');
-        if (subtotalElem && vatElem && totalElem) {
-            subtotalElem.textContent = new Intl.NumberFormat('pt-MZ', { style: 'currency', currency: 'MZN' }).format(mainSubtotal);
-            vatElem.textContent = new Intl.NumberFormat('pt-MZ', { style: 'currency', currency: 'MZN' }).format(mainVat);
-            totalElem.textContent = new Intl.NumberFormat('pt-MZ', { style: 'currency', currency: 'MZN' }).format(mainTotal);
-            ['reviewSubtotal','reviewTotalVat','reviewInvoiceTotal'].forEach((id, idx) => {
-                let convertedDiv = document.getElementById(id + '_converted');
-                if (!convertedDiv) {
-                    convertedDiv = document.createElement('div');
-                    convertedDiv.id = id + '_converted';
-                    convertedDiv.style.fontSize = '0.95em';
-                    convertedDiv.style.color = '#555';
-                    document.getElementById(id).parentElement.appendChild(convertedDiv);
-                }
-                if (currency !== 'MZN' && rate && !isNaN(rate)) {
-                    let baseVal = [mainSubtotal, mainVat, mainTotal][idx];
-                    const convertedVal = this.getConvertedAmount(baseVal);
-                    if (convertedVal !== null) {
-                        convertedDiv.textContent = `${convertedVal.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} ${currency} (1 MZN ≈ ${rate.toFixed(4)} ${currency})`;
-                    } else {
-                        convertedDiv.textContent = 'Exchange rate unavailable.';
-                    }
-                } else {
-                    convertedDiv.textContent = '';
-                }
-            });
-        }
-    }
-}
 
 // Create invoice notification
 async function createInvoiceNotification(userId, invoiceNumber) {
@@ -1587,11 +1379,3 @@ async function createInvoiceNotification(userId, invoiceNumber) {
         console.error('[InvoiceJS] Error in createInvoiceNotification:', error);
     }
 }
-
-// Instantiate after DOM is ready
-
-document.addEventListener('DOMContentLoaded', function() {
-    const invoiceForm = new InvoiceForm();
-    window.invoiceForm = invoiceForm;
-    invoiceForm.updateExchangeRateInfo();
-});

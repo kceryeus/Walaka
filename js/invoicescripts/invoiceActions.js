@@ -131,7 +131,7 @@ class InvoiceActions {
             if (deleteError) throw deleteError;
 
             // Close modal if open
-            window.closeAllModals();
+            window.modalManager.closeModal('viewInvoiceModal');
 
             // Show notification
             showNotification('Invoice deleted successfully', 'success');

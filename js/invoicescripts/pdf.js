@@ -217,28 +217,57 @@ async function generatePDF(invoiceData) {
         const formattedItems = invoiceData.items?.map(item => {
             const quantity = parseFloat(item.quantity) || 0;
             const price = parseFloat(item.price) || 0;
-            const vatRate = parseFloat(item.vat_rate || 16) / 100; // Convert percentage to decimal (16% -> 0.16)
+            // Only use vatRate or vat_rate as the VAT rate (never item.vat, which is the amount)
+            let vatRate = (typeof item.vatRate !== 'undefined') ? item.vatRate : (typeof item.vat_rate !== 'undefined' ? item.vat_rate : 0.16);
+            if (typeof vatRate === 'string') vatRate = parseFloat(vatRate);
+            if (vatRate > 1) vatRate = vatRate / 100;
             const subtotal = quantity * price;
             const vatAmount = subtotal * vatRate; // Calculate VAT based on item's VAT rate
-            
             return {
                 description: item.description || '',
                 quantity: quantity,
                 price: price,
+                vatRate: vatRate, // Pass as decimal for template
                 vat: vatAmount,
                 total: subtotal + vatAmount
             };
         }) || [];
 
-        // Calculate totals using the same logic
-        const subtotal = formattedItems.reduce((sum, item) => sum + (item.quantity * item.price), 0);
-        const totalVat = formattedItems.reduce((sum, item) => sum + item.vat, 0);
-        const total = subtotal + totalVat;
-
+        // Calculate discount
+        let discountType = invoiceData.discountType || 'none';
+        let discountValue = invoiceData.discountValue || 0;
+        let discountAmount = 0;
+        let subtotal = formattedItems.reduce((sum, item) => sum + (item.quantity * item.price), 0);
+        if (discountType === 'percent') {
+            discountAmount = subtotal * (discountValue / 100);
+        } else if (discountType === 'fixed') {
+            discountAmount = discountValue;
+        }
+        const subtotalAfterDiscount = Math.max(subtotal - discountAmount, 0);
+        // Calculate VAT for each item based on discounted price (match form logic)
+        let totalVat = 0;
+        const discountedItems = formattedItems.map(item => {
+            let itemDiscount = 0;
+            if (discountType === 'percent') {
+                itemDiscount = item.price * item.quantity * (discountValue / 100);
+            } else if (discountType === 'fixed' && subtotal > 0) {
+                itemDiscount = discountAmount * ((item.price * item.quantity) / subtotal);
+            }
+            const discountedSubtotal = Math.max(item.price * item.quantity - itemDiscount, 0);
+            // --- Match form logic: VAT is (discountedSubtotal) * item.vatRate ---
+            const vatAmount = discountedSubtotal * item.vatRate;
+            totalVat += vatAmount;
+            return {
+                ...item,
+                discountedSubtotal,
+                vat: vatAmount,
+                total: discountedSubtotal + vatAmount
+            };
+        });
+        const total = subtotalAfterDiscount + totalVat;
         // Get business profile
         const businessProfile = await getBusinessProfile();
-        
-        // Format the data for the template
+        // Format the data for the template (flattened, not nested under 'invoice')
         const formattedData = {
             // Company info
             company: {
@@ -250,25 +279,25 @@ async function generatePDF(invoiceData) {
                 logo: businessProfile.logo || '',
                 website: businessProfile.website || ''
             },
-            // Invoice details
-            invoice: {
-                id: invoiceData.id || invoiceData.invoice_id,
-                number: invoiceData.invoiceNumber || await getNextInvoiceNumber(),
+            // Invoice details (flattened)
+            invoiceNumber: invoiceData.invoiceNumber || await getNextInvoiceNumber(),
                 issueDate: invoiceData.issueDate || invoiceData.issue_date || new Date().toISOString().split('T')[0],
                 dueDate: invoiceData.dueDate || invoiceData.due_date || new Date(Date.now() + 30*24*60*60*1000).toISOString().split('T')[0],
                 status: invoiceData.status || 'draft',
                 projectName: invoiceData.projectName || '',
-                subtotal: subtotal,
-                vat: totalVat,
-                total: total,
-                discount: invoiceData.discount || 0,
+            subtotal,
+            discountType,
+            discountValue,
+            discountAmount,
+            subtotalAfterDiscount,
+            totalVat,
+            total,
                 notes: invoiceData.notes || '',
-                paymentTerms: invoiceData.paymentTerms || 'net30'
-            },
+            paymentTerms: invoiceData.paymentTerms || 'net30',
             // Client info
             client: client,
             // Items
-            items: formattedItems,
+            items: discountedItems,
             // Currency
             currency: invoiceData.currency || 'MZN'
         };
@@ -286,7 +315,7 @@ async function generatePDF(invoiceData) {
             <head>
                 <meta charset="UTF-8">
                 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                <title>Invoice ${formattedData.invoice.number}</title>
+                <title>Invoice ${formattedData.invoiceNumber}</title>
                 <style>
                     ${template.styles}
                 </style>
@@ -308,6 +337,7 @@ async function generatePDF(invoiceData) {
             showConversion = true;
             rate = window.invoiceForm.currentRate;
         }
+        /*
         // Replace the totals section if present
         let totalsHtml = `
             <div class="invoice-totals">
@@ -329,29 +359,14 @@ async function generatePDF(invoiceData) {
             const convertedVat = window.invoiceForm.getConvertedAmount(formattedData.invoice.vat);
             const convertedTotal = window.invoiceForm.getConvertedAmount(formattedData.invoice.total);
             totalsHtml += `
-                <div class=\"totals-row\">
-                    <span>Subtotal:</span>
-                    <span>${currency} ${formatNumber(convertedSubtotal)}</span>
-                </div>
-                <div class=\"totals-row\">
-                    <span>VAT (16%):</span>
-                    <span>${currency} ${formatNumber(convertedVat)}</span>
-                </div>
-                <div class=\"totals-row total\">
-                    <span>Total:</span>
-                    <span>${currency} ${formatNumber(convertedTotal)}</span>
-                </div>
-                <div class=\"totals-row\" style=\"font-size:0.95em;color:#555;\">
-                    <span></span>
-                    <span>1 MZN ≈ ${rate.toFixed(4)} ${currency}</span>
-                </div>
-            `;
+                <div class=\"totals-row\">\n                    <span>Subtotal:</span>\n                    <span>${currency} ${formatNumber(convertedSubtotal)}</span>\n                </div>\n                <div class=\"totals-row\">\n                    <span>VAT (16%):</span>\n                    <span>${currency} ${formatNumber(convertedVat)}</span>\n                </div>\n                <div class=\"totals-row total\">\n                    <span>Total:</span>\n                    <span>${currency} ${formatNumber(convertedTotal)}</span>\n                </div>\n                <div class=\"totals-row\" style=\"font-size:0.95em;color:#555;\">\n                    <span></span>\n                    <span>1 MZN ≈ ${rate.toFixed(4)} ${currency}</span>\n                </div>\n            `;
         }
         totalsHtml += '</div>';
         populatedHtml = populatedHtml.replace(
             /<div class="invoice-totals">[\s\S]*?<\/div>/,
             totalsHtml
         );
+        */
 
         // Create PDF container
         const pdfContainer = document.createElement('div');
@@ -361,7 +376,7 @@ async function generatePDF(invoiceData) {
         // PDF Options
         const opt = {
             margin: 10,
-            filename: `Invoice-${formattedData.invoice.number}.pdf`,
+            filename: `Invoice-${formattedData.invoiceNumber}.pdf`,
             image: { type: 'jpeg', quality: 0.98 },
             html2canvas: { 
                 scale: 2,
@@ -404,6 +419,40 @@ async function generatePDF(invoiceData) {
         console.error('Error generating PDF:', error);
         throw error;
     }
+}
+
+/**
+ * Generate PDF from invoice data and upload to Supabase Storage
+ * @param {Object} invoiceData - The invoice data
+ * @returns {Promise<string>} - The public URL of the uploaded PDF
+ */
+async function generateAndUploadPDF(invoiceData) {
+    // Generate the PDF blob
+    const pdfBlob = await generatePDF(invoiceData);
+    // Get user session
+    const { data: { session }, error: sessionError } = await window.supabase.auth.getSession();
+    if (sessionError || !session) {
+        throw new Error('Authentication required');
+    }
+    // Generate a safe filename
+    const pdfFileName = `${invoiceData.invoiceNumber.replace(/\s+/g, '_')}_${session.user.id}.pdf`;
+    // Upload to Supabase Storage
+    const { data: uploadData, error: uploadError } = await window.supabase.storage
+        .from('invoice_pdfs')
+        .upload(pdfFileName, pdfBlob, {
+            contentType: 'application/pdf',
+            upsert: true,
+            cacheControl: '3600',
+        });
+    if (uploadError) {
+        console.error('Storage upload error:', uploadError);
+        throw new Error('Failed to upload PDF');
+    }
+    // Get public URL
+    const { data: { publicUrl } } = window.supabase.storage
+        .from('invoice_pdfs')
+        .getPublicUrl(pdfFileName);
+    return publicUrl;
 }
 
 /**
@@ -461,5 +510,48 @@ async function getNextInvoiceNumber() {
     }
 }
 
+// Update the PDF/Preview table generation logic to include all per-item fields
+function generateInvoiceTableHTML(invoice) {
+    let itemsHtml = '';
+    invoice.items.forEach(item => {
+        let discountDisplay = '';
+        if (item.discountType === 'percent') discountDisplay = `${item.discountValue}%`;
+        else if (item.discountType === 'fixed') discountDisplay = `${item.discountValue}`;
+        else discountDisplay = '—';
+        itemsHtml += `
+            <tr>
+                <td>${item.description}</td>
+                <td>${item.quantity}</td>
+                <td>${item.price}</td>
+                <td>${item.discountType || '—'}</td>
+                <td>${discountDisplay}</td>
+                <td>${item.discountedSubtotal?.toFixed(2) ?? '0.00'}</td>
+                <td>${item.vat?.toFixed(2) ?? '0.00'}</td>
+                <td>${item.total?.toFixed(2) ?? '0.00'}</td>
+            </tr>
+        `;
+    });
+    return `
+        <table style="width:100%;border-collapse:collapse;">
+            <thead>
+                <tr>
+                    <th>Description</th>
+                    <th>Quantity</th>
+                    <th>Unit Price</th>
+                    <th>Discount Type</th>
+                    <th>Discount</th>
+                    <th>Discounted Subtotal</th>
+                    <th>VAT</th>
+                    <th>Total</th>
+                </tr>
+            </thead>
+            <tbody>
+                ${itemsHtml}
+            </tbody>
+        </table>
+    `;
+}
+
 // Attach to window for global access
 window.generatePDF = generatePDF;
+window.generateAndUploadPDF = generateAndUploadPDF;

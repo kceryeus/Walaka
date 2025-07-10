@@ -22,7 +22,7 @@ class InvoiceEventListeners {
                     e.stopPropagation();
                     return;
                 }
-                await openModal('invoiceModal');
+                await window.openModal('invoiceModal');
             });
         }
 
@@ -30,17 +30,12 @@ class InvoiceEventListeners {
         const closeButtons = document.querySelectorAll('.close-modal, #closeInvoiceBtn');
         closeButtons.forEach(button => {
             button.addEventListener('click', function() {
-                closeAllModals();
+                window.modalManager.closeModal('viewInvoiceModal');
+                window.modalManager.closeModal('emailInvoiceModal');
+                window.modalManager.closeModal('invoiceModal');
+                window.modalManager.closeModal('newClientModal');
             });
         });
-
-        // Modal overlay click to close
-        const modalOverlay = document.querySelector('.modal-overlay');
-        if (modalOverlay) {
-            modalOverlay.addEventListener('click', function() {
-                closeAllModals();
-            });
-        }
 
         // Prevent closing when clicking inside modal content
         const modalContents = document.querySelectorAll('.modal-content');
@@ -63,31 +58,6 @@ class InvoiceEventListeners {
         if (issueDateField) {
             issueDateField.addEventListener('change', function() {
                 updateDueDate();
-            });
-        }
-
-        // Form submission
-        const invoiceForm = document.getElementById('invoiceForm');
-        if (invoiceForm) {
-            invoiceForm.addEventListener('submit', async function (event) {
-                event.preventDefault();
-
-                // Prevent duplicate submissions
-                if (invoiceForm.dataset.submitting === 'true') return;
-                invoiceForm.dataset.submitting = 'true';
-
-                try {
-                    const invoiceNumberField = document.getElementById('invoiceNumber');
-                    if (!invoiceNumberField.value) {
-                        throw new Error('Invoice number is missing');
-                    }
-                    await saveInvoice();
-                } catch (error) {
-                    console.error('Error submitting form:', error);
-                    showNotification('Error: ' + error.message);
-                } finally {
-                    invoiceForm.dataset.submitting = 'false';
-                }
             });
         }
 

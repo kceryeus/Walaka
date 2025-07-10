@@ -35,7 +35,7 @@ class TrialRestrictions {
     }
 
     init() {
-        console.log('[TrialRestrictions] Initializing listeners and waiting for trial data.');
+        // console.log('[TrialRestrictions] Initializing listeners and waiting for trial data.');
 
         // Show spinners on restricted elements while waiting for trial data
         this.showLoadingSpinners();
@@ -54,7 +54,7 @@ class TrialRestrictions {
     
     setTrialData(data) {
         // Always update trial data and re-apply restrictions
-        console.log('[TrialRestrictions] Received trial data:', data);
+        // console.log('[TrialRestrictions] Received trial data:', data);
         this.trialData = data;
         this.removeLoadingSpinners();
         if (this.trialData.isRestricted) {
@@ -94,14 +94,14 @@ class TrialRestrictions {
             if (actionLink) {
                 // If trial status is still unknown, prevent click to be safe.
                 if (this.trialData === null) {
-                    console.warn('[TrialRestrictions] Trial data not yet available. Click prevented.');
+                    // console.warn('[TrialRestrictions] Trial data not yet available. Click prevented.');
                     event.preventDefault();
                     event.stopPropagation();
                     return;
                 }
                 // If the link is restricted, show the modal.
                 if (this.isActionRestricted(actionLink.getAttribute('href'))) {
-                    console.log('[TrialRestrictions] Restricted action link clicked.');
+                    // console.log('[TrialRestrictions] Restricted action link clicked.');
                     event.preventDefault();
                     event.stopPropagation();
                     this.showRestrictionModal('this action');
@@ -113,13 +113,13 @@ class TrialRestrictions {
                 const button = element.closest(selector);
                 if (button) {
                      if (this.trialData === null) {
-                        console.warn('[TrialRestrictions] Trial data not yet available. Click prevented.');
+                        // console.warn('[TrialRestrictions] Trial data not yet available. Click prevented.');
                         event.preventDefault();
                         event.stopPropagation();
                         return;
                     }
                     if (this.shouldRestrictButton(button)) {
-                        console.log('[TrialRestrictions] Restricted button clicked.');
+                        // console.log('[TrialRestrictions] Restricted button clicked.');
                         event.preventDefault();
                         event.stopPropagation();
                         this.showRestrictionModal('this action');
@@ -200,7 +200,7 @@ class TrialRestrictions {
         await new Promise(resolve => setTimeout(resolve, 1500));
         if (this.trialData !== null) return; // Event was received, no need to poll.
 
-        console.log('[TrialRestrictions] Event not received. Starting polling fallback.');
+        // console.log('[TrialRestrictions] Event not received. Starting polling fallback.');
         let attempts = 0;
         const maxAttempts = 10; // Poll for 1.0 more seconds (was 35 for 3.5s)
 
@@ -212,7 +212,7 @@ class TrialRestrictions {
             if (daysElement && invoicesElement && (daysElement.textContent !== '14' || invoicesElement.textContent !== '5')) {
                 const days = parseInt(daysElement.textContent, 10) || 0;
                 const invoices = parseInt(invoicesElement.textContent, 10) || 0;
-                console.log('[TrialRestrictions] Polling fallback successful.');
+                // console.log('[TrialRestrictions] Polling fallback successful.');
                 this.setTrialData({
                     daysRemaining: days,
                     invoicesRemaining: invoices,
@@ -225,7 +225,7 @@ class TrialRestrictions {
         }
         
         if (this.trialData === null) {
-            console.warn('[TrialRestrictions] Could not determine trial status. Defaulting to not restricted.');
+            // console.warn('[TrialRestrictions] Could not determine trial status. Defaulting to not restricted.');
             this.trialData = { isRestricted: false }; // Default to not restricted if we can't find out.
             this.removeLoadingSpinners();
         }
@@ -250,7 +250,7 @@ class TrialRestrictions {
     applyRestrictions() {
         if (!this.trialData || !this.trialData.isRestricted) return;
 
-        console.log('[TrialRestrictions] Applying visual restrictions...');
+        // console.log('[TrialRestrictions] Applying visual restrictions...');
 
         // Restrict Quick Action cards
         document.querySelectorAll('.action-card').forEach(card => {
