@@ -217,27 +217,35 @@ class InvoiceForm {
             if (window.invoiceItemsPagination && typeof window.invoiceItemsPagination.getAllItemsForPDF === 'function') {
                 // Use pagination module to get all items
                 itemRows = window.invoiceItemsPagination.getAllItemsForPDF();
-                console.log('Using pagination module, found items:', itemRows.length);
             } else {
                 // Fallback to direct DOM query
                 itemRows = document.querySelectorAll('.item-row');
-                console.log('Using direct DOM query, found items:', itemRows.length);
             }
 
-            console.log('Found item rows:', itemRows.length);
+            let hasDiscount = false;
+            let subtotal = 0;
+            let discountAmount = 0;
+            let subtotalAfterDiscount = 0;
+            let totalVat = 0;
+            let total = 0;
+            let invoiceDiscountType = 'none';
+            let invoiceDiscountValue = 0;
 
             itemRows.forEach((row, index) => {
                 const description = row.querySelector('.item-description')?.value;
                 const quantity = parseAmount(row.querySelector('.item-quantity')?.value) || 0;
                 const price = parseAmount(row.querySelector('.item-price')?.value) || 0;
                 // Discount logic
-                let discountType = row.querySelector('.item-discount-type')?.value || 'none';
-                let discountValue = parseAmount(row.querySelector('.item-discount-value')?.value) || 0;
+                let itemDiscountType = row.querySelector('.item-discount-type')?.value || 'none';
+                let itemDiscountValue = parseAmount(row.querySelector('.item-discount-value')?.value) || 0;
                 let itemDiscount = 0;
-                if (discountType === 'percent') {
-                    itemDiscount = price * quantity * (discountValue / 100);
-                } else if (discountType === 'fixed') {
-                    itemDiscount = discountValue;
+                if (itemDiscountType === 'percent') {
+                    itemDiscount = price * quantity * (itemDiscountValue / 100);
+                } else if (itemDiscountType === 'fixed') {
+                    itemDiscount = itemDiscountValue;
+                }
+                if (itemDiscountType !== 'none' && itemDiscountValue > 0) {
+                    hasDiscount = true;
                 }
                 const discountedSubtotal = Math.max(price * quantity - itemDiscount, 0);
                 // VAT rate logic
@@ -252,55 +260,40 @@ class InvoiceForm {
                     }
                 }
                 const vat = discountedSubtotal * vatRate;
-                const total = discountedSubtotal + vat;
-
-                console.log(`Item ${index + 1}:`, {
-                    description,
-                    quantity,
-                    price,
-                    vatRate,
-                    vat,
-                    total
-                });
+                const itemTotal = discountedSubtotal + vat;
 
                 if (description && quantity > 0 && price >= 0) {
                     items.push({
                         description,
                         quantity,
                         price,
-                        discountType,
-                        discountValue,
+                        discountType: itemDiscountType,
+                        discountValue: itemDiscountValue,
                         discountedSubtotal,
                         vatRate,
                         vat,
-                        total
+                        total: itemTotal
                     });
+                    subtotal += price * quantity;
+                    discountAmount += itemDiscount;
+                    subtotalAfterDiscount += discountedSubtotal;
+                    totalVat += vat;
+                    total += itemTotal;
                 }
             });
 
-            // Calculate subtotal
-            const subtotal = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
-            // Calculate discount
-            let discountAmount = 0;
-            let discountPercent = 0;
-            if (discountType === 'percent') {
-                discountPercent = discountValue;
-                discountAmount = subtotal * (discountPercent / 100);
-            } else if (discountType === 'fixed') {
-                discountAmount = discountValue;
+            // If all items have the same discount type/value, set at invoice level, else 'none'/0
+            if (items.length > 0) {
+                const allTypes = Array.from(new Set(items.map(i => i.discountType)));
+                const allValues = Array.from(new Set(items.map(i => i.discountValue)));
+                if (allTypes.length === 1 && allValues.length === 1) {
+                    invoiceDiscountType = allTypes[0];
+                    invoiceDiscountValue = allValues[0];
+                }
             }
-            // Subtotal after discount
-            const subtotalAfterDiscount = Math.max(subtotal - discountAmount, 0);
-            // Calculate total VAT
-            const totalVat = items.reduce((sum, item) => sum + (item.price * item.quantity - (discountType === 'percent' ? item.price * item.quantity * (discountPercent / 100) : 0)) * item.vatRate, 0);
-            // Calculate total
-            const total = subtotalAfterDiscount + totalVat;
-
-            console.log('Totals calculated:', { subtotal, discountAmount, discountPercent, subtotalAfterDiscount, totalVat, total });
-
-            // Validate invoice has items
-            if (items.length === 0) {
-                throw new Error('Invoice must have at least one item');
+            if (!hasDiscount) {
+                invoiceDiscountType = 'none';
+                invoiceDiscountValue = 0;
             }
 
             // Construct the complete invoice data object
@@ -322,11 +315,10 @@ class InvoiceForm {
                 paymentTerms: paymentTerms.value || 'net30',
                 notes: notes?.value || '',
                 items: items,
-                subtotal: subtotal,
-                discountType,
-                discountValue,
+                subtotal,
+                discountType: invoiceDiscountType,
+                discountValue: invoiceDiscountValue,
                 discountAmount,
-                discountPercent,
                 subtotalAfterDiscount,
                 totalVat,
                 total
@@ -876,6 +868,13 @@ document.getElementById('invoiceForm')?.addEventListener('submit', handleInvoice
             }
           }).join('')}
         </tbody></table>
+      </div>
+      <div class="invoice-totals" style="margin-top:16px;text-align:right;">
+        <div class="totals-row"><span>Subtotal:</span> <span id="reviewSubtotal">0.00</span></div>
+        <div class="totals-row"><span>Desconto:</span> <span id="reviewTotalDiscount">0.00</span></div>
+        <div class="totals-row"><span>Subtotal após Desconto:</span> <span id="reviewSubtotalAfterDiscount">0.00</span></div>
+        <div class="totals-row"><span>IVA:</span> <span id="reviewTotalVat">0.00</span></div>
+        <div class="totals-row"><span>Total:</span> <span id="reviewInvoiceTotal">0.00</span></div>
       </div>
       <div style="margin-top:16px;text-align:right;">
         <button type="button" class="btn secondary-btn" id="previewInvoiceBtn">

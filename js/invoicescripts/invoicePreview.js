@@ -304,13 +304,29 @@ async function previewInvoice(invoiceData) {
         // Update the invoice totals in the preview
         const totalsSection = document.querySelector("#invoicePreviewContent .invoice-totals");
         if (totalsSection) {
+            let discount = formattedData.invoice.discount || 0;
+            let subtotal = formattedData.invoice.subtotal || 0;
+            let discountAmount = 0;
+            let subtotalAfterDiscount = subtotal;
+            if (discount > 0) {
+                discountAmount = discount;
+                subtotalAfterDiscount = subtotal - discountAmount;
+            }
             let totalsHtml = `
                 <div class="totals-row">
                     <span>Subtotal:</span>
-                    <span>MZN ${formatNumber(formattedData.invoice.subtotal)}</span>
+                    <span>MZN ${formatNumber(subtotal)}</span>
                 </div>
                 <div class="totals-row">
-                    <span>VAT (16%):</span>
+                    <span>Desconto:</span>
+                    <span>- MZN ${formatNumber(discountAmount)}</span>
+                </div>
+                <div class="totals-row">
+                    <span>Subtotal após Desconto:</span>
+                    <span>MZN ${formatNumber(subtotalAfterDiscount)}</span>
+                </div>
+                <div class="totals-row">
+                    <span>IVA (16%):</span>
                     <span>MZN ${formatNumber(formattedData.invoice.vat)}</span>
                 </div>
                 <div class="totals-row total">
@@ -319,7 +335,9 @@ async function previewInvoice(invoiceData) {
                 </div>
             `;
             if (showConversion) {
-                const convertedSubtotal = window.invoiceForm.getConvertedAmount(formattedData.invoice.subtotal);
+                const convertedSubtotal = window.invoiceForm.getConvertedAmount(subtotal);
+                const convertedDiscount = window.invoiceForm.getConvertedAmount(discountAmount);
+                const convertedSubtotalAfterDiscount = window.invoiceForm.getConvertedAmount(subtotalAfterDiscount);
                 const convertedVat = window.invoiceForm.getConvertedAmount(formattedData.invoice.vat);
                 const convertedTotal = window.invoiceForm.getConvertedAmount(formattedData.invoice.total);
                 totalsHtml += `
@@ -328,7 +346,15 @@ async function previewInvoice(invoiceData) {
                     <span>${currency} ${formatNumber(convertedSubtotal)}</span>
                 </div>
                 <div class=\"totals-row\">
-                    <span>VAT (16%):</span>
+                    <span>Desconto:</span>
+                    <span>- ${currency} ${formatNumber(convertedDiscount)}</span>
+                </div>
+                <div class=\"totals-row\">
+                    <span>Subtotal após Desconto:</span>
+                    <span>${currency} ${formatNumber(convertedSubtotalAfterDiscount)}</span>
+                </div>
+                <div class=\"totals-row\">
+                    <span>IVA (16%):</span>
                     <span>${currency} ${formatNumber(convertedVat)}</span>
                 </div>
                 <div class=\"totals-row total\">

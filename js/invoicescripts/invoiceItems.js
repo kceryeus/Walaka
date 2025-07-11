@@ -123,6 +123,15 @@ class InvoiceItems {
         if (descriptionInput) descriptionInput.value = product.description || '';
         if (priceInput) priceInput.value = product.price || 0;
         if (quantityInput) quantityInput.value = 1;
+        // Set discount type to 'none' and value to 0 by default
+        const discountTypeInput = row.querySelector('.item-discount-type');
+        const discountValueInput = row.querySelector('.item-discount-value');
+        if (discountTypeInput) discountTypeInput.value = 'none';
+        if (discountValueInput) discountValueInput.value = 0;
+        // Trigger calculation immediately
+        if (window.invoiceForm && typeof window.invoiceForm.updateItemRow === 'function') {
+            window.invoiceForm.updateItemRow(row);
+        }
     }
 
     showNewProductForm(row) {

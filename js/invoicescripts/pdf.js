@@ -62,6 +62,17 @@ async function populateTemplate(templateContent, data) {
     
     // Totals
     html = html.replace(/{{subtotal}}/g, formatCurrency(data.subtotal));
+    // Discount block logic
+    let discountBlock = '';
+    if (data.discountAmount && data.discountAmount > 0) {
+        let discountLabel = 'Desconto';
+        if (data.discountType === 'percent') {
+            discountLabel = `Desconto (${data.discountValue}%)`;
+        }
+        discountBlock = `<div class='total-row'><span>${discountLabel}:</span> <span>- ${formatCurrency(data.discountAmount)}</span></div>`;
+        discountBlock += `<div class='total-row'><span>Subtotal após Desconto:</span> <span>${formatCurrency(data.subtotalAfterDiscount)}</span></div>`;
+    }
+    html = html.replace(/{{discountBlock}}/g, discountBlock);
     html = html.replace(/{{totalVat}}/g, formatCurrency(data.totalVat));
     html = html.replace(/{{total}}/g, formatCurrency(data.total));
     
@@ -76,11 +87,11 @@ async function populateTemplate(templateContent, data) {
 function formatDate(dateString) {
     if (!dateString) return '';
     const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric'
-    });
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = date.toLocaleString('pt-PT', { month: 'long' });
+    const year = date.getFullYear();
+    const monthCap = month.charAt(0).toUpperCase() + month.slice(1);
+    return `${day}-${monthCap}-${year}`;
 }
 
 function formatCurrency(amount) {
@@ -304,8 +315,13 @@ async function generatePDF(invoiceData, options = {}) {
         const serie = invoiceData.serie || invoiceData.invoiceSerie || '';
         let invoiceNumber = invoiceData.invoiceNumber || invoiceData.invoice_number || '';
         if (!invoiceNumber) invoiceNumber = await getNextInvoiceNumber();
-        // Only combine if both are present
-        const displayInvoiceNumber = serie && invoiceNumber ? `${serie}/${invoiceNumber}` : invoiceNumber || serie || 'Draft Invoice';
+        // Only combine if both are present and not already combined
+        let displayInvoiceNumber = invoiceNumber;
+        if (serie && invoiceNumber && !(`${invoiceNumber}`.startsWith(`${serie}/`))) {
+            displayInvoiceNumber = `${serie}/${invoiceNumber}`;
+        } else {
+            displayInvoiceNumber = invoiceNumber || serie || 'Factura Rascunho';
+        }
         const formattedData = {
             // Company info
             company: {
@@ -350,6 +366,10 @@ async function generatePDF(invoiceData, options = {}) {
         const selectedTemplate = await window.invoiceTemplateManager.getSelectedTemplate();
         const template = window.invoiceTemplateManager.TEMPLATES[selectedTemplate] || window.invoiceTemplateManager.TEMPLATES['classic'];
         
+        /*
+         * IMPORTANT: The .invoice-container max-width and centering must match the settings in TemplateManager (templatemanager.js)
+         * If you change max-width or margins there, update here as well. Recommended max-width: 700px for A4 PDF compatibility.
+         */
         // Create the full HTML document with styles
         const html = `
             <!DOCTYPE html>
@@ -436,13 +456,20 @@ async function generatePDF(invoiceData, options = {}) {
         // Create PDF container
         const pdfContainer = document.createElement('div');
         pdfContainer.innerHTML = populatedHtml;
+        // --- CRITICAL: Force width and centering for PDF output ---
+        // This ensures the invoice is always centered on the PDF page, not just in the browser window.
+        pdfContainer.style.width = 'auto';
+        pdfContainer.style.marginLeft = '10px';
+        pdfContainer.style.marginRight = '50px';
+        pdfContainer.style.background = '#fff';
+        pdfContainer.style.boxSizing = 'border-box';
         document.body.appendChild(pdfContainer);
 
         // PDF Options
         const opt = {
-            margin: 10,
+            margin: 0,
             filename: `Invoice-${formattedData.invoice.displayNumber}.pdf`,
-            image: { type: 'jpeg', quality: 0.98 },
+            image: { type: 'jpeg', quality: 100 },
             html2canvas: { 
                 scale: 2,
                 useCORS: true,

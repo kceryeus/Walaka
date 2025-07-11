@@ -87,7 +87,13 @@ async function fetchInvoiceData(invoiceId) {
 // Helper functions for data formatting
 function formatDate(dateString) {
     if (!dateString) return '';
-    return new Date(dateString).toLocaleDateString();
+    const date = new Date(dateString);
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = date.toLocaleString('pt-PT', { month: 'long' });
+    const year = date.getFullYear();
+    // Capitalize month and use hyphens
+    const monthCap = month.charAt(0).toUpperCase() + month.slice(1);
+    return `${day}-${monthCap}-${year}`;
 }
 
 function formatCurrency(amount, currency = 'MZN') {
@@ -110,12 +116,22 @@ const TEMPLATES = {
     'classic': {
         name: 'Classic',
         styles: `
+            /*
+             * IMPORTANT: The .invoice-container width and centering must match the PDF.js logic.
+             * If you change max-width or margins here, update PDF.js comments and logic as well.
+             * Recommended max-width: 700px for A4 PDF compatibility.
+             */
             .invoice-container {
-                max-width: 800px;
-                margin: 20px auto;
+                max-width: 700px; /* Keep in sync with PDF.js for A4 */
+                margin-left: auto;
+                margin-right: auto;
+                margin-top: 20px;
+                margin-bottom: 20px;
                 padding: 20px;
                 font-family: 'Inter', sans-serif;
                 color: #000000;
+                background: #fff;
+                box-sizing: border-box;
             }
             .invoice-header {
                 display: flex;
@@ -123,6 +139,7 @@ const TEMPLATES = {
                 margin-bottom: 40px;
                 border-bottom: 2px solid #eee;
                 padding-bottom: 20px;
+                font-size: 0.85em;
             }
             .company-info {
                 flex: 1;
@@ -135,19 +152,20 @@ const TEMPLATES = {
                 padding: 20px;
                 background: #f9f9f9;
                 border-radius: 5px;
+                font-size: 0.85em;
             }
             .invoice-items {
                 width: 100%;
                 max-width: 100%;
                 table-layout: fixed;
-                font-size: 0.75em; /* 25% smaller */
+                font-size: 0.80em; /* 25% smaller */
             }
             .invoice-items th,
             .invoice-items td {
                 padding: 8px;
                 border-bottom: 1px solid #eee;
                 word-break: break-word;
-                font-size: 0.75em; /* 25% smaller */
+                font-size: 0.80em; /* 25% smaller */
             }
             .invoice-items th {
                 background: #f5f5f5;
@@ -157,16 +175,50 @@ const TEMPLATES = {
             .invoice-items td {
                 padding: 8px;
             }
+            /* Adjust column widths */
+            .invoice-items th:nth-child(1),
+            .invoice-items td:nth-child(1) { /* Description */
+                width: 32%;
+            }
+            .invoice-items th:nth-child(2),
+            .invoice-items td:nth-child(2) { /* Quantity */
+                width: 8%;
+            }
+            .invoice-items th:nth-child(3),
+            .invoice-items td:nth-child(3) { /* Unit Price */
+                width: 12%;
+            }
+            .invoice-items th:nth-child(4),
+            .invoice-items td:nth-child(4) { /* Discount Type */
+                width: 5%;
+            }
+            .invoice-items th:nth-child(5),
+            .invoice-items td:nth-child(5) { /* Discount */
+                width: 6%;
+            }
+            .invoice-items th:nth-child(6),
+            .invoice-items td:nth-child(6) { /* Discounted Subtotal */
+                width: 10%;
+            }
+            .invoice-items th:nth-child(7),
+            .invoice-items td:nth-child(7) { /* VAT */
+                width: 8%;
+            }
+            .invoice-items th:nth-child(8),
+            .invoice-items td:nth-child(8) { /* Total */
+                width: 10%;
+            }
             .invoice-totals {
                 text-align: right;
                 margin-top: 30px;
+                font-size: 0.85em;
             }
             .total-row {
                 margin: 5px 0;
             }
             .grand-total {
                 font-weight: bold;
-                font-size: 1.2em;
+                font-size: 0.90em;
                 border-top: 2px solid #eee;
                 padding-top: 10px;
             }
@@ -181,26 +233,27 @@ const TEMPLATES = {
             <div class="invoice-container">
                 <div class="invoice-header">
                     <div class="company-info">
-                        <h1 id="company-name">Company Name</h1>
-                        <p id="company-address">Company Address</p>
-                        <p id="company-contact">Email: <span id="company-email"></span> | Phone: <span id="company-phone"></span></p>
+                        <h1 id="company-name">Nome da Empresa</h1>
+                        <p id="company-address">Endereço da Empresa</p>
+                        <p id="company-contact">Email: <span id="company-email"></span> | Telefone: <span id="company-phone"></span></p>
                         <p>NUIT: <span id="company-nuit"></span></p>
                     </div>
                     <div class="invoice-details">
-                        <h2>INVOICE</h2>
-                        <p>Invoice #: <span id="invoice-number"></span></p>
-                        <p>Date: <span id="issue-date"></span></p>
-                        <p>Due Date: <span id="due-date"></span></p>
+                        <h2>FACTURA</h2>
+                        <p>Nº Fatura: <span id="invoice-number"></span></p>
+                        <p>Data de Emissão: <span id="issue-date"></span></p>
+                        <p>Data de Vencimento: <span id="due-date"></span></p>
+                        <p id="currency-field"></p> <!-- Moeda: MZN (Currency: MZN) -->
                     </div>
                 </div>
                 
                 <div class="client-info">
-                    <h3>Bill To:</h3>
-                    <p id="client-name">Client Name</p>
-                    <p id="client-address">Client Address</p>
+                    <h3>Cliente:</h3>
+                    <p id="client-name">Nome do Cliente</p>
+                    <p id="client-address">Endereço do Cliente</p>
                     <p>NUIT: <span id="client-nuit"></span></p>
                     <p>Email: <span id="client-email"></span></p>
-                    <p>Contact: <span id="client-contact"></span></p>
+                    <p>Contacto: <span id="client-contact"></span></p>
                 </div>
                 
                 <!-- Items Table Placeholder -->
@@ -210,7 +263,7 @@ const TEMPLATES = {
                 </div>
                 
                 <div class="notes">
-                    <h4>Notes:</h4>
+                    <h4>Observações:</h4>
                     <p id="notes"></p>
                 </div>
             </div>
@@ -219,14 +272,23 @@ const TEMPLATES = {
     'modern': {
         name: 'Modern',
         styles: `
+            /*
+             * IMPORTANT: The .invoice-container width and centering must match the PDF.js logic.
+             * If you change max-width or margins here, update PDF.js comments and logic as well.
+             * Recommended max-width: 700px for A4 PDF compatibility.
+             */
             .invoice-container {
-                max-width: 800px;
-                margin: 20px auto;
+                max-width: 700px; /* Keep in sync with PDF.js for A4 */
+                margin-left: auto;
+                margin-right: auto;
+                margin-top: 20px;
+                margin-bottom: 20px;
                 padding: 30px;
                 font-family: 'Inter', sans-serif;
                 background: white;
                 box-shadow: 0 0 20px rgba(0,0,0,0.1);
                 border-radius: 10px;
+                box-sizing: border-box;
             }
             .invoice-header {
                 display: flex;
@@ -256,14 +318,14 @@ const TEMPLATES = {
                 width: 100%;
                 max-width: 100%;
                 table-layout: fixed;
-                font-size: 0.75em; /* 25% smaller */
+                font-size: 0.80em; /* 25% smaller */
             }
             .invoice-items th,
             .invoice-items td {
                 padding: 8px;
                 border-bottom: 1px solid #eee;
                 word-break: break-word;
-                font-size: 0.75em; /* 25% smaller */
+                font-size: 0.80em; /* 25% smaller */
             }
             .invoice-items th {
                 background: #007ec7;
@@ -277,6 +339,39 @@ const TEMPLATES = {
             .invoice-items tr:hover {
                 background: #f8f9fa;
             }
+            /* Adjust column widths */
+            .invoice-items th:nth-child(1),
+            .invoice-items td:nth-child(1) { /* Description */
+                width: 32%;
+            }
+            .invoice-items th:nth-child(2),
+            .invoice-items td:nth-child(2) { /* Quantity */
+                width: 8%;
+            }
+            .invoice-items th:nth-child(3),
+            .invoice-items td:nth-child(3) { /* Unit Price */
+                width: 12%;
+            }
+            .invoice-items th:nth-child(4),
+            .invoice-items td:nth-child(4) { /* Discount Type */
+                width: 5%;
+            }
+            .invoice-items th:nth-child(5),
+            .invoice-items td:nth-child(5) { /* Discount */
+                width: 6%;
+            }
+            .invoice-items th:nth-child(6),
+            .invoice-items td:nth-child(6) { /* Discounted Subtotal */
+                width: 10%;
+            }
+            .invoice-items th:nth-child(7),
+            .invoice-items td:nth-child(7) { /* VAT */
+                width: 8%;
+            }
+            .invoice-items th:nth-child(8),
+            .invoice-items td:nth-child(8) { /* Total */
+                width: 10%;
+            }
             .invoice-totals {
                 text-align: right;
                 margin-top: 30px;
@@ -289,7 +384,7 @@ const TEMPLATES = {
             }
             .grand-total {
                 font-weight: bold;
-                font-size: 1.3em;
+                font-size: 1.0em;
                 color: #007ec7;
                 border-top: 2px solid #007ec7;
                 padding-top: 15px;
@@ -307,26 +402,27 @@ const TEMPLATES = {
             <div class="invoice-container">
                 <div class="invoice-header">
                     <div class="company-info">
-                        <h1 id="company-name">Company Name</h1>
-                        <p id="company-address">Company Address</p>
-                        <p id="company-contact">Email: <span id="company-email"></span> | Phone: <span id="company-phone"></span></p>
+                        <h1 id="company-name">Nome da Empresa</h1>
+                        <p id="company-address">Endereço da Empresa</p>
+                        <p id="company-contact">Email: <span id="company-email"></span> | Telefone: <span id="company-phone"></span></p>
                         <p>NUIT: <span id="company-nuit"></span></p>
                     </div>
                     <div class="invoice-details">
-                        <h2>INVOICE</h2>
-                        <p>Invoice #: <span id="invoice-number"></span></p>
-                        <p>Date: <span id="issue-date"></span></p>
-                        <p>Due Date: <span id="due-date"></span></p>
+                        <h2>FACTURA</h2>
+                        <p>Nº Fatura: <span id="invoice-number"></span></p>
+                        <p>Data de Emissão: <span id="issue-date"></span></p>
+                        <p>Data de Vencimento: <span id="due-date"></span></p>
+                        <p id="currency-field"></p> <!-- Moeda: MZN (Currency: MZN) -->
                     </div>
                 </div>
                 
                 <div class="client-info">
-                    <h3>Bill To:</h3>
-                    <p id="client-name">Client Name</p>
-                    <p id="client-address">Client Address</p>
+                    <h3>Cliente:</h3>
+                    <p id="client-name">Nome do Cliente</p>
+                    <p id="client-address">Endereço do Cliente</p>
                     <p>NUIT: <span id="client-nuit"></span></p>
                     <p>Email: <span id="client-email"></span></p>
-                    <p>Contact: <span id="client-contact"></span></p>
+                    <p>Contacto: <span id="client-contact"></span></p>
                 </div>
                 
                 <!-- Items Table Placeholder -->
@@ -336,7 +432,7 @@ const TEMPLATES = {
                 </div>
                 
                 <div class="notes">
-                    <h4>TESTE:</h4>
+                    <h4>Observações:</h4>
                     <p id="notes"></p>
                 </div>
             </div>
@@ -403,12 +499,20 @@ async function populateTemplate(templateContent, invoiceData) {
     let displayInvoiceNumber = invoiceData.invoice?.displayNumber || null;
     if (!displayInvoiceNumber) {
         let serie = invoiceData.invoice?.serie || invoiceData.serie || '';
-        let invoiceNumber = invoiceData.invoice?.number || invoiceData.invoice_number || 'Draft Invoice';
-        displayInvoiceNumber = serie && invoiceNumber ? `${serie}/${invoiceNumber}` : invoiceNumber || serie || 'Draft Invoice';
+        let invoiceNumber = invoiceData.invoice?.number || invoiceData.invoice_number || 'Factura Rascunho';
+        // Avoid double serie/number if already combined
+        if (serie && invoiceNumber && !(`${invoiceNumber}`.startsWith(`${serie}/`))) {
+            displayInvoiceNumber = `${serie}/${invoiceNumber}`;
+        } else {
+            displayInvoiceNumber = invoiceNumber || serie || 'Factura Rascunho';
+        }
     }
     setDataField(doc, 'invoice-number', displayInvoiceNumber);
     setDataField(doc, 'issue-date', formatDate(invoiceData.invoice?.issueDate || invoiceData.issue_date));
     setDataField(doc, 'due-date', formatDate(invoiceData.invoice?.dueDate || invoiceData.due_date));
+
+    // Set currency field (Moeda: MZN)
+    setDataField(doc, 'currency-field', `Moeda: ${invoiceData.currency || 'MZN'}`); // Currency: MZN
 
     // Client Information
     setDataField(doc, 'client-name', invoiceData.client?.name || invoiceData.client_name || '');
@@ -422,11 +526,6 @@ async function populateTemplate(templateContent, invoiceData) {
     const discountAmount = Number(invoiceData.discountAmount || 0);
     const discountType = invoiceData.discountType || 'none';
     const discountValue = invoiceData.discountValue || 0;
-    const subtotalAfterDiscount = Number(invoiceData.subtotalAfterDiscount || (subtotal - discountAmount));
-    const totalVat = Number(invoiceData.totalVat || 0);
-    const total = Number(invoiceData.total || 0);
-    let hasExempt = false;
-
     // Get all items for PDF generation (including paginated items)
     let allItems = invoiceData.items || [];
     
@@ -459,17 +558,46 @@ async function populateTemplate(templateContent, invoiceData) {
         }
     }
 
-    // Populate Items (with VAT asterisk for exempt)
-    const itemsContainer = doc.getElementById('invoice-items-body');
-    // True centering for invoice container
-    const styleTag = doc.querySelector('style');
-    if (styleTag) {
-        styleTag.textContent += `
-.invoice-container { margin-left: auto !important; margin-right: auto !important; margin-top: 20px; margin-bottom: 20px; max-width: 700px !important; background: #fff; }
-.pdf-footer { position: fixed; left: 0; right: 0; bottom: 20px; text-align: center; font-size: 14px; color: #333; width: 100%; }
-@media print { .pdf-footer { position: fixed; } }`;
+    // Always recalculate subtotalAfterDiscount from allItems
+    const subtotalAfterDiscount = allItems && allItems.length > 0
+        ? allItems.reduce((sum, item) => sum + (item.discountedSubtotal !== undefined ? item.discountedSubtotal : (item.discounted_subtotal !== undefined ? item.discounted_subtotal : ((item.quantity || 1) * (item.unit_price ?? item.price ?? 0)))), 0)
+        : 0;
+    // Always recalculate grandTotal from allItems
+    const grandTotal = allItems && allItems.length > 0
+        ? allItems.reduce((sum, item) => sum + (item.total !== undefined ? item.total : 0), 0)
+        : 0;
+    // Always recalculate totalVat from allItems
+    const totalVat = allItems && allItems.length > 0
+        ? allItems.reduce((sum, item) => sum + (item.vat !== undefined ? item.vat : (item.vat_amount !== undefined ? item.vat_amount : 0)), 0)
+        : 0;
+    const total = Number(invoiceData.total || 0);
+    let hasExempt = false;
+
+    // Calculate if any item has a discount and if all discounts are the same
+    let anyItemHasDiscount = false;
+    let allDiscountTypes = new Set();
+    let allDiscountValues = new Set();
+    let totalDiscountAmount = 0;
+    if (allItems && allItems.length > 0) {
+        allItems.forEach(item => {
+            const type = item.discountType || item.discount_type || 'none';
+            const value = item.discountValue !== undefined ? item.discountValue : (item.discount_value !== undefined ? item.discount_value : 0);
+            if (type !== 'none' && value > 0) anyItemHasDiscount = true;
+            allDiscountTypes.add(type);
+            allDiscountValues.add(value);
+            // Calculate per-item discount
+            let itemDiscount = 0;
+            if (type === 'percent') {
+                itemDiscount = (item.price || item.unit_price || 0) * (item.quantity || 1) * (value / 100);
+            } else if (type === 'fixed') {
+                itemDiscount = value;
+            }
+            totalDiscountAmount += itemDiscount;
+        });
     }
 
+    // Populate Items (with VAT asterisk for exempt)
+    const itemsContainer = doc.getElementById('invoice-items-body');
     // PDF PAGINATION: Split items into groups of 10, each group is a table with headers, with a page break after each except the last
     if (itemsContainer && allItems && Array.isArray(allItems)) {
         let paginatedHtml = '';
@@ -482,39 +610,33 @@ async function populateTemplate(templateContent, invoiceData) {
                 <table class="invoice-items" style="width:100%;border-collapse:collapse;margin-bottom:16px;">
                     <thead>
                         <tr>
-                            <th>Description</th>
-                            <th>Quantity</th>
-                            <th>Unit Price</th>
-                            <th>Discount Type</th>
-                            <th>Discount</th>
-                            <th>Discounted Subtotal</th>
-                            <th>VAT</th>
+                            <th>Descrição</th>
+                            <th>Qtd.</th>
+                            <th>Preço Unit.</th>
+                            <th style="min-width:60px;">Desconto</th>
+                            <th style="min-width:60px;">Subtotal</th>
+                            <th>IVA</th>
                             <th>Total</th>
                         </tr>
                     </thead>
                     <tbody>
                         ${pageItems.map(item => {
-                            const quantity = Number(item.quantity ?? 1);
-                            const unitPrice = Number(item.price ?? item.unit_price ?? 0);
-                            const discountType = item.discountType || 'none';
-                            const discountValue = typeof item.discountValue !== 'undefined' ? item.discountValue : 0;
-                            const discountedSubtotal = typeof item.discountedSubtotal !== 'undefined' ? item.discountedSubtotal : quantity * unitPrice;
-                            const vatAmount = typeof item.vat !== 'undefined' ? item.vat : 0;
-                            const lineTotal = typeof item.total !== 'undefined' ? item.total : discountedSubtotal + vatAmount;
-                            let discountDisplay = '';
-                            if (discountType === 'percent') discountDisplay = discountValue + '%';
-                            else if (discountType === 'fixed') discountDisplay = discountValue;
-                            else discountDisplay = '—';
+                            // Discount display: value + unit
+                            let discountDisplay = '—';
+                            const type = item.discount_type || item.discountType;
+                            const value = item.discount_value !== undefined ? item.discount_value : (item.discountValue !== undefined ? item.discountValue : null);
+                            if (type === 'percent' && value) discountDisplay = `${value} %`;
+                            else if (type === 'fixed' && value) discountDisplay = `${value} MTn`;
+                            else if (type === 'none' || !value) discountDisplay = '—';
                             return `
                                 <tr>
                                     <td>${item.description || ''}</td>
-                                    <td>${quantity}</td>
-                                    <td>${formatCurrency(unitPrice, invoiceData.currency)}</td>
-                                    <td>${discountType}</td>
+                                    <td>${item.quantity || 1}</td>
+                                    <td>${formatCurrency(item.unit_price ?? item.price ?? 0, invoiceData.currency)}</td>
                                     <td>${discountDisplay}</td>
-                                    <td>${formatCurrency(discountedSubtotal, invoiceData.currency)}</td>
-                                    <td>${formatCurrency(vatAmount, invoiceData.currency)}</td>
-                                    <td>${formatCurrency(lineTotal, invoiceData.currency)}</td>
+                                    <td>${formatCurrency(item.discounted_subtotal !== undefined ? item.discounted_subtotal : (item.discountedSubtotal !== undefined ? item.discountedSubtotal : ((item.quantity || 1) * (item.unit_price ?? item.price ?? 0))), invoiceData.currency)}</td>
+                                    <td>${formatCurrency(item.vat_amount !== undefined ? item.vat_amount : (item.vat !== undefined ? item.vat : 0), invoiceData.currency)}</td>
+                                    <td>${formatCurrency(item.total !== undefined ? item.total : (((item.discounted_subtotal !== undefined ? item.discounted_subtotal : (item.discountedSubtotal !== undefined ? item.discountedSubtotal : ((item.quantity || 1) * (item.unit_price ?? item.price ?? 0)))) + (item.vat_amount !== undefined ? item.vat_amount : (item.vat !== undefined ? item.vat : 0)))), invoiceData.currency)}</td>
                                 </tr>
                             `;
                         }).join('')}
@@ -523,30 +645,38 @@ async function populateTemplate(templateContent, invoiceData) {
             `;
             // Add page break after each table except the last
             if (page + 1 < totalPages) {
-                // Add footer before page break
-                paginatedHtml += `<div class="pdf-footer">Page ${page+1}/${totalPages}</div><div style="page-break-after: always;"></div>`;
-            } else {
-                // Last page: add footer at the end
-                paginatedHtml += `<div class="pdf-footer">Page ${page+1}/${totalPages}</div>`;
+                paginatedHtml += `<div style="page-break-after: always;"></div>`;
             }
         }
         itemsContainer.innerHTML = paginatedHtml;
+        // Footer/page number removed as requested
     }
     // Totals section
     const totalsContainer = doc.querySelector('.invoice-totals');
     if (totalsContainer) {
-        let totalsHtml = `<div class="total-row"><span>Subtotal:</span> <span>${formatCurrency(subtotal, invoiceData.currency)}</span></div>`;
-        if (discountAmount > 0) {
-            let discountLabel = 'Discount';
-            if (discountType === 'percent') {
-                discountLabel = `Discount (${discountValue}%)`;
-            }
-            totalsHtml += `<div class="total-row"><span>${discountLabel}:</span> <span>- ${formatCurrency(discountAmount, invoiceData.currency)}</span></div>`;
-            totalsHtml += `<div class="total-row"><span>Subtotal after Discount:</span> <span>${formatCurrency(subtotalAfterDiscount, invoiceData.currency)}</span></div>`;
+        let totalsHtml = `<div class='total-row'><span>Subtotal:</span> <span>${formatCurrency(subtotal, invoiceData.currency)}</span></div>`;
+        // Show discount block if any item has a discount
+        if (anyItemHasDiscount) {
+            let discountLabel = 'Desconto';
+            if (allDiscountTypes.size === 1 && allDiscountValues.size === 1) {
+                const onlyType = Array.from(allDiscountTypes)[0];
+                const onlyValue = Array.from(allDiscountValues)[0];
+                if (onlyType === 'percent') {
+                    discountLabel = `Desconto (${onlyValue}%)`;
+                } else if (onlyType === 'fixed') {
+                    discountLabel = `Desconto (${formatCurrency(onlyValue, invoiceData.currency)})`;
+                }
+            } // else just 'Desconto' for mixed
+            totalsHtml += `<div class='total-row' style='font-size:0.90em;'><span>${discountLabel}:</span> <span>- ${formatCurrency(totalDiscountAmount, invoiceData.currency)}</span></div>`;
+            totalsHtml += `<div class='total-row'><span>Subtotal após Desconto:</span> <span>${formatCurrency(subtotalAfterDiscount, invoiceData.currency)}</span></div>`;
         }
-        totalsHtml += `<div class="total-row"><span>VAT:</span> <span>${formatCurrency(totalVat, invoiceData.currency)}</span></div>`;
-        totalsHtml += `<div class="grand-total"><span>Total:</span> <span>${formatCurrency(total, invoiceData.currency)}</span></div>`;
+        totalsHtml += `<div class='total-row'><span>IVA:</span> <span>${formatCurrency(totalVat, invoiceData.currency)}</span></div>`;
+        totalsHtml += `<div class='grand-total'><span>Total:</span> <span>${formatCurrency(grandTotal, invoiceData.currency)}</span></div>`;
         totalsContainer.innerHTML = totalsHtml;
+        totalsContainer.style.display = 'block'; // Ensure visible
+        totalsContainer.style.fontSize = '1.1em';
+        totalsContainer.style.fontWeight = '500';
+        totalsContainer.style.marginTop = '30px';
     }
     // Remove any extra VAT/TOTAL lines outside the main totals section (if present in template, clear them)
 //    const extraVat = doc.getElementById('extra-vat');
