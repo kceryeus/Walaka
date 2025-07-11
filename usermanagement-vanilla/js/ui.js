@@ -82,8 +82,8 @@ class UI {
             form.role.value = user.role || 'viewer';
         }
 
-        // Update role dropdown based on current user's role
-        this.updateRoleOptions(roleSelect, user);
+        // Use the current logged-in user's role for the dropdown
+        this.updateRoleOptions(roleSelect, app.currentUser);
 
         this.userModal.classList.remove('hidden');
     }

@@ -207,6 +207,19 @@ class API {
             throw error;
         }
     }
+
+    async getCurrentUserProfile() {
+        if (!this.supabase) return null;
+        const { data: { session } } = await this.supabase.auth.getSession();
+        if (!session?.user?.id) return null;
+        const { data, error } = await this.supabase
+            .from('users')
+            .select('*')
+            .eq('id', session.user.id)
+            .single();
+        if (error) return null;
+        return data;
+    }
 }
 
 // Note: If you see a GoTrueClient warning, ensure you only create the Supabase client once and reuse it across your app.

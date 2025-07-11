@@ -139,9 +139,11 @@ class App {
             
             if (!isAuthenticated) {
                 console.log('User not authenticated, but continuing with limited functionality');
+                this.currentUser = null;
                 // Don't redirect, just continue with limited functionality
             } else {
                 console.log('User is authenticated');
+                this.currentUser = await api.getCurrentUserProfile();
             }
 
             // Load users
