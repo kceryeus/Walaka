@@ -130,7 +130,28 @@ async function previewInvoice(invoiceData) {
         if (!template || !template.layout || !template.styles) {
             template = window.invoiceTemplateManager.defaultTemplate;
         }
-        
+        // Fetch accent color from invoice_settings if modern template
+        let color = '#007ec7';
+        if (selectedTemplate === 'modern') {
+            try {
+                const { data: { session } } = await window.supabase.auth.getSession();
+                if (session && session.user) {
+                    const { data: invoiceSettings, error } = await window.supabase
+                        .from('invoice_settings')
+                        .select('color')
+                        .eq('user_id', session.user.id)
+                        .single();
+                    if (!error && invoiceSettings && invoiceSettings.color && invoiceSettings.color.trim()) {
+                        color = invoiceSettings.color;
+                    }
+                }
+            } catch (err) {
+                console.error('[InvoicePreview] Error fetching accent color:', err);
+            }
+            // Replace {{accentColor}} in styles
+            template = { ...template, styles: template.styles.replace(/{{accentColor}}/g, color) };
+            console.log('[InvoicePreview] Using accent color for modern template:', color);
+        }
         // Create the full HTML document with styles
         const html = `
             <!DOCTYPE html>

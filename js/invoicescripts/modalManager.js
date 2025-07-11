@@ -52,6 +52,10 @@ class ModalManager {
             document.removeEventListener('keydown', this._boundKeyDown);
             console.log('[ModalManager] Overlay hidden');
         }
+        // --- Refresh invoice table if the invoice modal was closed ---
+        if (modalId === 'invoiceModal' && window.invoiceTable && typeof window.invoiceTable.refreshTable === 'function') {
+            window.invoiceTable.refreshTable();
+        }
     }
 
     _onOverlayClick(e) {

@@ -158,7 +158,7 @@ const TEMPLATES = {
                 width: 100%;
                 max-width: 100%;
                 table-layout: fixed;
-                font-size: 0.80em; /* 25% smaller */
+                font-size: 0.75em; /* 25% smaller */
             }
             .invoice-items th,
             .invoice-items td {
@@ -178,23 +178,23 @@ const TEMPLATES = {
             /* Adjust column widths */
             .invoice-items th:nth-child(1),
             .invoice-items td:nth-child(1) { /* Description */
-                width: 32%;
+                width: 30%;
             }
             .invoice-items th:nth-child(2),
             .invoice-items td:nth-child(2) { /* Quantity */
-                width: 8%;
+                width: 10%;
             }
             .invoice-items th:nth-child(3),
             .invoice-items td:nth-child(3) { /* Unit Price */
-                width: 12%;
+                width: 10%;
             }
             .invoice-items th:nth-child(4),
             .invoice-items td:nth-child(4) { /* Discount Type */
-                width: 5%;
+                width: 10%;
             }
             .invoice-items th:nth-child(5),
             .invoice-items td:nth-child(5) { /* Discount */
-                width: 6%;
+                width: 10%;
             }
             .invoice-items th:nth-child(6),
             .invoice-items td:nth-child(6) { /* Discounted Subtotal */
@@ -202,7 +202,7 @@ const TEMPLATES = {
             }
             .invoice-items th:nth-child(7),
             .invoice-items td:nth-child(7) { /* VAT */
-                width: 8%;
+                width: 10%;
             }
             .invoice-items th:nth-child(8),
             .invoice-items td:nth-child(8) { /* Total */
@@ -289,20 +289,23 @@ const TEMPLATES = {
                 box-shadow: 0 0 20px rgba(0,0,0,0.1);
                 border-radius: 10px;
                 box-sizing: border-box;
+                color: #000000;
+                font-size: 1em; /* Match classic base font size */
             }
             .invoice-header {
                 display: flex;
                 justify-content: space-between;
                 margin-bottom: 40px;
                 padding-bottom: 20px;
-                border-bottom: 3px solid #007ec7;
+                border-bottom: 3px solid {{accentColor}};
+                font-size: 0.85em; /* Match classic table font size */
             }
             .company-info {
                 flex: 1;
             }
             .invoice-details {
                 text-align: right;
-                background: #007ec7;
+                background: {{accentColor}};
                 color: white;
                 padding: 20px;
                 border-radius: 5px;
@@ -312,13 +315,16 @@ const TEMPLATES = {
                 padding: 25px;
                 background: #f8f9fa;
                 border-radius: 8px;
-                border-left: 4px solid #007ec7;
+                border-left: 4px solid {{accentColor}};
+                font-size: 0.80em; /* Match classic table font size */
             }
             .invoice-items {
                 width: 100%;
                 max-width: 100%;
-                table-layout: fixed;
-                font-size: 0.80em; /* 25% smaller */
+                margin: 0 auto;
+                box-sizing: border-box;
+                border-spacing: 0;
+                font-size: 0.75em; /* Match classic table font size */
             }
             .invoice-items th,
             .invoice-items td {
@@ -328,7 +334,7 @@ const TEMPLATES = {
                 font-size: 0.80em; /* 25% smaller */
             }
             .invoice-items th {
-                background: #007ec7;
+                background: {{accentColor}};
                 color: white;
                 padding: 12px 8px;
                 text-align: left;
@@ -339,39 +345,15 @@ const TEMPLATES = {
             .invoice-items tr:hover {
                 background: #f8f9fa;
             }
-            /* Adjust column widths */
-            .invoice-items th:nth-child(1),
-            .invoice-items td:nth-child(1) { /* Description */
-                width: 32%;
-            }
-            .invoice-items th:nth-child(2),
-            .invoice-items td:nth-child(2) { /* Quantity */
-                width: 8%;
-            }
-            .invoice-items th:nth-child(3),
-            .invoice-items td:nth-child(3) { /* Unit Price */
-                width: 12%;
-            }
-            .invoice-items th:nth-child(4),
-            .invoice-items td:nth-child(4) { /* Discount Type */
-                width: 5%;
-            }
-            .invoice-items th:nth-child(5),
-            .invoice-items td:nth-child(5) { /* Discount */
-                width: 6%;
-            }
-            .invoice-items th:nth-child(6),
-            .invoice-items td:nth-child(6) { /* Discounted Subtotal */
-                width: 10%;
-            }
-            .invoice-items th:nth-child(7),
-            .invoice-items td:nth-child(7) { /* VAT */
-                width: 8%;
-            }
-            .invoice-items th:nth-child(8),
-            .invoice-items td:nth-child(8) { /* Total */
-                width: 10%;
-            }
+            /* Column widths and alignment */
+            .invoice-items th:nth-child(1), .invoice-items td:nth-child(1) { width: 25%; text-align: left; } /* Descrição */
+            .invoice-items th:nth-child(2), .invoice-items td:nth-child(2) { width: 5%; text-align: right; } /* Qtd. */
+            .invoice-items th:nth-child(3), .invoice-items td:nth-child(3) { width: 12%; text-align: right; } /* Preço Unit. */
+            .invoice-items th:nth-child(4), .invoice-items td:nth-child(4) { width: 8%; text-align: right; } /* Discount Type */
+            .invoice-items th:nth-child(5), .invoice-items td:nth-child(5) { width: 10%; text-align: right; } /* Discount */
+            .invoice-items th:nth-child(6), .invoice-items td:nth-child(6) { width: 15%; text-align: right; } /* Subtotal */
+            .invoice-items th:nth-child(7), .invoice-items td:nth-child(7) { width: 10%; text-align: right; } /* VAT */
+            .invoice-items th:nth-child(8), .invoice-items td:nth-child(8) { width: 15%; text-align: right; } /* Total */
             .invoice-totals {
                 text-align: right;
                 margin-top: 30px;
@@ -381,21 +363,23 @@ const TEMPLATES = {
             }
             .total-row {
                 margin: 8px 0;
+                font-size: 0.80em; /* Match classic table font size */
             }
             .grand-total {
                 font-weight: bold;
                 font-size: 1.0em;
-                color: #007ec7;
-                border-top: 2px solid #007ec7;
+                color: {{accentColor}};
+                border-top: 2px solid {{accentColor}};
                 padding-top: 15px;
                 margin-top: 15px;
+                font-size: 0.85em; /* Match classic table font size */
             }
             .notes {
                 margin-top: 40px;
                 padding: 25px;
                 background: #f8f9fa;
                 border-radius: 8px;
-                border-left: 4px solid #007ec7;
+                border-left: 4px solid {{accentColor}};
             }
         `,
         layout: `
@@ -626,17 +610,17 @@ async function populateTemplate(templateContent, invoiceData) {
                             const type = item.discount_type || item.discountType;
                             const value = item.discount_value !== undefined ? item.discount_value : (item.discountValue !== undefined ? item.discountValue : null);
                             if (type === 'percent' && value) discountDisplay = `${value} %`;
-                            else if (type === 'fixed' && value) discountDisplay = `${value} MTn`;
+                            else if (type === 'fixed' && value) discountDisplay = `${value} MT`;
                             else if (type === 'none' || !value) discountDisplay = '—';
                             return `
                                 <tr>
                                     <td>${item.description || ''}</td>
                                     <td>${item.quantity || 1}</td>
-                                    <td>${formatCurrency(item.unit_price ?? item.price ?? 0, invoiceData.currency)}</td>
-                                    <td>${discountDisplay}</td>
-                                    <td>${formatCurrency(item.discounted_subtotal !== undefined ? item.discounted_subtotal : (item.discountedSubtotal !== undefined ? item.discountedSubtotal : ((item.quantity || 1) * (item.unit_price ?? item.price ?? 0))), invoiceData.currency)}</td>
-                                    <td>${formatCurrency(item.vat_amount !== undefined ? item.vat_amount : (item.vat !== undefined ? item.vat : 0), invoiceData.currency)}</td>
-                                    <td>${formatCurrency(item.total !== undefined ? item.total : (((item.discounted_subtotal !== undefined ? item.discounted_subtotal : (item.discountedSubtotal !== undefined ? item.discountedSubtotal : ((item.quantity || 1) * (item.unit_price ?? item.price ?? 0)))) + (item.vat_amount !== undefined ? item.vat_amount : (item.vat !== undefined ? item.vat : 0)))), invoiceData.currency)}</td>
+                                    <td>${formatCurrency(item.unit_price ?? item.price ?? 0, invoiceData.currency).replace('MTn','MT')}</td>
+                                    <td>${discountDisplay.replace('MTn','MT')}</td>
+                                    <td>${formatCurrency(item.discounted_subtotal !== undefined ? item.discounted_subtotal : (item.discountedSubtotal !== undefined ? item.discountedSubtotal : ((item.quantity || 1) * (item.unit_price ?? item.price ?? 0))), invoiceData.currency).replace('MTn','MT')}</td>
+                                    <td>${formatCurrency(item.vat_amount !== undefined ? item.vat_amount : (item.vat !== undefined ? item.vat : 0), invoiceData.currency).replace('MTn','MT')}</td>
+                                    <td>${formatCurrency(item.total !== undefined ? item.total : (((item.discounted_subtotal !== undefined ? item.discounted_subtotal : (item.discountedSubtotal !== undefined ? item.discountedSubtotal : ((item.quantity || 1) * (item.unit_price ?? item.price ?? 0)))) + (item.vat_amount !== undefined ? item.vat_amount : (item.vat !== undefined ? item.vat : 0)))), invoiceData.currency).replace('MTn','MT')}</td>
                                 </tr>
                             `;
                         }).join('')}
@@ -654,7 +638,7 @@ async function populateTemplate(templateContent, invoiceData) {
     // Totals section
     const totalsContainer = doc.querySelector('.invoice-totals');
     if (totalsContainer) {
-        let totalsHtml = `<div class='total-row'><span>Subtotal:</span> <span>${formatCurrency(subtotal, invoiceData.currency)}</span></div>`;
+        let totalsHtml = `<div class='total-row'><span>Subtotal:</span> <span>${formatCurrency(subtotal, invoiceData.currency).replace('MTn','MT')}</span></div>`;
         // Show discount block if any item has a discount
         if (anyItemHasDiscount) {
             let discountLabel = 'Desconto';
@@ -668,10 +652,10 @@ async function populateTemplate(templateContent, invoiceData) {
                 }
             } // else just 'Desconto' for mixed
             totalsHtml += `<div class='total-row' style='font-size:0.90em;'><span>${discountLabel}:</span> <span>- ${formatCurrency(totalDiscountAmount, invoiceData.currency)}</span></div>`;
-            totalsHtml += `<div class='total-row'><span>Subtotal após Desconto:</span> <span>${formatCurrency(subtotalAfterDiscount, invoiceData.currency)}</span></div>`;
+            totalsHtml += `<div class='total-row'><span>Subtotal após Desconto:</span> <span>${formatCurrency(subtotalAfterDiscount, invoiceData.currency).replace('MTn','MT')}</span></div>`;
         }
-        totalsHtml += `<div class='total-row'><span>IVA:</span> <span>${formatCurrency(totalVat, invoiceData.currency)}</span></div>`;
-        totalsHtml += `<div class='grand-total'><span>Total:</span> <span>${formatCurrency(grandTotal, invoiceData.currency)}</span></div>`;
+        totalsHtml += `<div class='total-row'><span>IVA:</span> <span>${formatCurrency(totalVat, invoiceData.currency).replace('MTn','MT')}</span></div>`;
+        totalsHtml += `<div class='grand-total'><span>Total:</span> <span>${formatCurrency(grandTotal, invoiceData.currency).replace('MTn','MT')}</span></div>`;
         totalsContainer.innerHTML = totalsHtml;
         totalsContainer.style.display = 'block'; // Ensure visible
         totalsContainer.style.fontSize = '1.1em';
@@ -770,7 +754,19 @@ async function generateInvoiceHTML(invoiceId) {
         const selectedTemplate = await window.invoiceTemplateManager.getSelectedTemplate();
         const template = TEMPLATES[selectedTemplate] || TEMPLATES['classic'];
         
+        // Fetch accent color if modern template
+        let accentColor = '#007ec7';
+        if (selectedTemplate === 'modern') {
+            accentColor = await getInvoiceAccentColor();
+            formattedData.color = accentColor;
+            console.log('[generateInvoiceHTML] Modern template, using accentColor:', accentColor);
+        }
         // Create the full HTML document with styles
+        let styles = template.styles;
+        if (selectedTemplate === 'modern') {
+            styles = styles.replace(/{{accentColor}}/g, accentColor);
+            console.log('[generateInvoiceHTML] Final styles after color replacement:', styles);
+        }
         const html = `
             <!DOCTYPE html>
             <html>
@@ -779,7 +775,7 @@ async function generateInvoiceHTML(invoiceId) {
                 <meta name="viewport" content="width=device-width, initial-scale=1.0">
                 <title>Invoice ${formattedData.invoice.number}</title>
                 <style>
-                    ${template.styles}
+                    ${styles}
                 </style>
             </head>
             <body>
@@ -824,22 +820,48 @@ async function previewInvoice(invoiceData) {
  * @param {string} templateName - The name of the template to preview
  * @returns {Promise<void>}
  */
-async function previewTemplate(templateName) {
+async function previewTemplate() {
     try {
+        // Fetch current user session
+        const { data: { session } } = await window.supabase.auth.getSession();
+        if (!session || !session.user) {
+            console.warn('[TemplateManager] No user session for preview');
+            return;
+        }
+        // Fetch invoice settings for the user
+        const { data: invoiceSettings, error } = await window.supabase
+            .from('invoice_settings')
+            .select('*')
+            .eq('user_id', session.user.id)
+            .single();
+        if (error) {
+            console.error('[TemplateManager] Error fetching invoice settings for preview:', error);
+            return;
+        }
+        // Determine template and color
+        const templateName = invoiceSettings.template || 'classic';
+        // Robust fallback for color: use #007ec7 if blank, null, or whitespace
+        const color = invoiceSettings.color && invoiceSettings.color.trim() ? invoiceSettings.color : '#007ec7';
+        console.log('[TemplateManager] previewTemplate: templateName =', templateName, ', color =', color);
         const template = TEMPLATES[templateName] || TEMPLATES['classic'];
         const previewContainer = document.getElementById('template-preview-container');
-        
         if (!previewContainer) return;
-        
         // Create iframe for preview
         const iframe = document.createElement('iframe');
         previewContainer.innerHTML = '';
         previewContainer.appendChild(iframe);
-        
-        // Write template content to iframe
-        const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
-        iframeDoc.open();
-        iframeDoc.write(`
+        // Prepare preview data
+        const previewData = { ...TEMPLATE_PREVIEW_DATA };
+        if (templateName === 'modern') {
+            previewData.color = color;
+        }
+        // Build the HTML string, replacing {{accentColor}} if needed
+        let styles = template.styles;
+        if (templateName === 'modern') {
+            styles = styles.replace(/{{accentColor}}/g, color);
+            console.log('[TemplateManager] previewTemplate: final styles after color replacement:', styles);
+        }
+        const html = `
             <!DOCTYPE html>
             <html>
             <head>
@@ -847,23 +869,25 @@ async function previewTemplate(templateName) {
                 <meta name="viewport" content="width=device-width, initial-scale=1.0">
                 <title>Template Preview</title>
                 <style>
-                    ${template.styles}
+                    ${styles}
                 </style>
             </head>
             <body>
                 ${template.layout}
             </body>
             </html>
-        `);
+        `;
+        // Write template content to iframe
+        const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+        iframeDoc.open();
+        iframeDoc.write(html);
         iframeDoc.close();
-        
-        // Populate template with preview data
-        await populateTemplate(iframeDoc, TEMPLATE_PREVIEW_DATA);
-        
+        // Populate template with preview data (no need to replace color again)
+        await populateTemplate(iframeDoc, previewData);
         // Adjust iframe height to content
         iframe.style.height = iframeDoc.body.scrollHeight + 'px';
     } catch (error) {
-        console.error('Error previewing template:', error);
+        console.error('[TemplateManager] Error previewing template:', error);
     }
 }
 
@@ -881,6 +905,51 @@ function saveTemplateSelection(templateName) {
  */
 function getSelectedTemplate() {
     return localStorage.getItem('selectedInvoiceTemplate') || 'classic';
+}
+
+// --- PDF CONTAINER CREATION FOR PDF.JS ---
+/**
+ * Create and return a fully prepared PDF container element for PDF generation.
+ * This is the single source of truth for PDF container structure (width, centering, background, etc.).
+ * @param {string} populatedHtml - The populated invoice HTML
+ * @returns {HTMLElement} - The container element ready for PDF generation
+ */
+function createPDFContainer(populatedHtml) {
+    const container = document.createElement('div');
+    container.innerHTML = populatedHtml;
+    container.style.width = '700px';
+    container.style.marginLeft = 'auto';
+    container.style.marginRight = 'auto';
+    container.style.background = '#fff';
+    container.style.boxSizing = 'border-box';
+    return container;
+}
+
+// Add a function to fetch the invoice color from invoice_settings
+async function getInvoiceAccentColor() {
+    try {
+        const { data: { session } } = await window.supabase.auth.getSession();
+        if (!session || !session.user) {
+            console.log('[AccentColor] No session or user, using fallback #007ec7');
+            return '#007ec7';
+        }
+        const { data: invoiceData, error } = await window.supabase
+            .from('invoice_settings')
+            .select('color')
+            .eq('user_id', session.user.id)
+            .single();
+        console.log('[AccentColor] DB response:', invoiceData, 'Error:', error);
+        if (invoiceData && invoiceData.color) {
+            console.log('[AccentColor] Using DB color:', invoiceData.color);
+            return invoiceData.color;
+        } else {
+            console.log('[AccentColor] No color in DB, using fallback #007ec7');
+            return '#007ec7';
+        }
+    } catch (error) {
+        console.error('[AccentColor] Error getting invoice accent color:', error);
+        return '#007ec7';
+    }
 }
 
 // Export functions for external use
@@ -921,7 +990,9 @@ window.invoiceTemplateManager = {
         } catch (error) {
             console.error('Error saving template:', error);
         }
-    }
+    },
+    createPDFContainer: createPDFContainer,
+    getInvoiceAccentColor: getInvoiceAccentColor
 };
 // --- BEGIN: Uncomment legacy TemplateManager class (for compatibility) ---
 class TemplateManager {

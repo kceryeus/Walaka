@@ -708,8 +708,9 @@ async function handleInvoiceSubmission(event) {
         }
         showNotification('Invoice saved successfully!', 'success');
         window.modalManager.closeModal('invoiceModal');
-        if (window.invoiceTable && typeof window.invoiceTable.fetchAndDisplayInvoices === 'function') {
-            await window.invoiceTable.fetchAndDisplayInvoices(1, 10, {});
+        // --- Refresh invoice table after invoice creation ---
+        if (window.invoiceTable && typeof window.invoiceTable.refreshTable === 'function') {
+            window.invoiceTable.refreshTable();
         }
     } catch (error) {
         console.error('Error saving invoice:', error);

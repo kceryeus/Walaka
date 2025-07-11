@@ -379,8 +379,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Get the selected template from Supabase
     window.invoiceTemplateManager.getSelectedTemplate().then(template => {
         invoiceTemplateInput.value = template;
-        // Preview the selected template
-        window.invoiceTemplateManager.previewTemplate(template);
+        // Preview the selected template with the current color
+        previewTemplate(template);
     });
 
     invoiceColorInput.value = invoiceSettings.color;
@@ -1668,8 +1668,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             // Save to Supabase
             window.invoiceTemplateManager.saveTemplateSelection(selectedTemplate);
             
-            // Preview the template
-            window.invoiceTemplateManager.previewTemplate(selectedTemplate);
+            // Preview the template with the current color
+            previewTemplate(selectedTemplate);
             
             // Show success message
             showToast('success', 'Template Updated', `Invoice template changed to ${templates[selectedTemplate]}`);
@@ -1776,8 +1776,13 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   function previewTemplate(selectedTemplate) {
-    // Implementation of previewTemplate function
-    console.log(`Previewing template: ${selectedTemplate}`);
+    // Get the color from the invoice color input
+    const colorInput = document.getElementById('invoice-color');
+    const color = colorInput ? colorInput.value : '#007ec7';
+    console.log('[Settings] previewTemplate called with:', selectedTemplate, color);
+    if (window.invoiceTemplateManager && typeof window.invoiceTemplateManager.previewTemplate === 'function') {
+        window.invoiceTemplateManager.previewTemplate(selectedTemplate, color);
+    }
   }
 
   function saveTemplateSelection(selectedTemplate) {
@@ -1931,6 +1936,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         throw new Error('No active session found');
       }
 
+      // Fetch all fields as top-level columns
       const { data: invoiceData, error } = await window.supabase
         .from('invoice_settings')
         .select('*')
@@ -1940,15 +1946,15 @@ document.addEventListener('DOMContentLoaded', async () => {
       if (error) throw error;
 
       if (invoiceData) {
-        const content = invoiceData.content || {};
-        document.getElementById('invoice-prefix').value = content.prefix || '';
-        document.getElementById('invoice-next-number').value = content.next_number || 1;
+        document.getElementById('invoice-prefix').value = invoiceData.prefix || 'FAT-';
+        document.getElementById('invoice-next-number').value = invoiceData.next_number || 1001;
         document.getElementById('invoice-template').value = invoiceData.template || 'classic';
-        document.getElementById('invoice-color').value = content.color || '#007ec7';
-        document.getElementById('default-currency').value = content.currency || 'MZN';
-        document.getElementById('default-tax-rate').value = content.tax_rate || 23;
-        document.getElementById('payment-terms').value = content.payment_terms || 'net-30';
-        document.getElementById('invoice-notes').value = content.notes || '';
+        document.getElementById('invoice-color').value = invoiceData.color || '#007ec7';
+        document.getElementById('invoice-color-value').textContent = invoiceData.color || '#007ec7';
+        document.getElementById('default-currency').value = invoiceData.currency || 'MZN';
+        document.getElementById('default-tax-rate').value = invoiceData.tax_rate || 17;
+        document.getElementById('payment-terms').value = invoiceData.payment_terms || 'net-30';
+        document.getElementById('invoice-notes').value = invoiceData.notes || '';
       }
     } catch (error) {
       console.error('Error loading invoice settings:', error);
@@ -1963,27 +1969,39 @@ document.addEventListener('DOMContentLoaded', async () => {
         throw new Error('No active session found');
       }
 
+      // Save all fields as top-level columns
       const invoiceData = {
         user_id: session.user.id,
+        prefix: invoicePrefixInput.value,
+        next_number: parseInt(invoiceNextNumberInput.value),
         template: invoiceTemplateInput.value,
-        content: {
-          prefix: invoicePrefixInput.value,
-          next_number: parseInt(invoiceNextNumberInput.value),
-          color: invoiceColorInput.value,
-          currency: defaultCurrencyInput.value,
-          tax_rate: parseFloat(defaultTaxRateInput.value),
-          payment_terms: paymentTermsInput.value,
-          notes: invoiceNotesInput.value
-        },
-        created_at: existingSettings ? existingSettings.created_at : new Date().toISOString(),
+        color: invoiceColorInput.value,
+        currency: defaultCurrencyInput.value,
+        tax_rate: parseFloat(defaultTaxRateInput.value),
+        payment_terms: paymentTermsInput.value,
+        notes: invoiceNotesInput.value,
         updated_at: new Date().toISOString()
       };
 
-      const { error } = await window.supabase
+      // Check if record exists
+      const { data: existingSettings } = await window.supabase
         .from('invoice_settings')
-        .upsert(invoiceData, { onConflict: 'user_id' });
+        .select('id,created_at')
+        .eq('user_id', session.user.id)
+        .single();
 
-      if (error) throw error;
+      if (existingSettings) {
+        invoiceData.created_at = existingSettings.created_at;
+        await window.supabase
+          .from('invoice_settings')
+          .update(invoiceData)
+          .eq('user_id', session.user.id);
+      } else {
+        invoiceData.created_at = new Date().toISOString();
+        await window.supabase
+          .from('invoice_settings')
+          .insert([invoiceData]);
+      }
 
       showToast('Invoice settings saved successfully', 'success');
     } catch (error) {
