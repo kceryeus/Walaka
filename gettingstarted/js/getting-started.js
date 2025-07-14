@@ -37,16 +37,13 @@ document.addEventListener('DOMContentLoaded', async function() {
         return;
     }
 
-    // Check onboarding status from Supabase
-    const { data: profile, error: profileError } = await supabase
-        .from('profiles')
-        .select('onboarding_completed')
-        .eq('user_id', session.user.id)
+    // Check onboarding status in users table
+    const { data: user, error: userError } = await supabase
+        .from('users')
+        .select('onboarding')
+        .eq('id', session.user.id)
         .single();
-    if (profileError) {
-        console.error('Error fetching profile:', profileError);
-    }
-    if (profile && profile.onboarding_completed) {
+    if (user && user.onboarding === 'yes') {
         window.location.href = '../dashboard.html';
         return;
     }
@@ -56,6 +53,97 @@ document.addEventListener('DOMContentLoaded', async function() {
     setupEventListeners();
     // Populate industries from cae table
     await fetchAndPopulateIndustries();
+
+    // NUIT validation and guidance
+    const nuitInput = document.getElementById('org-tax-id');
+    const nuitHelp = document.querySelector('.nuit-help');
+    const orgForm = document.getElementById('organization-form');
+
+    if (nuitInput && nuitHelp && orgForm) {
+        // Store translations for NUIT guidance
+        const nuitMessages = {
+            en: {
+                ei: 'NUITs starting with 1 are assigned to Sole Proprietorships (Empresa em Nome Individual)',
+                company: 'NUITs starting with 4 are assigned to Corporate Entities (e.g., Limited Liability Companies, Public Limited Companies)',
+                invalid: 'NUIT must start with 1 (Sole Proprietorship) or 4 (Corporate Entity)',
+                length: 'NUIT must be exactly 9 digits'
+            },
+            pt: {
+                ei: 'NUITs iniciados por 1 são atribuídos a Empresários em Nome Individual (ENI)',
+                company: 'NUITs iniciados por 4 são atribuídos a Sociedades (ex: Lda, SA, etc.)',
+                invalid: 'O NUIT deve começar com 1 (Empresário em Nome Individual) ou 4 (Sociedade)',
+                length: 'O NUIT deve conter exatamente 9 dígitos'
+            }
+        };
+        // Get current language
+        function getCurrentLang() {
+            return localStorage.getItem('walaka-language') || localStorage.getItem('waLangPreference') || 'en';
+        }
+        function getNuitMsg(type) {
+            const lang = getCurrentLang();
+            return nuitMessages[lang] && nuitMessages[lang][type] ? nuitMessages[lang][type] : nuitMessages['en'][type];
+        }
+        function validateNuitInput() {
+            const value = nuitInput.value.trim();
+            const cleanValue = value.replace(/\D/g, '');
+            let message = '';
+            let isValid = false;
+            nuitInput.classList.remove('invalid', 'valid');
+            nuitHelp.classList.remove('error');
+            if (cleanValue.length === 0) {
+                nuitHelp.textContent = '';
+                return;
+            }
+            if (cleanValue.length !== 9) {
+                message = getNuitMsg('length');
+                nuitHelp.classList.add('error');
+                nuitInput.classList.add('invalid');
+            } else if (cleanValue[0] === '1') {
+                message = getNuitMsg('ei');
+                nuitInput.classList.add('valid');
+                isValid = true;
+            } else if (cleanValue[0] === '4') {
+                message = getNuitMsg('company');
+                nuitInput.classList.add('valid');
+                isValid = true;
+            } else {
+                message = getNuitMsg('invalid');
+                nuitHelp.classList.add('error');
+                nuitInput.classList.add('invalid');
+            }
+            nuitHelp.textContent = message;
+        }
+        nuitInput.addEventListener('input', validateNuitInput);
+        // Listen for language changes and update message
+        window.addEventListener('storage', function(e) {
+            if (e.key && (e.key === 'walaka-language' || e.key === 'waLangPreference')) {
+                validateNuitInput();
+            }
+        });
+        // Also listen for custom event from language toggle
+        document.addEventListener('languageChanged', validateNuitInput);
+        orgForm.addEventListener('submit', function(e) {
+            const value = nuitInput.value.trim();
+            const cleanValue = value.replace(/\D/g, '');
+            let valid = true;
+            if (cleanValue.length !== 9) {
+                nuitHelp.textContent = getNuitMsg('length');
+                nuitHelp.classList.add('error');
+                nuitInput.classList.add('invalid');
+                nuitInput.focus();
+                valid = false;
+            } else if (cleanValue[0] !== '1' && cleanValue[0] !== '4') {
+                nuitHelp.textContent = getNuitMsg('invalid');
+                nuitHelp.classList.add('error');
+                nuitInput.classList.add('invalid');
+                nuitInput.focus();
+                valid = false;
+            }
+            if (!valid) {
+                e.preventDefault();
+            }
+        });
+    }
 });
 
 // Initialize form validation
@@ -150,7 +238,9 @@ function setupEventListeners() {
     });
 
     // Complete setup button
-    document.querySelector('.btn-complete').addEventListener('click', completeSetup);
+    document.querySelectorAll('.btn-complete').forEach(btn => {
+        btn.addEventListener('click', completeSetup);
+    });
 
     // Template selection
     document.querySelectorAll('.template-option').forEach(option => {
@@ -298,16 +388,31 @@ async function saveAndContinue(step) {
                 });
 
             if (businessError) throw businessError;
-        } else {
-            // Save other settings
-            await supabase
-                .from('settings')
-                .update({
-                    invoice: onboardingData.invoice,
-                    subscription: onboardingData.subscription,
-                    modules: onboardingData.modules
-                })
-                .eq('user_id', userId);
+        } else if (step === '2') {
+            // Save invoice settings (only use valid columns)
+            const invoiceData = {
+                user_id: userId,
+                prefix: onboardingData.invoice.prefix,
+                next_number: onboardingData.invoice.next_number,
+                template: onboardingData.invoice.template,
+                color: onboardingData.invoice.color,
+                currency: onboardingData.invoice.currency,
+                tax_rate: onboardingData.invoice.tax_rate,
+                payment_terms: onboardingData.invoice.payment_terms,
+                notes: onboardingData.invoice.notes,
+                created_at: new Date().toISOString(),
+                updated_at: new Date().toISOString()
+            };
+            // Remove undefined fields
+            Object.keys(invoiceData).forEach(key => invoiceData[key] === undefined && delete invoiceData[key]);
+            const { error: invoiceError } = await supabase
+                .from('invoice_settings')
+                .upsert(invoiceData);
+            if (invoiceError) throw invoiceError;
+        } else if (step === '3') {
+            // Save subscription (already handled above)
+        } else if (step === '4') {
+            // Optionally save modules to a new table, or skip
         }
 
         // Go to next step or complete setup
@@ -332,9 +437,9 @@ async function completeSetup() {
 
         // Update user profile with onboarding completion
         await supabase
-            .from('profiles')
-            .update({ onboarding_completed: true })
-            .eq('user_id', userId);
+            .from('users')
+            .update({ onboarding: 'yes', updated_at: new Date().toISOString() })
+            .eq('id', userId);
 
         // Clear onboarding flag
         localStorage.removeItem('needsOnboarding');

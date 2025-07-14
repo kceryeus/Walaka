@@ -12,6 +12,8 @@ const PLAN_CONFIG = {
         price: 'Free',
         priceValue: 0,
         maxUsers: 1,
+        trialDays: 14,         // <-- Added explicit trial days
+        trialInvoices: 5,      // <-- Added explicit trial invoice count
         features: ['Limited invoices', '14 days', '1 user'],
         recommended: false
     },
@@ -139,7 +141,7 @@ async function updateTrialBanner() {
         if (trialStartDate) {
             const now = new Date();
             const daysElapsed = Math.floor((now.getTime() - trialStartDate.getTime()) / (1000 * 60 * 60 * 24));
-            daysRemaining = Math.max(0, PLAN_CONFIG.trial.maxUsers - 1 - daysElapsed); // Adjust for maxUsers
+            daysRemaining = Math.max(0, PLAN_CONFIG.trial.trialDays - daysElapsed); // <-- Use explicit trialDays
         }
         let invoiceCount = 0;
         try {
@@ -159,7 +161,7 @@ async function updateTrialBanner() {
                 invoiceCount = count || 0;
             }
         } catch (err) {}
-        const invoicesRemaining = Math.max(0, PLAN_CONFIG.trial.maxUsers - 1 - invoiceCount); // Adjust for maxUsers
+        const invoicesRemaining = Math.max(0, PLAN_CONFIG.trial.trialInvoices - invoiceCount); // <-- Use explicit trialInvoices
         updateTrialUI(daysRemaining, invoicesRemaining, trialStartDate);
         window.dispatchEvent(new CustomEvent('trialDataUpdated', {
             detail: {
@@ -202,7 +204,7 @@ function updateTrialUI(daysRemaining, invoicesRemaining, trialStartDate) {
     if (progressFill && trialStartDate) {
         const now = new Date();
         const daysElapsed = Math.floor((now.getTime() - trialStartDate.getTime()) / (1000 * 60 * 60 * 24));
-        const percent = Math.min(100, Math.max(0, (daysElapsed / PLAN_CONFIG.trial.maxUsers) * 100)); // Adjust for maxUsers
+        const percent = Math.min(100, Math.max(0, (daysElapsed / PLAN_CONFIG.trial.trialDays) * 100)); // <-- Use explicit trialDays
         
         progressFill.style.width = percent + '%';
         progressFill.classList.toggle('warning', daysRemaining <= 3);

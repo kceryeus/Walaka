@@ -570,5 +570,17 @@
     "basic_plan_features": "2 utilizadores, Facturas ilimitadas",
     "standard_plan_features": "5 utilizadores, Facturas ilimitadas",
     "select_basic_button": "Seleccionar Básico",
-    "select_standard_button": "Seleccionar Padrão"
+    "select_standard_button": "Seleccionar Padrão",
+    "nuit_guidance_ei": "NUITs iniciados por 1 são atribuídos a Empresários em Nome Individual (ENI)",
+    "nuit_guidance_company": "NUITs iniciados por 4 são atribuídos a Sociedades (ex: Lda, SA, etc.)",
+    "nuit_guidance_invalid": "O NUIT deve começar com 1 (Empresário em Nome Individual) ou 4 (Sociedade)",
+    "nuit_guidance_length": "O NUIT deve conter exatamente 9 dígitos",
+    "quick_add_product": "Adicionar Produto Rápido",
+    "product_created_successfully": "Produto Criado com Sucesso",
+    "product_created_message": "O produto foi criado e já está disponível para seleção no formulário da factura.",
+    "product_information": "Informação do Produto",
+    "use_this_product": "Usar Este Produto",
+    "product_price_placeholder": "0.00",
+    "vat_0": "0%",
+    "vat_16": "16%"
 }

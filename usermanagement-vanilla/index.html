@@ -279,5 +279,17 @@
     </script>
     <!-- User restrictions script -->
     <script src="../components/user-restrictions.js"></script>
+    <script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const upgradeBtn = document.querySelector('#upgrade-plan-btn');
+    if (upgradeBtn) {
+      upgradeBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        // Always redirect to /profile.html at the root
+        window.location.href = window.location.origin + '/profile.html';
+      });
+    }
+  });
+</script>
 </body>
 </html> 

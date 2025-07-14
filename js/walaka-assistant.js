@@ -20,7 +20,7 @@ class WalakaAssistant {
     ) {
       url = "http://localhost:54321/functions/v1/walaka-assistant";
     } else {
-      // For production, use relative path (works on Supabase hosting and most static hosts)
+      // For production, use relative path (works on walakasoftware.com and most static hosts)
       url = "/functions/v1/walaka-assistant";
     }
 

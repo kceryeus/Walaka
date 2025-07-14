@@ -581,5 +581,17 @@
   "standard_plan_features": "5 users, Unlimited invoices",
   "select_basic_button": "Select Basic",
   "select_standard_button": "Select Standard",
-  "cancel_button": "Cancel"
+  "cancel_button": "Cancel",
+  "nuit_guidance_ei": "NUITs starting with 1 are assigned to Sole Proprietorships (Empresa em Nome Individual)",
+  "nuit_guidance_company": "NUITs starting with 4 are assigned to Corporate Entities (e.g., Limited Liability Companies, Public Limited Companies)",
+  "nuit_guidance_invalid": "NUIT must start with 1 (Sole Proprietorship) or 4 (Corporate Entity)",
+  "nuit_guidance_length": "NUIT must be exactly 9 digits",
+  "quick_add_product": "Quick Add Product",
+  "product_created_successfully": "Product Created Successfully",
+  "product_created_message": "The product has been created and is now available for selection in the invoice form.",
+  "product_information": "Product Information",
+  "use_this_product": "Use This Product",
+  "product_price_placeholder": "0.00",
+  "vat_0": "0%",
+  "vat_16": "16%"
 }

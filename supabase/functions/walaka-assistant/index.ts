@@ -29,8 +29,8 @@ serve(async (req)=>{
     });
   }
   // Dynamically set HTTP-Referer based on request origin
-  // Fallback to a default if not present
-  let referer = req.headers.get("origin") || req.headers.get("referer") || "http://localhost:3000";
+  // Fallback to production domain if not present
+  let referer = req.headers.get("origin") || req.headers.get("referer") || "https://walakasoftware.com";
   // Call OpenRouter API
   const openRouterRes = await fetch("https://openrouter.ai/api/v1/chat/completions", {
     method: "POST",

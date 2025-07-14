@@ -11,6 +11,7 @@
 </head>
 <body>
     <div class="language-toggle">
+        <!-- Both buttons are present; JS will show only the active one -->
         <button class="lang-btn active" data-lang="en">EN</button>
         <button class="lang-btn" data-lang="pt">PT</button>
     </div>
@@ -75,8 +76,8 @@
                     <h4 data-lang="en">Need Help?</h4>
                     <h4 data-lang="pt">Precisa de Ajuda?</h4>
                     <p data-lang="en">Contact our support team</p>
-                    <p data-lang="pt">Entre em contato com nossa equipe de suporte</p>
-                    <a href="mailto:support@walaka.io" class="help-link">support@walaka.io</a>
+                    <p data-lang="pt">Entre em contacto com nossa equipe de suporte</p>
+                    <a href="mailto:info@walakasoftware.com" class="help-link">info@walakasoftware.com</a>
                 </div>
             </div>
         </div>
@@ -157,7 +158,8 @@
                             <div class="form-group">
                                 <label for="org-tax-id" data-lang="en">Tax ID / NUIT</label>
                                 <label for="org-tax-id" data-lang="pt">ID Fiscal / NUIT</label>
-                                <input type="text" id="org-tax-id" name="org-tax-id">
+                                <input type="text" id="org-tax-id" name="org-tax-id" required maxlength="9">
+                                <div class="form-help nuit-help"></div>
                             </div>
                             
                             <div class="form-group">
@@ -518,7 +520,7 @@
                                     </div>
                                     <div class="module-name">
                                         <h4 data-lang="en">Invoicing</h4>
-                                        <h4 data-lang="pt">Faturamento</h4>
+                                        <h4 data-lang="pt">Faturação</h4>
                                     </div>
                                     <div class="module-description">
                                         <p data-lang="en">Create and send professional invoices</p>
@@ -529,61 +531,7 @@
                                         <label for="module-invoicing"></label>
                                     </div>
                                 </div>
-                                
-                                <div class="module-card">
-                                    <div class="module-icon">
-                                        <i class="fas fa-quote-right"></i>
-                                    </div>
-                                    <div class="module-name">
-                                        <h4 data-lang="en">Quotes</h4>
-                                        <h4 data-lang="pt">Orçamentos</h4>
-                                    </div>
-                                    <div class="module-description">
-                                        <p data-lang="en">Create estimates and convert to invoices</p>
-                                        <p data-lang="pt">Crie estimativas e converta em faturas</p>
-                                    </div>
-                                    <div class="module-toggle">
-                                        <input type="checkbox" id="module-quotes" name="module-quotes">
-                                        <label for="module-quotes"></label>
-                                    </div>
-                                </div>
-                                
-                                <div class="module-card">
-                                    <div class="module-icon">
-                                        <i class="fas fa-clock"></i>
-                                    </div>
-                                    <div class="module-name">
-                                        <h4 data-lang="en">Timesheet</h4>
-                                        <h4 data-lang="pt">Planilha de Horas</h4>
-                                    </div>
-                                    <div class="module-description">
-                                        <p data-lang="en">Track time and bill clients accordingly</p>
-                                        <p data-lang="pt">Acompanhe o tempo e cobre os clientes de acordo</p>
-                                    </div>
-                                    <div class="module-toggle">
-                                        <input type="checkbox" id="module-timesheet" name="module-timesheet">
-                                        <label for="module-timesheet"></label>
-                                    </div>
-                                </div>
-                                
-                                <div class="module-card">
-                                    <div class="module-icon">
-                                        <i class="fas fa-redo-alt"></i>
-                                    </div>
-                                    <div class="module-name">
-                                        <h4 data-lang="en">Recurring Invoices</h4>
-                                        <h4 data-lang="pt">Faturas Recorrentes</h4>
-                                    </div>
-                                    <div class="module-description">
-                                        <p data-lang="en">Set up automatic recurring invoices</p>
-                                        <p data-lang="pt">Configure faturas recorrentes automáticas</p>
-                                    </div>
-                                    <div class="module-toggle">
-                                        <input type="checkbox" id="module-recurring" name="module-recurring">
-                                        <label for="module-recurring"></label>
-                                    </div>
-                                </div>
-                                
+
                                 <div class="module-card">
                                     <div class="module-icon">
                                         <i class="fas fa-file-alt"></i>
@@ -601,22 +549,24 @@
                                         <label for="module-credit-notes"></label>
                                     </div>
                                 </div>
-                                
-                                <div class="module-card">
+
+                                <div class="module-card module-coming-soon">
                                     <div class="module-icon">
-                                        <i class="fas fa-link"></i>
+                                        <i class="fas fa-cubes"></i>
                                     </div>
                                     <div class="module-name">
-                                        <h4 data-lang="en">Payment Links</h4>
-                                        <h4 data-lang="pt">Links de Pagamento</h4>
+                                        <h4 data-lang="en">More modules soon</h4>
+                                        <h4 data-lang="pt">Mais módulos brevemente</h4>
                                     </div>
-                                    <div class="module-description">
-                                        <p data-lang="en">Create shareable payment links</p>
-                                        <p data-lang="pt">Crie links de pagamento compartilháveis</p>
+                                </div>
+
+                                <div class="module-card module-coming-soon">
+                                    <div class="module-icon">
+                                        <i class="fas fa-cogs"></i>
                                     </div>
-                                    <div class="module-toggle">
-                                        <input type="checkbox" id="module-payment-links" name="module-payment-links">
-                                        <label for="module-payment-links"></label>
+                                    <div class="module-name">
+                                        <h4 data-lang="en">More modules soon</h4>
+                                        <h4 data-lang="pt">Mais módulos brevemente</h4>
                                     </div>
                                 </div>
                             </div>

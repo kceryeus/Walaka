@@ -118,11 +118,14 @@ class API {
                 created_by: currentUserId
             };
 
+            const isLocalhost = typeof window !== 'undefined' && (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1");
+            const baseDomain = isLocalhost ? "http://localhost:3000" : "https://walakasoftware.com";
+
             const { data: { user }, error: signUpError } = await this.supabase.auth.signUp({
                 email: userData.email,
                 password: randomPassword,
                 options: {
-                    emailRedirectTo: 'http://localhost:3000/usermanagement-vanilla/setup-password.html',
+                    emailRedirectTo: `${baseDomain}/usermanagement-vanilla/setup-password.html`,
                     data: metadata
                 }
             });
