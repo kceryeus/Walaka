@@ -515,8 +515,12 @@
             messageDiv.style.display = 'none';
 
             try {
+                const isLocalhost = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
+                const baseDomain = isLocalhost ? "http://localhost:3000" : "https://walakasoftware.com";
+                // Use this for redirectTo
+                const redirectTo = `${baseDomain}/reset-password.html`;
                 const { error } = await supabase.auth.resetPasswordForEmail(email, {
-                    redirectTo: 'http://localhost:3000/reset-password.html'
+                    redirectTo: redirectTo
                 });
                 if (error) throw error;
                 messageDiv.textContent = 'Password reset link has been sent to your email.';

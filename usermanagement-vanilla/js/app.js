@@ -77,7 +77,7 @@ function showUserLimitModal() {
     document.getElementById('close-user-limit-modal').onclick = () => modal.remove();
     document.getElementById('upgrade-plan-btn').onclick = () => {
         modal.remove();
-        window.location.href = 'profile.html';
+        window.location.href = '/profile.html';
     };
 }
 

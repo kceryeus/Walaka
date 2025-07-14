@@ -8,17 +8,24 @@
  * @param {string} lang - The language code to switch to ('en' or 'pt')
  */
 function toggleLanguage(lang) {
-    // Update active language button
+    console.log('[LanguageToggle] toggleLanguage called with:', lang);
+    // Update active language button (do not hide inactive)
     document.querySelectorAll('.lang-btn').forEach(btn => {
-        btn.classList.remove('active');
+        if (btn.getAttribute('data-lang') === lang) {
+            btn.classList.add('active');
+        } else {
+            btn.classList.remove('active');
+        }
     });
-    document.querySelector(`.lang-btn[data-lang="${lang}"]`).classList.add('active');
-    
     // Show elements with the selected language
     showSelectedLanguageElements(lang);
-    
-    // Save preference to local storage
-    localStorage.setItem('waLangPreference', lang);
+    // Save preference to local storage (sync with index.html)
+    localStorage.setItem('walaka-language', lang); // main key
+    localStorage.setItem('waLangPreference', lang); // legacy key
+    localStorage.setItem('selectedLanguage', lang); // legacy key
+    console.log('[LanguageToggle] Language set in localStorage:', lang);
+    // Dispatch custom event for language change
+    document.dispatchEvent(new CustomEvent('languageChanged', { detail: { lang } }));
 }
 
 /**
@@ -26,13 +33,15 @@ function toggleLanguage(lang) {
  * @param {string} lang - The language code ('en' or 'pt')
  */
 function showSelectedLanguageElements(lang) {
-    // Hide all language-specific elements
+    // Hide all language-specific elements, except language toggle buttons
     document.querySelectorAll('[data-lang]').forEach(el => {
+        // Don't hide language toggle buttons or anything inside .language-toggle
+        if (el.classList.contains('lang-btn') || el.closest('.language-toggle')) return;
         el.style.display = 'none';
     });
-    
-    // Show elements for the selected language
+    // Show elements for the selected language (except language toggle buttons)
     document.querySelectorAll(`[data-lang="${lang}"]`).forEach(el => {
+        if (el.classList.contains('lang-btn') || el.closest('.language-toggle')) return;
         // Check if element is a block element or should be displayed as something else
         if (el.tagName === 'SPAN' && el.parentElement.tagName === 'BUTTON') {
             el.style.display = 'inline-flex';
@@ -46,8 +55,6 @@ function showSelectedLanguageElements(lang) {
             el.style.display = 'block';
         } else if (el.tagName === 'LABEL') {
             el.style.display = 'block';
-        } else if (el.tagName === 'BUTTON') {
-            el.style.display = 'inline-flex';
         } else if (el.tagName === 'LI') {
             el.style.display = 'flex';
         } else {
@@ -60,48 +67,36 @@ function showSelectedLanguageElements(lang) {
  * Initialize the language system
  */
 function initLanguage() {
-    // Set default language or use stored preference
-    const storedLang = localStorage.getItem('waLangPreference') || 'en';
+    // Set default language or use stored preference (sync with index.html)
+    const storedLang = localStorage.getItem('walaka-language') || localStorage.getItem('waLangPreference') || 'en';
+    console.log('[LanguageToggle] initLanguage, storedLang:', storedLang);
     toggleLanguage(storedLang);
-    
     // Add event listeners to language toggle buttons
     document.querySelectorAll('.lang-btn').forEach(btn => {
         btn.addEventListener('click', function() {
             const lang = this.getAttribute('data-lang');
+            console.log('[LanguageToggle] Button clicked, lang:', lang);
             toggleLanguage(lang);
         });
     });
 }
 
 // Initialize when DOM is loaded
+// Only one init needed
+
 document.addEventListener('DOMContentLoaded', initLanguage);
 
-// Language toggle functionality
-document.addEventListener('DOMContentLoaded', function() {
-    const langButtons = document.querySelectorAll('.lang-btn');
-    const defaultLang = 'en';
-    let currentLang = localStorage.getItem('selectedLanguage') || defaultLang;
-
-    // Initialize language
-    setActiveLanguage(currentLang);
-
-    // Add click event listeners to language buttons
-    langButtons.forEach(button => {
-        button.addEventListener('click', function() {
-            const lang = this.dataset.lang;
-            setActiveLanguage(lang);
-            localStorage.setItem('selectedLanguage', lang);
-        });
-    });
-});
-
-// Set active language
+// Set active language (for form placeholders and selects)
 function setActiveLanguage(lang) {
-    // Update language buttons
+    console.log('[LanguageToggle] setActiveLanguage called with:', lang);
+    // Update language buttons (do not hide inactive)
     document.querySelectorAll('.lang-btn').forEach(btn => {
-        btn.classList.toggle('active', btn.dataset.lang === lang);
+        if (btn.dataset.lang === lang) {
+            btn.classList.add('active');
+        } else {
+            btn.classList.remove('active');
+        }
     });
-
     // Update all elements with data-lang attribute
     document.querySelectorAll('[data-lang]').forEach(element => {
         if (element.dataset.lang === lang) {
@@ -110,10 +105,8 @@ function setActiveLanguage(lang) {
             element.style.display = 'none';
         }
     });
-
     // Update document language
     document.documentElement.setAttribute('lang', lang);
-
     // Update form placeholders and labels
     updateFormElements(lang);
 }
@@ -144,7 +137,6 @@ function updateFormElements(lang) {
             'mobile-number': 'Número de Celular'
         }
     };
-
     // Update input placeholders
     Object.keys(translations[lang]).forEach(id => {
         const element = document.getElementById(id);
@@ -152,7 +144,6 @@ function updateFormElements(lang) {
             element.placeholder = translations[lang][id];
         }
     });
-
     // Update select options
     const industrySelect = document.getElementById('org-industry');
     if (industrySelect) {
@@ -176,14 +167,12 @@ function updateFormElements(lang) {
                 other: 'Outro'
             }
         };
-
         Array.from(industrySelect.options).forEach(option => {
             if (option.value && options[lang][option.value]) {
                 option.text = options[lang][option.value];
             }
         });
     }
-
     // Update payment terms options
     const paymentTermsSelect = document.getElementById('payment-terms');
     if (paymentTermsSelect) {
@@ -203,7 +192,6 @@ function updateFormElements(lang) {
                 net_60: 'Líquido 60'
             }
         };
-
         Array.from(paymentTermsSelect.options).forEach(option => {
             if (option.value && terms[lang][option.value]) {
                 option.text = terms[lang][option.value];
