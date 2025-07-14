@@ -368,6 +368,73 @@
     margin-bottom: 1.5rem;
 }
 
+/* Quick Add Client Modal Styles */
+.radio-group {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.radio-label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+}
+
+.radio-label input[type="radio"] {
+    margin: 0;
+}
+
+.success-message {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    padding: 1rem;
+    background-color: #f0f9ff;
+    border: 1px solid #0ea5e9;
+    border-radius: 8px;
+    color: #0c4a6e;
+}
+
+.success-message i {
+    font-size: 1.5rem;
+    color: #059669;
+}
+
+.client-info-preview {
+    margin-top: 1.5rem;
+}
+
+.client-info-preview h4 {
+    margin-bottom: 1rem;
+    color: #374151;
+    font-size: 1.1rem;
+}
+
+.client-info-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1rem;
+    padding: 1rem;
+    background-color: #f9fafb;
+    border-radius: 8px;
+    border: 1px solid #e5e7eb;
+}
+
+.client-info-grid div {
+    padding: 0.5rem;
+    background-color: white;
+    border-radius: 4px;
+    border: 1px solid #e5e7eb;
+}
+
+.client-info-grid strong {
+    color: #374151;
+    font-weight: 600;
+}
+
 .form-section {
     margin-bottom: 1.5rem;
 }

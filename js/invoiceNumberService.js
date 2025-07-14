@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
+import { getCurrentEnvironmentId } from './environment-utils.js';
 
 class InvoiceNumberService {
     constructor() {
@@ -12,14 +13,16 @@ class InvoiceNumberService {
             }
 
             const currentYear = new Date().getFullYear();
+            const environment_id = await getCurrentEnvironmentId();
 
-            // Get the latest invoice number for this client in the current year
-            const { data: lastInvoice, error } = await this.supabase
+            // Get the latest invoice number for this client in the current year and environment
+            const { data: lastInvoice, error } = await window.supabase
                 .from('invoices')
-                .select('invoice_number')
+                .select('invoiceNumber')
                 .eq('client_id', clientId)
-                .ilike('invoice_number', `CLI-${clientId}-${currentYear}-%`)
-                .order('invoice_number', { ascending: false })
+                .eq('environment_id', environment_id)
+                .ilike('invoiceNumber', `CLI-${clientId}-${currentYear}-%`)
+                .order('invoiceNumber', { ascending: false })
                 .limit(1)
                 .single();
 
@@ -31,7 +34,7 @@ class InvoiceNumberService {
 
             if (lastInvoice) {
                 // Extract sequence number from last invoice
-                const matches = lastInvoice.invoice_number.match(/\d+$/);
+                const matches = lastInvoice.invoiceNumber.match(/\d+$/);
                 if (matches) {
                     nextSequence = parseInt(matches[0]) + 1;
                 }
@@ -40,11 +43,12 @@ class InvoiceNumberService {
             // Format: CLI-{ClientId}-YYYY-XXXX
             const formattedNumber = `CLI-${clientId}-${currentYear}-${String(nextSequence).padStart(4, '0')}`;
             
-            // Verify uniqueness
-            const { data: existingInvoice, error: checkError } = await this.supabase
+            // Verify uniqueness within environment
+            const { data: existingInvoice, error: checkError } = await window.supabase
                 .from('invoices')
-                .select('invoice_number')
-                .eq('invoice_number', formattedNumber)
+                .select('invoiceNumber')
+                .eq('invoiceNumber', formattedNumber)
+                .eq('environment_id', environment_id)
                 .single();
 
             if (checkError && checkError.code !== 'PGRST116') throw checkError;

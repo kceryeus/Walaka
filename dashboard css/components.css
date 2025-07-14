@@ -1,4 +1,4 @@
-/* User menu components */
+/* User menu components 
 .language-toggle {
   display: flex;
   gap: 5px;
@@ -231,7 +231,7 @@
   color: var(--greytext-light);
 }
 
-/* Metric cards */
+/* Metric cards 
 .metric-card {
   background-color: var(--white);
   border-radius: 8px;
@@ -412,7 +412,7 @@
   color: var(--primary-700);
 }
 
-/* Chart components */
+/* Chart components 
 .chart-header {
   display: flex;
   justify-content: space-between;
@@ -474,7 +474,7 @@
   background-color: var(--grey-200);
 }
 
-/* Activity components */
+/* Activity components 
 .activities-list {
   padding: 10px 0;
 }

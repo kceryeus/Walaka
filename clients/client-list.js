@@ -40,11 +40,16 @@ async function fetchClientsFromSupabase() {
       .select('*')
       .order('created_at', { ascending: false });
 
-    if (error) throw error;
-    console.log('Fetched clients:', data);
+    if (error) {
+      console.error('Error fetching clients:', error);
+      return [];
+    }
+
+    console.log('Fetched clients (RLS enforced):', data);
     return data || [];
   } catch (err) {
     console.error('Error fetching clients:', err);
+    showErrorMessage('Error fetching clients: ' + (err.message || err));
     return [];
   }
 }
@@ -235,6 +240,34 @@ function showErrorMessage(message) {
 }
 
 /**
+ * Get client by ID from Supabase
+ * @param {string} clientId - ID of client to retrieve
+ * @returns {Promise<Object|null>} - Client data or null if not found
+ */
+async function getClientById(clientId) {
+  try {
+    if (!window.supabase) {
+      throw new Error('Supabase client not initialized');
+    }
+    const environment_id = await window.getCurrentEnvironmentId();
+    const { data, error } = await window.supabase
+      .from('clients')
+      .select('*')
+      .eq('customer_id', clientId)
+      .eq('environment_id', environment_id)
+      .single();
+    if (error) throw error;
+    return data;
+  } catch (error) {
+    console.error('Error fetching client:', error);
+    return null;
+  }
+}
+
+// Make getClientById globally available
+window.getClientById = getClientById;
+
+/**
  * Render client list
  * @param {Array} clients - Array of clients to render
  */
@@ -266,7 +299,7 @@ function renderClientList(clients) {
           <span class="status-badge ${client.status || 'active'}">${client.status || 'Active'}</span>
           <span class="client-type-badge ${client.client_type}">${client.client_type === 'business' ? 'Business' : 'Individual'}</span>
         </div>
-        <h4>${client.company_name || 'N/A'}</h4>
+        <h4>${client.customer_name || 'N/A'}</h4>
         <p><strong>NIF/NUIT:</strong> ${client.customer_tax_id || 'N/A'}</p>
         <p><strong>Contact:</strong> ${client.contact || 'N/A'}</p>
         <p><strong>Email:</strong> ${client.email || 'N/A'}</p>
@@ -296,14 +329,13 @@ function renderClientList(clients) {
 async function toggleClientStatus(clientId, currentStatus) {
   try {
     const newStatus = currentStatus === 'active' ? 'inactive' : 'active';
-    
+    const environment_id = await window.getCurrentEnvironmentId();
     const { error } = await window.supabase
       .from('clients')
       .update({ status: newStatus })
-      .eq('customer_id', clientId);
-
+      .eq('customer_id', clientId)
+      .eq('environment_id', environment_id);
     if (error) throw error;
-
     window.appUtils.showToast(`Client ${newStatus === 'active' ? 'activated' : 'deactivated'} successfully`, 'success');
     refreshClientList();
   } catch (error) {
@@ -382,11 +414,12 @@ window.refreshClientList = refreshClientList;
 // Update the deleteClient function
 async function deleteClient(clientId) {
   try {
+    const environment_id = await window.getCurrentEnvironmentId();
     const { error } = await window.supabase
       .from('clients')
       .delete()
-      .eq('customer_id', clientId);
-
+      .eq('customer_id', clientId)
+      .eq('environment_id', environment_id);
     if (error) throw error;
     window.appUtils.showToast('Client deleted successfully', 'success');
     refreshClientList();

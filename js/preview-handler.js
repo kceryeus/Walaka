@@ -14,28 +14,24 @@ document.addEventListener('DOMContentLoaded', function() {
                 address: document.getElementById('company-address')?.textContent,
                 email: document.getElementById('company-email')?.textContent,
                 phone: document.getElementById('company-phone')?.textContent,
-                nuit: document.getElementById('company-nuit')?.textContent,
+                nuit: Number(document.getElementById('company-nuit')?.textContent) || 0,
                 softwareCertNo: document.getElementById('software-cert-no')?.textContent
             },
             client: {
                 name: document.getElementById('client-list')?.value,
                 address: document.getElementById('clientAddress')?.value,
                 email: document.getElementById('clientEmail')?.value,
-                nuit: document.getElementById('clientTaxId')?.value
+                taxId: Number(document.getElementById('clientTaxId')?.value) || 0
             },
-            invoice: {
-                number: document.getElementById('invoiceNumber')?.value,
-                issueDate: document.getElementById('issueDate')?.value,
-                dueDate: document.getElementById('dueDate')?.value,
-                currency: document.getElementById('currency')?.value,
-                items: getInvoiceItems(),
-                totals: {
-                    subtotal: parseFloat(document.getElementById('subtotal')?.textContent || '0'),
-                    vat: parseFloat(document.getElementById('totalVat')?.textContent || '0'),
-                    total: parseFloat(document.getElementById('invoiceTotal')?.textContent || '0')
-                },
-                notes: document.getElementById('notes')?.value
-            },
+            invoiceNumber: document.getElementById('invoiceNumber')?.value,
+            issueDate: document.getElementById('issueDate')?.value,
+            dueDate: document.getElementById('dueDate')?.value,
+            currency: document.getElementById('currency')?.value,
+            items: getInvoiceItems(),
+            subtotal: parseFloat(document.getElementById('subtotal')?.textContent || '0'),
+            totalVat: parseFloat(document.getElementById('totalVat')?.textContent || '0'),
+            total: parseFloat(document.getElementById('invoiceTotal')?.textContent || '0'),
+            notes: document.getElementById('notes')?.value,
             template: {
                 name: 'template01', // Default template
                 color: getComputedStyle(document.documentElement).getPropertyValue('--primary-color').trim()
@@ -44,10 +40,7 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Show preview modal
         if (viewInvoiceModal) {
-            viewInvoiceModal.style.display = 'block';
-            document.querySelector('.modal-overlay').style.display = 'block';
-            
-            // Preview invoice
+            // Preview invoice - this function now handles showing the modal
             await window.invoiceTemplateManager.previewInvoice(invoiceData);
         }
     }
@@ -73,8 +66,12 @@ document.addEventListener('DOMContentLoaded', function() {
     const closeButtons = document.querySelectorAll('.close-modal, #closeInvoiceBtn');
     closeButtons.forEach(button => {
         button.addEventListener('click', () => {
-            viewInvoiceModal.style.display = 'none';
-            document.querySelector('.modal-overlay').style.display = 'none';
+            viewInvoiceModal.classList.remove('active');
+            document.body.classList.remove('modal-open');
+            const modalOverlay = document.querySelector('.modal-overlay');
+            if (modalOverlay) {
+                 modalOverlay.classList.remove('active'); // Assuming overlay also uses active class
+            }
         });
     });
 });

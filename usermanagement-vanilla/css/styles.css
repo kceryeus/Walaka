@@ -1,0 +1,473 @@
+/* Base Styles and Reset */
+:root {
+  --primary-color: #3b82f6;
+  --primary-dark: #2563eb;
+  --primary-light: #dbeafe;
+  --primary-100: #eff6ff;
+  --primary-700: #1d4ed8;
+  --primary-800: #1e40af;
+  --gray-50: #f9fafb;
+  --gray-100: #f3f4f6;
+  --gray-200: #e5e7eb;
+  --gray-300: #d1d5db;
+  --gray-400: #9ca3af;
+  --gray-500: #6b7280;
+  --gray-600: #4b5563;
+  --gray-700: #374151;
+  --gray-800: #1f2937;
+  --gray-900: #111827;
+  --green-500: #10b981;
+  --yellow-500: #f59e0b;
+  --red-500: #ef4444;
+  
+  /* Background and text colors */
+  --bg-color: #fff;
+  --text-color: var(--gray-700);
+  --heading-color: var(--gray-900);
+  --card-bg: #fff;
+  --border-color: var(--gray-200);
+  --shadow-color: rgba(0, 0, 0, 0.1);
+  --card-radius: 8px;
+  --box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+}
+
+/* Dark mode theme */
+html[data-theme="dark"] {
+  --primary-color: #60a5fab8;
+  --primary-dark: #3b82f6;
+  --primary-light: #1e3a8a;
+  --primary-100: #172554;
+  --primary-700: #93c5fd;
+  --primary-800: #bfdbfe;
+  --gray-50: #111827;
+  --gray-100: #4b4b4b;
+  --gray-200: #374151;
+  --gray-300: #4b5563;
+  --gray-400: #6b7280;
+  --gray-500: #9ca3af;
+  --gray-600: #d1d5db;
+  --gray-700: #e5e7eb;
+  --gray-800: #f3f4f6;
+  --gray-900: #f9fafb;
+  
+  /* Background and text colors */
+  --bg-color: #0f172a;
+  --text-color: var(--gray-500);
+  --heading-color: var(--gray-300);
+  --card-bg: #1e293b;
+  --border-color: #334155;
+  --shadow-color: rgba(0, 0, 0, 0.5);
+}
+
+/* User dropdown styles */
+.top-bar .user-profile {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+    padding: 0.5rem;
+    border-radius: var(--card-radius);
+    transition: background-color 0.2s ease;
+}
+
+.top-bar .user-profile:hover {
+    background-color: var(--gray-100);
+}
+
+.top-bar .user-profile.open .dropdown-menu,
+.top-bar .user-profile.show .dropdown-menu {
+    display: block;
+}
+
+.top-bar .dropdown-menu {
+    display: none;
+    position: absolute;
+    background-color: white;
+    box-shadow: var(--box-shadow);
+    border-radius: var(--card-radius);
+    overflow: hidden;
+    z-index: 1000;
+    right: 0;
+    top: 110%;
+    min-width: 180px;
+    animation: fadeIn 0.2s;
+}
+
+.top-bar .dropdown-menu a {
+    color: #333;
+    padding: 0.75rem 1.5rem;
+    text-decoration: none;
+    display: block;
+    font-size: 0.9rem;
+    transition: background 0.2s;
+}
+
+.top-bar .dropdown-menu a:hover {
+    background-color: #f0f0f0;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Custom styles */
+.modal-backdrop {
+    transition: opacity 0.3s ease-in-out;
+}
+
+.modal-content {
+    transition: transform 0.3s ease-in-out;
+    background-color: var(--card-bg);
+    border-radius: var(--card-radius);
+    box-shadow: var(--box-shadow);
+}
+
+/* Toast animations */
+@keyframes slideIn {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+@keyframes slideOut {
+    from {
+        transform: translateX(0);
+        opacity: 1;
+    }
+    to {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+}
+
+.toast-enter {
+    animation: slideIn 0.3s ease-in-out;
+}
+
+.toast-exit {
+    animation: slideOut 0.3s ease-in-out;
+}
+
+/* Loading spinner */
+.spinner {
+    border: 4px solid rgba(0, 0, 0, 0.1);
+    border-left-color: var(--primary-color);
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    animation: spin 1s linear infinite;
+}
+
+/* Loading cursor */
+.cursor-wait {
+    cursor: wait !important;
+}
+
+/* Spinner animation */
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.fa-spin {
+    animation: spin 1s linear infinite;
+}
+
+/* Common button styles */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.5rem 1rem;
+    border-radius: var(--card-radius);
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 8px 0 rgba(59, 130, 246, 0.08);
+    outline: none;
+}
+
+.btn:focus {
+    box-shadow: 0 0 0 2px var(--primary-100);
+    border-color: var(--primary-color);
+}
+
+.btn-primary {
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+}
+
+.btn-primary:hover {
+    background-color: var(--primary-dark);
+}
+
+.btn-primary:active {
+    background-color: var(--primary-700);
+}
+
+.btn-secondary {
+    background-color: var(--gray-100);
+    color: var(--gray-700);
+    border: 1px solid var(--gray-300);
+}
+
+.btn-secondary:hover {
+    background-color: var(--gray-200);
+}
+
+.btn-secondary:active {
+    background-color: var(--gray-300);
+}
+
+/* Table styles */
+.table-container {
+    background: var(--card-bg);
+    border-radius: var(--card-radius);
+    box-shadow: var(--box-shadow);
+    overflow: hidden;
+}
+
+.table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.table th,
+.table td {
+    padding: 1rem;
+    text-align: left;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.table th {
+    background-color: var(--gray-50);
+    font-weight: 600;
+    color: var(--gray-700);
+}
+
+.table tr {
+    transition: background 0.2s;
+}
+
+.table tr:hover, .table tr:focus-within {
+    background-color: var(--primary-100);
+}
+
+/* Tooltip styles */
+[title] {
+    position: relative;
+}
+
+[title]:hover::after {
+    content: attr(title);
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 0.5rem;
+    background: rgba(0, 0, 0, 0.8);
+    color: white;
+    border-radius: 0.25rem;
+    font-size: 0.75rem;
+    white-space: nowrap;
+    z-index: 10;
+}
+
+/* Role badges */
+.role-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.25rem 0.5rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    line-height: 1;
+    box-shadow: 0 1px 2px 0 rgba(0,0,0,0.04);
+    letter-spacing: 0.02em;
+}
+
+.role-badge.admin {
+    background: linear-gradient(90deg, #fee2e2 60%, #fecaca 100%);
+    color: #991b1b;
+}
+
+.role-badge.editor {
+    background: linear-gradient(90deg, #dbeafe 60%, #93c5fd 100%);
+    color: #1e40af;
+}
+
+.role-badge.viewer {
+    background: linear-gradient(90deg, #d1fae5 60%, #6ee7b7 100%);
+    color: #065f46;
+}
+
+/* Status badges */
+.status-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.25rem 0.5rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    line-height: 1;
+    box-shadow: 0 1px 2px 0 rgba(0,0,0,0.04);
+    letter-spacing: 0.02em;
+}
+
+.status-badge.active {
+    background: linear-gradient(90deg, #d1fae5 60%, #6ee7b7 100%);
+    color: #065f46;
+}
+
+.status-badge.inactive {
+    background: linear-gradient(90deg, #fee2e2 60%, #fecaca 100%);
+    color: #991b1b;
+}
+
+/* Role distribution chart */
+.role-chart {
+    height: 2px;
+    border-radius: 9999px;
+    overflow: hidden;
+    background-color: var(--gray-200);
+}
+
+.role-chart-bar {
+    height: 100%;
+    transition: width 0.3s ease;
+}
+
+/* Role distribution legend */
+.role-legend {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.role-legend-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.role-legend-color {
+    width: 1rem;
+    height: 1rem;
+    border-radius: 9999px;
+}
+
+/* Dashboard Layout */
+.dashboard-container {
+    display: flex;
+    min-height: 100vh;
+}
+
+.main-content {
+    flex-grow: 1;
+    padding: 2rem;
+    background-color: var(--bg-color);
+    margin-left: var(--sidebar-width, 250px); /* Adjust based on sidebar width */
+    transition: margin-left 0.3s ease;
+}
+
+.page-content {
+    max-width: 1200px; /* Match container width from invoice page */
+    margin: 0 auto;
+    padding-top: 1.5rem;
+}
+
+/* Toast container */
+#toastContainer {
+    z-index: 9999;
+}
+
+#toastContainer .toast {
+    border-radius: 8px;
+    box-shadow: 0 4px 16px 0 rgba(31, 41, 55, 0.10);
+    font-size: 1rem;
+    padding: 1rem 1.5rem;
+}
+
+/* --- Form Input Styles --- */
+input[type="text"], input[type="email"], select {
+    width: 100%;
+    padding: 0.5rem 0.75rem;
+    border: 1px solid var(--gray-300);
+    border-radius: 6px;
+    background: var(--gray-50);
+    color: var(--text-color);
+    font-size: 1rem;
+    transition: border 0.2s, box-shadow 0.2s;
+    margin-top: 0.25rem;
+}
+input[type="text"]:focus, input[type="email"]:focus, select:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 2px var(--primary-100);
+    outline: none;
+}
+
+/* --- Miscellaneous --- */
+input:disabled, select:disabled {
+    background: var(--gray-100);
+    color: var(--gray-400);
+    cursor: not-allowed;
+}
+
+::-webkit-input-placeholder { color: var(--gray-400); }
+::-moz-placeholder { color: var(--gray-400); }
+:-ms-input-placeholder { color: var(--gray-400); }
+::placeholder { color: var(--gray-400); }
+
+/* --- Modal Overlay and Animation --- */
+#userModal, #confirmationModal, #loadingOverlay {
+    background: rgba(31, 41, 55, 0.45);
+    backdrop-filter: blur(2px);
+    transition: opacity 0.3s;
+    z-index: 1000;
+}
+
+.modal-content, .bg-white.rounded-lg.p-6 {
+    animation: modalPop 0.3s cubic-bezier(.4,2,.6,1) both;
+}
+@keyframes modalPop {
+    0% { transform: scale(0.95) translateY(20px); opacity: 0; }
+    100% { transform: scale(1) translateY(0); opacity: 1; }
+}
+
+.status-toggle-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5em;
+  border-radius: 999px;
+  font-size: 1.3rem;
+  border: none;
+  cursor: pointer;
+  background: transparent;
+  transition: background 0.2s, color 0.2s, box-shadow 0.2s;
+}
+.status-toggle-btn:hover {
+  background: #f3f4f6;
+}
+.status-toggle-btn .status-active {
+  color: #16a34a;
+}
+.status-toggle-btn .status-inactive {
+  color: #dc2626;
+}

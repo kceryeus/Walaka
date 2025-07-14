@@ -1,122 +1,148 @@
 class EmailHandler {
     constructor() {
         this.modal = document.getElementById('emailInvoiceModal');
+        if (!this.modal) {
+            console.error('Email modal not found');
+            return;
+        }
+
         this.form = document.getElementById('emailInvoiceForm');
-        this.loadingIndicator = this.modal?.querySelector('.loading-indicator');
-        this.setupEventListeners();
+        this.toField = document.getElementById('emailTo');
+        this.subjectField = document.getElementById('emailSubject');
+        this.messageField = document.getElementById('emailMessage');
+        this.loadingIndicator = this.modal.querySelector('.loading-indicator');
+        this.currentInvoice = null;
+
+        if (this.form && this.toField && this.subjectField && this.messageField) {
+            this.initialize();
+        } else {
+            console.error('Required email form elements not found');
+        }
     }
 
-    setupEventListeners() {
-        // Email button click handler
-        document.querySelectorAll('.email-invoice-btn').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                e.preventDefault();
-                this.showEmailModal(e.target.dataset.invoice);
-            });
+    initialize() {
+        // Setup email button click handlers
+        document.querySelectorAll('#emailInvoiceBtn, .send-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => this.handleEmailButtonClick(e));
         });
 
         // Close modal handlers
-        this.modal?.querySelector('.close-modal')?.addEventListener('click', () => this.closeEmailModal());
-        this.modal?.querySelector('.close-email-modal')?.addEventListener('click', () => this.closeEmailModal());
+        this.modal.querySelector('.close-modal').addEventListener('click', () => this.closeModal());
+        this.modal.querySelector('.close-email-modal').addEventListener('click', () => this.closeModal());
 
         // Form submit handler
-        this.form?.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            await this.sendEmail();
-        });
+        this.form.addEventListener('submit', (e) => this.handleSubmit(e));
     }
 
-    showEmailModal(invoiceNumber) {
+    async handleEmailButtonClick(e) {
+        const invoiceNumber = e.target.dataset.invoice;
+        if (!invoiceNumber) return;
+
+        try {
+            // Get invoice data from Supabase
+            const { data: invoice, error } = await window.supabase
+                .from('invoices')
+                .select(`
+                    *,
+                    client:clients (
+                        name,
+                        email
+                    )
+                `)
+                .eq('number', invoiceNumber)
+                .single();
+
+            if (error) throw error;
+            if (!invoice) throw new Error('Invoice not found');
+
+            this.currentInvoice = invoiceNumber;
+            this.openEmailModal(invoice);
+        } catch (error) {
+            console.error('Error preparing email:', error);
+            alert('Error preparing email: ' + error.message);
+        }
+    }
+
+    openEmailModal(invoice) {
         if (!this.modal) return;
-        
-        const invoice = this.getInvoiceData(invoiceNumber);
-        if (!invoice) return;
 
         // Pre-fill form fields
-        const toField = document.getElementById('emailTo');
-        const subjectField = document.getElementById('emailSubject');
-        const messageField = document.getElementById('emailMessage');
-
-        if (toField) toField.value = invoice.clientEmail || '';
-        if (subjectField) subjectField.value = `Invoice #${invoiceNumber}`;
-        if (messageField) messageField.value = this.getDefaultEmailMessage(invoice);
-
+        this.toField.value = invoice.client?.email || '';
+        this.subjectField.value = `Invoice #${invoice.number}`;
+        this.messageField.value = this.getDefaultEmailMessage(invoice);
+        
+        // Show modal
         this.modal.style.display = 'block';
         document.querySelector('.modal-overlay').style.display = 'block';
     }
 
-    closeEmailModal() {
+    closeModal() {
         if (!this.modal) return;
         this.modal.style.display = 'none';
         document.querySelector('.modal-overlay').style.display = 'none';
-        this.form?.reset();
+        this.form.reset();
+        this.currentInvoice = null;
     }
 
-    async sendEmail() {
-        try {
-            if (this.loadingIndicator) this.loadingIndicator.style.display = 'block';
+    async handleSubmit(e) {
+        e.preventDefault();
+        if (!this.currentInvoice) {
+            alert('No invoice selected');
+            return;
+        }
 
+        this.loadingIndicator.style.display = 'block';
+
+        try {
             const emailData = {
-                to: document.getElementById('emailTo').value,
-                subject: document.getElementById('emailSubject').value,
-                message: document.getElementById('emailMessage').value,
+                to: this.toField.value,
+                subject: this.subjectField.value,
+                message: this.messageField.value,
+                invoiceNumber: this.currentInvoice,
                 attachPdf: document.getElementById('emailAttachPdf').checked
             };
 
-            const response = await this.sendEmailToServer(emailData);
-            
-            if (response.success) {
-                alert('Email sent successfully!');
-                this.closeEmailModal();
-            } else {
-                throw new Error(response.message || 'Failed to send email');
-            }
+            // Send email using Supabase Edge Function
+            const { data, error } = await window.supabase.functions.invoke('send-invoice-email', {
+                body: emailData
+            });
+
+            if (error) throw error;
+            if (!data?.success) throw new Error(data?.error || 'Failed to send email');
+
+            alert('Email sent successfully!');
+            this.closeModal();
+
         } catch (error) {
             console.error('Error sending email:', error);
             alert('Failed to send email: ' + error.message);
         } finally {
-            if (this.loadingIndicator) this.loadingIndicator.style.display = 'none';
+            this.loadingIndicator.style.display = 'none';
         }
     }
 
-    getInvoiceData(invoiceNumber) {
-        // Implement getting invoice data from your data source
-        return {
-            invoiceNumber,
-            clientEmail: '', // Get from your data source
-            amount: 0,      // Get from your data source
-            dueDate: ''     // Get from your data source
-        };
-    }
-
     getDefaultEmailMessage(invoice) {
-        return `Dear valued customer,
+        return `Dear ${invoice.client?.name || 'Valued Customer'},
 
-Please find attached invoice #${invoice.invoiceNumber} for your records.
+Please find attached invoice #${invoice.number} for ${invoice.currency} ${invoice.total}.
 
-Amount due: ${formatCurrency(invoice.amount)}
-Due date: ${formatDate(invoice.dueDate)}
+Payment is due by ${new Date(invoice.due_date).toLocaleDateString()}.
 
 If you have any questions, please don't hesitate to contact us.
 
 Best regards,
-Your Company Name`;
-    }
-
-    async sendEmailToServer(emailData) {
-        // Implement your email sending logic here
-        // This is just a placeholder that simulates an API call
-        return new Promise(resolve => {
-            setTimeout(() => {
-                resolve({ success: true, message: 'Email sent successfully' });
-            }, 2000);
-        });
+[Your Company Name]`;
     }
 }
 
-// Initialize email handler when DOM is ready
+// Initialize email handler when document is ready
 document.addEventListener('DOMContentLoaded', () => {
-    window.emailHandler = new EmailHandler();
+    const emailModal = document.getElementById('emailInvoiceModal');
+    if (emailModal) {
+        window.emailHandler = new EmailHandler();
+    } else {
+        console.error('Email modal element not found');
+    }
 });
 
 async function sendInvoiceEmail(invoiceNumber, emailAddress) {
@@ -125,7 +151,7 @@ async function sendInvoiceEmail(invoiceNumber, emailAddress) {
         const { data: invoice } = await window.supabase
             .from('invoices')
             .select('pdf_url')
-            .eq('invoice_number', invoiceNumber)
+            .eq('invoiceNumber', invoiceNumber)
             .single();
 
         if (!invoice?.pdf_url) {

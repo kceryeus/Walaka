@@ -1,6 +1,6 @@
 /* Responsive styles */
 
-/* Large devices (desktops, less than 1200px) */
+/* Large devices (desktops, less than 1200px) 
 @media (max-width: 1199.98px) {
   .metrics-grid {
     grid-template-columns: repeat(2, 1fr);
@@ -11,7 +11,7 @@
   }
 }
 
-/* Medium devices (tablets, less than 992px) */
+/* Medium devices (tablets, less than 992px) 
 @media (max-width: 991.98px) {
   .sidebar {
     width: 240px;
@@ -29,12 +29,12 @@
     grid-template-columns: 1fr;
   }
   
-  /* Enable sidebar toggle for medium screens */
+  /* Enable sidebar toggle for medium screens 
   .menu-toggle {
     display: flex;
   }
   
-  /* Start with sidebar collapsed on medium screens */
+  /* Start with sidebar collapsed on medium screens 
   .sidebar {
     transform: translateX(-240px);
     width: 0;
@@ -44,13 +44,13 @@
     margin-left: 0;
   }
   
-  /* Show sidebar when toggled */
+  /* Show sidebar when toggled 
   .sidebar-active .sidebar {
     transform: translateX(0);
     width: 240px;
   }
   
-  /* Add overlay when sidebar is active */
+  /* Add overlay when sidebar is active 
   .sidebar-overlay {
     display: none;
     position: fixed;
@@ -67,7 +67,7 @@
   }
 }
 
-/* Small devices (landscape phones, less than 768px) */
+/* Small devices (landscape phones, less than 768px) 
 @media (max-width: 767.98px) {
   .metrics-grid {
     grid-template-columns: 1fr;
@@ -129,7 +129,7 @@
   }
 }
 
-/* Extra small devices (portrait phones, less than 576px) */
+/* Extra small devices (portrait phones, less than 576px) 
 @media (max-width: 575.98px) {
   .top-bar {
     padding: 10px;
@@ -197,3 +197,4 @@
     font-size: 24px;
   }
 }
+*/

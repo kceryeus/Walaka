@@ -3,585 +3,1169 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Products Page</title>
-  <link rel="stylesheet" href="./styles.css"> <!-- Ensure correct relative path -->
+  <title data-translate="product_management_title">Product Management | WALAKA</title>
+
+  <script>
+      // Set base path for assets to handle GitHub Pages sub-directory
+      const repoName = 'Walaka';
+      const isGitHubPages = window.location.hostname.includes('github.io');
+      const basePath = isGitHubPages ? `/${repoName}/` : '/';
+  </script>
+
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.9.2/html2pdf.bundle.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap">
+
+  <script>
+      document.write(`<link rel="stylesheet" href="${basePath}trial/css/upgrade-modal.css">`);
+      document.write(`<link rel="stylesheet" href="${basePath}components/trial-banner.css">`);
+      document.write(`<link rel="stylesheet" href="${basePath}components/trial-restrictions.css">`);
+      document.write(`<link rel="stylesheet" href="${basePath}components/sidebar.css">`);
+      document.write(`<link rel="stylesheet" href="${basePath}css/styles.css">`);
+      document.write(`<link rel="stylesheet" href="${basePath}css/hints.css">`);
+  </script>
+
+  <!-- Hints System -->
+  <script src="js/hints/walaka-hints.js"></script>
+  <script src="js/hints/page-hints.js"></script>
+
+  <link rel="icon" type="image/png" href="assets/images/walaka-assistant.PNG">
+  
+  
+  
+  
   <style>
-    :root {
-      --primary-color: #007ec7; /* Corporate blue */
-      --secondary-color: #4f46e5;
-      --accent-color: #818cf8;
-      --background-color: #f8fafc;
-      --sidebar-width: 280px;
-      --topbar-height: 60px;
-      --card-radius: 16px;
-      --transition-speed: 0.3s;
-    }
-
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-
-    body {
-      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-      background-color: var(--background-color);
-      color: #1e293b;
-      min-height: 100vh;
-      overflow-x: hidden;
-      opacity: 0;
-      transition: opacity 0.5s ease-in-out;
-    }
-
-    body.loaded {
-      opacity: 1;
-    }
-
-    .dashboard-container {
-      display: grid;
-      grid-template-columns: var(--sidebar-width) 1fr;
-      min-height: 100vh;
-    }
-
-    /* Sidebar */
-    .sidebar {
-      background: linear-gradient(195deg, #007ec7, #02204e);
-      color: white;
-      padding: 1.5rem 1rem;
-      position: fixed;
-      top: 0;
-      left: 0;
-      height: 100vh;
-      width: var(--sidebar-width);
-      overflow-y: auto;
-      transition: transform var(--transition-speed) ease;
-      z-index: 1000;
-    }
-
-    .sidebar-container {
-      width: var(--sidebar-width);
-      flex-shrink: 0;
-    }
-
-    /* Scrollbar styling for sidebar */
-    .sidebar::-webkit-scrollbar {
-      width: 6px;
-    }
-
-    .sidebar::-webkit-scrollbar-track {
-      background: rgba(255, 255, 255, 0.1);
-    }
-
-    .sidebar::-webkit-scrollbar-thumb {
-      background: rgba(255, 255, 255, 0.2);
-      border-radius: 3px;
-    }
-
-    .sidebar::-webkit-scrollbar-thumb:hover {
-      background: rgba(255, 255, 255, 0.3);
-    }
-
-    .logo {
-      font-size: 1.5rem;
-      font-weight: 600;
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
-      padding: 0.5rem 1rem;
-      border-radius: var(--card-radius);
-      transition: all var(--transition-speed) ease;
-    }
-
-    .logo:hover {
-      background: rgba(255, 255, 255, 0.05);
-    }
-
-    .nav-menu {
-      display: flex;
-      flex-direction: column;
-      gap: 0.5rem;
-    }
-
-    .nav-section {
-      margin-top: 1.5rem;
-      margin-bottom: 0.5rem;
-    }
-
-    .nav-section h3 {
-      color: rgba(255, 255, 255, 0.5);
-      font-size: 0.75rem;
-      text-transform: uppercase;
-      letter-spacing: 0.1em;
-      padding: 0 1rem;
-      margin-bottom: 0.5rem;
-    }
-
-    .nav-item {
-      display: flex;
-      align-items: center;
-      gap: 1rem;
-      padding: 0.75rem 1rem;
-      border-radius: var(--card-radius);
-      color: rgba(255, 255, 255, 0.7);
-      text-decoration: none;
-      transition: all var(--transition-speed) ease;
-      margin-bottom: 0.25rem;
-    }
-
-    .nav-item:hover,
-    .nav-item.active {
-      background: rgba(255, 255, 255, 0.1);
-      color: white;
-    }
-
-    .nav-item i {
-      width: 20px;
-      text-align: center;
-      font-size: 1rem;
-    }
-
-    /* Main Content */
-    .main-content {
-      padding: 2rem;
-      margin-top: var(--topbar-height);
-    }
-
-    .top-bar {
-      position: fixed;
-      top: 0;
-      right: 0;
-      left: var(--sidebar-width);
-      height: var(--topbar-height);
-      background: white;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 0 2rem;
-      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-      z-index: 100;
-    }
-
-    .search-bar {
-      flex: 1;
-      max-width: 500px;
-      position: relative;
-    }
-
-    .search-bar input {
-      width: 100%;
-      padding: 0.75rem 1rem;
-      border: 1px solid #e2e8f0;
-      border-radius: var(--card-radius);
-      font-size: 0.9rem;
-    }
-
-    .user-menu {
-      display: flex;
-      align-items: center;
-      gap: 1.5rem;
-    }
-
-    .notification-bell {
-      position: relative;
-      cursor: pointer;
-    }
-
-    .badge {
-      position: absolute;
-      top: -5px;
-      right: -5px;
-      background: var(--primary-color);
-      color: white;
-      padding: 2px 6px;
-      border-radius: 10px;
-      font-size: 0.75rem;
-    }
-
-    .user-profile {
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
-      cursor: pointer;
-    }
-
-    .avatar {
-      width: 36px;
-      height: 36px;
-      border-radius: 50%;
-      background: #e2e8f0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .dropdown {
-      position: relative;
-      display: inline-block;
-    }
-
-    .dropdown-toggle {
-      background: none;
-      border: none;
-      cursor: pointer;
-      color: #64748b;
-      padding: 0 8px;
-    }
-
-    .dropdown-menu {
-      display: none;
-      position: absolute;
-      background-color: white;
-      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-      border-radius: var(--card-radius);
-      overflow: hidden;
-      z-index: 1000;
-      left: 50%;
-      transform: translateX(-50%);
-      top: 100%;
-      margin-top: 10px;
-    }
-
-    .dropdown-menu a {
-      color: #1e293b;
-      padding: 12px 16px;
-      text-decoration: none;
-      display: block;
-    }
-
-    .dropdown-menu a:hover {
-      background-color: #f1f5f9;
-    }
-
-    .user-profile:hover .dropdown-menu {
-      display: block;
-    }
-
-    @media (max-width: 768px) {
-      .dashboard-container {
-        grid-template-columns: 1fr;
-      }
-
-      .sidebar {
-        transform: translateX(-100%);
-      }
-
-      .sidebar.active {
-        transform: translateX(0);
-      }
-
-      .top-bar {
-        left: 0;
-      }
-
-      .main-content {
-        margin-top: calc(var(--topbar-height) + 1rem);
-        padding: 1rem;
-      }
-    }
-
-    .sign-out-btn {
-      background: none;
-      border: none;
-      color: #64748b;
-      cursor: pointer;
-      padding: 8px;
-      border-radius: 50%;
-      transition: all 0.2s ease;
-    }
-
-    .sign-out-btn:hover {
-      background: #f1f5f9;
-      color: var(--primary-color);
-    }
-
-    /* Additional styles for product management */
-    .product-management {
-      display: flex;
-      gap: 2rem;
-    }
-
-    .frame {
-      flex: 1;
-      padding: 1rem;
-      border: 1px solid #e2e8f0;
-      border-radius: var(--card-radius);
-      background-color: white;
-    }
-
-    .frame-left {
-      width: 300px; /* Fixed width */
-      height: 600px; /* Fixed height */
-      overflow-y: auto;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      padding: 2rem;
-      border-radius: var(--card-radius);
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    }
-
-    .frame-right {
-      max-height: 600px;
-      overflow-y: auto;
-      position: relative; /* Add relative positioning */
-    }
-
-    .search-bar-frame {
-      position: sticky; /* Fix the search bar at the top */
-      top: 0;
-      background-color: white; /* Ensure background color matches */
-      z-index: 10; /* Ensure it stays above other elements */
-      padding: 0.5rem 0; /* Add padding for spacing */
-      border-bottom: 1px solid #e2e8f0; /* Add a separator below the search bar */
-    }
-
-    .search-bar-frame input {
-      width: 100%;
-      padding: 0.5rem;
-      border: 1px solid #e2e8f0;
-      border-radius: var(--card-radius);
-    }
-
-    .product-item {
-      display: grid;
-      grid-template-columns: 1fr auto; /* Separate text and buttons into their own "frames" */
-      align-items: center; /* Ensure vertical alignment */
-      padding: 0.75rem 1rem;
-      border: 1px solid #e2e8f0;
-      border-radius: var(--card-radius);
-      margin-bottom: 0.5rem;
-    }
-
-    .product-item button {
-      font-size: 0.7rem; /* Slightly smaller font size */
-      border: none;
-      cursor: pointer;
-      padding: 0.3rem 0.6rem; /* Adjust padding */
-      border-radius: var(--card-radius);
-      transition: background-color 0.3s ease;
-    }
-
-    .product-item .edit-btn {
-      background-color: #fbbf24; /* Yellowish orange */
-      color: white;
-    }
-
-    .product-item .delete-btn {
-      background-color: #ef4444; /* Red */
-      color: white;
-    }
-
-    .product-item .edit-btn:hover {
-      background-color: #f59e0b; /* Darker yellowish orange */
-    }
-
-    .product-item .delete-btn:hover {
-      background-color: #dc2626; /* Darker red */
-    }
-
-    #product-form {
-      display: flex;
-      flex-direction: column;
-      gap: 1rem;
-      width: 100%;
-    }
-
-    #product-form label {
-      align-self: flex-start;
-      font-weight: 600;
-      color: var(--primary-color);
-    }
-
-    #product-form input,
-    #product-form select,
-    #product-form button {
-      width: 100%;
-      padding: 0.75rem;
-      border: 1px solid #e2e8f0;
-      border-radius: var(--card-radius);
-      font-size: 0.9rem;
-    }
-
-    #product-form input:focus,
-    #product-form select:focus,
-    #product-form button:focus {
-      outline: none;
-      border-color: var(--primary-color);
-      box-shadow: 0 0 0 3px rgba(0, 126, 199, 0.2);
-    }
-
-    #other-vat-container {
-      display: none;
-      width: 100%;
-    }
-
-    #other-vat-container label {
-      font-weight: 600;
-      color: var(--primary-color);
-    }
-
-    #other-vat-container input {
-      width: 100%;
-      padding: 0.75rem;
-      border: 1px solid #e2e8f0;
-      border-radius: var(--card-radius);
-      font-size: 0.9rem;
-    }
-
-    #other-vat-container input:focus {
-      outline: none;
-      border-color: var(--primary-color);
-      box-shadow: 0 0 0 3px rgba(0, 126, 199, 0.2);
-    }
-
-    #product-form button {
-      background-color: var(--primary-color); /* Blue */
-      color: white;
-      border: none;
-      padding: 0.75rem 1rem;
-      border-radius: var(--card-radius);
-      cursor: pointer;
-      transition: background-color 0.3s ease;
-    }
-
-    #product-form button:hover {
-      background-color: #005fa3; /* Darker blue */
-    }
-
-    .search-bar-frame,
-    #product-list h3 {
-      position: sticky; /* Fix both the search bar and header */
-      top: 0;
-      background-color: white;
-      z-index: 10;
-      padding: 0.5rem 0;
-    }
-
-    #product-list h3 {
-      margin: 0; /* Remove default margin for better alignment */
-      border-bottom: 1px solid #e2e8f0; /* Add a separator */
-      position: sticky; /* Fix the header below the search bar */
-      top: 2.5rem; /* Adjust to account for the search bar height */
-      background-color: white;
-      z-index: 9; /* Ensure it stays below the search bar */
-      padding: 0.5rem 0;
-      border-bottom: 1px solid #e2e8f0; /* Add a separator below the header */
-    }
+/* ===== VARIABLES ===== 
+:root {
+  --primary-color: #007ec7;
+  --primary-dark: #005fa3;
+  --primary-light: #e6f4fb;
+  --secondary-color: #4f46e5;
+  --secondary-light: #818cf8;
+  --accent-color: #3b82f6;
+  --text-primary: #1e293b;
+  --text-secondary: #64748b;
+  --text-light: #94a3b8;
+  --success-color: #10b981;
+  --warning-color: #f59e0b;
+  --danger-color: #ef4444;
+  --danger-light: #fee2e2;
+  --background-color: #f8fafc;
+  --card-background: #ffffff;
+  --border-color: #e2e8f0;
+  --box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06);
+  --box-shadow-hover: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --card-radius: 12px;
+  --input-radius: 8px;
+  --transition-speed: 0.2s;
+}
+
+/* ===== RESET & BASE STYLES ===== 
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  font-size: 16px;
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+  background-color: var(--background-color);
+  color: #333;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+a {
+  text-decoration: none;
+  color: inherit;
+}
+
+button {
+  cursor: pointer;
+  font-family: inherit;
+}
+
+ul {
+  list-style: none;
+}
+
+/* ===== LAYOUT ===== 
+.dashboard-container {
+  display: flex;
+  min-height: 100vh;
+}
+
+.dashboard-container.sidebar-collapsed {
+  grid-template-columns: var(--sidebar-collapsed-width) -1fr;
+}
+
+.main-container {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  margin-left: var(--sidebar-width);
+  transition: margin-left var(--transition-speed) ease;
+  width: calc(100% - var(--sidebar-width));
+}
+
+.sidebar-collapsed .main-container {
+  margin-left: var(--sidebar-collapsed-width);
+}
+
+.content-wrapper {
+  flex: 1;
+  padding: 2rem;
+  margin-top: var(--topbar-height);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  max-width: 1800px;
+  margin-left: auto;
+  margin-right: auto;
+  width: 100%;
+}
+
+@media (max-width: 992px) {
+  .content-wrapper {
+    padding: 1.5rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .main-container {
+    margin-left: 0;
+    width: 100%;
+  }
+  
+  .content-wrapper {
+    padding: 1rem;
+  }
+  
+  .container {
+    padding: 0 0.5rem;
+  }
+}
+
+.content-wrapper {
+  flex: 1;
+  padding: 2rem;
+  margin-top: var(--topbar-height);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Main Content */
+.main-content {
+  flex: 1;
+  margin-left: var(--sidebar-width);
+  padding: 1.5rem;
+  margin-top: var(--topbar-height);
+  background-color: var(--background-color);
+}
+
+/* Top Bar */
+.top-bar {
+    position: fixed;
+    top: 0;
+    left: var(--sidebar-width);
+    right: 0;
+    height: var(--topbar-height);
+    background: white;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 1.5rem;
+    box-shadow: var(--box-shadow);
+    z-index: 99;
+}
+
+.top-bar .search-bar {
+    flex: 1;
+    max-width: 400px;
+    margin-right: 1rem;
+}
+
+.top-bar .search-bar input {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid #e0e0e0;
+    border-radius: var(--card-radius);
+    font-size: 0.9rem;
+    background-color: #f5f5f5;
+}
+
+.top-bar .user-menu {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.top-bar .notification-bell {
+    position: relative;
+    cursor: pointer;
+}
+
+.top-bar .notification-bell i {
+    font-size: 1.2rem;
+    color: #555;
+}
+
+.top-bar .badge {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    background: var(--primary-color);
+    color: white;
+    padding: 2px 6px;
+    border-radius: 10px;
+    font-size: 0.75rem;
+}
+
+/* --- Top Bar Dropdown Fix --- */
+.top-bar .user-profile {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+}
+
+.top-bar .dropdown-menu {
+    display: none;
+    position: absolute;
+    background-color: white;
+    box-shadow: var(--box-shadow);
+    border-radius: var(--card-radius);
+    overflow: hidden;
+    z-index: 1000;
+    right: 0;
+    top: 110%;
+    min-width: 180px;
+    animation: fadeIn 0.2s;
+}
+
+.top-bar .user-profile.open .dropdown-menu {
+    display: block;
+}
+
+.top-bar .dropdown-menu a {
+    color: #333;
+    padding: 0.75rem 1.5rem;
+    text-decoration: none;
+    display: block;
+    font-size: 0.9rem;
+    transition: background 0.2s;
+}
+
+.top-bar .dropdown-menu a:hover {
+    background-color: #f0f0f0;
+}
+
+
+/* ===== PAGE HEADER ===== 
+.page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 2rem;
+  width: 100%;
+  max-width: 1400px;
+}
+
+.page-header h1 {
+  font-size: 1.75rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+/* ===== BUTTONS ===== */
+.primary-btn {
+  background-color: var(--primary-color);
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: var(--input-radius);
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: all 0.2s ease;
+}
+
+.primary-btn:hover {
+  background-color: var(--primary-dark);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.secondary-btn {
+  background-color: white;
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+  padding: 0.75rem 1.5rem;
+  border-radius: var(--input-radius);
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: all 0.2s ease;
+}
+
+.secondary-btn:hover {
+  background-color: var(--primary-light);
+  border-color: var(--primary-color);
+  color: var(--primary-color);
+}
+
+.danger-btn {
+  background-color: var(--danger-color);
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: var(--input-radius);
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: all 0.2s ease;
+}
+
+.danger-btn:hover {
+  background-color: #dc2626;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.link-btn {
+  background: none;
+  border: none;
+  color: var(--primary-color);
+  padding: 0.5rem;
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: all 0.2s ease;
+}
+
+.link-btn:hover {
+  color: var(--primary-dark);
+  text-decoration: underline;
+}
+
+/* Update Product Management Styles */
+.product-management {
+  display: flex;
+  gap: 2rem;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 1.5rem;
+  align-items: stretch;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+.frame {
+  background: var(--card-background);
+  border-radius: var(--card-radius);
+  box-shadow: var(--box-shadow);
+  transition: box-shadow var(--transition-speed) ease;
+}
+
+.frame:hover {
+  box-shadow: var(--box-shadow-hover);
+}
+
+.frame-left {
+  width: 400px;
+  max-height: 90vh;
+  height: 100%;
+  position: sticky;
+  top: 80px;
+  padding: 1.5rem;
+}
+
+body .frame-right {
+  flex: 1;
+  min-height: 600px;
+  max-height: 90vh;
+  height: 100%;
+  padding: 1rem;
+  overflow-y: auto;
+  overflow-x: hidden;
+  max-width: 100%;
+  box-sizing: border-box;
+  min-width: 0;
+}
+
+@media (max-width: 1200px) {
+  body .frame-right {
+    max-width: 100% !important;
+  }
+}
+
+/* ===== FORM STYLES ===== */
+#product-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.form-group label {
+  font-weight: 600;
+  color: var(--text-primary);
+  font-size: 0.9rem;
+}
+
+.form-group input,
+.form-group select {
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--border-color);
+  border-radius: var(--input-radius);
+  font-size: 0.95rem;
+  transition: all var(--transition-speed) ease;
+  color: var(--text-primary);
+}
+
+.form-group input:focus,
+.form-group select:focus {
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px rgba(0, 126, 199, 0.1);
+  outline: none;
+}
+
+.form-group input::placeholder {
+  color: var(--text-light);
+}
+
+/* ===== BUTTON STYLES ===== */
+.btn-primary,
+.btn-secondary {
+  padding: 0.75rem 1.5rem;
+  border-radius: var(--input-radius);
+  font-weight: 500;
+  font-size: 0.95rem;
+  transition: all var(--transition-speed) ease;
+  cursor: pointer;
+}
+
+.btn-primary {
+  background-color: var(--primary-color);
+  color: white;
+  border: none;
+}
+
+.btn-primary:hover {
+  background-color: var(--primary-dark);
+  transform: translateY(-1px);
+}
+
+.btn-secondary {
+  background-color: white;
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+}
+
+.btn-secondary:hover {
+  background-color: var(--background-color);
+  border-color: var(--text-secondary);
+}
+
+/* ===== FILTERS AND VIEW TOGGLE ===== */
+.product-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.filter-group {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.filter-group select,
+.filter-group input {
+  min-width: 150px;
+  padding: 0.6rem 1rem;
+  border: 1px solid var(--border-color);
+  border-radius: var(--input-radius);
+  font-size: 0.9rem;
+  color: var(--text-primary);
+  background-color: white;
+}
+
+.view-toggle {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.view-toggle button {
+  padding: 0.6rem;
+  border: 1px solid var(--border-color);
+  border-radius: var(--input-radius);
+  background: white;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all var(--transition-speed) ease;
+}
+
+.view-toggle button.active {
+  background: var(--primary-color);
+  color: white;
+  border-color: var(--primary-color);
+}
+
+/* ===== PRODUCT LIST STYLES ===== */
+.product-list {
+  display: grid;
+  gap: 1rem;
+}
+
+.product-list.grid-view {
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+}
+
+.product-list.list-view {
+  grid-template-columns: 1fr;
+}
+
+.product-item {
+  background: white;
+  border-radius: var(--card-radius);
+  border: 1px solid var(--border-color);
+  padding: 1.5rem;
+  transition: all var(--transition-speed) ease;
+}
+
+.product-item:hover {
+  border-color: var(--primary-color);
+  box-shadow: var(--box-shadow-hover);
+  transform: translateY(-2px);
+}
+
+.product-item-content {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.product-info {
+  flex: 1;
+}
+
+.product-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 0.5rem;
+}
+
+.product-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.meta-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+}
+
+.product-actions {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: flex-end;
+}
+
+.action-btn {
+  padding: 0.5rem;
+  border: none;
+  border-radius: var(--input-radius);
+  color: white;
+  cursor: pointer;
+  transition: all var(--transition-speed) ease;
+}
+
+.edit-btn {
+  background-color: var(--warning-color);
+}
+
+.edit-btn:hover {
+  background-color: #f59e0b;
+}
+
+.delete-btn {
+  background-color: var(--danger-color);
+}
+
+.delete-btn:hover {
+  background-color: #dc2626;
+}
+
+/* ===== EMPTY STATE ===== */
+.empty-state {
+  text-align: center;
+  padding: 3rem 1.5rem;
+  color: var(--text-secondary);
+}
+
+.empty-state i {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+  color: var(--text-light);
+}
+
+.empty-state h3 {
+  font-size: 1.2rem;
+  margin-bottom: 0.5rem;
+  color: var(--text-primary);
+}
+
+.empty-state p {
+  color: var(--text-secondary);
+  margin-bottom: 1.5rem;
+}
+
+/* ===== ANIMATIONS AND TRANSITIONS ===== */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideIn {
+  from { transform: translateX(-10px); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+
+.product-item {
+  animation: fadeIn 0.3s ease-out;
+}
+
+.product-meta {
+  animation: slideIn 0.3s ease-out;
+}
+
+/* ===== ENHANCED FORM STYLES ===== */
+.form-group .required {
+  color: var(--danger-color);
+  margin-left: 2px;
+}
+
+.form-group input:focus::placeholder,
+.form-group select:focus::placeholder {
+  opacity: 0.5;
+}
+
+.form-actions {
+  display: flex;
+  gap: 1rem;
+  margin-top: 2rem;
+}
+
+.form-actions button {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.form-actions button i {
+  font-size: 0.9rem;
+}
+
+/* ===== IMPROVED FILTER STYLES ===== */
+.filter-group input,
+.filter-group select {
+  background-color: white;
+  transition: all var(--transition-speed) ease;
+}
+
+.filter-group input:hover,
+.filter-group select:hover {
+  border-color: var(--text-secondary);
+}
+
+.filter-group input:focus,
+.filter-group select:focus {
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px rgba(0, 126, 199, 0.1);
+  outline: none;
+}
+
+.search-input {
+  padding-left: 2.5rem !important;
+  background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%2364748b"><path d="M21.71 20.29l-5.01-5.01C17.54 13.68 18 11.91 18 10c0-4.41-3.59-8-8-8S2 5.59 2 10s3.59 8 8 8c1.91 0 3.68-.46 5.28-1.3l5.01 5.01c.39.39 1.02.39 1.41 0l1.41-1.41c.39-.39.39-1.02 0-1.41zM10 16c-3.31 0-6-2.69-6-6s2.69-6 6-6 6 2.69 6 6-2.69 6-6 6z"/></svg>');
+  background-position: 12px center;
+  background-repeat: no-repeat;
+  background-size: 16px;
+}
+
+/* ===== IMPROVED VIEW TOGGLE ===== */
+.view-toggle button {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+}
+
+.view-toggle button:hover {
+  background-color: var(--primary-light);
+  color: var(--primary-color);
+  border-color: var(--primary-color);
+}
+
+/* ===== LOADING STATE ===== */
+.loading-state {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 1.5rem;
+  color: var(--text-secondary);
+}
+
+.loading-spinner {
+  border: 3px solid var(--border-color);
+  border-radius: 50%;
+  border-top: 3px solid var(--primary-color);
+  width: 24px;
+  height: 24px;
+  animation: spin 1s linear infinite;
+  margin-right: 1rem;
+}
+
+/* ===== NOTIFICATION STYLES ===== */
+.notification {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  padding: 1rem 1.5rem;
+  border-radius: var(--card-radius);
+  background: white;
+  box-shadow: var(--box-shadow-hover);
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  transform: translateX(120%);
+  transition: transform var(--transition-speed) ease;
+  z-index: 1000;
+}
+
+.notification.show {
+  transform: translateX(0);
+}
+
+.notification.success {
+  border-left: 4px solid var(--success-color);
+}
+
+.notification.error {
+  border-left: 4px solid var(--danger-color);
+}
+
+.notification i {
+  font-size: 1.25rem;
+}
+
+.notification.success i {
+  color: var(--success-color);
+}
+
+.notification.error i {
+  color: var(--danger-color);
+}
+
+/* ===== DISABLED STATE STYLES ===== */
+button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+button:disabled:hover {
+  transform: none;
+}
+
+/* ===== CONFIRMATION DIALOG STYLES ===== */
+.dialog-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.dialog {
+  background: white;
+  border-radius: var(--card-radius);
+  padding: 1.5rem;
+  max-width: 400px;
+  width: 90%;
+}
+
+.dialog-header {
+  margin-bottom: 1rem;
+}
+
+.dialog-header h3 {
+  font-size: 1.2rem;
+  color: var(--text-primary);
+}
+
+.dialog-content {
+  margin-bottom: 1.5rem;
+  color: var(--text-secondary);
+}
+
+.dialog-actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: flex-end;
+}
+
+/* ===== ENHANCE FOCUS STYLES ===== */
+:focus {
+  outline: none;
+}
+
+:focus-visible {
+  outline: 2px solid var(--primary-color);
+  outline-offset: 2px;
+}
+
+/* ===== MODAL STYLES ===== */
+.modal {
+  display: none; /* Hidden by default */
+  position: fixed;
+  z-index: 2000;
+  left: 0;
+  top: 0;
+  width: 100vw;
+  height: 100vh;
+  overflow: auto;
+  background: rgba(0, 0, 0, 0.4);
+  align-items: center;
+  justify-content: center;
+}
+
+.modal.show {
+  display: flex;
+}
+
+.modal-content {
+  background: #fff;
+  margin: auto;
+  border-radius: var(--card-radius);
+  padding: 0;
+  max-width: 400px;
+  width: 90vw;
+  box-shadow: var(--box-shadow-hover);
+  animation: fadeIn 0.2s;
+  display: flex;
+  flex-direction: column;
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.25rem 1.5rem 1rem 1.5rem;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.modal-header h3 {
+  font-size: 1.1rem;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.close-modal {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  color: var(--text-secondary);
+  cursor: pointer;
+  padding: 0 0.5rem;
+  line-height: 1;
+}
+
+.modal-body {
+  padding: 1.25rem 1.5rem;
+  color: var(--text-secondary);
+}
+
+.modal-footer {
+  display: flex;
+  gap: 1rem;
+  justify-content: flex-end;
+  padding: 1rem 1.5rem 1.25rem 1.5rem;
+  border-top: 1px solid var(--border-color);
+}
+
+.dashboard-container {
+  display: flex;
+  min-height: 100vh;
+  width: 100vw;
+  overflow-x: hidden;
+}
+
+.main-container {
+  flex: 1 1 0%;
+  min-width: 0;
+  box-sizing: border-box;
+}
   </style>
-  <script src="assets/js/sidebar.js"></script>
+
 </head>
 <body>
   <div class="dashboard-container">
-    <!-- Sidebar -->
-    <div class="sidebar-container">
-      <!-- Sidebar will be loaded here -->
-    </div>
-
-    <!-- Main Content -->
-    <div class="main-content">
-      <!-- Top Bar -->
-      <div class="top-bar">
-        <div class="search-bar">
-          <input type="text" placeholder="Pesquisar...">
+    <!-- Sidebar Menu -->
+    <div id="sidebar-container"></div>
+    <script>
+    // Dynamically load the sidebar from components/sidebar.html
+    document.addEventListener('DOMContentLoaded', function() {
+        fetch(`${basePath}components/sidebar.html`)
+            .then(response => response.text())
+            .then(html => {
+                document.getElementById('sidebar-container').innerHTML = html;
+                // Dynamically load the sidebar-actions.js script after sidebar is injected
+                var script = document.createElement('script');
+                script.src = `${basePath}components/sidebar-actions.js`;
+                document.body.appendChild(script);
+            })
+            .catch(err => {
+                console.error('Failed to load sidebar:', err);
+            });
+    });
+    </script>
+    <!-- Main Content Area -->
+    <main class="main-container">
+      <header class="top-bar">
+        <div class="hamburger-menu" id="hamburger-menu">
+          <i class="fas fa-bars"></i>
         </div>
-        <div class="user-menu">
-          <div class="notification-bell">
+        <div class="user-menu" style="margin-left:auto;">
+          <a href="notifications.html" class="notification-bell">
             <i class="fas fa-bell"></i>
             <span class="badge">0</span>
-          </div>
-          <div class="user-profile">
+          </a>
+          <div class="user-profile" id="userProfile">
             <div class="avatar">
               <i class="fas fa-user"></i>
             </div>
-            <span id="user-name">Loading...</span>
-            <div class="dropdown">
-              <button class="dropdown-toggle"><i class="fas fa-caret-down"></i></button>
-              <div class="dropdown-menu">
-                <a href="profile.html">Profile Management</a>
-                <a href="settings.html">General Settings</a>
-              </div>
+            <span id="user-displayname">Loading...</span>
+            <div class="dropdown-menu" id="userDropdown">
+              <a href="#"><i class="fas fa-user-circle"></i> My Profile</a>
+              <a href="settings.html"><i class="fas fa-cog"></i> Settings</a>
+              <a href="#"><i class="fas fa-sign-out-alt"></i> Logout</a>
             </div>
+          </div>
+        </div>
+      </header>
+
+      <!-- Add trial banner and restrictions system -->
+      <div id="trial-banner-container"></div>
+      <script>
+      document.addEventListener('DOMContentLoaded', function() {
+          fetch(`${basePath}components/trial-banner.html`)
+              .then(response => {
+                  if (!response.ok) {
+                      throw new Error('Network response was not ok');
+                  }
+                  return response.text();
+              })
+              .then(html => {
+                  document.getElementById('trial-banner-container').innerHTML = html;
+                  
+                  // Load the banner script
+                  const bannerScript = document.createElement('script');
+                  bannerScript.type = 'module';
+                  bannerScript.src = `${basePath}components/trial-banner.js`;
+                  document.body.appendChild(bannerScript);
+                  
+                  // Load the restrictions script immediately after
+                  const restrictionsScript = document.createElement('script');
+                  restrictionsScript.src = `${basePath}components/trial-restrictions.js`;
+                  document.body.appendChild(restrictionsScript);
+              })
+              .catch(error => {
+                  console.error('Failed to load trial banner component:', error);
+              });
+      });
+      </script>
+
+      <div class="content-wrapper">
+        <div class="container">
+          <div class="page-header" style="display: flex; align-items: center; justify-content: space-between; width: 100%; max-width: 1400px;">
+            <h1 data-translate="product_management">Product Management</h1>
+            <div style="margin-left: auto;">
+              <button id="add-new-product-btn" class="primary-btn">
+                <i class="fas fa-plus"></i> <span data-translate="add_new_product">Add New Product</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="product-management">
+            <!-- Product Form Section -->
+            <section class="frame frame-left" id="product-form-container">
+              <h2 id="form-title" data-translate="new_product_form_title">New Product</h2>
+              <form id="product-form">
+                <div class="form-group">
+                  <label for="description" data-translate="description">Description <span class="required">*</span></label>
+                  <input type="text" id="description" required data-translate-placeholder="description_placeholder" placeholder="Enter product description">
+                </div>
+
+                <div class="form-group">
+                  <label for="price" data-translate="price">Price <span class="required">*</span></label>
+                  <input type="number" id="price" step="0.01" required placeholder="0.00">
+                </div>
+
+                <div class="form-group">
+                  <label for="tax-code" data-translate="tax_code_sat">Tax Code (SAT) <span class="required">*</span></label>
+                  <input type="text" id="tax-code" required data-translate-placeholder="tax_code_placeholder" placeholder="e.g. 10101">
+                </div>
+
+                <div class="form-group">
+                  <label for="vat" data-translate="vat_rate">VAT Rate <span class="required">*</span></label>
+                  <select id="vat" required>
+                    <option value="" data-translate="select_vat_rate">Select VAT rate</option>
+                    <option value="0">0%</option>
+                    <option value="0.16">16%</option>
+                    <option value="other" data-translate="other">Other</option>
+                  </select>
+                </div>
+
+                <div id="other-vat-container" class="form-group" style="display: none;">
+                  <label for="other-vat" data-translate="custom_vat_rate">Custom VAT Rate (%)</label>
+                  <input type="number" id="other-vat" min="0" max="100" step="1">
+                </div>
+
+                <div class="form-group">
+                  <label for="industry" data-translate="industry">Industry <span class="required">*</span></label>
+                  <select id="industry" required>
+                    <option value="" data-translate="loading_industries">Loading industries...</option>
+                  </select>
+                </div>
+
+                <div class="form-actions">
+                  <button type="submit" class="btn-primary" data-translate="save_product">Save Product</button>
+                  <button type="button" class="btn-secondary" id="cancel-btn" data-translate="cancel">Cancel</button>
+                </div>
+              </form>
+            </section>
+
+            <!-- Product List Section -->
+            <section class="frame frame-right">
+              <div class="product-controls">
+                <div class="filter-group">
+                  <input type="text" id="product-search" data-translate-placeholder="search_products_placeholder" placeholder="Search products..." class="search-input">
+                  <select id="industry-filter" class="filter-select">
+                    <option value="all" data-translate="all_industries">All Industries</option>
+                  </select>
+                  <select id="vat-filter" class="filter-select">
+                    <option value="all" data-translate="all_vat_rates">All VAT Rates</option>
+                    <option value="16">16%</option>
+                    <option value="0">0%</option>
+                  </select>
+                </div>
+                <div class="view-toggle">
+                  <button id="grid-view-btn" class="active" data-translate-title="grid_view_title" title="Grid View">
+                    <i class="fas fa-th-large"></i>
+                  </button>
+                  <button id="list-view-btn" data-translate-title="list_view_title" title="List View">
+                    <i class="fas fa-list"></i>
+                  </button>
+                </div>
+              </div>
+
+              <div id="product-list" class="product-list grid-view">
+                <!-- Products will be dynamically inserted here -->
+              </div>
+
+              <div class="pagination">
+                <button id="prev-page" class="secondary-btn">
+                  <i class="fas fa-chevron-left"></i> <span data-translate="previous">Previous</span>
+                </button>
+                <span id="page-info">Page 1 of 1</span>
+                <button id="next-page" class="secondary-btn">
+                  <span data-translate="next">Next</span> <i class="fas fa-chevron-right"></i>
+                </button>
+              </div>
+            </section>
           </div>
         </div>
       </div>
+    </main>
+  </div>
 
-      <!-- User Defined Products Section -->
-      <section id="user-defined-products">
-        <h2>Manage User Defined Products</h2>
-        <div class="product-management">
-          <div class="frame frame-left">
-            <form id="product-form">
-              <label for="description">Description:</label>
-              <input type="text" id="description" name="description" required>
-
-              <label for="price">Price:</label>
-              <input type="number" id="price" name="price" step="0.01" required>
-
-              <label for="tax-code">Tax Code (SAT):</label>
-              <input type="text" id="tax-code" name="tax-code" required placeholder="e.g. 10101">
-
-              <label for="tax-rate">Tax Rate (VAT):</label>
-              <select id="vat" name="vat" required>
-                <option value="0.16">16%</option>
-                <option value="0.05">5%</option>
-                <option value="0">Exempt</option>
-                <option value="other">Other</option>
-              </select>
-              <div id="other-vat-container" style="display: none;">
-                <label for="other-vat">Other VAT Percentage:</label>
-                <input type="number" id="other-vat" name="other-vat" min="0" max="100" step="0.01">
-              </div>
-
-              <label for="industry">Industry (SAT):</label>
-              <input type="text" id="industry" name="industry" required placeholder="e.g. Retail">
-
-              <button type="button" onclick="saveProduct()">Save</button>
-              <button type="button" onclick="discardChanges()">Discard</button>
-            </form>
-          </div>
-          <div class="frame frame-right">
-            <div class="search-bar-frame">
-              <input type="text" id="search-bar" placeholder="Search products..." oninput="filterProducts()">
-            </div>
-            <div id="product-list">
-              <h3>Product List</h3>
-              <!-- List of user defined products will be displayed here -->
-            </div>
-          </div>
-        </div>
-      </section>
+  <!-- Delete Confirmation Modal -->
+  <div id="delete-modal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 data-translate="confirm_delete_title">Confirm Delete</h3>
+        <button class="close-modal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p data-translate="confirm_delete_product_message">Are you sure you want to delete this product? This action cannot be undone.</p>
+      </div>
+      <div class="modal-footer">
+        <button id="confirm-delete-btn" class="danger-btn" data-translate="delete">Delete</button>
+        <button id="cancel-delete-btn" class="secondary-btn" data-translate="cancel">Cancel</button>
+      </div>
     </div>
   </div>
+
   <script type="module">
     import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.0.0/+esm';
 
     const supabaseUrl = 'https://qvmtozjvjflygbkjecyj.supabase.co';
     const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF2bXRvemp2amZseWdia2plY3lqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDYxMjc2MjMsImV4cCI6MjA2MTcwMzYyM30.DJMC1eM5_EouM1oc07JaoXsMX_bSLn2AVCozAcdfHmo';
- // Replace with your actual Supabase key
     const supabase = createClient(supabaseUrl, supabaseKey);
+    window.supabase = supabase; // Make supabase available globally for auth.js
 
     async function displayUserName() {
       try {
         const { data: { session }, error } = await supabase.auth.getSession();
         if (error || !session) {
           console.error('Erro ao obter sessão:', error?.message);
-          document.getElementById('user-name').textContent = 'Não logado';
+          document.getElementById('user-displayname').textContent = 'Não logado';
           return;
         }
 
         const user = session.user;
         if (!user) {
-          document.getElementById('user-name').textContent = 'Não logado';
+          document.getElementById('user-displayname').textContent = 'Não logado';
           return;
         }
 
         const { data: profileData, error: profileError } = await supabase
           .from('users')
-          .select('username, logo')
+          .select('username')
           .eq('id', user.id)
           .single();
 
@@ -590,32 +1174,23 @@
           return;
         }
 
-        const userNameSpan = document.getElementById('user-name');
-        if (userNameSpan) {
-          userNameSpan.textContent = profileData.username || 'Usuário Desconhecido';
-        }
-
-        const userAvatar = document.querySelector('.avatar');
-        if (userAvatar && profileData.logo) {
-          userAvatar.innerHTML = `<img src="${profileData.logo}" alt="User Logo" style="width: 100%; height: 100%; border-radius: 50%;">`;
+        const userDisplayName = document.getElementById('user-displayname');
+        if (userDisplayName) {
+          userDisplayName.textContent = profileData.username || user.email || 'Usuário Desconhecido';
         }
       } catch (err) {
         console.error('Erro inesperado:', err);
       }
     }
 
-    window.addEventListener('DOMContentLoaded', displayUserName);
-
-    async function handleSignOut() {
-      const { error } = await supabase.auth.signOut();
-      if (error) {
-        console.error('Erro ao sair:', error);
-      } else {
-        window.location.href = '/login.html';
-      }
-    }
+    // Initialize auth and user display
+    document.addEventListener('DOMContentLoaded', async () => {
+      await auth.init(); // Initialize auth system
+      await displayUserName(); // Display user name after auth is initialized
+    });
 
     let products = [];
+    let currentProductId = null; // Track which product is being edited
 
     function formatCurrency(value) {
       return `MZN ${value.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ' ').replace('.', ',')}`;
@@ -630,233 +1205,415 @@
     }
 
     async function fetchProducts() {
-      // Obter o usuário logado
-      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-      if (sessionError || !session || !session.user) {
-        console.error('Erro ao obter sessão:', sessionError?.message);
-        return;
-      }
-      const userId = session.user.id;
-      // Buscar apenas produtos do usuário logado
-      const { data, count, error } = await supabase
-        .from('products')
-        .select('*', { count: 'exact' })
-        .eq('user_id', userId);
-
-      if (error) {
-        console.error('Error fetching products:', error);
-        return;
-      }
-
-      products = data;
-      displayProducts();
-
-      // Update product count in the header
-      const productListHeader = document.querySelector('#product-list h3');
-      if (productListHeader) {
-        productListHeader.textContent = `Product List (${count || 0})`;
-      }
-    }
-
-    async function saveProduct() {
-      // Obter o usuário logado
-      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-      if (sessionError || !session || !session.user) {
-        alert('Usuário não autenticado. Faça login novamente.');
-        return;
-      }
-      const userId = session.user.id;
-      const description = document.getElementById('description').value;
-      const price = parseFloat(document.getElementById('price').value);
-      const taxCode = document.getElementById('tax-code').value;
-      const taxRate = parseFloat(document.getElementById('vat').value);
-      const industry = document.getElementById('industry').value;
-
-      if (!description || isNaN(price) || !taxCode || isNaN(taxRate) || !industry) {
-        alert('Please fill in all required fields.');
-        return;
-      }
+      const productList = document.getElementById('product-list');
+      productList.innerHTML = `
+        <div class="loading-state">
+          <div class="loading-spinner"></div>
+          <span>Loading products...</span>
+        </div>
+      `;
 
       try {
-        const { data, error } = await supabase
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+        if (sessionError || !session || !session.user) {
+          console.error('Error getting session:', sessionError?.message);
+          return;
+        }
+        
+        const userId = session.user.id;
+        // Fetch the user's row to check for created_by (parent)
+        const { data: userRow, error: userRowError } = await supabase
+          .from('users')
+          .select('created_by')
+          .eq('id', userId)
+          .single();
+        if (userRowError) {
+          console.error('Error fetching user row:', userRowError);
+          return;
+        }
+        let userIdsToFetch = [userId];
+        if (userRow && userRow.created_by) {
+          userIdsToFetch.push(userRow.created_by);
+        }
+        // Fetch products for self and parent (if any)
+        const { data, count, error } = await supabase
           .from('products')
-          .insert([{ description, price, tax_code: taxCode, tax_rate: taxRate, industry, user_id: userId }])
-          .select();
+          .select('*', { count: 'exact' })
+          .in('user_id', userIdsToFetch);
 
         if (error) {
-          alert('Error saving product: ' + error.message);
+          console.error('Error fetching products:', error);
+          productList.innerHTML = `
+            <div class="empty-state">
+              <i class="fas fa-exclamation-circle"></i>
+              <h3 data-translate="error_loading_products">Error Loading Products</h3>
+              <p data-translate="error_loading_products_message">There was an error loading your products. Please try again.</p>
+              <button class="btn-primary" onclick="fetchProducts()">
+                <i class="fas fa-sync"></i> <span data-translate="retry">Retry</span>
+              </button>
+            </div>
+          `;
           return;
         }
 
-        products.push(data[0]);
+        products = data;
         displayProducts();
-        document.getElementById('product-form').reset();
+
+        // Update product count in the header
+        const productListHeader = document.querySelector('#product-list h3');
+        if (productListHeader) {
+          productListHeader.textContent = `Products (${count || 0})`;
+        }
       } catch (err) {
-        alert('Unexpected error: ' + err.message);
+        console.error('Unexpected error:', err);
       }
-    }
-
-    async function logProductUpdate(productId, oldData, newData, userId) {
-      await supabase.from('product_updates').insert([
-        {
-          product_id: productId,
-          old_data: JSON.stringify(oldData),
-          new_data: JSON.stringify(newData),
-          updated_by: userId
-        }
-      ]);
-    }
-
-    async function editProduct(index) {
-      const product = products[index];
-      document.getElementById('description').value = product.description;
-      document.getElementById('price').value = product.price;
-      document.getElementById('vat').value = product.vat === 0 ? '0' : formatVatForDisplay(product.vat);
-      if (document.getElementById('vat').value === 'other') {
-        document.getElementById('other-vat-container').style.display = 'block';
-        document.getElementById('other-vat').value = (product.vat * 100).toFixed(0); // Show as percentage
-      } else {
-        document.getElementById('other-vat-container').style.display = 'none';
-      }
-
-      const saveButton = document.querySelector('#product-form button[type="button"]');
-      saveButton.textContent = 'Update Product';
-      saveButton.onclick = async function () {
-        const updatedDescription = document.getElementById('description').value;
-        const updatedPrice = parseFloat(document.getElementById('price').value);
-        const updatedVatDisplay = document.getElementById('vat').value === 'other' 
-          ? `${document.getElementById('other-vat').value}%` 
-          : document.getElementById('vat').value;
-        const updatedVat = parseVatFromDisplay(updatedVatDisplay);
-        const updatedTaxCode = document.getElementById('tax-code').value;
-        const updatedTaxRate = parseFloat(document.getElementById('tax-rate').value);
-        const updatedIndustry = document.getElementById('industry').value;
-
-        // Obter usuário logado
-        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-        const userId = session?.user?.id || null;
-
-        const oldData = { ...product };
-        const newData = {
-          description: updatedDescription,
-          price: updatedPrice,
-          vat: updatedVat,
-          tax_code: updatedTaxCode,
-          tax_rate: updatedTaxRate,
-          industry: updatedIndustry
-        };
-
-        const { error } = await supabase
-          .from('products')
-          .update(newData)
-          .eq('id', product.id);
-
-        if (!error) {
-          await logProductUpdate(product.id, oldData, newData, userId);
-          products[index] = { ...product, ...newData };
-          displayProducts();
-          document.getElementById('product-form').reset();
-          document.getElementById('other-vat-container').style.display = 'none';
-          saveButton.textContent = 'Save';
-          saveButton.onclick = saveProduct;
-        } else {
-          console.error('Error updating product:', error);
-        }
-      };
-    }
-
-    async function deleteProduct(index) {
-      const product = products[index];
-      const { error } = await supabase.from('products').delete().eq('id', product.id);
-      if (error) {
-        console.error('Error deleting product:', error);
-        return;
-      }
-      products.splice(index, 1);
-      displayProducts();
     }
 
     function displayProducts() {
-      const productList = document.getElementById('product-list');
-      productList.innerHTML = '<h3>Product List</h3>';
-      products.forEach((product, index) => {
-        const productItem = document.createElement('div');
-        productItem.className = 'product-item';
-        productItem.innerHTML = `
-          <span>
-            ${product.description} - ${formatCurrency(product.price)}<br>
-            <strong>Tax Code:</strong> ${product.tax_code} | 
-            <strong>Tax Rate:</strong> ${product.tax_rate}% | 
-            <strong>Industry:</strong> ${product.industry}
-          </span>
-          <div>
-            <button class="edit-btn" onclick="editProduct(${index})">Update Product</button>
-          </div>
+        const productList = document.getElementById('product-list');
+        const isGridView = productList.classList.contains('grid-view');
+        
+        // Get filter values
+        const searchQuery = document.getElementById('product-search').value.toLowerCase();
+        const industryFilter = document.getElementById('industry-filter').value;
+        const vatFilter = document.getElementById('vat-filter').value;
+
+        // Apply filters
+        const filteredProducts = products.filter(product => {
+            const matchesSearch = product.description.toLowerCase().includes(searchQuery) ||
+                                product.tax_code.toLowerCase().includes(searchQuery);
+            const matchesIndustry = industryFilter === 'all' || product.industry === industryFilter;
+            const matchesVat = vatFilter === 'all' || 
+                             (product.tax_rate * 100).toFixed(0) === vatFilter;
+            
+            return matchesSearch && matchesIndustry && matchesVat;
+        });
+
+        if (filteredProducts.length === 0) {
+            productList.innerHTML = `
+                <div class="empty-state">
+                    <i class="fas fa-filter"></i>
+                    <h3 data-translate="no_products_found">No Products Found</h3>
+                    <p data-translate="no_products_found_message">Try adjusting your filters or search criteria.</p>
+                    <button class="btn-secondary" onclick="clearFilters()">
+                        <i class="fas fa-times"></i> <span data-translate="clear_filters">Clear Filters</span>
+                    </button>
+                </div>
+            `;
+            return;
+        }
+
+        productList.innerHTML = filteredProducts.map((product, index) => `
+            <div class="product-item">
+                <div class="product-item-content">
+                    <div class="product-info">
+                        <h3 class="product-title">${product.description}</h3>
+                        <div class="product-meta">
+                            <span class="meta-item">
+                                <i class="fas fa-tag"></i> ${formatCurrency(product.price)}
+                            </span>
+                            <span class="meta-item">
+                                <i class="fas fa-percent"></i> ${formatVatForDisplay(product.tax_rate)}
+                            </span>
+                            <span class="meta-item">
+                                <i class="fas fa-industry"></i> ${product.industry}
+                            </span>
+                            <span class="meta-item">
+                                <i class="fas fa-barcode"></i> ${product.tax_code}
+                            </span>
+                        </div>
+                    </div>
+                    <div class="product-actions">
+                        <button class="action-btn edit-btn" onclick="editProduct(${index})">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="action-btn delete-btn" onclick="deleteProduct(${index})">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    // Add view toggle handlers
+    document.getElementById('grid-view-btn').addEventListener('click', function() {
+        const productList = document.getElementById('product-list');
+        productList.classList.add('grid-view');
+        productList.classList.remove('list-view');
+        this.classList.add('active');
+        document.getElementById('list-view-btn').classList.remove('active');
+        displayProducts();
+    });
+
+    document.getElementById('list-view-btn').addEventListener('click', function() {
+        const productList = document.getElementById('product-list');
+        productList.classList.add('list-view');
+        productList.classList.remove('grid-view');
+        this.classList.add('active');
+        document.getElementById('grid-view-btn').classList.remove('active');
+        displayProducts();
+    });
+
+    // Add notification function
+    function showNotification(type, message) {
+        // Remove any existing notifications
+        const existingNotifications = document.querySelectorAll('.notification');
+        existingNotifications.forEach(notification => notification.remove());
+        
+        // Create new notification
+        const notification = document.createElement('div');
+        notification.className = `notification ${type}`;
+        notification.innerHTML = `
+            <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'}"></i>
+            <span>${message}</span>
         `;
-        productList.appendChild(productItem);
-      });
+        
+        document.body.appendChild(notification);
+        
+        // Trigger animation
+        requestAnimationFrame(() => {
+            notification.classList.add('show');
+        });
+        
+        // Remove after 3 seconds
+        setTimeout(() => {
+            notification.classList.remove('show');
+            setTimeout(() => notification.remove(), 300);
+        }, 3000);
     }
 
-    function subscribeToProducts() {
-      supabase
-        .channel('products-changes')
-        .on(
-          'postgres_changes',
-          { event: '*', schema: 'public', table: 'products' },
-          (payload) => {
-            console.log('Change received:', payload);
-            fetchProducts(); // Refresh the product list on any change
-          }
-        )
-        .subscribe();
+    // Add form submission handler
+    document.getElementById('product-form').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        await saveProduct();
+    });
+
+    // Enhance save product with loading state
+    async function saveProduct() {
+        const saveButton = document.querySelector('#product-form button[type="submit"]');
+        const originalText = saveButton.innerHTML;
+        
+        try {
+            saveButton.disabled = true;
+            saveButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+            
+            const { data: { session } } = await supabase.auth.getSession();
+            if (!session?.user) {
+                showNotification('error', 'Please login to continue');
+                return;
+            }
+
+            const formData = {
+                description: document.getElementById('description').value.trim(),
+                price: parseFloat(document.getElementById('price').value),
+                tax_code: document.getElementById('tax-code').value.trim(),
+                industry: document.getElementById('industry').value,
+                tax_rate: document.getElementById('vat').value === 'other' 
+                    ? parseFloat(document.getElementById('other-vat').value) / 100 
+                    : parseFloat(document.getElementById('vat').value),
+                user_id: session.user.id
+            };
+
+            if (!formData.description || isNaN(formData.price) || !formData.tax_code || 
+                isNaN(formData.tax_rate) || !formData.industry) {
+                showNotification('error', 'Please fill in all required fields correctly');
+                return;
+            }
+
+            let response;
+            if (currentProductId) {
+                // Update existing product
+                response = await supabase
+                    .from('products')
+                    .update(formData)
+                    .eq('id', currentProductId)
+                    .eq('user_id', session.user.id);
+            } else {
+                // Create new product
+                response = await supabase
+                    .from('products')
+                    .insert([formData])
+                    .select();
+            }
+
+            if (response.error) throw response.error;
+
+            showNotification('success', `Product ${currentProductId ? 'updated' : 'created'} successfully!`);
+            resetForm();
+            await fetchProducts();
+            
+        } catch (err) {
+            console.error('Error saving product:', err);
+            showNotification('error', err.message || 'Error saving product');
+        } finally {
+            saveButton.disabled = false;
+            saveButton.innerHTML = originalText;
+        }
     }
 
-    // Attach functions to the global window object
-    window.saveProduct = saveProduct;
+    function resetForm() {
+        const form = document.getElementById('product-form');
+        form.reset();
+        document.getElementById('form-title').textContent = 'New Product';
+        document.querySelector('#product-form button[type="submit"]').textContent = 'Save Product';
+        currentProductId = null;
+        document.getElementById('other-vat-container').style.display = 'none';
+    }
+
+    // Delete product with modal confirmation
+    async function deleteProduct(index) {
+        const product = products[index];
+        const modal = document.getElementById('delete-modal');
+        
+        // Update modal content
+        modal.querySelector('.modal-body p').textContent = 
+            `Are you sure you want to delete "${product.description}"? This action cannot be undone.`;
+        
+        // Show modal (use .show class)
+        modal.classList.add('show');
+        
+        // Handle confirmation
+        const handleDelete = async () => {
+            try {
+                const { error } = await supabase
+                    .from('products')
+                    .delete()
+                    .eq('id', product.id)
+                    .eq('user_id', (await supabase.auth.getSession()).data.session.user.id);
+
+                if (error) throw error;
+                
+                products = products.filter(p => p.id !== product.id);
+                displayProducts();
+                showNotification('success', 'Product deleted successfully');
+            } catch (err) {
+                console.error('Error deleting product:', err);
+                showNotification('error', 'Error deleting product');
+            } finally {
+                modal.classList.remove('show');
+            }
+        };
+        
+        // Set up modal button handlers
+        modal.querySelector('#confirm-delete-btn').onclick = handleDelete;
+        modal.querySelector('#cancel-delete-btn').onclick = () => modal.classList.remove('show');
+        modal.querySelector('.close-modal').onclick = () => modal.classList.remove('show');
+    }
+
+    function editProduct(index) {
+        const product = products[index];
+        currentProductId = product.id;
+        const form = document.getElementById('product-form');
+        
+        // Populate form fields
+        document.getElementById('description').value = product.description;
+        document.getElementById('price').value = product.price;
+        document.getElementById('tax-code').value = product.tax_code;
+        document.getElementById('industry').value = product.industry;
+        
+        // Handle VAT rate
+        const vatSelect = document.getElementById('vat');
+        const standardRates = ['0', '0.16'];
+        const taxRate = product.tax_rate.toString();
+        
+        if (standardRates.includes(taxRate)) {
+            vatSelect.value = taxRate;
+            document.getElementById('other-vat-container').style.display = 'none';
+        } else {
+            vatSelect.value = 'other';
+            document.getElementById('other-vat-container').style.display = 'block';
+            document.getElementById('other-vat').value = (product.tax_rate * 100).toString();
+        }
+        
+        // Update form UI
+        document.getElementById('form-title').textContent = 'Edit Product';
+        document.querySelector('#product-form button[type="submit"]').textContent = 'Update Product';
+        
+        // Scroll form into view
+        form.scrollIntoView({ behavior: 'smooth' });
+    }
+
+    // Add form cancel handler
+    document.getElementById('cancel-btn').addEventListener('click', resetForm);
+
+    // Make functions globally available
     window.editProduct = editProduct;
     window.deleteProduct = deleteProduct;
-    window.filterProducts = filterProducts; // Attach filterProducts globally
 
-    window.addEventListener('DOMContentLoaded', () => {
-      fetchProducts();
-      subscribeToProducts(); // Start listening for real-time updates
-    });
+    // Add filter event listeners
+    document.getElementById('product-search').addEventListener('input', displayProducts);
+    document.getElementById('industry-filter').addEventListener('change', displayProducts);
+    document.getElementById('vat-filter').addEventListener('change', displayProducts);
 
-    function filterProducts() {
-      const searchTerm = document.getElementById('search-bar').value.toLowerCase();
-      const productItems = document.querySelectorAll('.product-item');
+    // Add clear filters function
+    function clearFilters() {
+        document.getElementById('product-search').value = '';
+        document.getElementById('industry-filter').value = 'all';
+        document.getElementById('vat-filter').value = 'all';
+        displayProducts();
+    }
 
-      productItems.forEach((item) => {
-        const productText = item.querySelector('span').textContent.toLowerCase();
-        if (productText.includes(searchTerm)) {
-          item.style.display = 'grid';
-        } else {
-          item.style.display = 'none';
+    // Make clearFilters available globally
+    window.clearFilters = clearFilters;
+
+    // --- CAE Industry Fetch & Populate ---
+    async function fetchAndPopulateIndustries() {
+      const industrySelect = document.getElementById('industry');
+      const industryFilter = document.getElementById('industry-filter');
+      try {
+        // Show loading state
+        industrySelect.innerHTML = '<option value="" data-translate="loading_industries">Loading industries...</option>';
+        industryFilter.innerHTML = '<option value="all" data-translate="all_industries">All Industries</option>';
+        // Fetch industries from cae table
+        const { data, error } = await supabase
+          .from('cae')
+          .select('Subclasse, Descricao')
+          .order('Descricao', { ascending: true });
+        if (error) throw error;
+        if (!data || data.length === 0) {
+          industrySelect.innerHTML = '<option value="" data-translate="no_industries_found">No industries found</option>';
+          industryFilter.innerHTML = '<option value="all" data-translate="all_industries">All Industries</option>';
+          return;
+        }
+        // Only keep rows with a valid subclasse (number)
+        const validIndustries = data.filter(row => row.Subclasse && /^\d+$/.test(row.Subclasse) && row.Descricao && row.Descricao.trim() !== '');
+        // Sort by subclasse ascending (as number)
+        validIndustries.sort((a, b) => Number(a.Subclasse) - Number(b.Subclasse));
+        // Populate form select
+        industrySelect.innerHTML = '<option value="" data-translate="select_industry">Select industry</option>' +
+          validIndustries.map(row => `<option value="${row.Subclasse}">${row.Subclasse} - ${row.Descricao}</option>`).join('');
+        // Populate filter select
+        industryFilter.innerHTML = '<option value="all" data-translate="all_industries">All Industries</option>' +
+          validIndustries.map(row => `<option value="${row.Subclasse}">${row.Descricao}</option>`).join('');
+      } catch (err) {
+        industrySelect.innerHTML = '<option value="" data-translate="failed_load_industries">Failed to load industries</option>';
+        industryFilter.innerHTML = '<option value="all" data-translate="all_industries">All Industries</option>';
+        console.error('Error loading industries:', err);
+      }
+    }
+    // Call on DOMContentLoaded
+    document.addEventListener('DOMContentLoaded', fetchAndPopulateIndustries);
+
+    // Initial fetch
+    fetchProducts();
+  </script>
+    <script src="js/auth.js"></script>
+    <!-- Notification badge synchronization -->
+    <script src="js/notification-badge.js"></script>
+    <script src="services/languageManager.js"></script>
+    <script>
+      // Initialize the language manager with the correct base path
+      window.languageManager = new LanguageManager('./');
+
+      // Initialize the language manager
+      document.addEventListener('DOMContentLoaded', async function() {
+        if (window.languageManager) {
+          const preferredLanguage = localStorage.getItem('preferredLanguage') || 'pt';
+          await window.languageManager.setLanguage(preferredLanguage);
         }
       });
-    }
-  </script>
-  <script>
-    document.getElementById('vat').addEventListener('change', function() {
-      if (this.value === 'other') {
-        document.getElementById('other-vat-container').style.display = 'block';
-      } else {
-        document.getElementById('other-vat-container').style.display = 'none';
-      }
-    });
-
-    const menuToggle = document.createElement('div');
-    menuToggle.className = 'menu-toggle';
-    menuToggle.innerHTML = '<i class="fas fa-bars"></i>';
-    document.querySelector('.top-bar').prepend(menuToggle);
-
-    menuToggle.addEventListener('click', () => {
-      document.querySelector('.sidebar').classList.toggle('active');
-    });
-
-    window.addEventListener('load', () => {
-      document.body.classList.add('loaded');
-    });
-  </script>
+    </script>
+    <script src="components/user-restrictions.js"></script>
 </body>
 </html>

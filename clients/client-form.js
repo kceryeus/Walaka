@@ -45,7 +45,7 @@ async function initClientForm() {
 
       // Only include fields that exist in your database schema
       const formData = {
-        company_name: document.getElementById('company-name')?.value || '',
+        customer_name: document.getElementById('company-name')?.value || '',
         customer_tax_id: document.getElementById('customer-tax-id')?.value || '',
         contact: document.getElementById('contact')?.value || '',
         billing_address: document.getElementById('billing-address')?.value || '',
@@ -62,7 +62,8 @@ async function initClientForm() {
         email: document.getElementById('email')?.value || '',
         website: document.getElementById('website')?.value || '',
         status: 'active', // Default status for new clients
-        client_type: document.querySelector('input[name="client-type"]:checked')?.value || 'business' // Default to business
+        client_type: document.querySelector('input[name="client-type"]:checked')?.value || 'business', // Default to business
+        user_id: (await window.supabase.auth.getUser()).data.user?.id // Add the current user's ID using the current method
       };
 
       // Convert string values to numbers where needed
@@ -130,18 +131,26 @@ async function initClientForm() {
   }
   
   // Setup edit client functionality
-  window.editClient = (clientId) => {
-    const client = getClientById(clientId);
-    if (!client) return;
-    
-    currentClientId = clientId;
-    populateForm(clientForm, client);
-    formTitle.textContent = 'Edit Client';
-    
-    // Scroll to form on mobile
-    const formContainer = document.getElementById('client-form-container');
-    if (formContainer && window.innerWidth < 1200) {
-      formContainer.scrollIntoView({ behavior: 'smooth' });
+  window.editClient = async (clientId) => {
+    try {
+      const client = await getClientById(clientId);
+      if (!client) {
+        window.appUtils.showToast('Client not found', 'error');
+        return;
+      }
+      
+      currentClientId = clientId;
+      populateForm(clientForm, client);
+      formTitle.textContent = 'Edit Client';
+      
+      // Scroll to form on mobile
+      const formContainer = document.getElementById('client-form-container');
+      if (formContainer && window.innerWidth < 1200) {
+        formContainer.scrollIntoView({ behavior: 'smooth' });
+      }
+    } catch (error) {
+      console.error('Error editing client:', error);
+      window.appUtils.showToast('Error loading client data', 'error');
     }
   };
   
@@ -195,15 +204,15 @@ function initDisplayNameDropdown() {
  * Initialize the client type toggle functionality
  */
 function initClientTypeToggle() {
-  const businessType = document.getElementById('business-type');
-  const individualType = document.getElementById('individual-type');
-  const companyNameField = document.getElementById('company-name').closest('.form-group');
+  const clientTypeInputs = document.querySelectorAll('input[name="client-type"]');
+  const companyNameField = document.getElementById('company-name')?.closest('.form-group');
   
-  if (!businessType || !individualType || !companyNameField) return;
+  if (!clientTypeInputs.length || !companyNameField) return;
   
   // Function to toggle company name field visibility
   const toggleCompanyField = () => {
-    if (businessType.checked) {
+    const selectedType = document.querySelector('input[name="client-type"]:checked')?.value || 'business';
+    if (selectedType === 'business') {
       companyNameField.style.display = 'block';
       companyNameField.querySelector('input').setAttribute('required', 'required');
     } else {
@@ -215,9 +224,10 @@ function initClientTypeToggle() {
   // Set initial state
   toggleCompanyField();
   
-  // Add event listeners
-  businessType.addEventListener('change', toggleCompanyField);
-  individualType.addEventListener('change', toggleCompanyField);
+  // Add event listeners to all radio buttons
+  clientTypeInputs.forEach(input => {
+    input.addEventListener('change', toggleCompanyField);
+  });
 }
 
 /**
@@ -419,52 +429,102 @@ function initContactModal() {
 }
 
 /**
+ * Validate NUIT based on client type
+ * @param {string} value - The NUIT value to validate
+ * @param {string} clientType - The type of client ('individual' or 'business')
+ * @returns {Object} - Validation result with isValid and message
+ */
+function validateNUIT(value, clientType) {
+  // Remove any non-digit characters
+  const cleanNUIT = value.replace(/\D/g, '');
+  
+  // Check length first
+  if (cleanNUIT.length !== 9) {
+    return {
+      isValid: false,
+      message: 'NUIT must be exactly 9 digits'
+    };
+  }
+
+  // Check first digit based on client type
+  const firstDigit = cleanNUIT.charAt(0);
+  switch (clientType) {
+    case 'individual':
+      if (firstDigit !== '1') {
+        return {
+          isValid: false,
+          message: 'Individual NUIT must start with 1'
+        };
+      }
+      break;
+    case 'business':
+      if (firstDigit !== '4') {
+        return {
+          isValid: false,
+          message: 'Company NUIT must start with 4'
+        };
+      }
+      break;
+  }
+
+  return {
+    isValid: true,
+    message: ''
+  };
+}
+
+/**
  * Initialize form validation
  */
 function initFormValidation() {
-  const form = document.getElementById('client-form');
+  const taxIdInput = document.getElementById('customer-tax-id');
+  const clientTypeInputs = document.querySelectorAll('input[name="client-type"]');
   
-  if (!form) return;
-  
-  // Add input event listeners to required fields
-  const requiredInputs = form.querySelectorAll('[required]');
-  requiredInputs.forEach(input => {
-    input.addEventListener('input', () => {
-      validateInput(input);
-    });
+  if (!taxIdInput) return;
+
+  // Create error message element
+  const errorMessage = document.createElement('div');
+  errorMessage.className = 'error-message';
+  taxIdInput.parentNode.appendChild(errorMessage);
+
+  // Function to update validation state
+  function updateValidation() {
+    const clientType = document.querySelector('input[name="client-type"]:checked')?.value || 'business';
+    const validation = validateNUIT(taxIdInput.value, clientType);
     
-    input.addEventListener('blur', () => {
-      validateInput(input);
-    });
-  });
-  
-  // Email validation
-  const emailInput = document.getElementById('email');
-  if (emailInput) {
-    emailInput.addEventListener('input', () => {
-      if (emailInput.value && !window.appUtils.isValidEmail(emailInput.value)) {
-        emailInput.setCustomValidity('Please enter a valid email address');
-        emailInput.classList.add('error');
-      } else {
-        emailInput.setCustomValidity('');
-        emailInput.classList.remove('error');
-      }
-    });
+    if (validation.message) {
+      errorMessage.textContent = validation.message;
+      taxIdInput.classList.add('invalid');
+      taxIdInput.classList.remove('valid');
+    } else {
+      errorMessage.textContent = '';
+      taxIdInput.classList.add('valid');
+      taxIdInput.classList.remove('invalid');
+    }
   }
-  
-  // Phone validation
-  const phoneInputs = form.querySelectorAll('input[type="tel"]');
-  phoneInputs.forEach(input => {
-    input.addEventListener('input', () => {
-      if (input.value && !window.appUtils.isValidPhone(input.value)) {
-        input.setCustomValidity('Please enter a valid phone number');
-        input.classList.add('error');
-      } else {
-        input.setCustomValidity('');
-        input.classList.remove('error');
-      }
-    });
+
+  // Add event listeners
+  taxIdInput.addEventListener('input', updateValidation);
+  clientTypeInputs.forEach(input => {
+    input.addEventListener('change', updateValidation);
   });
+
+  // Add CSS for validation states
+  const style = document.createElement('style');
+  style.textContent = `
+    .invalid {
+      border-color: #dc3545 !important;
+    }
+    .valid {
+      border-color: #28a745 !important;
+    }
+    .error-message {
+      color: #dc3545;
+      font-size: 0.875rem;
+      margin-top: 0.25rem;
+    }
+  `;
+  document.head.appendChild(style);
 }
 
 /**
@@ -500,6 +560,17 @@ function validateInput(input) {
  * @returns {boolean} - True if valid, false otherwise
  */
 function validateForm(form) {
+  const taxIdInput = document.getElementById('customer-tax-id');
+  const clientType = document.querySelector('input[name="client-type"]:checked')?.value || 'business';
+  
+  if (taxIdInput && taxIdInput.value) {
+    const validation = validateNUIT(taxIdInput.value, clientType);
+    if (!validation.isValid) {
+      window.appUtils.showToast(validation.message, 'error');
+      return false;
+    }
+  }
+
   let isValid = true;
   
   // Validate required fields
@@ -578,72 +649,66 @@ function getFormData(form) {
  * @param {Object} client - Client data
  */
 function populateForm(form, client) {
-  // Set form fields
-  form.querySelector(`input[name="client-type"][value="${client.clientType}"]`).checked = true;
-  form.querySelector('#salutation').value = client.salutation || '';
-  form.querySelector('#first-name').value = client.firstName || '';
-  form.querySelector('#last-name').value = client.lastName || '';
-  form.querySelector('#company-name').value = client.companyName || '';
-  form.querySelector('#display-name').value = client.displayName || '';
-  form.querySelector('#currency').value = client.currency || 'USD';
-  form.querySelector('#email').value = client.email || '';
-  form.querySelector('#work-phone').value = client.workPhone || '';
-  form.querySelector('#mobile').value = client.mobile || '';
-  
-  // Handle company name field visibility
-  const companyNameField = form.querySelector('#company-name').closest('.form-group');
-  companyNameField.style.display = client.clientType === 'business' ? 'block' : 'none';
-  
-  // Set tax information
-  form.querySelector('#tax-rate').value = client.taxRate || '';
-  
-  if (client.taxRate === 'other' && client.customVatRate) {
-    form.querySelector('#other-vat-container').style.display = 'block';
-    form.querySelector('#custom-vat').value = client.customVatRate;
-  } else {
-    form.querySelector('#other-vat-container').style.display = 'none';
+  try {
+    // Set client type radio button
+    const clientTypeRadio = form.querySelector(`input[name="client-type"][value="${client.client_type}"]`);
+    if (clientTypeRadio) {
+      clientTypeRadio.checked = true;
+      // Trigger change event to update field visibility
+      const event = new Event('change');
+      clientTypeRadio.dispatchEvent(event);
+    }
+
+    // Set other form fields
+    const fields = {
+      'company-name': client.customer_name,
+      'customer-tax-id': client.customer_tax_id,
+      'contact': client.contact,
+      'billing-address': client.billing_address,
+      'street-name': client.street_name,
+      'address-detail': client.address_detail,
+      'city': client.city,
+      'postal-code': client.postal_code,
+      'province': client.province,
+      'country': client.country,
+      'ship-to-address': client.ship_to_address,
+      'building-number': client.building_number,
+      'telephone': client.telephone,
+      'fax': client.fax,
+      'email': client.email,
+      'website': client.website
+    };
+
+    // Populate each field
+    Object.entries(fields).forEach(([id, value]) => {
+      const field = form.querySelector(`#${id}`);
+      if (field) {
+        field.value = value || '';
+      }
+    });
+    
+    // Handle company name field required state
+    const companyNameField = form.querySelector('#company-name')?.closest('.form-group');
+    const companyNameInput = companyNameField?.querySelector('input');
+    
+    if (companyNameField && companyNameInput) {
+      if (client.client_type === 'individual') {
+        companyNameInput.removeAttribute('required');
+      } else {
+        companyNameInput.setAttribute('required', 'required');
+      }
+    }
+    
+    // Trigger validation for NUIT
+    const taxIdInput = form.querySelector('#customer-tax-id');
+    if (taxIdInput) {
+      const event = new Event('input');
+      taxIdInput.dispatchEvent(event);
+    }
+  } catch (error) {
+    console.error('Error populating form:', error);
+    window.appUtils.showToast('Error loading client data', 'error');
   }
-  
-  // Set payment terms and price list
-  form.querySelector('#payment-terms').value = client.paymentTerms || 'due-receipt';
-  form.querySelector('#price-list').value = client.priceList || '';
-  
-  // Set portal settings
-  form.querySelector('#enable-portal').checked = client.enablePortal || false;
-  form.querySelector('#portal-language').value = client.portalLanguage || 'en';
-  
-  // Set custom fields
-  if (client.reference) form.querySelector('#reference').value = client.reference;
-  if (client.industry) form.querySelector('#industry').value = client.industry;
-  if (client.notes) form.querySelector('#notes').value = client.notes;
-  
-  // Set billing address
-  if (client.billingAddress) {
-    form.querySelector('#billing-attention').value = client.billingAddress.attention || '';
-    form.querySelector('#billing-country').value = client.billingAddress.country || '';
-    form.querySelector('#billing-street1').value = client.billingAddress.street1 || '';
-    form.querySelector('#billing-street2').value = client.billingAddress.street2 || '';
-    form.querySelector('#billing-city').value = client.billingAddress.city || '';
-    form.querySelector('#billing-state').value = client.billingAddress.state || '';
-    form.querySelector('#billing-zip').value = client.billingAddress.zip || '';
-    form.querySelector('#billing-phone').value = client.billingAddress.phone || '';
-  }
-  
-  // Set shipping address
-  if (client.shippingAddress) {
-    form.querySelector('#shipping-attention').value = client.shippingAddress.attention || '';
-    form.querySelector('#shipping-country').value = client.shippingAddress.country || '';
-    form.querySelector('#shipping-street1').value = client.shippingAddress.street1 || '';
-    form.querySelector('#shipping-street2').value = client.shippingAddress.street2 || '';
-    form.querySelector('#shipping-city').value = client.shippingAddress.city || '';
-    form.querySelector('#shipping-state').value = client.shippingAddress.state || '';
-    form.querySelector('#shipping-zip').value = client.shippingAddress.zip || '';
-    form.querySelector('#shipping-phone').value = client.shippingAddress.phone || '';
-  }
-  
-  // Trigger display name options update
-  const event = new Event('input');
-  form.querySelector('#first-name').dispatchEvent(event);
 }
 
 /**
@@ -653,13 +718,52 @@ function populateForm(form, client) {
 function resetForm(form) {
   if (!form) return;
   
-  // Basic form reset
-  form.reset();
-  
-  // Clear validation states
-  form.querySelectorAll('.error').forEach(el => {
-    el.classList.remove('error');
-  });
+  try {
+    // Basic form reset
+    form.reset();
+    
+    // Reset client type to business
+    const businessTypeRadio = form.querySelector('input[name="client-type"][value="business"]');
+    if (businessTypeRadio) {
+      businessTypeRadio.checked = true;
+    }
+    
+    // Show company name field
+    const companyNameField = form.querySelector('#company-name')?.closest('.form-group');
+    if (companyNameField) {
+      companyNameField.style.display = 'block';
+      companyNameField.querySelector('input').setAttribute('required', 'required');
+    }
+    
+    // Clear validation states
+    form.querySelectorAll('.error, .invalid, .valid').forEach(el => {
+      el.classList.remove('error', 'invalid', 'valid');
+    });
+    
+    // Clear error messages
+    form.querySelectorAll('.error-message').forEach(el => {
+      el.textContent = '';
+    });
+    
+    // Reset form title
+    const formTitle = document.getElementById('form-title');
+    if (formTitle) {
+      formTitle.textContent = 'New Client';
+    }
+    
+    // Reset current client ID
+    currentClientId = null;
+    
+    // Trigger client type toggle to ensure proper field visibility
+    const event = new Event('change');
+    const businessTypeInput = form.querySelector('input[name="client-type"][value="business"]');
+    if (businessTypeInput) {
+      businessTypeInput.dispatchEvent(event);
+    }
+  } catch (error) {
+    console.error('Error resetting form:', error);
+    window.appUtils.showToast('Error resetting form', 'error');
+  }
 }
 
 // Mock functions for client data management

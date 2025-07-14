@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trial Banner Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .debug-info {
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 12px;
+            margin: 10px 0;
+        }
+        button {
+            background: #007ec7;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #005a8b;
+        }
+        .trial-banner {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        .trial-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .trial-metric {
+            text-align: center;
+        }
+        .trial-metric-value {
+            font-size: 2em;
+            font-weight: bold;
+        }
+        .trial-metric-label {
+            font-size: 0.9em;
+            opacity: 0.9;
+        }
+        .warning {
+            color: #ff6b6b !important;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Trial Banner Test Page</h1>
+        
+        <div class="test-section">
+            <h3>Test Controls</h3>
+            <button onclick="testTrialBanner()">Test Trial Banner</button>
+            <button onclick="clearConsole()">Clear Console</button>
+            <button onclick="showDebugInfo()">Show Debug Info</button>
+            <button onclick="testZeroValues()">Test Zero Values</button>
+            <button onclick="testWarningValues()">Test Warning Values</button>
+        </div>
+
+        <div class="test-section">
+            <h3>Trial Banner</h3>
+            <div id="trial-banner-container"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>Debug Information</h3>
+            <div id="debug-info" class="debug-info">
+                Click "Show Debug Info" to see current state...
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h3>Manual Test</h3>
+            <div>
+                <label>Days Remaining: <input type="number" id="manual-days" value="14" min="0" max="14"></label>
+                <label>Invoices Remaining: <input type="number" id="manual-invoices" value="5" min="0" max="5"></label>
+                <button onclick="updateManual()">Update Manual</button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.0.0/+esm';
+
+        const supabaseUrl = 'https://qvmtozjvjflygbkjecyj.supabase.co';
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF2bXRvemp2amZseWdia2plY3lqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDYxMjc2MjMsImV4cCI6MjA2MTcwMzYyM30.DJMC1eM5_EouM1oc07JaoXsMX_bSLn2AVCozAcdfHmo';
+        
+        window.supabase = createClient(supabaseUrl, supabaseKey);
+
+        // Load trial banner
+        async function loadTrialBanner() {
+            try {
+                const response = await fetch('components/trial-banner.html');
+                if (!response.ok) throw new Error('Failed to load banner HTML');
+                
+                const html = await response.text();
+                document.getElementById('trial-banner-container').innerHTML = html;
+                
+                // Load the banner script
+                const script = document.createElement('script');
+                script.type = 'module';
+                script.src = 'components/trial-banner.js';
+                document.body.appendChild(script);
+                
+                console.log('Trial banner loaded successfully');
+            } catch (error) {
+                console.error('Error loading trial banner:', error);
+            }
+        }
+
+        // Test function
+        window.testTrialBanner = async function() {
+            console.log('=== Testing Trial Banner ===');
+            
+            try {
+                const { data: { session } } = await window.supabase.auth.getSession();
+                console.log('Session:', session);
+                
+                if (session) {
+                    console.log('User ID:', session.user.id);
+                    console.log('User created_at:', session.user.created_at);
+                    
+                    // Test invoice count
+                    const { count, error } = await window.supabase
+                        .from('invoices')
+                        .select('*', { count: 'exact', head: true })
+                        .eq('user_id', session.user.id);
+                    
+                    console.log('Invoice count result:', { count, error });
+                } else {
+                    console.log('No session found');
+                }
+            } catch (error) {
+                console.error('Test error:', error);
+            }
+        };
+
+        // Clear console
+        window.clearConsole = function() {
+            console.clear();
+            console.log('Console cleared');
+        };
+
+        // Show debug info
+        window.showDebugInfo = function() {
+            const debugDiv = document.getElementById('debug-info');
+            const now = new Date();
+            
+            let debugText = `Current Time: ${now.toISOString()}\n`;
+            debugText += `User Agent: ${navigator.userAgent}\n`;
+            debugText += `Page URL: ${window.location.href}\n`;
+            
+            // Check for trial banner elements
+            const daysElem = document.getElementById('days-remaining');
+            const invoicesElem = document.getElementById('invoices-remaining');
+            const progressElem = document.getElementById('trial-progress');
+            
+            debugText += `\nTrial Banner Elements:\n`;
+            debugText += `- Days remaining element: ${daysElem ? 'Found' : 'Not found'}\n`;
+            debugText += `- Invoices remaining element: ${invoicesElem ? 'Found' : 'Not found'}\n`;
+            debugText += `- Progress bar element: ${progressElem ? 'Found' : 'Not found'}\n`;
+            
+            if (daysElem) debugText += `- Days remaining value: ${daysElem.textContent}\n`;
+            if (invoicesElem) debugText += `- Invoices remaining value: ${invoicesElem.textContent}\n`;
+            
+            debugDiv.textContent = debugText;
+        };
+
+        // Manual update
+        window.updateManual = function() {
+            const days = document.getElementById('manual-days').value;
+            const invoices = document.getElementById('manual-invoices').value;
+            
+            const daysElem = document.getElementById('days-remaining');
+            const invoicesElem = document.getElementById('invoices-remaining');
+            
+            if (daysElem) {
+                daysElem.textContent = days;
+                daysElem.classList.toggle('warning', days <= 3);
+            }
+            
+            if (invoicesElem) {
+                invoicesElem.textContent = invoices;
+                invoicesElem.classList.toggle('warning', invoices <= 1);
+            }
+            
+            console.log('Manual update applied:', { days, invoices });
+        };
+
+        // Test zero values
+        window.testZeroValues = function() {
+            console.log('Testing zero values...');
+            if (window.TrialBanner && window.TrialBanner.testWithValues) {
+                window.TrialBanner.testWithValues(0, 0);
+            } else {
+                // Fallback manual update
+                const daysElem = document.getElementById('days-remaining');
+                const invoicesElem = document.getElementById('invoices-remaining');
+                
+                if (daysElem) {
+                    daysElem.textContent = '0';
+                    daysElem.classList.add('warning');
+                }
+                
+                if (invoicesElem) {
+                    invoicesElem.textContent = '0';
+                    invoicesElem.classList.add('warning');
+                }
+            }
+        };
+
+        // Test warning values
+        window.testWarningValues = function() {
+            console.log('Testing warning values...');
+            if (window.TrialBanner && window.TrialBanner.testWithValues) {
+                window.TrialBanner.testWithValues(2, 1);
+            } else {
+                // Fallback manual update
+                const daysElem = document.getElementById('days-remaining');
+                const invoicesElem = document.getElementById('invoices-remaining');
+                
+                if (daysElem) {
+                    daysElem.textContent = '2';
+                    daysElem.classList.add('warning');
+                }
+                
+                if (invoicesElem) {
+                    invoicesElem.textContent = '1';
+                    invoicesElem.classList.add('warning');
+                }
+            }
+        };
+
+        // Listen for trial data updates
+        window.addEventListener('trialDataUpdated', (event) => {
+            console.log('Trial data updated event received:', event.detail);
+        });
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            loadTrialBanner();
+            console.log('Test page initialized');
+        });
+    </script>
+</body>
+</html> 

@@ -1,0 +1,19 @@
+{
+    "dashboard": "Painel",
+    "invoices": "Faturas",
+    "products": "Produtos",
+    "clients": "Clientes",
+    "taxes": "Impostos",
+    "expenses": "Despesas",
+    "reports": "Relatórios",
+    "payments": "Pagamentos",
+    "stock": "Stock",
+    "suppliers": "Fornecedores",
+    "movements": "Movimentos",
+    "settings": "Configurações",
+    "account": "Conta",
+    "help": "Ajuda",
+    "search_placeholder": "Pesquisar...",
+    "settings_title": "Configurações e Preferências",
+    "settings_description": "Gerir as suas preferências e configurações da aplicação"
+}

@@ -4,47 +4,47 @@
 function generatePDF() {
     const invoiceData = collectInvoiceData();
     
-    showLoading('Generating PDF...');
+    showLoading('Generating PDF from preview...');
     
-    // Get the template
-    const templateName = getSelectedTemplate();
+    // Get the element that contains the invoice preview
+    const invoicePreviewElement = document.getElementById('invoicePreviewContent');
     
-    loadTemplate(templateName)
-        .then(templateContent => {
-            // Create a document parser
-            const parser = new DOMParser();
-            const doc = parser.parseFromString(templateContent, 'text/html');
-            
-            // Populate template
-            populateTemplate(doc, templateContent, invoiceData);
-            
-            // Get the updated HTML
-            const serializer = new XMLSerializer();
-            const updatedHTML = serializer.serializeToString(doc);
-            
-            // Generate PDF using jsPDF and html2canvas 
-            // Note: In a production environment, you would include these libraries
-            // Here we'll simulate the PDF generation with a timeout
-            
-            setTimeout(() => {
-                // This is where jsPDF would create the PDF
-                console.log('PDF would be generated here with contents:', updatedHTML);
-                
-                // Create a download link for demonstration purposes
-                const blob = new Blob([updatedHTML], { type: 'text/html' });
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = generateFilename(invoiceData);
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-                URL.revokeObjectURL(url);
-                
-                hideLoading();
-                
-                alert('In a production environment, this would generate a PDF. For demonstration, an HTML file has been downloaded.');
-            }, 1000);
+    if (!invoicePreviewElement) {
+        console.error('Invoice preview element not found!');
+        hideLoading();
+        alert('Could not find invoice preview content to generate PDF.');
+        return;
+    }
+    
+    // Configure html2pdf options
+    const opt = {
+        margin: [10, 10, 10, 10], // Slightly smaller margins to give more space
+        filename: generateFilename(invoiceData),
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: {
+            scale: 2, // Keep a good scale for quality
+            useCORS: true,
+            letterRendering: true,
+            scrollY: 0,
+            // Attempt to fix table rendering issues
+            allowTaint: true, // Allow loading images from the same origin without CORS issues
+            ignoreElements: (element) => {
+                // Ignore elements that are not part of the core invoice content if needed
+                // e.g., return element.id === 'ignoreThis';
+                return false; // For now, capture everything
+            }
+        },
+        jsPDF: {
+            unit: 'mm',
+            format: 'a4',
+            orientation: 'portrait'
+        }
+    };
+    
+    // Generate PDF directly from the preview element
+    html2pdf().set(opt).from(invoicePreviewElement).save()
+        .then(() => {
+            hideLoading();
         })
         .catch(error => {
             console.error('Error generating PDF:', error);
@@ -59,14 +59,15 @@ function generatePDF() {
  * @returns {string} The generated filename
  */
 function generateFilename(invoiceData) {
-    const { number } = invoiceData.invoice;
-    const { name } = invoiceData.client;
+    // Check if invoiceData and its properties are defined before accessing them
+    const number = invoiceData?.invoice?.number || 'unknown';
+    const name = invoiceData?.client?.name || 'client';
     
     // Create a clean client name (no special characters)
     const cleanClientName = name.replace(/[^a-zA-Z0-9]/g, '_').replace(/_+/g, '_');
     
     // Generate filename
-    return `Invoice_${number}_${cleanClientName}.html`;
+    return `Invoice_${number}_${cleanClientName}.pdf`; // Changed extension to pdf
 }
 
 /**

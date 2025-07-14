@@ -1,6 +1,6 @@
 // Supabase initialization (ensure this is done only once)
-const SUPABASE_URL = 'YOUR_SUPABASE_URL';
-const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY';
+const SUPABASE_URL = 'https://qvmtozjvjflygbkjecyj.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF2bXRvemp2amZseWdia2plY3lqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDYxMjc2MjMsImV4cCI6MjA2MTcwMzYyM30.DJMC1eM5_EouM1oc07JaoXsMX_bSLn2AVCozAcdfHmo';
 
 const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
@@ -168,6 +168,9 @@ async function handleInvoiceFormSubmit(event) {
   // 3. Save invoice to local storage
   addInvoiceToLocalStorage(invoice);
 
+  // Dispatch event to update trial banner
+  document.dispatchEvent(new CustomEvent('invoiceCreated'));
+
   // Also save to Supabase
   await insertInvoiceToSupabase(invoice);
 
@@ -180,7 +183,7 @@ async function handleInvoiceFormSubmit(event) {
   // 6. Close the modal
   closeModal();
 }
-
+/*
 // Function to insert invoice into Supabase
 async function insertInvoiceToSupabase(invoice) {
         const { data, error } = await supabase
@@ -194,7 +197,7 @@ async function insertInvoiceToSupabase(invoice) {
         client_name: invoice.clientName,
         client_nuit: invoice.clientTaxId,
         client_address: invoice.clientAddress,
-        invoice_number: invoice.invoiceNumber,
+        invoiceNumber: invoice.invoiceNumber,
         issue_date: invoice.issueDate,
         description: invoice.description,
         total_without_taxes: invoice.totalWithoutTaxes,
@@ -214,7 +217,7 @@ async function insertInvoiceToSupabase(invoice) {
             alert('Invoice created successfully!');
         }
     }
-
+*/
 // Add event listener to the form
 document.getElementById('invoiceForm').addEventListener('submit', handleInvoiceFormSubmit);
 
@@ -245,7 +248,7 @@ function displayInvoices(invoices) {
 
   invoices.forEach(invoice => {
     const row = document.createElement('tr');
-    row.setAttribute('data-invoice', invoice.invoice_number); // Use os nomes de coluna reais
+    row.setAttribute('data-invoice', invoice.invoiceNumber); // Use os nomes de coluna reais
     row.setAttribute('data-client', invoice.client_name);
     row.setAttribute('data-date', invoice.issue_date);
     row.setAttribute('data-duedate', invoice.due_date);
@@ -253,14 +256,14 @@ function displayInvoices(invoices) {
     row.setAttribute('data-status', invoice.status);
 
     row.innerHTML = `
-      <td>${invoice.invoice_number}</td>
+      <td>${invoice.invoiceNumber}</td>
       <td>${invoice.client_name}</td>
       <td>${new Date(invoice.issue_date).toLocaleDateString()}</td>
       <td>${new Date(invoice.due_date).toLocaleDateString()}</td>
       <td>$${invoice.total_amount_payable ? invoice.total_amount_payable.toFixed(2) : '0.00'}</td>
       <td><span class="status ${invoice.status}">${invoice.status}</span></td>
       <td class="actions">
-        <button class="action-btn view-btn" data-invoice="${invoice.invoice_number}" title="View">
+        <button class="action-btn view-btn" data-invoice="${invoice.invoiceNumber}" title="View">
           <i class="fas fa-eye"></i>
         </button>
         <button class="action-btn edit-btn" title="Edit">
@@ -321,7 +324,7 @@ function displayInvoices(invoices) {
 
   invoicesToDisplay.forEach(invoice => {
     const row = document.createElement('tr');
-    row.setAttribute('data-invoice', invoice.invoice_number); // Use os nomes de coluna reais
+    row.setAttribute('data-invoice', invoice.invoiceNumber); // Use os nomes de coluna reais
     row.setAttribute('data-client', invoice.client_name);
     row.setAttribute('data-date', invoice.issue_date);
     row.setAttribute('data-duedate', invoice.due_date);
@@ -329,14 +332,14 @@ function displayInvoices(invoices) {
     row.setAttribute('data-status', invoice.status);
 
     row.innerHTML = `
-      <td>${invoice.invoice_number}</td>
+      <td>${invoice.invoiceNumber}</td>
       <td>${invoice.client_name}</td>
       <td>${new Date(invoice.issue_date).toLocaleDateString()}</td>
       <td>${new Date(invoice.due_date).toLocaleDateString()}</td>
       <td>$${invoice.total_amount_payable ? invoice.total_amount_payable.toFixed(2) : '0.00'}</td>
       <td><span class="status ${invoice.status}">${invoice.status}</span></td>
       <td class="actions">
-        <button class="action-btn view-btn" data-invoice="${invoice.invoice_number}" title="View">
+        <button class="action-btn view-btn" data-invoice="${invoice.invoiceNumber}" title="View">
           <i class="fas fa-eye"></i>
         </button>
         <button class="action-btn edit-btn" title="Edit">

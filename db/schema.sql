@@ -32,6 +32,19 @@ CREATE TABLE IF NOT EXISTS public.invoices (
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
+-- Create invoice_items table
+CREATE TABLE IF NOT EXISTS public.invoice_items (
+    id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    invoice_id BIGINT REFERENCES public.invoices(id) ON DELETE CASCADE,
+    description TEXT NOT NULL,
+    quantity NUMERIC(10, 2) NOT NULL,
+    unit_price NUMERIC(10, 2) NOT NULL,
+    vat_amount NUMERIC(10, 2) NOT NULL,
+    total NUMERIC(10, 2) NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
 -- Create storage bucket for invoice PDFs
 INSERT INTO storage.buckets (id, name) 
 VALUES ('invoice_pdfs', 'invoice_pdfs');
@@ -44,3 +57,14 @@ USING (bucket_id = 'invoice_pdfs');
 CREATE POLICY "Users can upload invoice PDFs"
 ON storage.objects FOR INSERT
 WITH CHECK (bucket_id = 'invoice_pdfs');
+
+-- Add support for 'cash' accounts and a balance field
+ALTER TABLE public.bank_accounts
+    ADD COLUMN IF NOT EXISTS balance numeric(18,2) DEFAULT 0;
+
+ALTER TABLE public.bank_accounts
+    DROP CONSTRAINT IF EXISTS bank_accounts_account_type_check;
+ALTER TABLE public.bank_accounts
+    ADD CONSTRAINT bank_accounts_account_type_check CHECK (
+        account_type = ANY (ARRAY['bank', 'wallet', 'cash'])
+    );

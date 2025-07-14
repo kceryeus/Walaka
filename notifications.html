@@ -1,0 +1,964 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>WALAKA - Notifications</title>
+    
+    <!-- External Libraries -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet" />
+    
+    <!-- Internal CSS -->
+    <link rel="stylesheet" href="components/sidebar.css"> 
+    <link rel="stylesheet" href="banks/static/assets/css/banks.css">
+    <link rel="stylesheet" href="trial-banner.css"> 
+    <style>
+        .notifications-container {
+            padding: 20px;
+        }
+
+        .notification-card {
+            background: white;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 16px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            display: flex;
+            align-items: flex-start;
+            transition: background-color 0.2s;
+        }
+
+        .notification-card.unread {
+            background-color: #f0f7ff;
+        }
+
+        .notification-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #e9ecef;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 16px;
+            flex-shrink: 0;
+        }
+
+        .notification-content {
+            flex-grow: 1;
+        }
+
+        .notification-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 8px;
+        }
+
+        .notification-title {
+            font-weight: 600;
+            color: #2c3e50;
+            margin: 0;
+        }
+
+        .notification-time {
+            color: #6c757d;
+            font-size: 0.875rem;
+        }
+
+        .notification-message {
+            color: #4a5568;
+            margin: 0;
+            line-height: 1.5;
+        }
+
+        .notification-actions {
+            margin-top: 12px;
+            display: flex;
+            gap: 12px;
+        }
+
+        .notification-action-btn {
+            background: none;
+            border: none;
+            color: #3498db;
+            cursor: pointer;
+            font-size: 0.875rem;
+            padding: 0;
+        }
+
+        .notification-action-btn:hover {
+            text-decoration: underline;
+        }
+
+        .notification-filters {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .filter-button {
+            background: none;
+            border: 2px solid #e9ecef;
+            border-radius: 20px;
+            padding: 8px 16px;
+            cursor: pointer;
+            color: #4a5568;
+            transition: all 0.2s;
+        }
+
+        .filter-button.active {
+            background: #3498db;
+            color: white;
+            border-color: #3498db;
+        }
+
+        .empty-notifications {
+            text-align: center;
+            padding: 48px 0;
+            color: #6c757d;
+        }
+
+        .empty-notifications i {
+            font-size: 48px;
+            margin-bottom: 16px;
+            color: #e9ecef;
+        }
+
+        .clear-all-btn {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            float: right;
+            margin-bottom: 16px;
+        }
+
+        .clear-all-btn:hover {
+            background: #c82333;
+        }
+
+        .notification-type-icon {
+            font-size: 1.2em;
+        }
+
+        .type-invoice { background: #e3f2fd; }
+        .type-payment { background: #e8f5e9; }
+        .type-system { background: #fff3e0; }
+        .type-alert { background: #ffebee; }
+        .type-subscription_warning { background: #fff3cd; }
+        .type-subscription_expired { background: #f8d7da; }
+        
+        /* Dropdown functionality */
+        .user-profile.open .dropdown-menu {
+            display: block;
+        }
+        /* Loading Spinner */
+        .notifications-loading-spinner {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100px; /* Half the previous height */
+        }
+        .notifications-loading-spinner .spinner {
+            border: 3px solid #f3f3f3; /* Half the previous border width */
+            border-top: 3px solid #3498db;
+            border-radius: 50%;
+            width: 24px; /* Half the previous size */
+            height: 24px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- Sidebar Menu -->
+        <div id="sidebar-container"></div>
+        <script>
+        // Dynamically load the sidebar from components/sidebar.html
+        document.addEventListener('DOMContentLoaded', function() {
+            fetch('components/sidebar.html')
+                .then(response => response.text())
+                .then(html => {
+                    document.getElementById('sidebar-container').innerHTML = html;
+                    // Dynamically load the sidebar-actions.js script after sidebar is injected
+                    var script = document.createElement('script');
+                    script.src = 'components/sidebar-actions.js';
+                    document.body.appendChild(script);
+                })
+                .catch(err => {
+                    console.error('Failed to load sidebar:', err);
+                });
+        });
+        </script>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Top Bar -->
+            <div class="top-bar">
+                <button class="menu-toggle">
+                    <i class="fas fa-bars"></i>
+                </button>
+                
+                <div class="user-menu" style="margin-left:auto;">
+                    <a href="notifications.html" class="notification-bell">
+                        <i class="fas fa-bell"></i>
+                        <span class="badge">0</span>
+                    </a>
+                    
+                    <div class="user-profile" id="userProfile">
+                        <div class="avatar">
+                            <i class="fas fa-user"></i>
+                        </div>
+                        <span id="user-displayname">Loading...</span>
+                        <div class="dropdown-menu" id="userDropdown">
+                            <a href="profile.html">
+                                <i class="fas fa-user-circle"></i> My Profile
+                            </a>
+                            <a href="settings.html">
+                                <i class="fas fa-cog"></i> Settings
+                            </a>
+                            <a href="#" id="sign-out-btn">
+                                <i class="fas fa-sign-out-alt"></i> Logout
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Notifications Page Header -->
+            <div class="page-header">
+                <div>
+                    <h1>Notifications</h1>
+                    <p>View and manage your system notifications</p>
+                </div>
+                <button id="mark-all-read" class="primary-btn">
+                    <i class="fas fa-check-double"></i> Mark All as Read
+                </button>
+            </div>
+
+            <!-- Main Content Area -->
+            <div class="notifications-container">
+                <!-- Search Bar -->
+                <div class="search-container" style="margin-bottom: 1rem;">
+                    <input type="text" placeholder="Search notifications..." id="search-notifications" style="width: 100%; padding: 0.75rem 1rem; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 0.9rem;">
+                </div>
+                <!-- Notification Filters -->
+                <div class="notification-filters">
+                    <button class="filter-button active" data-filter="all">
+                        All Notifications
+                    </button>
+                    <button class="filter-button" data-filter="unread">
+                        Unread
+                    </button>
+                    <button class="filter-button" data-filter="invoice">
+                        Invoices
+                    </button>
+                    <button class="filter-button" data-filter="payment">
+                        Payments
+                    </button>
+                    <button class="filter-button" data-filter="system">
+                        System
+                    </button>
+                    <button class="filter-button" data-filter="subscription_warning">
+                        Subscription Warnings
+                    </button>
+                    <button class="filter-button" data-filter="subscription_expired">
+                        Subscription Expired
+                    </button>
+                    <button class="clear-all-btn" id="clear-all">
+                        <i class="fas fa-trash"></i> Clear All
+                    </button>
+                </div>
+                <!-- Loading Spinner (moved below filters) -->
+                <div id="notifications-loading" class="notifications-loading-spinner" style="display: none;">
+                    <div class="spinner"></div>
+                </div>
+                
+                <!-- Empty State -->
+                <div id="empty-notifications" class="empty-notifications" style="display: none;">
+                    <i class="fas fa-bell-slash"></i>
+                    <h3>No Notifications</h3>
+                    <p>You're all caught up! No new notifications to display.</p>
+                </div>
+
+                <!-- Notifications List -->
+                <div id="notifications-list">
+                    <!-- Notifications will be dynamically inserted here -->
+                </div>
+            </div>
+
+            <!-- Toast Notification -->
+            <div id="toast" class="toast">
+                <div class="toast-icon">
+                    <i id="toast-icon" class="fas fa-check-circle"></i>
+                </div>
+                <div class="toast-content">
+                    <span id="toast-message"></span>
+                </div>
+                <button id="toast-close" class="toast-close">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        </main>
+    </div>
+
+    <!-- Notification badge synchronization -->
+    <script src="js/notification-badge.js"></script>
+    
+    <!-- JavaScript -->
+    <script type="module">
+        // Initialize Supabase client
+        import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+        
+        // Initialize Supabase
+        window.supabase = createClient(
+            'https://qvmtozjvjflygbkjecyj.supabase.co',
+            'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF2bXRvemp2amZseWdia2plY3lqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDYxMjc2MjMsImV4cCI6MjA2MTcwMzYyM30.DJMC1eM5_EouM1oc07JaoXsMX_bSLn2AVCozAcdfHmo'
+        );
+
+        // DOM Elements
+        const notificationsList = document.getElementById('notifications-list');
+        const emptyState = document.getElementById('empty-notifications');
+        const filterButtons = document.querySelectorAll('.filter-button');
+        const searchInput = document.getElementById('search-notifications');
+        const clearAllBtn = document.getElementById('clear-all');
+        const markAllReadBtn = document.getElementById('mark-all-read');
+        const notificationBadge = document.querySelector('.notification-bell .badge');
+        const loadingSpinner = document.getElementById('notifications-loading');
+
+        let notifications = [];
+        let lastSubscriptionCheck = 0; // Track last subscription check time
+
+        // Initialize notifications
+        async function initializeNotifications() {
+            const { data: { user } } = await window.supabase.auth.getUser();
+            if (!user) return;
+
+            // Show loading spinner
+            loadingSpinner.style.display = 'flex';
+            notificationsList.innerHTML = '';
+            emptyState.style.display = 'none';
+
+            // Check for subscription expiration notifications (but not too frequently)
+            const now = Date.now();
+            if (now - lastSubscriptionCheck > 60000) { // Only check once per minute
+                await checkSubscriptionNotifications(user.id);
+                await checkInvoiceNotifications(user.id); // <-- Added for invoice due/overdue
+                lastSubscriptionCheck = now;
+            }
+
+            // Fetch notifications from Supabase
+            const { data, error } = await window.supabase
+                .from('notifications')
+                .select('*')
+                .eq('user_id', user.id)
+                .order('created_at', { ascending: false });
+
+            // Hide loading spinner
+            loadingSpinner.style.display = 'none';
+
+            if (error) {
+                showToast('Error loading notifications', 'error');
+                return;
+            }
+
+            notifications = data || [];
+            updateNotificationsDisplay();
+            updateUnreadCount();
+        }
+
+        // Check and create subscription expiration notifications
+        async function checkSubscriptionNotifications(userId) {
+            try {
+                // Get user's subscription
+                const { data: subscriptions, error: subError } = await window.supabase
+                    .from('subscriptions')
+                    .select('*')
+                    .eq('user_id', userId)
+                    .order('end_date', { ascending: false });
+
+                if (subError || !subscriptions || subscriptions.length === 0) {
+                    return; // No subscription found
+                }
+
+                const subscription = subscriptions[0];
+                if (!subscription.end_date) return;
+
+                // Parse the subscription end date
+                const endDate = new Date(subscription.end_date);
+                const today = new Date();
+                
+                // Reset time to midnight for accurate day comparison
+                const endDateMidnight = new Date(endDate.getFullYear(), endDate.getMonth(), endDate.getDate());
+                const todayMidnight = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+                
+                // Calculate days until expiration
+                const daysUntilExpiration = Math.ceil((endDateMidnight - todayMidnight) / (1000 * 60 * 60 * 24));
+
+                console.log('=== NOTIFICATION DATE DEBUG ===');
+                console.log('End date:', endDate.toISOString());
+                console.log('Today:', today.toISOString());
+                console.log('Days until expiration:', daysUntilExpiration);
+
+                // Check if we need to create a 3-day warning notification
+                if (daysUntilExpiration === 3) {
+                    console.log('Checking for 3-day warning notification...');
+                    await createSubscriptionNotification(
+                        userId,
+                        'subscription_warning',
+                        'Subscription Expiring Soon',
+                        `Your subscription will expire in 3 days on ${endDate.toLocaleDateString()}. Please renew to continue using our services.`,
+                        'profile.html',
+                        endDateMidnight
+                    );
+                }
+
+                // Check if subscription has expired today
+                if (daysUntilExpiration === 0) {
+                    console.log('Checking for expired notification...');
+                    await createSubscriptionNotification(
+                        userId,
+                        'subscription_expired',
+                        'Subscription Expired',
+                        `Your subscription has expired on ${endDate.toLocaleDateString()}. Please renew to restore access to our services.`,
+                        'profile.html',
+                        endDateMidnight
+                    );
+                }
+
+            } catch (error) {
+                console.error('Error checking subscription notifications:', error);
+            }
+        }
+
+        // Create subscription notification
+        async function createSubscriptionNotification(userId, type, title, message, actionUrl, targetDate) {
+            try {
+                // Create a unique identifier for this notification based on type and target date
+                const targetDateStr = targetDate.toISOString().split('T')[0]; // YYYY-MM-DD format
+                
+                // Check if notification already exists for this type and target date
+                const { data: existingNotifications, error: checkError } = await window.supabase
+                    .from('notifications')
+                    .select('id')
+                    .eq('user_id', userId)
+                    .eq('type', type)
+                    .eq('title', title); // Also check title to be extra safe
+
+                if (checkError) {
+                    console.error('Error checking existing notifications:', checkError);
+                    return;
+                }
+
+                if (existingNotifications && existingNotifications.length > 0) {
+                    console.log(`Notification of type "${type}" already exists, skipping...`);
+                    return; // Notification already exists
+                }
+
+                console.log(`Creating new notification: ${type} - ${title}`);
+                
+                // Create new notification
+                const { error } = await window.supabase
+                    .from('notifications')
+                    .insert({
+                        user_id: userId,
+                        type: type,
+                        title: title,
+                        message: message,
+                        action_url: actionUrl,
+                        read: false
+                    });
+
+                if (error) {
+                    console.error('Error creating subscription notification:', error);
+                } else {
+                    console.log(`Successfully created notification: ${type}`);
+                }
+            } catch (error) {
+                console.error('Error creating subscription notification:', error);
+            }
+        }
+
+        // Check and create invoice due/overdue notifications
+        async function checkInvoiceNotifications(userId) {
+            try {
+                // Get all unpaid invoices for the user
+                const { data: invoices, error: invError } = await window.supabase
+                    .from('invoices')
+                    .select('*')
+                    .eq('user_id', userId)
+                    .neq('status', 'paid');
+
+                if (invError || !invoices) return;
+
+                const today = new Date();
+                const todayMidnight = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+
+                for (const invoice of invoices) {
+                    if (!invoice.due_date) continue;
+                    const dueDate = new Date(invoice.due_date);
+                    const dueDateMidnight = new Date(dueDate.getFullYear(), dueDate.getMonth(), dueDate.getDate());
+                    const daysUntilDue = Math.ceil((dueDateMidnight - todayMidnight) / (1000 * 60 * 60 * 24));
+
+                    // Due in 3 days
+                    if (daysUntilDue === 3) {
+                        await createInvoiceNotification(
+                            userId,
+                            'invoice_due',
+                            `Invoice Due Soon: ${invoice.invoiceNumber}`,
+                            `Invoice ${invoice.invoiceNumber} is due in 3 days (${dueDate.toLocaleDateString()}).`,
+                            'invoices.html',
+                            invoice.invoiceNumber
+                        );
+                    }
+
+                    // Overdue
+                    if (daysUntilDue < 0) {
+                        await createInvoiceNotification(
+                            userId,
+                            'invoice_overdue',
+                            `Invoice Overdue: ${invoice.invoiceNumber}`,
+                            `Invoice ${invoice.invoiceNumber} is overdue (was due on ${dueDate.toLocaleDateString()}).`,
+                            'invoices.html',
+                            invoice.invoiceNumber
+                        );
+                    }
+                }
+            } catch (error) {
+                console.error('Error checking invoice notifications:', error);
+            }
+        }
+
+        // Create invoice notification (avoids duplicates)
+        async function createInvoiceNotification(userId, type, title, message, actionUrl, invoiceNumber) {
+            try {
+                // Check if notification already exists for this invoice and type
+                const { data: existing, error: checkError } = await window.supabase
+                    .from('notifications')
+                    .select('id')
+                    .eq('user_id', userId)
+                    .eq('type', type)
+                    .eq('title', title);
+
+                if (checkError) {
+                    console.error('Error checking existing invoice notifications:', checkError);
+                    return;
+                }
+
+                if (existing && existing.length > 0) {
+                    // Already exists
+                    return;
+                }
+
+                // Insert new notification
+                await window.supabase
+                    .from('notifications')
+                    .insert({
+                        user_id: userId,
+                        type: type,
+                        title: title,
+                        message: message,
+                        action_url: actionUrl,
+                        read: false
+                    });
+            } catch (error) {
+                console.error('Error creating invoice notification:', error);
+            }
+        }
+
+        // Update notifications display
+        function updateNotificationsDisplay(filterType = 'all', searchQuery = '') {
+            // Hide loading spinner if still visible
+            loadingSpinner.style.display = 'none';
+
+            const filteredNotifications = notifications.filter(notification => {
+                let matchesFilter = false;
+                if (filterType === 'all') {
+                    matchesFilter = true;
+                } else if (filterType === 'unread') {
+                    matchesFilter = !notification.read;
+                } else if (filterType === 'invoice') {
+                    // Include all invoice-related notifications
+                    matchesFilter = ['invoice', 'invoice_due', 'invoice_overdue'].includes(notification.type);
+                } else {
+                    matchesFilter = notification.type === filterType;
+                }
+
+                const matchesSearch = searchQuery === '' ||
+                    notification.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                    notification.message.toLowerCase().includes(searchQuery.toLowerCase());
+
+                return matchesFilter && matchesSearch;
+            });
+
+            notificationsList.innerHTML = '';
+            
+            if (filteredNotifications.length === 0) {
+                emptyState.style.display = 'block';
+                return;
+            }
+
+            emptyState.style.display = 'none';
+            
+            filteredNotifications.forEach(notification => {
+                const card = createNotificationCard(notification);
+                notificationsList.appendChild(card);
+            });
+        }
+
+        // Create notification card
+        function createNotificationCard(notification) {
+            const card = document.createElement('div');
+            card.className = `notification-card ${notification.read ? '' : 'unread'}`;
+            card.dataset.id = notification.id;
+
+            let iconClass = 'fa-bell';
+            let typeClass = notification.type;
+            
+            switch (notification.type) {
+                case 'invoice': 
+                    iconClass = 'fa-file-invoice-dollar'; 
+                    break;
+                case 'payment': 
+                    iconClass = 'fa-money-bill-wave'; 
+                    break;
+                case 'system': 
+                    iconClass = 'fa-cog'; 
+                    break;
+                case 'alert': 
+                    iconClass = 'fa-exclamation-circle'; 
+                    break;
+                case 'subscription_warning': 
+                    iconClass = 'fa-exclamation-triangle'; 
+                    typeClass = 'alert';
+                    break;
+                case 'subscription_expired': 
+                    iconClass = 'fa-times-circle'; 
+                    typeClass = 'alert';
+                    break;
+            }
+
+            card.innerHTML = `
+                <div class="notification-icon type-${typeClass}">
+                    <i class="fas ${iconClass} notification-type-icon"></i>
+                </div>
+                <div class="notification-content">
+                    <div class="notification-header">
+                        <h4 class="notification-title">${notification.title}</h4>
+                        <span class="notification-time">${formatDate(notification.created_at)}</span>
+                    </div>
+                    <p class="notification-message">${notification.message}</p>
+                    <div class="notification-actions">
+                        ${notification.action_url ? 
+                            `<button class="notification-action-btn" onclick="window.location.href='${notification.action_url}'">
+                                View Details
+                            </button>` : ''
+                        }
+                        <button class="notification-action-btn" onclick="markAsRead('${notification.id}')">
+                            ${notification.read ? 'Mark as Unread' : 'Mark as Read'}
+                        </button>
+                        <button class="notification-action-btn" onclick="deleteNotification('${notification.id}')">
+                            Delete
+                        </button>
+                    </div>
+                </div>
+            `;
+
+            return card;
+        }
+
+        // Format date with more precise time display
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            const now = new Date();
+            const diff = now - date;
+            
+            // Less than 1 minute
+            if (diff < 60000) return 'Just now';
+            
+            // Less than 1 hour
+            if (diff < 3600000) {
+                const minutes = Math.floor(diff / 60000);
+                return `${minutes}m ago`;
+            }
+            
+            // Less than 24 hours
+            if (diff < 86400000) {
+                const hours = Math.floor(diff / 3600000);
+                return `${hours}h ago`;
+            }
+            
+            // Less than 7 days
+            if (diff < 604800000) {
+                const days = Math.floor(diff / 86400000);
+                return `${days}d ago`;
+            }
+            
+            // Less than 30 days
+            if (diff < 2592000000) {
+                const weeks = Math.floor(diff / 604800000);
+                return `${weeks}w ago`;
+            }
+            
+            // Less than 1 year
+            if (diff < 31536000000) {
+                const months = Math.floor(diff / 2592000000);
+                return `${months}mo ago`;
+            }
+            
+            // More than 1 year
+            const years = Math.floor(diff / 31536000000);
+            return `${years}y ago`;
+        }
+
+        // Update unread count - use the badge manager instead
+        function updateUnreadCount() {
+            // Let the notification badge manager handle the count
+            if (window.notificationBadgeManager) {
+                window.notificationBadgeManager.refresh();
+            }
+        }
+
+        // Mark notification as read/unread
+        async function markAsRead(id) {
+            const notification = notifications.find(n => n.id === id);
+            if (!notification) return;
+
+            const { error } = await window.supabase
+                .from('notifications')
+                .update({ read: !notification.read })
+                .eq('id', id);
+
+            if (error) {
+                showToast('Error updating notification', 'error');
+                return;
+            }
+
+            notification.read = !notification.read;
+            updateNotificationsDisplay();
+            updateUnreadCount();
+            
+            // Update notification badge count
+            if (window.notificationBadgeManager) {
+                await window.notificationBadgeManager.refresh();
+            }
+            
+            showToast('Notification updated successfully');
+        }
+
+        // Delete notification
+        async function deleteNotification(id) {
+            const { error } = await window.supabase
+                .from('notifications')
+                .delete()
+                .eq('id', id);
+
+            if (error) {
+                showToast('Error deleting notification', 'error');
+                return;
+            }
+
+            notifications = notifications.filter(n => n.id !== id);
+            updateNotificationsDisplay();
+            updateUnreadCount();
+            
+            // Update notification badge count
+            if (window.notificationBadgeManager) {
+                await window.notificationBadgeManager.refresh();
+            }
+            
+            showToast('Notification deleted successfully');
+        }
+
+        // Show toast message
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            const toastMessage = document.getElementById('toast-message');
+            const toastIcon = document.getElementById('toast-icon');
+            
+            toastMessage.textContent = message;
+            toastIcon.className = `fas ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'}`;
+            toast.className = `toast ${type}`;
+            toast.style.display = 'flex';
+            
+            setTimeout(() => {
+                toast.style.display = 'none';
+            }, 3000);
+        }
+
+        // Event Listeners
+        filterButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                filterButtons.forEach(btn => btn.classList.remove('active'));
+                button.classList.add('active');
+                updateNotificationsDisplay(button.dataset.filter, searchInput.value);
+            });
+        });
+
+        searchInput.addEventListener('input', (e) => {
+            const activeFilter = document.querySelector('.filter-button.active').dataset.filter;
+            updateNotificationsDisplay(activeFilter, e.target.value);
+        });
+
+        clearAllBtn.addEventListener('click', async () => {
+            if (!confirm('Are you sure you want to clear all notifications?')) return;
+
+            const { data: { user } } = await window.supabase.auth.getUser();
+            if (!user) return;
+
+            const { error } = await window.supabase
+                .from('notifications')
+                .delete()
+                .eq('user_id', user.id);
+
+            if (error) {
+                showToast('Error clearing notifications', 'error');
+                return;
+            }
+
+            notifications = [];
+            updateNotificationsDisplay();
+            updateUnreadCount();
+            
+            // Update notification badge count
+            if (window.notificationBadgeManager) {
+                await window.notificationBadgeManager.refresh();
+            }
+            
+            showToast('All notifications cleared');
+        });
+
+        markAllReadBtn.addEventListener('click', async () => {
+            const { data: { user } } = await window.supabase.auth.getUser();
+            if (!user) return;
+
+            const { error } = await window.supabase
+                .from('notifications')
+                .update({ read: true })
+                .eq('user_id', user.id);
+
+            if (error) {
+                showToast('Error updating notifications', 'error');
+                return;
+            }
+
+            notifications.forEach(n => n.read = true);
+            updateNotificationsDisplay();
+            updateUnreadCount();
+            
+            // Update notification badge count
+            if (window.notificationBadgeManager) {
+                await window.notificationBadgeManager.refresh();
+            }
+            
+            showToast('All notifications marked as read');
+        });
+
+
+        // Username display and dropdown logic (from invoices.html)
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Username display
+            if (typeof window.supabase !== 'undefined') {
+                const { data: { session } } = await window.supabase.auth.getSession();
+                if (session && session.user) {
+                    let displayName = session.user.email;
+                    try {
+                        const { data: userRecord } = await window.supabase
+                            .from('users')
+                            .select('username')
+                            .eq('id', session.user.id)
+                            .maybeSingle();
+                        if (userRecord && userRecord.username) {
+                            displayName = userRecord.username;
+                        }
+                    } catch (e) {}
+                    const userSpan = document.getElementById('user-displayname');
+                    if (userSpan) userSpan.textContent = displayName;
+                }
+            }
+            // Dropdown open/close logic
+            const userProfile = document.getElementById('userProfile');
+            const userDropdown = document.getElementById('userDropdown');
+            if (!userProfile || !userDropdown) return;
+            let dropdownTimeout;
+            function openDropdown() {
+                clearTimeout(dropdownTimeout);
+                userProfile.classList.add('open');
+            }
+            function closeDropdown() {
+                dropdownTimeout = setTimeout(() => {
+                    userProfile.classList.remove('open');
+                }, 150);
+            }
+            userProfile.addEventListener('mouseenter', openDropdown);
+            userProfile.addEventListener('mouseleave', closeDropdown);
+            userDropdown.addEventListener('mouseenter', openDropdown);
+            userDropdown.addEventListener('mouseleave', closeDropdown);
+            // Click events for mobile
+            userProfile.addEventListener('click', (e) => {
+                e.stopPropagation();
+                if (window.innerWidth <= 768) {
+                    userProfile.classList.toggle('open');
+                }
+            });
+            // Close dropdown when clicking outside
+            document.addEventListener('click', (e) => {
+                if (!userProfile.contains(e.target)) {
+                    userProfile.classList.remove('open');
+                }
+            });
+            // Handle window resize
+            window.addEventListener('resize', () => {
+                if (window.innerWidth > 768) {
+                    userProfile.classList.remove('open');
+                }
+            });
+        });
+
+        // Authentication handler
+        document.addEventListener('DOMContentLoaded', async () => {
+            const { data: { user } } = await window.supabase.auth.getUser();
+            if (user) {
+                const userSpan = document.getElementById('user-name');
+                if (userSpan) userSpan.textContent = user.email;
+                initializeNotifications();
+                
+                // Set up periodic subscription notification checks (every hour)
+                setInterval(async () => {
+                    await checkSubscriptionNotifications(user.id);
+                    await checkInvoiceNotifications(user.id); // <-- Added for invoice due/overdue
+                    // Refresh notifications list
+                    const { data, error } = await window.supabase
+                        .from('notifications')
+                        .select('*')
+                        .eq('user_id', user.id)
+                        .order('created_at', { ascending: false });
+                    
+                    if (!error && data) {
+                        notifications = data;
+                        updateNotificationsDisplay();
+                        updateUnreadCount();
+                    }
+                }, 60 * 60 * 1000); // Check every hour
+            }
+        });
+
+        // Sign out handler
+        document.getElementById('sign-out-btn')?.addEventListener('click', () => {
+            window.supabase.auth.signOut();
+        });
+
+        // Make functions available globally
+        window.markAsRead = markAsRead;
+        window.deleteNotification = deleteNotification;
+    </script>
+</body>
+</html>

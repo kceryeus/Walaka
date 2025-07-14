@@ -8,6 +8,9 @@
   <link rel="stylesheet" href="css/style.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
   <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+  <script src="js/dashboard.js"></script>
+  <link rel="icon" type="image/png" href="assets/images/walaka-assistant.PNG">
 </head>
 <body>
   <!-- Header -->
@@ -48,7 +51,7 @@
 
           <div class="auth-buttons">
             <a href="login.html" class="login-btn" data-en="Login" data-pt="Entrar">Login</a>
-            <a href="trial/trial_dashboard.html" class="get-started-btn" data-en="Get Started" data-pt="Começar">Get Started</a>
+            <a href="trial/login.html" class="get-started-btn" data-en="Get Started" data-pt="Começar">Get Started</a>
           </div>
 
           <button class="mobile-menu-btn" id="mobile-menu-btn">
@@ -67,8 +70,8 @@
           <li><a href="#contact" class="nav-link" data-en="Contact" data-pt="Contacto">Contact</a></li>
         </ul>
         <div class="mobile-buttons">
-          <a href="#" class="login-btn" data-en="Login" data-pt="Entrar">Login</a>
-          <a href="#" class="get-started-btn" data-en="Get Started" data-pt="Começar">Get Started</a>
+          <a href="login.html" class="login-btn" data-en="Login" data-pt="Entrar">Login</a>
+          <a href="trial/login.html" class="get-started-btn" data-en="Get Started" data-pt="Começar">Get Started</a>
         </div>
       </div>
     </div>
@@ -86,7 +89,7 @@
             Create professional invoices, manage taxes, and get paid faster — all in one place. The unified business management platform designed for modern companies in Mozambique.
           </p>
           <div class="hero-buttons">
-            <a href="#start" class="primary-btn" data-en="Start Free Trial" data-pt="Iniciar Teste Gratuito">
+            <a href="trial/login.html" class="primary-btn" data-en="Start Free Trial" data-pt="Iniciar Teste Gratuito">
               Start Free Trial
             </a>
             <a href="#demo" class="secondary-btn demo-btn" data-en="Explore Demo" data-pt="Explorar Demonstração">

@@ -1,0 +1,394 @@
+<!--
+    Template 04
+    Author: Walaka
+    Date: 2025-07-10
+    Description: Factura Template
+
+<!DOCTYPE html>
+<html lang="pt-MZ">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Factura Nº {{ invoice_number }}</title>
+    <style>
+        :root {
+            --cor-primaria: #004A99; /* Azul Escuro */
+            --cor-secundaria: #F0F8FF; /* Azul Alice Muito Claro */
+            --cor-texto: #333333;
+            --cor-borda: #DDDDDD;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #EFEFEF;
+            color: var(--cor-texto);
+            line-height: 1.6;
+        }
+
+        .recipiente-factura {
+            width: 21cm;
+            min-height: 29.7cm; /* Ensure at least A4 height */
+            background-color: #FFFFFF;
+            margin: 30px auto; /* Center on screen */
+            padding: 2.5cm; /* Padding for screen */
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+            box-sizing: border-box;
+        }
+
+        .cabecalho-factura {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            border-bottom: 3px solid var(--cor-primaria);
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+        }
+
+        .cabecalho-factura .logotipo-empresa {
+            font-size: 28px;
+            font-weight: bold;
+            color: var(--cor-primaria);
+        }
+
+        .cabecalho-factura .titulo-factura {
+            font-size: 26px;
+            font-weight: bold;
+            color: var(--cor-primaria);
+            text-align: right;
+        }
+
+        .informacao-factura {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 30px;
+            background-color: var(--cor-secundaria);
+            padding: 20px;
+            border-radius: 8px;
+        }
+
+        .informacao-factura .dados-cliente,
+        .informacao-factura .detalhes-documento {
+            width: 48%;
+            font-size: 14px;
+        }
+
+        .informacao-factura h2 {
+            font-size: 18px;
+            font-weight: bold;
+            color: var(--cor-primaria);
+            margin-top: 0;
+            margin-bottom: 10px;
+            border-bottom: 1px solid var(--cor-borda);
+            padding-bottom: 5px;
+        }
+
+        .informacao-factura p {
+            margin-bottom: 5px;
+        }
+        .informacao-factura .etiqueta {
+            font-weight: bold;
+            min-width: 100px;
+            display: inline-block;
+        }
+
+        .tabela-itens {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 30px;
+            table-layout: fixed; /* Ensure column widths are respected */
+        }
+
+        .tabela-itens th,
+        .tabela-itens td {
+            border: 1px solid var(--cor-borda);
+            padding: 10px 12px; /* Keep existing padding */
+            text-align: left;
+            font-size: 14px;
+            word-wrap: break-word; /* Prevent long words from overflowing */
+            overflow-wrap: break-word; /* Alternative for wrapping */
+        }
+
+        .tabela-itens th {
+            background-color: var(--cor-primaria);
+            color: #FFFFFF;
+            font-weight: bold;
+        }
+
+        .tabela-itens tbody tr:nth-child(even) {
+            background-color: var(--cor-secundaria);
+        }
+
+        .tabela-itens .alinhar-direita {
+            text-align: right;
+        }
+
+        /* Set explicit column widths */
+         .tabela-itens th:nth-child(1) { width: 50%; } /* Descrição */
+         .tabela-itens th:nth-child(2) { width: 10%; } /* Quant. */
+         .tabela-itens th:nth-child(3) { width: 15%; } /* Preço Unit. */
+         .tabela-itens th:nth-child(4) { width: 10%; } /* IVA (%) */
+         .tabela-itens th:nth-child(5) { width: 15%; } /* Total */
+
+        .seccao-totais {
+            display: flex;
+            justify-content: flex-end;
+            margin-bottom: 30px;
+        }
+
+        .seccao-totais table {
+            width: 40%;
+            border-collapse: collapse;
+        }
+
+        .seccao-totais td {
+            padding: 8px 12px;
+            font-size: 14px;
+        }
+
+        .seccao-totais .etiqueta-total {
+            font-weight: bold;
+            text-align: right;
+        }
+        .seccao-totais .valor-total {
+            text-align: right;
+            font-weight: bold;
+        }
+         .seccao-totais .valor-total.grande {
+            font-size: 18px;
+            color: var(--cor-primaria);
+        }
+
+
+        .seccao-notas {
+            margin-bottom: 30px;
+            padding: 15px;
+            background-color: var(--cor-secundaria);
+            border-left: 4px solid var(--cor-primaria);
+            border-radius: 0 8px 8px 0;
+        }
+
+        .seccao-notas h3 {
+            font-size: 16px;
+            color: var(--cor-primaria);
+            margin-top: 0;
+            margin-bottom: 8px;
+        }
+
+        .seccao-notas p {
+            font-size: 13px;
+            margin: 0;
+        }
+
+        .informacao-empresa-rodape {
+            border-top: 1px solid var(--cor-borda);
+            padding-top: 20px;
+            margin-bottom: 20px;
+            font-size: 13px;
+        }
+        .informacao-empresa-rodape h2 {
+            font-size: 16px;
+            color: var(--cor-primaria);
+            margin-top: 0;
+            margin-bottom: 10px;
+        }
+        .informacao-empresa-rodape .linha-info {
+            margin-bottom: 4px;
+        }
+        .informacao-empresa-rodape .etiqueta-info {
+            font-weight: bold;
+            min-width: 80px;
+            display: inline-block;
+        }
+
+        .rodape-factura {
+            text-align: center;
+            font-size: 12px;
+            color: #777777;
+            border-top: 1px solid var(--cor-borda);
+            padding-top: 20px;
+        }
+
+        @media print {
+            body {
+                background-color: #FFFFFF;
+                width: 210mm;
+                height: 297mm;
+                margin: 0;
+                padding: 0;
+                overflow: hidden; /* Prevent scrollbars in print */
+            }
+            .recipiente-factura {
+                margin: 0 !important; /* Remove margin in print */
+                box-shadow: none !important;
+                padding: 1.5cm !important; /* Use consistent padding for print margins */
+                width: 210mm !important; /* Full A4 width in print */
+                min-height: 297mm !important; /* Ensure at least A4 height in print */
+                box-sizing: border-box !important;
+            }
+             /* Ensure table and its content fit within the print area */
+            .tabela-itens {
+                width: 100% !important;
+                box-sizing: border-box !important;
+                table-layout: fixed !important; /* Enforce fixed layout */
+                border-collapse: collapse !important;
+            }
+            .tabela-itens th,
+            .tabela-itens td {
+                 padding: 10px !important; /* Consistent padding */
+                 box-sizing: border-box !important;
+                 word-wrap: break-word !important; /* Ensure wrapping */
+                 overflow-wrap: break-word !important; /* Alternative wrapping */
+                 max-width: 0 !important; /* Allow shrinking */
+                 white-space: normal !important; /* Allow wrapping */
+            }
+              /* Fine-tune column widths for print if needed */
+            .tabela-itens th:nth-child(1) { width: 50% !important; } /* Descrição */
+            .tabela-itens th:nth-child(2) { width: 10% !important; } /* Quant. */
+            .tabela-itens th:nth-child(3) { width: 15% !important; } /* Preço Unit. */
+            .tabela-itens th:nth-child(4) { width: 10% !important; } /* IVA (%) */
+            .tabela-itens th:nth-child(5) { width: 15% !important; } /* Total */
+
+             /* Adjust footer positioning if needed */
+             .rodape-factura {
+                 position: absolute !important;
+                 bottom: 1.5cm !important; /* Position from bottom margin */
+                 left: 1.5cm !important;
+                 right: 1.5cm !important;
+                 width: auto !important;
+                 text-align: center !important;
+             }
+             .seccao-notas {
+                 margin-bottom: 40mm !important; /* Add space above footer */
+             }
+        }
+    </style>
+</head>
+<body>
+    <div class="recipiente-factura">
+        <header class="cabecalho-factura">
+            <div class="logotipo-empresa" id="company-logo-placeholder">NOME DA SUA EMPRESA</div>
+            <div class="titulo-factura">FACTURA</div>
+        </header>
+
+        <section class="informacao-factura">
+            <div class="dados-cliente">
+                <h2>Facturar a</h2>
+                <p><span class="etiqueta">Cliente:</span> <span id="client-name">{{clientName}}</span></p>
+                <p><span class="etiqueta">Endereço:</span> <span id="client-address">{{clientAddress}}</span></p>
+                <p><span class="etiqueta">NUIT:</span> <span id="client-nuit">{{clientTaxId}}</span></p>
+                <p><span class="etiqueta">Email:</span> <span id="client-email">{{clientEmail}}</span></p>
+            </div>
+            <div class="detalhes-documento">
+                <h2>Detalhes da Factura</h2>
+                <p><span class="etiqueta">Factura Nº:</span> <span id="invoice-number">{{invoiceNumber}}</span></p>
+                <p><span class="etiqueta">Data Emissão:</span> <span id="issue-date">{{issueDate}}</span></p>
+                <p><span class="etiqueta">Data Venc.:</span> <span id="due-date">{{dueDate}}</span></p>
+                <p><span class="etiqueta">Estado:</span> <span id="invoice-status">Pendente</span></p>
+            </div>
+        </section>
+
+        <table class="tabela-itens">
+            <thead>
+                <tr>
+                    <th>Descrição</th>
+                    <th class="alinhar-direita">Quant.</th>
+                    <th class="alinhar-direita">Preço Unit.</th>
+                    <th class="alinhar-direita">IVA (%)</th>
+                    <th class="alinhar-direita">Total</th>
+                </tr>
+            </thead>
+            <tbody id="invoice-items">
+                <tr>
+                    <td>Exemplo de Item 1</td>
+                    <td class="alinhar-direita">2</td>
+                    <td class="alinhar-direita">1,500.00</td>
+                    <td class="alinhar-direita">17</td>
+                    <td class="alinhar-direita">3,510.00</td>
+                </tr>
+                <tr>
+                    <td>Exemplo de Item 2 mais longo para testar o alinhamento do texto</td>
+                    <td class="alinhar-direita">1</td>
+                    <td class="alinhar-direita">5,000.00</td>
+                    <td class="alinhar-direita">17</td>
+                    <td class="alinhar-direita">5,850.00</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <section class="seccao-totais">
+            <table>
+                <tr>
+                    <td class="etiqueta-total">Subtotal:</td>
+                    <td class="valor-total" id="subtotal">MZN {{subtotal}}</td>
+                </tr>
+                <tr>
+                    <td class="etiqueta-total">IVA (17%):</td>
+                    <td class="valor-total" id="totalVat">MZN {{totalVat}}</td>
+                </tr>
+                <tr>
+                    <td class="etiqueta-total">Total Geral:</td>
+                    <td class="valor-total grande" id="total">MZN {{total}}</td>
+                </tr>
+            </table>
+        </section>
+
+        <section class="seccao-notas">
+            <h3>Notas</h3>
+            <p id="notes">{{notes}}</p>
+        </section>
+
+        <section class="informacao-empresa-rodape">
+            <h2>Informação da Empresa</h2>
+            <div class="linha-info">
+                <span class="etiqueta-info">Empresa:</span>
+                <span class="info-valor" id="company-name-footer">Nome da Sua Empresa</span>
+            </div>
+            <div class="linha-info">
+                <span class="etiqueta-info">Endereço:</span>
+                <span class="info-valor" id="company-address">Seu Endereço Completo, Cidade, Província</span>
+            </div>
+            <div class="linha-info">
+                <span class="etiqueta-info">NUIT:</span>
+                <span class="info-valor" id="company-nuit-footer">000000000</span>
+            </div>
+            <div class="linha-info">
+                <span class="etiqueta-info">Email:</span>
+                <span class="info-valor" id="company-email-footer">seuemail@empresa.co.mz</span>
+            </div>
+            <div class="linha-info">
+                <span class="etiqueta-info">Telefone:</span>
+                <span class="info-valor" id="company-phone">+258 XX XXX XXXX</span>
+            </div>
+        </section>
+
+        <footer class="rodape-factura">
+            <p>Obrigado pela sua preferência!</p>
+            <p>Software de Facturação Certificado Nº: <span id="software-cert-no">AT-XXXX-XXXX</span></p>
+            <p>Hash do Documento: <span id="invoice-hash">XXXXXXXX</span></p>
+        </footer>
+    </div>
+
+    <script>
+        // O JavaScript original pode ser adaptado para preencher estes campos.
+        // Certifique-se que os IDs correspondem.
+        // Exemplo de como preencher os dados (simplificado):
+        // document.getElementById('client-name').textContent = dadosFactura.clientName;
+        // ... e assim por diante para todos os campos.
+
+        // Funções como formatDate e formatCurrency do script original podem ser mantidas e usadas.
+        // Lembre-se de ajustar o locale para 'pt-MZ' se necessário para formatação de moeda e data.
+        // Exemplo:
+        // function formatCurrency(amount, currency = 'MZN') {
+        //     if (typeof amount !== 'number') {
+        //         amount = parseFloat(amount) || 0;
+        //     }
+        //     return new Intl.NumberFormat('pt-MZ', { // Alterado para pt-MZ
+        //         style: 'currency',
+        //         currency: currency
+        //     }).format(amount);
+        // }
+    </script>
+</body>
+</html>

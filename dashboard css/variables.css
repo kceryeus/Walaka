@@ -1,5 +1,5 @@
-:root {
-  /* Colors */
+/*:root {
+  /* Colors 
   --white: rgba(255, 255, 255, 1);
   --black: rgba(0, 0, 0, 1);
   --greybackground: rgba(248, 250, 252, 1);
@@ -14,7 +14,7 @@
   --grey-900: rgba(15, 23, 42, 1);
   --greytext-dark: rgba(2, 6, 23, 1);
   
-  /* Primary colors */
+  /* Primary colors 
   --primary-50: rgba(239, 246, 255, 1);
   --primary-100: rgba(224, 242, 254, 1);
   --primary-200: rgba(191, 219, 254, 1);
@@ -27,7 +27,7 @@
   --primary-900: rgba(30, 58, 138, 1);
   --primary-950: rgba(23, 37, 84, 1);
   
-  /* Active/Success colors */
+  /* Active/Success colors 
   --active-50: rgba(240, 253, 244, 1);
   --active-100: rgba(220, 252, 231, 1);
   --active-200: rgba(187, 247, 208, 1);
@@ -40,7 +40,7 @@
   --active-900: rgba(20, 83, 45, 1);
   --active-950: rgba(5, 46, 22, 1);
   
-  /* Error colors */
+  /* Error colors 
   --error-50: rgba(254, 242, 242, 1);
   --error-100: rgba(254, 226, 226, 1);
   --error-200: rgba(254, 202, 202, 1);
@@ -53,7 +53,7 @@
   --error-900: rgba(127, 29, 29, 1);
   --error-950: rgba(69, 10, 10, 1);
   
-  /* Warning colors */
+  /* Warning colors 
   --warning-50: rgba(254, 252, 232, 1);
   --warning-100: rgba(254, 249, 195, 1);
   --warning-200: rgba(254, 240, 138, 1);
@@ -66,12 +66,12 @@
   --warning-900: rgba(113, 63, 18, 1);
   --warning-950: rgba(66, 32, 6, 1);
   
-  /* Neutral colors */
+  /* Neutral colors 
   --neutral-colors200: rgba(246, 248, 252, 1);
   --neutral-colors300: rgba(235, 239, 246, 1);
   --neutral-colors800: rgba(25, 33, 61, 1);
   
-  /* Typography */
+  /* Typography 
   --heading-1-font-family: "Inter", Helvetica;
   --heading-1-font-weight: 700;
   --heading-1-font-size: 40px;
@@ -131,20 +131,21 @@
   --label-font-size: 12px;
   --label-letter-spacing: 0px;
   --label-line-height: normal;
-  
-  /* Shadows */
+
+  /* Shadows 
   --shadow: 0px 0px 8px 0px rgba(59, 130, 246, 0.12);
   --card-shadow: 0px 1px 3px rgba(0, 0, 0, 0.1), 0px 1px 2px rgba(0, 0, 0, 0.06);
   --dropdown-shadow: 0px 4px 6px -1px rgba(0, 0, 0, 0.1), 0px 2px 4px -1px rgba(0, 0, 0, 0.06);
   
-  /* Transitions */
+  /* Transitions 
   --transition-fast: 0.15s ease;
   --transition-medium: 0.25s ease;
   --transition-slow: 0.35s ease;
   
-  /* Z-index layers */
+ /*Z-index layers 
   --z-dropdown: 1000;
   --z-sidebar: 1100;
   --z-modal: 1200;
   --z-tooltip: 1300;
 }
+*/

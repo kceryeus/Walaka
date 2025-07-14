@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WALAKA - Criar Fatura</title>
+    <title data-translate="create_invoice_title">WALAKA - Create Invoice</title>
     
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
@@ -11,7 +11,7 @@
     
     <link rel="stylesheet" href="css/styles.css">
     <link rel="stylesheet" href="css/invoice.css">
-    <script src="https://cdn.supabase.com/supabase-js-v2.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         /* Estilos CSS para o dropdown */
         .select-wrapper {
@@ -125,75 +125,75 @@
             <div class="nav-menu">
                 <a href="index.html" class="nav-item">
                     <i class="fas fa-home"></i>
-                    <span>Dashboard</span>
+                    <span data-translate="dashboard">Dashboard</span>
                 </a>
                 
                 <div class="nav-section">
-                    <h3>Invoices & Sales</h3>
+                    <h3 data-translate="invoices_sales">Invoices & Sales</h3>
                 </div>
                 <a href="invoices.html" class="nav-item active">
                     <i class="fas fa-file-invoice-dollar"></i>
-                    <span>Invoices</span>
+                    <span data-translate="invoices">Invoices</span>
                 </a>
                 <a href="products.html" class="nav-item">
                     <i class="fas fa-shopping-cart"></i>
-                    <span>Products</span>
+                    <span data-translate="products">Products</span>
                 </a>
                 <a href="clients/clients/clients.html" class="nav-item">
                     <i class="fas fa-users"></i>
-                    <span>Clients</span>
+                    <span data-translate="clients">Clients</span>
                 </a>
                 <a href="#" class="nav-item">
                     <i class="fas fa-percentage"></i>
-                    <span>Taxes</span>
+                    <span data-translate="taxes">Taxes</span>
                 </a>
                 
                 <div class="nav-section">
-                    <h3>Finances</h3>
+                    <h3 data-translate="finances">Finances</h3>
                 </div>
                 <a href="#" class="nav-item">
                     <i class="fas fa-money-bill-wave"></i>
-                    <span>Expenses</span>
+                    <span data-translate="expenses">Expenses</span>
                 </a>
                 <a href="#" class="nav-item">
                     <i class="fas fa-chart-pie"></i>
-                    <span>Reports</span>
+                    <span data-translate="reports">Reports</span>
                 </a>
                 <a href="#" class="nav-item">
                     <i class="fas fa-hand-holding-usd"></i>
-                    <span>Payments</span>
+                    <span data-translate="payments">Payments</span>
                 </a>
                 
                 <div class="nav-section">
-                    <h3>Inventory</h3>
+                    <h3 data-translate="inventory">Inventory</h3>
                 </div>
                 <a href="#" class="nav-item">
                     <i class="fas fa-boxes"></i>
-                    <span>Stock</span>
+                    <span data-translate="stock">Stock</span>
                 </a>
                 <a href="#" class="nav-item">
                     <i class="fas fa-truck"></i>
-                    <span>Suppliers</span>
+                    <span data-translate="suppliers">Suppliers</span>
                 </a>
                 <a href="#" class="nav-item">
                     <i class="fas fa-exchange-alt"></i>
-                    <span>Movements</span>
+                    <span data-translate="movements">Movements</span>
                 </a>
                 
                 <div class="nav-section">
-                    <h3>Settings</h3>
+                    <h3 data-translate="settings">Settings</h3>
                 </div>
                 <a href="#" class="nav-item">
                     <i class="fas fa-cog"></i>
-                    <span>Settings</span>
+                    <span data-translate="settings">Settings</span>
                 </a>
                 <a href="#" class="nav-item">
                     <i class="fas fa-user-cog"></i>
-                    <span>Account</span>
+                    <span data-translate="account">Account</span>
                 </a>
                 <a href="#" class="nav-item">
                     <i class="fas fa-question-circle"></i>
-                    <span>Help</span>
+                    <span data-translate="help">Help</span>
                 </a>
             </div>
         </nav>
@@ -205,7 +205,7 @@
                 </button>
                 
                 <div class="search-bar">
-                    <input type="text" placeholder="Search...">
+                    <input type="text" data-translate-placeholder="search_placeholder" placeholder="Search...">
                 </div>
                 
                 <div class="user-menu">
@@ -221,13 +221,13 @@
                         <span>John Doe</span>
                         <div class="dropdown-menu">
                             <a href="#">
-                                <i class="fas fa-user-circle"></i> My Profile
+                                <i class="fas fa-user-circle"></i> <span data-translate="my_profile">My Profile</span>
                             </a>
                             <a href="#">
-                                <i class="fas fa-cog"></i> Settings
+                                <i class="fas fa-cog"></i> <span data-translate="settings">Settings</span>
                             </a>
                             <a href="#">
-                                <i class="fas fa-sign-out-alt"></i> Logout
+                                <i class="fas fa-sign-out-alt"></i> <span data-translate="logout">Logout</span>
                             </a>
                         </div>
                     </div>
@@ -236,20 +236,20 @@
             
             <div class="page-header">
                 <div>
-                    <h2>Create Invoice</h2>
-                    <p class="subtitle">Fill out the form below to create a new invoice</p>
+                    <h2 data-translate="create_invoice">Create Invoice</h2>
+                    <p class="subtitle" data-translate="create_invoice_subtitle">Fill out the form below to create a new invoice</p>
                 </div>
                 <div class="action-buttons">
                     <a href="invoices.html" class="btn secondary-btn">
-                        <i class="fas fa-arrow-left"></i> Back to Invoices
+                        <i class="fas fa-arrow-left"></i> <span data-translate="back_to_invoices">Back to Invoices</span>
                     </a>
                 </div>
             </div>
             
             <div class="page-header">
                 <div>
-                    <h2>Existing Invoices</h2>
-                    <p class="subtitle">A list of existing invoices</p>
+                    <h2 data-translate="existing_invoices">Existing Invoices</h2>
+                    <p class="subtitle" data-translate="existing_invoices_subtitle">A list of existing invoices</p>
                 </div>
             </div>
             <div id="invoices-container">
@@ -259,65 +259,65 @@
                 <form id="invoiceForm" class="create-invoice-form">
                     <div class="form-grid">
                         <div class="form-section">
-                            <h3>Client Information</h3>
+                            <h3 data-translate="client_information">Client Information</h3>
                             <div class="form-row">
                                 <div class="form-group">
-                                    <label for="clientSelect">Nome do Cliente/Empresa</label>
+                                    <label for="clientSelect" data-translate="client_name_company">Client Name/Company</label>
                                     <div class="select-wrapper" id="clientSelectWrapper">
                                         <div class="select-trigger">
-                                            <span>Selecione um cliente</span>
+                                            <span data-translate="select_a_client">Select a client</span>
                                             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>
                                         </div>
                                         <div class="select-options">
                                             <select id="clientSelect" required>
-                                                <option value="" disabled selected>Selecione um cliente</option>
+                                                <option value="" disabled selected data-translate="select_a_client">Select a client</option>
                                             </select>
                                             <ul>
                                             </ul>
                                         </div>
                                     </div>
-                                    <button type="button" class="btn secondary-btn" id="addClientBtn" onclick="redirectToClients()">
-                                        <i class="fas fa-plus"></i> Add Client
+                                    <button type="button" class="btn secondary-btn" id="addClientBtn">
+                                        <i class="fas fa-plus"></i> <span data-translate="add_client">Add Client</span>
                                     </button>
                                 </div>
                                 <div class="form-group">
-                                    <label for="clientEmail">Email</label>
-                                    <input type="email" id="clientEmail" placeholder="client@example.com">
+                                    <label for="clientEmail" data-translate="email">Email</label>
+                                    <input type="email" id="clientEmail" data-translate-placeholder="client_email_placeholder" placeholder="client@example.com">
                                 </div>
                             </div>
                             <div class="form-row">
                                 <div class="form-group">
-                                    <label for="clientAddress">Address</label>
-                                    <textarea id="clientAddress" rows="3" placeholder="Client's full address"></textarea>
+                                    <label for="clientAddress" data-translate="address">Address</label>
+                                    <textarea id="clientAddress" rows="3" data-translate-placeholder="client_address_placeholder" placeholder="Client's full address"></textarea>
                                 </div>
                             </div>
                             <div class="form-row">
                                 <div class="form-group">
-                                    <label for="clientTaxId">Tax ID (NUIT)</label>
-                                    <input type="text" id="clientTaxId" placeholder="e.g. 123456789">
+                                    <label for="clientTaxId" data-translate="tax_id_nuit">Tax ID (NUIT)</label>
+                                    <input type="text" id="clientTaxId" data-translate-placeholder="tax_id_placeholder" placeholder="e.g. 123456789">
                                 </div>
                             </div>
                         </div>
                         
                         <div class="form-section">
-                            <h3>Invoice Details</h3>
+                            <h3 data-translate="invoice_details">Invoice Details</h3>
                             <div class="form-row">
                                 <div class="form-group">
-                                    <label for="invoiceNumber">Invoice Number</label>
-                                    <input type="text" id="invoiceNumber" value="INV-2025-0007" readonly>
+                                    <label for="invoiceNumber" data-translate="invoice_number">Invoice Number</label>
+                                    <input type="text" id="invoiceNumber" data-translate-value="generating_invoice_number" value="Generating invoice number" readonly>
                                 </div>
                                 <div class="form-group">
-                                    <label for="issueDate">Issue Date</label>
+                                    <label for="issueDate" data-translate="issue_date">Issue Date</label>
                                     <input type="date" id="issueDate" value="2025-03-25" required>
                                 </div>
                             </div>
                             <div class="form-row">
                                 <div class="form-group">
-                                    <label for="dueDate">Due Date</label>
+                                    <label for="dueDate" data-translate="due_date">Due Date</label>
                                     <input type="date" id="dueDate" required>
                                 </div>
                                 <div class="form-group">
-                                    <label for="currency">Currency</label>
+                                    <label for="currency" data-translate="currency">Currency</label>
                                     <select id="currency" required>
                                         <option value="USD" selected>USD - US Dollar</option>
                                         <option value="EUR">EUR - Euro</option>
@@ -328,52 +328,52 @@
                             </div>
                             <div class="form-row">
                                 <div class="form-group">
-                                    <label for="paymentTerms">Payment Terms</label>
+                                    <label for="paymentTerms" data-translate="payment_terms">Payment Terms</label>
                                     <select id="paymentTerms" required>
-                                        <option value="net30" selected>Net 30 - Due in 30 days</option>
-                                        <option value="net15">Net 15 - Due in 15 days</option>
-                                        <option value="net60">Net 60 - Due in 60 days</option>
-                                        <option value="custom">Custom</option>
+                                        <option value="net30" selected data-translate="net_30">Net 30 - Due in 30 days</option>
+                                        <option value="net15" data-translate="net_15">Net 15 - Due in 15 days</option>
+                                        <option value="net60" data-translate="net_60">Net 60 - Due in 60 days</option>
+                                        <option value="custom" data-translate="custom">Custom</option>
                                     </select>
                                 </div>
                             </div>
                             <div class="form-row">
                                 <div class="form-group">
-                                    <label for="issuerName">Issuer Name</label>
-                                    <input type="text" id="issuerName" placeholder="Issuer Name" required>
+                                    <label for="issuerName" data-translate="issuer_name">Issuer Name</label>
+                                    <input type="text" id="issuerName" data-translate-placeholder="issuer_name_placeholder" placeholder="Issuer Name" required>
                                 </div>
                                 <div class="form-group">
-                                    <label for="issuerNuit">Issuer NUIT</label>
-                                    <input type="text" id="issuerNuit" placeholder="Issuer NUIT">
+                                    <label for="issuerNuit" data-translate="issuer_nuit">Issuer NUIT</label>
+                                    <input type="text" id="issuerNuit" data-translate-placeholder="issuer_nuit_placeholder" placeholder="Issuer NUIT">
                                 </div>
                             </div>
                             <div class="form-row">
                                  <div class="form-group">
-                                    <label for="issuerAddress">Issuer Address</label>
-                                    <textarea id="issuerAddress" rows="2" placeholder="Issuer Address"></textarea>
+                                    <label for="issuerAddress" data-translate="issuer_address">Issuer Address</label>
+                                    <textarea id="issuerAddress" rows="2" data-translate-placeholder="issuer_address_placeholder" placeholder="Issuer Address"></textarea>
                                 </div>
                             </div>
                         </div>
                     </div>
                     
                     <div class="form-section">
-                        <h3>Items</h3>
+                        <h3 data-translate="items">Items</h3>
                         <div class="items-table-container">
                             <table id="itemsTable" class="items-table">
                                 <thead>
                                     <tr>
-                                        <th width="40%">Description</th>
-                                        <th width="15%">Quantity</th>
-                                        <th width="15%">Unit Price</th>
-                                        <th width="10%">VAT (16%)</th>
-                                        <th width="15%">Total</th>
+                                        <th width="40%" data-translate="description">Description</th>
+                                        <th width="15%" data-translate="quantity">Quantity</th>
+                                        <th width="15%" data-translate="unit_price">Unit Price</th>
+                                        <th width="10%" data-translate="vat_16">VAT (16%)</th>
+                                        <th width="15%" data-translate="total">Total</th>
                                         <th width="5%"></th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     <tr class="item-row">
                                         <td>
-                                            <input type="text" class="item-description" placeholder="Enter item description">
+                                            <input type="text" class="item-description" data-translate-placeholder="item_description_placeholder" placeholder="Enter item description">
                                         </td>
                                         <td>
                                             <input type="number" class="item-quantity" value="1" min="1" step="1">
@@ -397,56 +397,56 @@
                             </table>
                         </div>
                         <button type="button" id="addItemBtn" class="btn secondary-btn">
-                            <i class="fas fa-plus"></i> Add Item
+                            <i class="fas fa-plus"></i> <span data-translate="add_item">Add Item</span>
                         </button>
                         
                         <div class="invoice-totals">
                             <div class="totals-row">
-                                <span>Subtotal:</span>
+                                <span data-translate="subtotal">Subtotal:</span>
                                 <span id="subtotal">0.00</span>
                             </div>
                             <div class="totals-row">
-                                <span>VAT (16%):</span>
+                                <span data-translate="vat_16_total">VAT (16%):</span>
                                 <span id="totalVat">0.00</span>
                             </div>
                             <div class="totals-row">
-                                <span>Total:</span>
+                                <span data-translate="total">Total:</span>
                                 <span id="invoiceTotal">0.00</span>
                             </div>
                         </div>
                     </div>
                     
                     <div class="form-section">
-                        <h3>Notes & Terms</h3>
+                        <h3 data-translate="notes_terms">Notes & Terms</h3>
                         <div class="form-row">
                             <div class="form-group">
-                                <label for="notes">Additional Notes</label>
-                                <textarea id="notes" rows="3" placeholder="Add any additional notes or terms..."></textarea>
+                                <label for="notes" data-translate="additional_notes">Additional Notes</label>
+                                <textarea id="notes" rows="3" data-translate-placeholder="additional_notes_placeholder" placeholder="Add any additional notes or terms..."></textarea>
                             </div>
                         </div>
                         <div class="form-row">
                             <div class="form-group">
-                                <label for="paymentConditions">Payment Conditions</label>
-                                <textarea id="paymentConditions" rows="2" placeholder="Payment Conditions"></textarea>
+                                <label for="paymentConditions" data-translate="payment_conditions">Payment Conditions</label>
+                                <textarea id="paymentConditions" rows="2" data-translate-placeholder="payment_conditions_placeholder" placeholder="Payment Conditions"></textarea>
                             </div>
                         </div>
                         <div class="form-row">
                             <div class="form-group">
-                                <label for="legalInfo">Legal Information</label>
-                                <textarea id="legalInfo" rows="2" placeholder="Legal Information"></textarea>
+                                <label for="legalInfo" data-translate="legal_information">Legal Information</label>
+                                <textarea id="legalInfo" rows="2" data-translate-placeholder="legal_information_placeholder" placeholder="Legal Information"></textarea>
                             </div>
                         </div>
                     </div>
                     
                     <div class="form-footer">
                         <button type="button" class="btn secondary-btn" id="chooseTemplate">
-                            <i class="fas fa-save"></i> Choose Template
+                            <i class="fas fa-save"></i> <span data-translate="choose_template">Choose Template</span>
                         </button>
                         <button type="button" class="btn secondary-btn" id="previewInvoiceBtn">
-                            <i class="fas fa-eye"></i> Preview
+                            <i class="fas fa-eye"></i> <span data-translate="preview">Preview</span>
                         </button>
                         <button type="submit" class="btn primary-btn">
-                            <i class="fas fa-check"></i> Create Invoice
+                            <i class="fas fa-check"></i> <span data-translate="create_invoice">Create Invoice</span>
                         </button>
                     </div>
                 </form>
@@ -456,18 +456,28 @@
 
     <script src="js/dashboard.js"></script>
     <script src="js/invoice.js"></script>
+    <script src="js/invoicescripts/templateManager.js"></script>
     <script>
         // Initialize the Supabase client
         const SUPABASE_URL = 'https://icirwhacigwjrxisvayj.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImljaXJ3aGFjaWd3anJ4aXN2YXlqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzkyNzc5NzQsImV4cCI6MjA1NDg1Mzk3NH0.A8bVciC-NDwYoWMP8ijXBgNlEplYNTf6VGVe5G7SnFk';
 
-        const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        let supabase;
+        
+        // Wait for Supabase to be available
+        function initializeSupabase() {
+            if (window.supabase) {
+                supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+                return true;
+            }
+            return false;
+        }
 
         // Função para buscar clientes do Supabase
         async function fetchClients() {
             const { data: clients, error } = await supabase
                 .from('clients')
-                .select('id, client_name');
+                .select('customer_id, customer_name');
 
             if (error) {
                 console.error('Erro ao buscar clientes:', error);
@@ -486,13 +496,13 @@
 
             clients.forEach(client => {
                 const option = document.createElement('option');
-                option.value = client.id;
-                option.textContent = client.client_name;
+                option.value = client.customer_id;
+                option.textContent = client.customer_name;
                 clientSelect.appendChild(option);
 
                 const li = document.createElement('li');
-                li.textContent = client.client_name;
-                li.dataset.value = client.id;  // Armazena o ID do cliente no dataset
+                li.textContent = client.customer_name;
+                li.dataset.value = client.customer_id;  // Armazena o ID do cliente no dataset
                 clientSelectOptionsList.appendChild(li);
             });
 
@@ -511,7 +521,7 @@
                 }
             });
 
-            selectOptions.addEventListener('click', (event) => {
+            selectOptions.addEventListener('click', async (event) => {
                 if (event.target.tagName === 'LI') {
                     const value = event.target.dataset.value;
                     const text = event.target.textContent;
@@ -519,6 +529,25 @@
                     clientSelect.value = value;
                     selectTriggerSpan.textContent = text;
                     selectWrapper.classList.remove('open');
+                    
+                    // If a client is selected, fetch and populate client details
+                    if (value) {
+                        try {
+                            const { data: client, error } = await supabase
+                                .from('clients')
+                                .select('*')
+                                .eq('customer_id', value)
+                                .single();
+                            
+                            if (error) throw error;
+                            
+                            if (client) {
+                                populateClientFields(client);
+                            }
+                        } catch (error) {
+                            console.error('Error fetching client details:', error);
+                        }
+                    }
                 }
             });
 
@@ -530,10 +559,159 @@
             });
 
             // Atualiza o texto do trigger quando o select আসল mudado via teclado ou outro método
-            clientSelect.addEventListener('change', () => {
+            clientSelect.addEventListener('change', async () => {
                 const selectedOptionText = clientSelect.options[clientSelect.selectedIndex].text;
                 selectTriggerSpan.textContent = selectedOptionText;
+                
+                // If a client is selected, fetch and populate client details
+                const selectedClientId = clientSelect.value;
+                if (selectedClientId) {
+                    try {
+                        const { data: client, error } = await supabase
+                            .from('clients')
+                            .select('*')
+                            .eq('customer_id', selectedClientId)
+                            .single();
+                        
+                        if (error) throw error;
+                        
+                        if (client) {
+                            populateClientFields(client);
+                        }
+                    } catch (error) {
+                        console.error('Error fetching client details:', error);
+                    }
+                }
             });
+        }
+
+        // Quick Add Client Modal Functionality
+        let newlyCreatedClient = null;
+
+        function showQuickAddClientModal() {
+            const modal = document.getElementById('quickAddClientModal');
+            modal.style.display = 'block';
+            
+            // Reset form
+            document.getElementById('quickClientForm').reset();
+            
+            // Set default values
+            document.querySelector('input[name="quick-client-type"][value="business"]').checked = true;
+        }
+
+        function hideQuickAddClientModal() {
+            const modal = document.getElementById('quickAddClientModal');
+            modal.style.display = 'none';
+        }
+
+        function showClientSuccessModal(clientData) {
+            const modal = document.getElementById('clientSuccessModal');
+            const previewDiv = document.getElementById('clientInfoPreview');
+            
+            // Populate client info preview
+            previewDiv.innerHTML = `
+                <div class="client-info-grid">
+                    <div><strong>Name:</strong> ${clientData.customer_name}</div>
+                    <div><strong>Tax ID:</strong> ${clientData.customer_tax_id}</div>
+                    <div><strong>Contact:</strong> ${clientData.contact}</div>
+                    <div><strong>Email:</strong> ${clientData.email}</div>
+                    <div><strong>Phone:</strong> ${clientData.telephone}</div>
+                    <div><strong>Address:</strong> ${clientData.billing_address}, ${clientData.city}, ${clientData.province}</div>
+                </div>
+            `;
+            
+            modal.style.display = 'block';
+        }
+
+        function hideClientSuccessModal() {
+            const modal = document.getElementById('clientSuccessModal');
+            modal.style.display = 'none';
+        }
+
+        async function saveQuickClient() {
+            const form = document.getElementById('quickClientForm');
+            
+            // Validate form
+            if (!form.checkValidity()) {
+                form.reportValidity();
+                return;
+            }
+
+            try {
+                const formData = {
+                    customer_name: document.getElementById('quick-company-name').value,
+                    customer_tax_id: document.getElementById('quick-customer-tax-id').value,
+                    contact: document.getElementById('quick-contact').value,
+                    billing_address: document.getElementById('quick-billing-address').value,
+                    street_name: document.getElementById('quick-street-name').value,
+                    city: document.getElementById('quick-city').value,
+                    province: document.getElementById('quick-province').value,
+                    country: document.getElementById('quick-country').value,
+                    telephone: document.getElementById('quick-telephone').value,
+                    email: document.getElementById('quick-email').value,
+                    status: 'active',
+                    client_type: document.querySelector('input[name="quick-client-type"]:checked').value,
+                    user_id: (await supabase.auth.getUser()).data.user?.id
+                };
+
+                // Convert string values to numbers where needed
+                if (formData.telephone) {
+                    formData.telephone = parseInt(formData.telephone.replace(/\D/g, '')) || null;
+                }
+
+                const { data, error } = await supabase
+                    .from('clients')
+                    .insert([formData])
+                    .select();
+
+                if (error) throw error;
+
+                // Store the newly created client
+                newlyCreatedClient = data[0];
+                
+                // Hide the quick add modal
+                hideQuickAddClientModal();
+                
+                // Show success modal
+                showClientSuccessModal(newlyCreatedClient);
+                
+                // Refresh the client list in the dropdown
+                await fetchClients();
+                
+                // Select the newly created client
+                const clientSelect = document.getElementById('clientSelect');
+                const selectTriggerSpan = document.querySelector('.select-trigger span');
+                
+                if (clientSelect && newlyCreatedClient) {
+                    clientSelect.value = newlyCreatedClient.customer_id;
+                    selectTriggerSpan.textContent = newlyCreatedClient.customer_name;
+                    
+                    // Populate client fields in the invoice form
+                    populateClientFields(newlyCreatedClient);
+                }
+
+            } catch (error) {
+                console.error('Error saving client:', error);
+                alert('Error saving client: ' + error.message);
+            }
+        }
+
+        function populateClientFields(client) {
+            // Populate client fields in the invoice form
+            const clientEmail = document.getElementById('clientEmail');
+            const clientAddress = document.getElementById('clientAddress');
+            const clientTaxId = document.getElementById('clientTaxId');
+            
+            if (clientEmail) clientEmail.value = client.email || '';
+            if (clientAddress) clientAddress.value = `${client.billing_address}, ${client.city}, ${client.province}` || '';
+            if (clientTaxId) clientTaxId.value = client.customer_tax_id || '';
+        }
+
+        function useNewlyCreatedClient() {
+            if (newlyCreatedClient) {
+                // The client is already selected and fields are populated
+                hideClientSuccessModal();
+            }
         }
 
         function redirectToClients() {
@@ -542,8 +720,67 @@
 
         // Call fetchClients when the page loads
         window.addEventListener('load', () => {
+          // Initialize Supabase first
+          if (!initializeSupabase()) {
+            console.error('Supabase not available');
+            return;
+          }
+          
           fetchClients();
           displayInvoices(); // Chama a função para exibir as invoices
+          
+          // Add event listeners for quick add client modal
+          const addClientBtn = document.getElementById('addClientBtn');
+          const closeQuickAddModal = document.getElementById('closeQuickAddModal');
+          const cancelQuickClientBtn = document.getElementById('cancelQuickClientBtn');
+          const saveQuickClientBtn = document.getElementById('saveQuickClientBtn');
+          const closeSuccessModal = document.getElementById('closeSuccessModal');
+          const closeSuccessBtn = document.getElementById('closeSuccessBtn');
+          const useClientBtn = document.getElementById('useClientBtn');
+
+          // Quick Add Client Modal
+          if (addClientBtn) {
+              addClientBtn.addEventListener('click', showQuickAddClientModal);
+          }
+
+          if (closeQuickAddModal) {
+              closeQuickAddModal.addEventListener('click', hideQuickAddClientModal);
+          }
+
+          if (cancelQuickClientBtn) {
+              cancelQuickClientBtn.addEventListener('click', hideQuickAddClientModal);
+          }
+
+          if (saveQuickClientBtn) {
+              saveQuickClientBtn.addEventListener('click', saveQuickClient);
+          }
+
+          // Success Modal
+          if (closeSuccessModal) {
+              closeSuccessModal.addEventListener('click', hideClientSuccessModal);
+          }
+
+          if (closeSuccessBtn) {
+              closeSuccessBtn.addEventListener('click', hideClientSuccessModal);
+          }
+
+          if (useClientBtn) {
+              useClientBtn.addEventListener('click', useNewlyCreatedClient);
+          }
+
+          // Close modals when clicking outside
+          window.addEventListener('click', (event) => {
+              const quickAddModal = document.getElementById('quickAddClientModal');
+              const successModal = document.getElementById('clientSuccessModal');
+              
+              if (event.target === quickAddModal) {
+                  hideQuickAddClientModal();
+              }
+              
+              if (event.target === successModal) {
+                  hideClientSuccessModal();
+              }
+          });
         });
 
         // Fetch data from the invoices table
@@ -569,7 +806,7 @@
                 invoices.forEach(invoice => {
                     const invoiceElement = document.createElement('div');
                     invoiceElement.innerHTML = `
-                        <h2>Invoice #${invoice.invoice_number}</h2>
+                        <h2>Invoice #${invoice.invoiceNumber}</h2>
                         <p>Issue Date: ${invoice.issue_date}</p>
                         <p>Issuer: ${invoice.issuer_name} (${invoice.issuer_nuit}), ${invoice.issuer_address}</p>
                         <p>Client: ${invoice.client_name} (${invoice.client_nuit}), ${invoice.client_address}</p>
@@ -592,6 +829,123 @@
         }
 
     </script>
-    
+    <!-- Quick Add Client Modal -->
+    <div id="quickAddClientModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 data-translate="quick_add_client">Quick Add Client</h3>
+                <button type="button" class="close-modal" id="closeQuickAddModal" aria-label="Close modal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="quickClientForm">
+                    <div class="form-group">
+                        <label data-translate="client_type">Client Type</label>
+                        <div class="radio-group">
+                            <label class="radio-label">
+                                <input type="radio" name="quick-client-type" value="business" checked>
+                                <span data-translate="business">Business</span>
+                            </label>
+                            <label class="radio-label">
+                                <input type="radio" name="quick-client-type" value="individual">
+                                <span data-translate="individual">Individual</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="quick-company-name" data-translate="company_name_label">Company Name <span class="required">*</span></label>
+                        <input type="text" id="quick-company-name" name="company_name" required data-translate-placeholder="company_name_placeholder" placeholder="Company Name">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="quick-customer-tax-id" data-translate="tax_id_nuit">NIF/NUIT <span class="required">*</span></label>
+                        <input type="text" id="quick-customer-tax-id" name="customer_tax_id" required data-translate-placeholder="tax_id_placeholder" placeholder="NIF/NUIT" maxlength="9">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="quick-contact" data-translate="contact">Contact <span class="required">*</span></label>
+                        <input type="text" id="quick-contact" name="contact" required data-translate-placeholder="contact_placeholder" placeholder="Contact">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="quick-billing-address" data-translate="billing_address">Billing Address <span class="required">*</span></label>
+                        <input type="text" id="quick-billing-address" name="billing_address" required data-translate-placeholder="billing_address_placeholder" placeholder="Billing Address">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="quick-street-name" data-translate="street_name">Street <span class="required">*</span></label>
+                        <input type="text" id="quick-street-name" name="street_name" required data-translate-placeholder="street_name_placeholder" placeholder="Street">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="quick-city" data-translate="city">City <span class="required">*</span></label>
+                        <input type="text" id="quick-city" name="city" required data-translate-placeholder="city_placeholder" placeholder="City">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="quick-province" data-translate="province">Province <span class="required">*</span></label>
+                        <input type="text" id="quick-province" name="province" required data-translate-placeholder="province_placeholder" placeholder="Province">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="quick-country" data-translate="country">Country <span class="required">*</span></label>
+                        <input type="text" id="quick-country" name="country" required data-translate-placeholder="country_placeholder" placeholder="Country">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="quick-telephone" data-translate="telephone">Telephone <span class="required">*</span></label>
+                        <input type="text" id="quick-telephone" name="telephone" required data-translate-placeholder="telephone_placeholder" placeholder="Telephone">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="quick-email" data-translate="email">Email <span class="required">*</span></label>
+                        <input type="email" id="quick-email" name="email" required data-translate-placeholder="email_placeholder" placeholder="Email">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" id="saveQuickClientBtn" class="primary-btn" data-translate="save_client">Save Client</button>
+                <button type="button" id="cancelQuickClientBtn" class="secondary-btn" data-translate="cancel">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Success Message Modal -->
+    <div id="clientSuccessModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 data-translate="client_created_successfully">Client Created Successfully</h3>
+                <button type="button" class="close-modal" id="closeSuccessModal" aria-label="Close modal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="success-message">
+                    <i class="fas fa-check-circle"></i>
+                    <p data-translate="client_created_message">The client has been created and is now available for selection in the invoice form.</p>
+                </div>
+                <div class="client-info-preview">
+                    <h4 data-translate="client_information">Client Information</h4>
+                    <div id="clientInfoPreview"></div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" id="useClientBtn" class="primary-btn" data-translate="use_this_client">Use This Client</button>
+                <button type="button" id="closeSuccessBtn" class="secondary-btn" data-translate="close">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="services/languageManager.js"></script>
+    <script>
+      document.addEventListener('DOMContentLoaded', function() {
+        if (window.languageManager) {
+          const lang = localStorage.getItem('preferredLanguage') || 'pt';
+          window.languageManager.setLanguage(lang);
+        }
+      });
+    </script>
 </body>
 </html>

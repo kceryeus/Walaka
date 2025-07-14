@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="200" height="60" viewBox="0 0 200 60">
+  <defs>
+    <linearGradient id="logo-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#3498db" />
+      <stop offset="100%" stop-color="#2980b9" />
+    </linearGradient>
+  </defs>
+  <g fill="url(#logo-gradient)">
+    <path d="M20.5,10 L32.5,50 L26,50 L23.5,40 L9.5,40 L7,50 L0.5,50 L12.5,10 L20.5,10 Z M16.5,16 L11.5,34 L21.5,34 L16.5,16 Z" />
+    <path d="M38,10 L50,30 L62,10 L67.5,10 L50,40 L32.5,10 L38,10 Z" />
+    <path d="M72,10 L78,10 L78,40 L95,40 L95,45 L72,45 L72,10 Z" />
+    <path d="M100,10 L121,10 L121,15 L106,15 L106,25 L119,25 L119,30 L106,30 L106,40 L121,40 L121,45 L100,45 L100,10 Z" />
+    <path d="M127,10 L133,10 L133,45 L127,45 L127,10 Z" />
+    <path d="M138,10 L159,10 L159,15 L144,15 L144,24 L157,24 L157,29 L144,29 L144,45 L138,45 L138,10 Z" />
+    <path d="M163,10 L184,10 L184,15 L169,15 L169,25 L182,25 L182,30 L169,30 L169,40 L184,40 L184,45 L163,45 L163,10 Z" />
+    <path d="M190,10 L196,10 L196,45 L190,45 L190,10 Z" />
+  </g>
+</svg>

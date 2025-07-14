@@ -1,0 +1,150 @@
+:root {
+  /* Colors */
+  --white: rgba(255, 255, 255, 1);
+  --black: rgba(0, 0, 0, 1);
+  --greybackground: rgba(248, 250, 252, 1);
+  --grey-100: rgba(241, 245, 249, 1);
+  --greyborder: rgba(226, 232, 240, 1);
+  --grey-300: rgba(203, 213, 225, 1);
+  --greydisable-color: rgba(148, 163, 184, 1);
+  --greytext-light: rgba(100, 116, 139, 1);
+  --grey-600: rgba(71, 85, 105, 1);
+  --grey-700: rgba(51, 65, 85, 1);
+  --grey-800: rgba(30, 41, 59, 1);
+  --grey-900: rgba(15, 23, 42, 1);
+  --greytext-dark: rgba(2, 6, 23, 1);
+  
+  /* Primary colors */
+  --primary-50: rgba(239, 246, 255, 1);
+  --primary-100: rgba(224, 242, 254, 1);
+  --primary-200: rgba(191, 219, 254, 1);
+  --primary-300: rgba(147, 197, 253, 1);
+  --primary-400: rgba(96, 165, 250, 1);
+  --primary-500: rgba(59, 130, 246, 1);
+  --primary-600: rgba(37, 99, 235, 1);
+  --primary-700: rgba(29, 78, 216, 1);
+  --primary-800: rgba(30, 64, 175, 1);
+  --primary-900: rgba(30, 58, 138, 1);
+  --primary-950: rgba(23, 37, 84, 1);
+  
+  /* Active/Success colors */
+  --active-50: rgba(240, 253, 244, 1);
+  --active-100: rgba(220, 252, 231, 1);
+  --active-200: rgba(187, 247, 208, 1);
+  --active-300: rgba(134, 239, 172, 1);
+  --active-400: rgba(74, 222, 128, 1);
+  --active-500: rgba(34, 197, 94, 1);
+  --active-600: rgba(22, 163, 74, 1);
+  --active-700: rgba(21, 128, 61, 1);
+  --active-800: rgba(22, 101, 52, 1);
+  --active-900: rgba(20, 83, 45, 1);
+  --active-950: rgba(5, 46, 22, 1);
+  
+  /* Error colors */
+  --error-50: rgba(254, 242, 242, 1);
+  --error-100: rgba(254, 226, 226, 1);
+  --error-200: rgba(254, 202, 202, 1);
+  --error-300: rgba(252, 165, 165, 1);
+  --error-400: rgba(248, 113, 113, 1);
+  --error-500: rgba(239, 68, 68, 1);
+  --error-600: rgba(220, 38, 38, 1);
+  --error-700: rgba(185, 28, 28, 1);
+  --error-800: rgba(153, 27, 27, 1);
+  --error-900: rgba(127, 29, 29, 1);
+  --error-950: rgba(69, 10, 10, 1);
+  
+  /* Warning colors */
+  --warning-50: rgba(254, 252, 232, 1);
+  --warning-100: rgba(254, 249, 195, 1);
+  --warning-200: rgba(254, 240, 138, 1);
+  --warning-300: rgba(253, 224, 71, 1);
+  --warning-400: rgba(250, 204, 21, 1);
+  --warning-500: rgba(234, 179, 8, 1);
+  --warning-600: rgba(202, 138, 4, 1);
+  --warning-700: rgba(161, 98, 7, 1);
+  --warning-800: rgba(133, 77, 14, 1);
+  --warning-900: rgba(113, 63, 18, 1);
+  --warning-950: rgba(66, 32, 6, 1);
+  
+  /* Neutral colors */
+  --neutral-colors200: rgba(246, 248, 252, 1);
+  --neutral-colors300: rgba(235, 239, 246, 1);
+  --neutral-colors800: rgba(25, 33, 61, 1);
+  
+  /* Typography */
+  --heading-1-font-family: "Inter", Helvetica;
+  --heading-1-font-weight: 700;
+  --heading-1-font-size: 40px;
+  --heading-1-letter-spacing: 0px;
+  --heading-1-line-height: 120%;
+  
+  --heading-2-font-family: "Inter", Helvetica;
+  --heading-2-font-weight: 600;
+  --heading-2-font-size: 32px;
+  --heading-2-letter-spacing: 0px;
+  --heading-2-line-height: 130%;
+  
+  --heading-3-font-family: "Inter", Helvetica;
+  --heading-3-font-weight: 600;
+  --heading-3-font-size: 24px;
+  --heading-3-letter-spacing: 0px;
+  --heading-3-line-height: 140%;
+  
+  --heading-4-font-family: "Inter", Helvetica;
+  --heading-4-font-weight: 600;
+  --heading-4-font-size: 20px;
+  --heading-4-letter-spacing: 0px;
+  --heading-4-line-height: 150%;
+  
+  --heading-5-font-family: "Inter", Helvetica;
+  --heading-5-font-weight: 600;
+  --heading-5-font-size: 18px;
+  --heading-5-letter-spacing: 0px;
+  --heading-5-line-height: 160%;
+  
+  --paragraph-medium-font-family: "Inter", Helvetica;
+  --paragraph-medium-font-weight: 500;
+  --paragraph-medium-font-size: 16px;
+  --paragraph-medium-letter-spacing: 0px;
+  --paragraph-medium-line-height: 160%;
+  
+  --paragraph-font-family: "Inter", Helvetica;
+  --paragraph-font-weight: 400;
+  --paragraph-font-size: 16px;
+  --paragraph-letter-spacing: 0px;
+  --paragraph-line-height: 160%;
+  
+  --small-text-font-family: "Inter", Helvetica;
+  --small-text-font-weight: 400;
+  --small-text-font-size: 14px;
+  --small-text-letter-spacing: 0px;
+  --small-text-line-height: 150%;
+  
+  --button-text-font-family: "Inter", Helvetica;
+  --button-text-font-weight: 500;
+  --button-text-font-size: 14px;
+  --button-text-letter-spacing: 0px;
+  --button-text-line-height: 160%;
+  
+  --label-font-family: "Inter", Helvetica;
+  --label-font-weight: 600;
+  --label-font-size: 12px;
+  --label-letter-spacing: 0px;
+  --label-line-height: normal;
+  
+  /* Shadows */
+  --shadow: 0px 0px 8px 0px rgba(59, 130, 246, 0.12);
+  --card-shadow: 0px 1px 3px rgba(0, 0, 0, 0.1), 0px 1px 2px rgba(0, 0, 0, 0.06);
+  --dropdown-shadow: 0px 4px 6px -1px rgba(0, 0, 0, 0.1), 0px 2px 4px -1px rgba(0, 0, 0, 0.06);
+  
+  /* Transitions */
+  --transition-fast: 0.15s ease;
+  --transition-medium: 0.25s ease;
+  --transition-slow: 0.35s ease;
+  
+  /* Z-index layers */
+  --z-dropdown: 1000;
+  --z-sidebar: 1100;
+  --z-modal: 1200;
+  --z-tooltip: 1300;
+}

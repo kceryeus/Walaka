@@ -282,16 +282,24 @@
             button.innerHTML = 'Creating account...';
             button.disabled = true;
             
-            try {
-                const { data, error } = await supabaseClient.auth.signUp({
-                    email: email,
-                    password: password,
-                    options: {
-                        data: { full_name: name }
-                    }
+            try {                const response = await fetch('/functions/create-user', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + supabaseKey
+                    },
+                    body: JSON.stringify({
+                        email: email,
+                        password: password,
+                        username: name,
+                        role: 'user'
+                    })
                 });
 
-                if (error) throw error;
+                const result = await response.json();
+                if (!response.ok) {
+                    throw new Error(result.error || 'Failed to create user');
+                }
 
                 console.log('Signed up:', data);
                 alert('Please check your email for verification link');

@@ -181,3 +181,228 @@
         font-size: 1.75rem;
     }
 }
+
+/* ==== PAGINATION ETC ==== */
+
+        .back-button {
+            margin: 10px 0;
+            padding: 8px 16px;
+            background-color: #007ec7;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .back-button:hover {
+            background-color: #0066a3;
+        }
+
+        .daily-invoices-table {
+            padding: 20px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-top: 20px;
+        }
+
+        .daily-invoices-table h4 {
+            margin: 0 0 15px 0;
+            color: #333;
+            font-size: 1.1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .daily-invoices-table table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 15px;
+        }
+
+        .daily-invoices-table th,
+        .daily-invoices-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+            font-size: 0.9rem;
+        }
+
+        .daily-invoices-table th {
+            background-color: #f8f9fa;
+            font-weight: 600;
+            color: #555;
+        }
+
+        .daily-invoices-table tr:hover {
+            background-color: #f8f9fa;
+            cursor: pointer;
+        }
+
+        .daily-invoices-table .status-cell {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+
+        .daily-invoices-table .status-pending {
+            background-color: #fff7ed;
+            color: #ea580c;
+        }
+
+        .daily-invoices-table .status-paid {
+            background-color: #f0fdf4;
+            color: #16a34a;
+        }
+
+        .back-button {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            background-color: #007ec7;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+
+        .back-button i {
+            font-size: 12px;
+        }
+
+        .back-button:hover {
+            background-color: #0066a3;
+            transform: translateY(-1px);
+        }
+
+        .chart-container {
+            position: relative;
+            min-height: 300px;
+            transition: all 0.3s ease;
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .chart-container.drilled-down {
+            margin-bottom: 30px;
+        }
+
+        .chart-container .back-button {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            z-index: 10;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            background-color: #007ec7;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .chart-container.drilled-down .back-button {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .chart-container .daily-invoices-table {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: white;
+            margin: 0;
+            border-radius: 8px;
+            padding: 20px;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .chart-container.drilled-down .daily-invoices-table {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .chart-container.drilled-down canvas {
+            opacity: 0;
+            visibility: hidden;
+        }
+
+        /* Pagination Styles */
+        .pagination {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 0;
+            font-size: 0.9rem;
+        }
+
+        .page-info {
+            color: #666;
+        }
+
+        .page-controls {
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+
+        .pagination-btn {
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid #e0e0e0;
+            background-color: white;
+            border-radius: 4px;
+            color: #555;
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: all 0.2s ease;
+        }
+
+        .pagination-btn:hover:not(:disabled) {
+            background-color: #f5f5f5;
+            border-color: #d0d0d0;
+        }
+
+        .pagination-btn.active {
+            background-color: #007ec7;
+            color: white;
+            border-color: #007ec7;
+        }
+
+        .pagination-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .pagination-ellipsis {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 32px;
+            color: #777;
+        }
+    

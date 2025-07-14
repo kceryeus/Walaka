@@ -1,0 +1,183 @@
+
+.metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.5rem;
+    margin: 1.5rem 0;
+}
+
+.metric-card {
+    background: var(--card-bg, #ffffff);
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    transition: transform 0.2s, box-shadow 0.2s;
+    position: relative;
+    overflow: hidden;
+}
+
+.metric-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+}
+
+.metric-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+    color: var(--text-muted, #6c757d);
+}
+
+.metric-header i {
+    font-size: 1.25rem;
+    padding: 0.5rem;
+    border-radius: 8px;
+    background: var(--icon-bg, rgba(0, 126, 199, 0.1));
+    color: var(--primary-color, #007ec7);
+}
+
+.metric-value {
+    font-size: 2rem;
+    font-weight: 600;
+    color: var(--text-primary, #2c3e50);
+    margin: 0.5rem 0;
+}
+
+.metric-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 1rem;
+}
+
+.metric-label {
+    color: var(--text-muted, #6c757d);
+    font-size: 0.875rem;
+}
+
+.metric-change {
+    padding: 0.25rem 0.5rem;
+    border-radius: 16px;
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+.metric-change.positive {
+    background: rgba(59, 176, 119, 0.1);
+    color: #3bb077;
+}
+
+.metric-change.negative {
+    background: rgba(229, 83, 83, 0.1);
+    color: #e55353;
+}
+
+/* Drilldown Content Styles */
+.drilldown-btn {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    background: transparent;
+    border: none;
+    color: var(--text-muted, #6c757d);
+    cursor: pointer;
+    padding: 0.5rem;
+    transition: transform 0.2s;
+}
+
+.drilldown-btn[aria-expanded="true"] i {
+    transform: rotate(180deg);
+}
+
+.drilldown-content {
+    display: none;
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border-color, #e9ecef);
+}
+
+.drilldown-content.active {
+    display: block;
+    animation: slideDown 0.3s ease-out;
+}
+
+.drilldown-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.drilldown-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.drilldown-tab {
+    padding: 0.25rem 0.75rem;
+    border-radius: 16px;
+    border: 1px solid var(--border-color, #e9ecef);
+    background: transparent;
+    color: var(--text-muted, #6c757d);
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.drilldown-tab.active {
+    background: var(--primary-color, #007ec7);
+    color: white;
+    border-color: var(--primary-color, #007ec7);
+}
+
+.drilldown-data {
+    display: grid;
+    gap: 0.75rem;
+}
+
+.drilldown-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem 0;
+}
+
+.drilldown-footer {
+    margin-top: 1rem;
+    text-align: center;
+}
+
+.drilldown-link {
+    color: var(--primary-color, #007ec7);
+    text-decoration: none;
+    font-size: 0.875rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.drilldown-link:hover {
+    text-decoration: underline;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .metrics-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .metric-value {
+        font-size: 1.75rem;
+    }
+}

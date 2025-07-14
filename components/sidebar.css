@@ -1,0 +1,340 @@
+:root {
+    --primary-color: #007ec7; /* Corporate blue */
+    --primary-dark: #005fa3;
+    --primary-light: #e6f4fb;
+    --secondary-color: #4f46e5;
+    --secondary-light: #818cf8;
+    --accent-color: #3b82f6;
+    --text-primary: #1e293b;
+    --text-secondary: #64748b;
+    --text-light: #94a3b8;
+    --success-color: #10b981;
+    --warning-color: #f59e0b;
+    --danger-color: #ef4444;
+    --danger-light: #fee2e2;
+    --background-color: #f8fafc;
+    --card-background: #ffffff;
+    --border-color: #e2e8f0;
+    --sidebar-width: 250px;
+    --sidebar-collapsed-width: 80px;
+    --topbar-height: 60px;
+    --card-radius: 8px;
+    --input-radius: 8px;
+    --transition-speed: 0.3s;
+    --box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    --paragraph-font-size: 0.90rem;
+  }
+
+.dashboard-container {
+    display: flex;
+    height: 100vh;
+    width: 100vw;
+}
+
+.sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 250px;
+    height: 100vh;
+    background-color: var(--primary-dark);
+    color: var(--primary-color);
+    padding: 20px 0;
+    box-sizing: border-box;
+    z-index: 1000;
+    overflow-y: auto;
+}
+
+.sidebar .logo {
+    padding: 0 20px;
+    margin-bottom: 5px;
+    display: flex;
+    align-items: center;;
+}
+
+.sidebar .logo i {
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 24px;
+    margin-right: 10px;
+}
+
+.sidebar .logo span {
+    font-size: var(--heading-4-subheading-font-size);
+    font-weight: var(--heading-4-subheading-font-weight);
+    color: rgba(255, 255, 255, 0.7);
+}
+
+.sidebar .nav-menu {
+    padding: 0;
+    margin: 0;
+}
+
+.nav-section {
+    margin: 0;
+    padding: 0;
+}
+
+.nav-section h3 {
+    font-size: 0.75rem;
+    font-weight: 900;
+    text-transform: uppercase;
+    color: var(--text-light);
+    margin: 0;
+    padding: 0;
+}
+
+.nav-item {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    min-height: 48px;
+    box-sizing: border-box;
+    padding: 0 0 0 24px; /* Only left padding for icon/text alignment */
+    color: var(--grey-300);
+    text-decoration: none;
+    background: none;
+    border: none;
+    transition: background 0.2s, color 0.2s;
+    font-size: var(--paragraph-font-size);
+    font-weight: var(--paragraph-font-weight);
+    margin: 0;
+    text-transform: uppercase;
+}
+
+.nav-item,
+.nav-item:visited {
+    background: none;
+    color: rgba(255, 255, 255, 0.7);
+    
+}
+
+.nav-item:hover,
+.nav-item.active {
+    background-color: var(--primary-600);
+    color: rgba(255, 255, 255, 0.7);
+}
+
+.nav-item i {
+    margin-right: 10px;
+    width: 20px;
+    color: (255, 255, 255, 0.7);
+    align-items: center;
+}
+
+/* Adjust main content area */
+.content-wrapper {
+    margin-left: 250px;
+    padding: 20px;
+    transition: margin-left 0.3s;
+}
+
+.main-content {
+    flex: 1;
+    margin-left: 250px;
+    height: 100vh;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Hamburger menu button styles */
+.sidebar-toggle {
+    display: none;
+    position: fixed;
+    top: 18px;
+    left: 18px;
+    z-index: 1101;
+    width: 40px;
+    height: 40px;
+    background: rgba(0,0,0,0.0);
+    border: none;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    padding: 0;
+}
+.sidebar-toggle span {
+    display: block;
+    width: 28px;
+    height: 4px;
+    margin: 4px 0;
+    background: #fff;
+    border-radius: 2px;
+    transition: all 0.3s;
+}
+
+/* Sidebar overlay styles */
+.sidebar-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0,0,0,0.3);
+    z-index: 1200;
+    opacity: 0;
+    transition: opacity 0.3s;
+    pointer-events: none;
+    /* Add blur effect to everything behind overlay */
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+}
+.sidebar-overlay.active {
+    display: block;
+    opacity: 1;
+    pointer-events: auto;
+}
+
+/* Responsive styles */
+@media (max-width: 768px) {
+    .sidebar {
+        position: fixed;
+        left: 0;
+        top: 60px; /* height of the topbar */
+        width: 250px;
+        height: calc(100vh - 60px);
+        z-index: 1201;
+        background: var(--primary-dark);
+        transform: translateX(-100%);
+        transition: transform 0.3s;
+        box-shadow: 2px 0 8px rgba(0,0,0,0.08);
+    }
+    .sidebar.active {
+        transform: translateX(0);
+    }
+    .sidebar-toggle {
+        display: flex;
+        position: fixed;
+        top: 10px;
+        left: 18px;
+        z-index: 1300;
+    }
+    .main-content {
+        margin-left: 0;
+        width: 100vw;
+        height: 100vh;
+        overflow-y: auto;
+    }
+    body.sidebar-open .main-content,
+    body.sidebar-open .content-wrapper {
+        filter: blur(4px) brightness(0.9);
+        pointer-events: none;
+        user-select: none;
+        transition: filter 0.3s;
+    }
+    .sidebar-overlay {
+        position: fixed;
+        top: 60px;
+        left: 0;
+        width: 100vw;
+        height: calc(100vh - 60px);
+        z-index: 1200;
+        display: block;
+    }
+    .content-wrapper {
+        margin-left: 0;
+    }
+    .main-content {
+        margin-left: 0;
+        width: 100vw;
+        height: 100vh;
+    }
+    /* Remove forced expansion of all submenus on mobile */
+    /* .sidebar .submenu {
+        max-height: 1000px !important;
+        opacity: 1 !important;
+        padding-top: 8px;
+        padding-bottom: 8px;
+        margin-bottom: 8px;
+        overflow: visible;
+    } */
+}
+
+/* Sidebar submenu expand/collapse - with smooth animation */
+.submenu {
+    margin: 0;
+    padding-left: 24px; /* match .nav-header.has-submenu left spacing */
+    border-left: none;
+    overflow: hidden;
+    max-height: 0;
+    opacity: 0;
+    display: block;
+    padding-top: 0;
+    padding-bottom: 0;
+    transition:
+        max-height 0.5s cubic-bezier(0.4, 0, 0.2, 1),
+        opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+        padding-top 0.3s,
+        padding-bottom 0.3s;
+    will-change: max-height, opacity, padding-top, padding-bottom;
+}
+
+.nav-section.active > .submenu {
+    max-height: 1000px; /* Large enough for most submenus */
+    opacity: 1;
+    padding-top: 8px;
+    padding-bottom: 8px;
+    margin-bottom: 8px;
+    transition:
+        max-height 0.5s cubic-bezier(0.4, 0, 0.2, 1),
+        opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+        padding-top 0.3s,
+        padding-bottom 0.3s;
+}
+
+.nav-header.has-submenu {
+    cursor: pointer;
+    position: relative;
+    padding-right: 24px;
+    user-select: none;
+    transition: color 0.8s;
+    /* Add left spacing and vertical spacing */
+    padding-left: 18px;
+    margin-top: 12px;
+    margin-bottom: 4px;
+    /* Match submenu font-size (0.9rem from styles.css .nav-item) */
+    font-size: var(--paragraph-font-size);
+    font-weight: 600;
+    color: rgba(255,255,255,0.85);
+}
+
+.nav-header.has-submenu + .submenu {
+    /* Add vertical spacing between submenus */
+    margin-top: 4px;
+    margin-bottom: 8px;
+}
+
+.nav-header.has-submenu:hover,
+.nav-header.has-submenu:focus {
+    color: rgba(255, 255, 255, 0.7);
+}
+
+.nav-header.has-submenu::after {
+    content: '\f078'; /* Font Awesome chevron-down */
+    font-family: 'Font Awesome 6 Free';
+    font-weight: 900;
+    position: absolute;
+    right: 16px;
+    top: 50%;
+    transform: translateY(-50%) rotate(0deg);
+    transition: transform 0.3s;
+    color: rgba(255, 255, 255, 0.7);
+    pointer-events: none;
+}
+
+.nav-section.active > .nav-header.has-submenu::after {
+    transform: translateY(-50%) rotate(-180deg); /* chevron-up */
+}
+
+/* Optional: style nested submenu with animation */
+.submenu .submenu {
+    border-left: 2px dashed var(--grey-700);
+/*    margin-left: 10px;
+    padding-left: 12px;*/
+    transition:
+        border-color 0.3s,
+        margin-left 0.3s,
+        padding-left 0.3s;
+}

@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Invoice Pagination Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .test-result {
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 3px;
+        }
+        .success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+    </style>
+</head>
+<body>
+    <h1>Invoice Pagination Test</h1>
+    
+    <div class="test-section">
+        <h2>Test Results</h2>
+        <div id="test-results"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>Manual Tests</h2>
+        <p>To test the pagination functionality:</p>
+        <ol>
+            <li>Open the invoice creation modal</li>
+            <li>Add more than 10 items to trigger pagination</li>
+            <li>Verify pagination controls appear</li>
+            <li>Test navigation between pages</li>
+            <li>Try to add more than 50 items (should be blocked)</li>
+            <li>Generate PDF to verify all items are included</li>
+        </ol>
+    </div>
+
+    <script>
+        // Simple test to verify pagination module loads
+        function runTests() {
+            const results = document.getElementById('test-results');
+            let testOutput = '';
+
+            // Test 1: Check if pagination module exists
+            if (typeof window.invoiceItemsPagination !== 'undefined') {
+                testOutput += '<div class="test-result success">✓ Pagination module loaded successfully</div>';
+            } else {
+                testOutput += '<div class="test-result error">✗ Pagination module not found</div>';
+            }
+
+            // Test 2: Check pagination configuration
+            if (window.invoiceItemsPagination) {
+                const config = window.invoiceItemsPagination.getPaginationInfo();
+                if (config.maxItems === 50 && config.itemsPerPage === 10) {
+                    testOutput += '<div class="test-result success">✓ Pagination configuration correct (50 items max, 10 per page)</div>';
+                } else {
+                    testOutput += '<div class="test-result error">✗ Pagination configuration incorrect</div>';
+                }
+            }
+
+            // Test 3: Check helper functions
+            if (typeof window.validateInvoiceItemLimits === 'function') {
+                testOutput += '<div class="test-result success">✓ Helper functions available</div>';
+            } else {
+                testOutput += '<div class="test-result error">✗ Helper functions not found</div>';
+            }
+
+            results.innerHTML = testOutput;
+        }
+
+        // Run tests when page loads
+        window.addEventListener('load', runTests);
+    </script>
+</body>
+</html> 

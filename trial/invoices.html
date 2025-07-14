@@ -1,0 +1,1182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WALAKA - Invoice Management</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+    
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Google Fonts - Inter -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap">
+
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/invoice.css">
+<!--    <link rel="stylesheet" href="css/invoice-print.css"> -->
+    <link rel="stylesheet" href="css/invoice-layout.css">
+    <link rel="stylesheet" href="css/trial.css">
+
+    <!-- Product Suggestions Styles -->
+    <style>
+        .suggestion-box {
+            position: fixed; /* Change to fixed positioning */
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            width: auto; /* Remove fixed width */
+            min-width: 200px; /* Add minimum width */
+            max-width: 400px; /* Add maximum width */
+            max-height: 200px;
+            overflow-y: auto;
+            z-index: 9999;
+        }
+
+        .suggestion-item {
+            padding: 8px 12px;
+            cursor: pointer;
+            border-bottom: 1px solid #eee;
+        }
+
+        .suggestion-item:hover {
+            background-color: #f5f5f5;
+        }
+
+        .suggestion-item.active {
+            background-color: #e9ecef;
+        }
+
+        .item-row td {
+            position: relative;
+        }
+    </style>
+    <style>
+        /* Client suggestions styles */
+        .client-suggestions {
+            position: absolute;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            max-height: 200px;
+            overflow-y: auto;
+            width: 100%;
+            z-index: 1000;
+        }
+
+        .suggestion-item {
+            padding: 8px 12px;
+            cursor: pointer;
+        }
+
+        .suggestion-item:hover {
+            background-color: #f5f5f5;
+        }
+
+        #expand-client-form {
+            display: none;
+            margin-top: 10px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+    </style>
+    <style>
+        /* Product suggestions styles */
+        .product-suggestions {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            width: 100%;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            z-index: 1000;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .suggestion-item {
+            padding: 8px 12px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .suggestion-item:hover {
+            background-color: #f5f5f5;
+        }
+
+        .suggestion-price {
+            color: #666;
+            font-size: 0.9em;
+        }
+
+        .new-product-form {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            width: 100%;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            padding: 1rem;
+            z-index: 1000;
+        }
+
+        .new-product-form .form-row {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 0.5rem;
+        }
+
+        .new-product-form input,
+        .new-product-form select {
+            padding: 0.5rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+
+        .new-product-form button {
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .new-product-form button:hover {
+            background: var(--primary-color-dark);
+        }
+    </style>
+    <style>
+        .item-row td {
+            position: relative;
+        }
+        
+        .product-suggestions {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            width: 100%;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            z-index: 1000;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .new-product-form {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            width: 100%;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            padding: 1rem;
+            z-index: 1000;
+        }
+
+        .new-product-form .form-row {
+            display: flex;
+            gap: 1rem;
+            align-items: flex-end;
+        }
+
+        .new-product-form .form-group {
+            flex: 1;
+        }
+
+        .new-product-form label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-size: 0.9rem;
+        }
+
+        .new-product-form input,
+        .new-product-form select {
+            width: 100%;
+            padding: 0.5rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+
+        .save-product-btn {
+            padding: 0.5rem 1rem;
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .save-product-btn:hover {
+            background: var(--primary-color-dark);
+        }
+    </style>
+    <style>
+    .trial-status-banner {
+        background: #f8d7da;
+        border: 1px solid #f5c6cb;
+        color: #721c24;
+        padding: 10px 20px;
+        margin: 10px 0;
+        border-radius: 4px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .upgrade-modal {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background: white;
+        padding: 2rem;
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        z-index: 1001;
+    }
+
+    .upgrade-btn {
+        background: #28a745;
+        color: white;
+        border: none;
+        padding: 8px 16px;
+        border-radius: 4px;
+        cursor: pointer;
+    }
+
+    .payment-options {
+        margin-top: 1.5rem;
+    }
+
+    .payment-btn {
+        width: 100%;
+        margin: 0.5rem 0;
+        padding: 1rem;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        background: white;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+</style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+</head>
+
+<body>
+    <div class="dashboard-container">
+        <!-- Sidebar Menu -->
+        <nav class="sidebar">
+            <div class="logo">
+                <i class="fas fa-chart-line"></i>
+                <span>WALAKA</span>
+            </div>
+            
+            <div class="nav-menu">
+                <a href="dashboard.html" class="nav-item">
+                    <i class="fas fa-home"></i>
+                    <span>Dashboard</span>
+                </a>
+                
+                <div class="nav-section">
+                    <h3>Invoicing</h3>
+                </div>
+                <a href="invoices.html" class="nav-item active">
+                    <i class="fas fa-file-invoice-dollar"></i>
+                    <span>Invoices</span>
+                </a>
+
+                <a href="clients/clients.html" class="nav-item">
+                    <i class="fas fa-users"></i>
+                    <span>Clients</span>
+                </a>
+
+                <a href="products.html" class="nav-item">
+                    <i class="fas fa-shopping-cart"></i>
+                    <span>Products</span>
+                </a>
+                
+                <div class="nav-section">
+                    <h3>Commercial</h3>
+                </div>
+                <a href="#" class="nav-item">
+                    <i class="fas fa-boxes"></i>
+                    <span>Stock</span>
+                </a>
+                <a href="#" class="nav-item">
+                    <i class="fas fa-truck"></i>
+                    <span>Suppliers</span>
+                </a>
+                <a href="#" class="nav-item">
+                    <i class="fas fa-exchange-alt"></i>
+                    <span>Movements</span>
+                </a>
+                <a href="#" class="nav-item">
+                    <i class="fas fa-money-bill-wave"></i>
+                    <span>Expenses</span>
+                </a>
+                <div class="nav-section">
+                    <h3>Accounting </h3>
+                 <a href="#" class="nav-item">
+                      <i class="fas fa-book"></i>
+                      <span>Entries</span> 
+                    </a>
+                    <a href="#" class="nav-item">
+                      <i class="fas fa-list-alt"></i>
+                     <span> Chart of Accounts</span>
+                    </a>
+                    <a href="#" class="nav-item">
+                      <i class="fas fa-percent"></i>
+                      <span>Taxes</span> 
+                    </a>
+                  </div>
+
+                <div class="nav-section">
+                    <h3>Finances</h3>
+                </div>
+               
+                <a href="#" class="nav-item">
+                    <i class="fas fa-chart-pie"></i>
+                    <span>Reports</span>
+                </a>
+                <a href="#" class="nav-item">
+                    <i class="fas fa-chart-line"></i>
+                    Key Metrics
+                  </a>
+
+                <div class="nav-section">
+                    <h3>Settings</h3>
+                </div>
+                <a href="settings.html" class="nav-item">
+                    <i class="fas fa-cog"></i>
+                    <span>Settings</span>
+                </a>
+                <a href="profile.html" class="nav-item">
+                    <i class="fas fa-user-cog"></i>
+                    <span>Account</span>
+                </a>
+                <a href="#" class="nav-item">
+                    <i class="fas fa-question-circle"></i>
+                    <span>Help</span>
+                </a>
+            </div>
+        </nav>
+        
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Top Bar -->
+            <div class="top-bar">
+                <button class="menu-toggle">
+                    <i class="fas fa-bars"></i>
+                </button>
+                
+                <div class="search-bar">
+                    <input type="text" placeholder="Search invoices...">
+                </div>
+                
+                <div class="user-menu">
+                    <div class="notification-bell">
+                        <i class="fas fa-bell"></i>
+                        <span class="badge">3</span>
+                    </div>
+                    
+                    <div class="user-profile">
+                        <div class="avatar">
+                            <i class="fas fa-user"></i>
+                        </div>
+                        <span>John Doe</span>
+                        <div class="dropdown-menu">
+                            <a href="#">
+                                <i class="fas fa-user-circle"></i> My Profile
+                            </a>
+                            <a href="#">
+                                <i class="fas fa-cog"></i> Settings
+                            </a>
+                            <a href="#">
+                                <i class="fas fa-sign-out-alt"></i> Logout
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="trial-status-banner" id="trialStatusBanner" style="display: none;">
+    <div class="trial-info">
+        <i class="fas fa-clock"></i>
+        <div class="trial-text">
+            <span id="trialStatus">Loading trial status...</span>
+            <div class="trial-progress">
+                <div class="progress-bar">
+                    <div class="progress-fill" id="trial-progress"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <button class="upgrade-btn" onclick="showUpgradeModal(window.trialInfo)">
+        <i class="fas fa-crown"></i>
+        Upgrade Now
+    </button>
+</div>
+
+<div class="trial-banner" id="trial-banner">
+    <div class="trial-info">
+        <div class="trial-header">
+            <h3>Your Free Trial</h3>
+        </div>
+        <div class="trial-metric">
+            <div class="trial-metric-value" id="days-remaining">14</div>
+            <div class="trial-metric-label">Days Remaining</div>
+        </div>
+        <div class="trial-metric">
+            <div class="trial-metric-value" id="invoices-remaining">5</div>
+            <div class="trial-metric-label">Invoices Remaining</div>
+        </div>
+    </div>
+    <button class="trial-btn" id="upgrade-btn">
+        <i class="fas fa-crown"></i>
+        Upgrade Now
+    </button>
+</div>
+
+            
+            <!-- Invoice Dashboard Content -->
+            <div class="page-header">
+                <div>
+                    <h2>Invoice Management</h2>
+                    <p class="subtitle">Create, manage, and track all your invoices</p>
+                </div>
+                <div class="action-buttons">
+                    <button class="btn secondary-btn" id="importInvoiceBtn">
+                        <i class="fas fa-file-import"></i> Import
+                    </button>
+                    <button class="btn primary-btn" id="createInvoiceBtn">
+                        <i class="fas fa-plus"></i> Create Invoice
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Invoice Metrics -->
+            <div class="metrics-grid">
+                <div class="metric-card" id="totalInvoicesCard">
+                    <div class="metric-header">
+                        <i class="fas fa-file-invoice"></i>
+                        <span>Total Invoices</span>
+                    </div>
+                    <div class="metric-value">0</div>
+                    <div class="metric-footer">
+                        <span class="metric-label">All Time</span>
+                    </div>
+                </div>
+                
+                <div class="metric-card" id="paidInvoicesCard">
+                    <div class="metric-header">
+                        <i class="fas fa-check-circle"></i>
+                        <span>Paid Invoices</span>
+                    </div>
+                    <div class="metric-value">0</div>
+                    <div class="metric-footer">
+                        <span class="metric-label">0% of Total</span>
+                    </div>
+                </div>
+                
+                <div class="metric-card" id="pendingInvoicesCard">
+                    <div class="metric-header">
+                        <i class="fas fa-clock"></i>
+                        <span>Pending Payments</span>
+                    </div>
+                    <div class="metric-value">0</div>
+                    <div class="metric-footer">
+                        <span class="metric-label">0% of Total</span>
+                    </div>
+                </div>
+                
+                <div class="metric-card" id="overdueInvoicesCard">
+                    <div class="metric-header">
+                        <i class="fas fa-exclamation-circle"></i>
+                        <span>Overdue Invoices</span>
+                    </div>
+                    <div class="metric-value">0</div>
+                    <div class="metric-footer">
+                        <span class="metric-label">0% of Total</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Invoice Charts -->
+            <div class="chart-grid">
+                <div class="chart-card">
+                    <h3>
+                        Invoice Distribution
+                        <div class="chart-actions">
+                            <button id="weeklyBtn" class="chart-period-btn active">Weekly</button>
+                            <button id="monthlyBtn" class="chart-period-btn">Monthly</button>
+                            <button id="quarterlyBtn" class="chart-period-btn">Quarterly</button>
+                        </div>
+                    </h3>
+                    <div class="chart-container">
+                        <canvas id="invoiceDistributionChart"></canvas>
+                    </div>
+                </div>
+                
+                <div class="chart-card">
+                    <h3>
+                        Revenue by Status
+                        <div class="chart-actions">
+                            <button id="revenueMonthlyBtn" class="chart-period-btn active">Monthly</button>
+                            <button id="revenueYearlyBtn" class="chart-period-btn">Yearly</button>
+                        </div>
+                    </h3>
+                    <div class="chart-container">
+                        <canvas id="revenueByStatusChart"></canvas>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Invoice Table Filter Section -->
+            <div class="invoice-table-container">
+                <div class="table-header">
+                    <h3>Recent Invoices</h3>
+                    <div class="table-filters">
+                        <div class="filter-group">
+                            <label for="statusFilter">Status:</label>
+                            <select id="statusFilter" class="filter-select">
+                                <option value="all">All Statuses</option>
+                                <option value="paid">Paid</option>
+                                <option value="pending">Pending</option>
+                                <option value="overdue">Overdue</option>
+                                <option value="draft">Unfinished</option>
+                            </select>
+                        </div>
+                        <div class="filter-group">
+                            <label for="dateFilter">Date Range:</label>
+                            <select id="dateFilter" class="filter-select">
+                                <option value="all">All Time</option>
+                                <option value="today">Today</option>
+                                <option value="week">This Week</option>
+                                <option value="month" selected>This Month</option>
+                                <option value="quarter">This Quarter</option>
+                                <option value="year">This Year</option>
+                            </select>
+                        </div>
+                        <div class="filter-group">
+                            <label for="clientFilter">Client:</label>
+                            <select id="clientFilter" class="filter-select">
+                                <option value="all">All Clients</option>
+                                <option value="globex">Globex Industries</option>
+                                <option value="stark">Stark Industries</option>
+                                <option value="wayne">Wayne Enterprises</option>
+                                <option value="acme">Acme Corp</option>
+                            </select>
+                        </div>
+                        <div class="search-filter">
+                            <label for="searchInvoices">Search:</label>
+                            <input type="text" id="searchInvoices" placeholder="Invoice number, client name...">
+                            <button id="clearFilters" class="clear-filters-btn">
+                                <i class="fas fa-times"></i> Clear
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Invoices Table -->
+                <div class="table-responsive">
+                    <table id="invoicesTable" class="data-table">
+                        <thead>
+                            <tr>
+                                <th>
+                                    Invoice # 
+                                    <span class="sort-icon" data-sort="invoice">
+                                        <i class="fas fa-sort"></i>
+                                    </span>
+                                </th>
+                                <th>
+                                    Client 
+                                    <span class="sort-icon" data-sort="client">
+                                        <i class="fas fa-sort"></i>
+                                    </span>
+                                </th>
+                                <th>
+                                    Date 
+                                    <span class="sort-icon" data-sort="date">
+                                        <i class="fas fa-sort"></i>
+                                    </span>
+                                </th>
+                                <th>
+                                    Due Date 
+                                    <span class="sort-icon" data-sort="dueDate">
+                                        <i class="fas fa-sort"></i>
+                                    </span>
+                                </th>
+                                <th>
+                                    Amount 
+                                    <span class="sort-icon" data-sort="amount">
+                                        <i class="fas fa-sort"></i>
+                                    </span>
+                                </th>
+                                <th>
+                                    Status 
+                                    <span class="sort-icon" data-sort="status">
+                                        <i class="fas fa-sort"></i>
+                                    </span>
+                                </th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td colspan="7" class="text-center">Loading invoices...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                
+                <!-- Pagination -->
+                <div class="pagination">
+                    <span class="page-info">Showing 1-6 of 358 invoices</span>
+                    <div class="page-controls">
+                        <button class="pagination-btn" disabled>
+                            <i class="fas fa-chevron-left"></i>
+                        </button>
+                        <button class="pagination-btn active">1</button>
+                        <button class="pagination-btn">2</button>
+                        <button class="pagination-btn">3</button>
+                        <span class="pagination-ellipsis">...</span>
+                        <button class="pagination-btn">60</button>
+                        <button class="pagination-btn">
+                            <i class="fas fa-chevron-right"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- No Results Message (hidden by default) -->
+            <div id="noResultsMessage" class="no-results" style="display: none;">
+                <i class="fas fa-search fa-3x"></i>
+                <h3>No invoices found</h3>
+                <p>Try adjusting your search or filter criteria</p>
+                <a href="#" id="resetFiltersLink">Reset all filters</a>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Create Invoice Modal -->
+    <div id="invoiceModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Create New Invoice</h2>
+                <button class="close-modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="invoiceForm">
+                    <div class="form-grid">
+                        <div class="form-section">
+                            <h3>Client Information</h3>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="client-list">Client Name</label>
+                                    <input type="text" id="client-list" required autocomplete="off">
+                                </div>
+                            </div>
+                            <div id="expand-client-form" style="display: none;">
+                                <!-- New client form fields go here -->
+                            </div>
+                        </div>
+                        <div class="form-section">
+                            <h3>Client Information</h3>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="client-list">Client Name/Company</label>
+                                    <div class="client-input-wrapper">
+                                        <input type="text" id="client-list" placeholder="Type client name..." autocomplete="off">
+                                        <div class="client-suggestions" style="display: none;"></div>
+                                    </div>
+                                    
+                                    <div id="expand-client-form" style="display: none;">
+                                        <h4>New Client Details</h4>
+                                        <div class="form-row">
+                                            <div class="form-group">
+                                                <label for="new-client-nuit">NUIT</label>
+                                                <input type="text" id="new-client-nuit">
+                                            </div>
+                                            <div class="form-group">
+                                                <label for="new-client-email">Email</label>
+                                                <input type="email" id="new-client-email">
+                                            </div>
+                                        </div>
+                                        <!-- ...rest of the form... -->
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="clientEmail">Email</label>
+                                    <input type="email" id="clientEmail" placeholder="client@example.com">
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="clientAddress">Address</label>
+                                    <textarea id="clientAddress" rows="3" placeholder="Client's full address"></textarea>
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="clientTaxId">Tax ID (NUIT)</label>
+                                    <input type="text" id="clientTaxId" placeholder="e.g. 123456789">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="form-section">
+                            <h3>Invoice Details</h3>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="invoiceNumber">Invoice Number</label>
+                                    <input type="text" id="invoiceNumber" value="INV-2025-0007" readonly>
+                                </div>
+                                <div class="form-group">
+                                    <label for="issueDate">Issue Date</label>
+                                    <input type="date" id="issueDate" value="2025-03-25" required>
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="dueDate">Due Date</label>
+                                    <input type="date" id="dueDate" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="currency">Currency</label>
+                                    <select id="currency" required>
+                                        <option value="MZN" selected>MZN - Mozambican Metical</option>
+                                        <option value="USD">USD - US Dollar</option>
+                                        <option value="EUR">EUR - Euro</option>
+                                        <option value="GBP">GBP - British Pound</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="paymentTerms">Payment Terms</label>
+                                    <select id="paymentTerms" required>
+                                        <option value="net30" selected>Net 30 - Due in 30 days</option>
+                                        <option value="net15">Net 15 - Due in 15 days</option>
+                                        <option value="net60">Net 60 - Due in 60 days</option>
+                                        <option value="custom">Custom</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-section">
+                        <h3>Items</h3>
+                        <div class="items-table-container">
+                            <table id="itemsTable" class="items-table">
+                                <thead>
+                                    <tr>
+                                        <th width="40%">Description</th>
+                                        <th width="15%">Quantity</th>
+                                        <th width="15%">Unit Price</th>
+                                        <th width="10%">VAT (16%)</th>
+                                        <th width="15%">Total</th>
+                                        <th width="5%"></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr class="item-row">
+                                        <td>
+                                            <input type="text" class="item-description" placeholder="Enter item description">
+                                        </td>
+                                        <td>
+                                            <input type="number" class="item-quantity" value="1" min="1" step="1">
+                                        </td>
+                                        <td>
+                                            <input type="number" class="item-price" value="0.00" min="0" step="0.01">
+                                        </td>
+                                        <td>
+                                            <span class="item-vat">0.00</span>
+                                        </td>
+                                        <td>
+                                            <span class="item-total">0.00</span>
+                                        </td>
+                                        <td>
+                                            <button type="button" class="remove-item-btn">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <button type="button" id="addItemBtn" class="btn secondary-btn">
+                            <i class="fas fa-plus"></i> Add Item
+                        </button>
+                        
+                        <div class="invoice-totals">
+                            <div class="totals-row">
+                                <span>Subtotal:</span>
+                                <span id="subtotal">0.00</span>
+                            </div>
+                            <div class="totals-row">
+                                <span>VAT (16%):</span>
+                                <span id="totalVat">0.00</span>
+                            </div>
+                            <div class="totals-row">
+                                <span>Total:</span>
+                                <span id="invoiceTotal">0.00</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-section">
+                        <h3>Notes & Terms</h3>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="notes">Additional Notes</label>
+                                <textarea id="notes" rows="3" placeholder="Add any additional notes or terms..."></textarea>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn secondary-btn" id="chooseTemplate">
+                            <i class="fas fa-save"></i> Choose Template
+                        </button>
+                        <button type="button" class="btn secondary-btn" id="previewInvoiceBtn">
+                            <i class="fas fa-eye"></i> Preview
+                        </button>
+                        <button type="submit" class="btn primary-btn">
+                            <i class="fas fa-check"></i> Create Invoice
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Create Invoice Modal -->
+    <div id="createInvoiceModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Create New Invoice</h2>
+                <button class="close-modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="invoiceForm">
+                    <div class="form-group">
+                        <label for="client-list">Client</label>
+                        <input type="text" id="client-list" required placeholder="Search client...">
+                    </div>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="invoiceNumber">Invoice Number</label>
+                            <input type="text" id="invoiceNumber" required readonly>
+                        </div>
+                        <div class="form-group">
+                            <label for="issueDate">Issue Date</label>
+                            <input type="date" id="issueDate" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="dueDate">Due Date</label>
+                            <input type="date" id="dueDate" required>
+                        </div>
+                    </div>
+                    
+                    <div class="items-section">
+                        <h3>Items</h3>
+                        <table id="itemsTable">
+                            <thead>
+                                <tr>
+                                    <th>Description</th>
+                                    <th>Quantity</th>
+                                    <th>Price</th>
+                                    <th>VAT</th>
+                                    <th>Total</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr class="item-row">
+                                    <td><input type="text" class="item-description" required></td>
+                                    <td><input type="number" class="item-quantity" value="1" min="1"></td>
+                                    <td><input type="number" class="item-price" value="0.00" min="0" step="0.01"></td>
+                                    <td><span class="item-vat">0.00</span></td>
+                                    <td><span class="item-total">0.00</span></td>
+                                    <td><button type="button" class="remove-item-btn"><i class="fas fa-trash"></i></button></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <button type="button" id="addItemBtn" class="btn secondary-btn">
+                            <i class="fas fa-plus"></i> Add Item
+                        </button>
+                    </div>
+
+                    <div class="totals-section">
+                        <div class="totals-grid">
+                            <span>Subtotal:</span>
+                            <span id="subtotal">0.00</span>
+                            <span>VAT:</span>
+                            <span id="totalVat">0.00</span>
+                            <span>Total:</span>
+                            <span id="invoiceTotal">0.00</span>
+                        </div>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="button" class="btn secondary-btn" onclick="previewInvoice()">Preview</button>
+                        <button type="submit" class="btn primary-btn">Create Invoice</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Template Selection Modal -->
+    <div id="templateModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Choose Invoice Template</h2>
+                <button class="close-modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="template-grid">
+                    <div class="template-card" data-template="classic">
+                        <img src="templates/previews/classic-preview.png" alt="Classic Template" 
+                             onerror="this.src='https://via.placeholder.com/300x400/e3e3e3/666666?text=Classic+Template'">
+                        <h3>Classic Template</h3>
+                        <p>Traditional professional layout </p>
+                        <button class="btn primary-btn select-template">Select</button>
+                    </div>
+                    <div class="template-card" data-template="modern">
+                        <img src="templates/previews/modern-preview.png" alt="Modern Template"
+                             onerror="this.src='https://via.placeholder.com/300x400/e3e3e3/666666?text=Modern+Template'">
+                        <h3>Modern Template</h3>
+                        <p>Clean contemporary design </p>
+                        <button class="btn primary-btn select-template">Select</button>
+                    </div>
+                    <div class="template-card" data-template="minimal">
+                        <img src="templates/previews/minimal-preview.png" alt="Minimal Template"
+                             onerror="this.src='https://via.placeholder.com/300x400/e3e3e3/666666?text=Minimal+Template'">
+                        <h3>Minimal Template</h3>
+                        <p>Simple and elegant style </p>
+                        <button class="btn primary-btn select-template">Select</button>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn secondary-btn close-template-modal">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    
+    
+    <!-- View Invoice Modal -->
+    <div id="viewInvoiceModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Invoice Details</h2>
+                <button class="close-modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="invoice-view-header">
+                    <div class="invoice-view-info">
+                        <h3 id="viewInvoiceNumber">INV-2025-0001</h3>
+                        <span id="viewInvoiceStatus" class="status paid">Paid</span>
+                    </div>
+                    <div class="invoice-view-actions">
+                        
+                        </div>
+                        <button class="btn icon-btn" id="downloadPdfBtn" title="Download PDF">
+                            <i class="fas fa-download"></i>
+                        </button>
+                        <button class="btn icon-btn" id="printInvoiceBtn" title="Print">
+                            <i class="fas fa-print"></i>
+                        </button>
+                        <button class="btn icon-btn" id="emailInvoiceBtn" title="Email">
+                            <i class="fas fa-envelope"></i>
+                        </button>
+                        
+                    </div>
+                </div>
+                
+                <div class="invoice-preview-container">
+                    <div id="invoicePreviewContent">
+                        <!-- Invoice content will be inserted here -->
+                    </div>
+                </div>
+                
+                <div class="invoice-view-footer">
+                    <div class="payment-status">
+                        <h4>Payment Status</h4>
+                        <div class="status-timeline">
+                            <div class="timeline-item active">
+                                <div class="timeline-marker"></div>
+                                <div class="timeline-content">
+                                    <span class="timeline-date">Mar 15, 2025</span>
+                                    <span class="timeline-title">Invoice Created</span>
+                                </div>
+                            </div>
+                            <div class="timeline-item active">
+                                <div class="timeline-marker"></div>
+                                <div class="timeline-content">
+                                    <span class="timeline-date">Mar 16, 2025</span>
+                                    <span class="timeline-title">Sent to Client</span>
+                                </div>
+                            </div>
+                            <div class="timeline-item active">
+                                <div class="timeline-marker"></div>
+                                <div class="timeline-content">
+                                    <span class="timeline-date">Mar 20, 2025</span>
+                                    <span class="timeline-title">Payment Received</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn secondary-btn" id="markPaidBtn">
+                    <i class="fas fa-check-circle"></i> Mark as Paid
+                </button>
+                <button class="btn primary-btn" id="closeInvoiceBtn">
+                    <i class="fas fa-times"></i> Close
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Email Invoice Modal -->
+    <div id="emailInvoiceModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Send Invoice</h2>
+                <button class="close-modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="emailInvoiceForm">
+                    <div class="form-group">
+                        <label for="emailTo">To:</label>
+                        <input type="email" id="emailTo" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="emailSubject">Subject:</label>
+                        <input type="text" id="emailSubject" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="emailMessage">Message:</label>
+                        <textarea id="emailMessage" rows="6" required></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="emailAttachPdf" checked>
+                            Attach invoice as PDF
+                        </label>
+                    </div>
+                    <div class="loading-indicator" style="display: none;">
+                        <i class="fas fa-spinner fa-spin"></i> Sending email...
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn secondary-btn close-email-modal">
+                    Cancel
+                </button>
+                <button type="submit" form="emailInvoiceForm" class="btn primary-btn">
+                    <i class="fas fa-paper-plane"></i> Send
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Dark Mode Overlay (used when modal is open) -->
+    <div class="modal-overlay"></div>
+
+    <!-- JavaScript Dependencies -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="scripts/templateManager.js"></script>
+    <script src="js/email-handler.js"></script>
+    <script src="js/invoice.js"></script>
+    
+    <!-- Initialize Supabase -->
+    <script type="module">
+        import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.0.0/+esm';
+        
+        // Create single Supabase instance
+        const supabase = createClient(
+            'https://qvmtozjvjflygbkjecyj.supabase.co',
+            'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF2bXRvemp2amZseWdia2plY3lqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDYxMjc2MjMsImV4cCI6MjA2MTcwMzYyM30.DJMC1eM5_EouM1oc07JaoXsMX_bSLn2AVCozAcdfHmo'
+        );
+
+        window.supabase = supabase;
+    </script>
+    <script>
+    document.addEventListener('DOMContentLoaded', async function() {
+    try {
+        const { data: { user } } = await supabase.auth.getSession();
+        if (!user) return;
+
+        const trialStatus = await window.trialSystem.checkTrialStatus(user.id);
+        updateTrialDisplay(trialStatus.trialInfo);
+    } catch (error) {
+        console.error('Error checking trial status:', error);
+    }
+});
+
+function updateTrialDisplay(trialInfo) {
+    // Update days remaining
+    const daysRemainingEl = document.getElementById('days-remaining');
+    if (daysRemainingEl) {
+        daysRemainingEl.textContent = trialInfo.daysLeft;
+        if (trialInfo.daysLeft <= 3) {
+            daysRemainingEl.classList.add('warning');
+        }
+    }
+
+    // Update invoices remaining
+    const invoicesRemainingEl = document.getElementById('invoices-remaining');
+    if (invoicesRemainingEl) {
+        invoicesRemainingEl.textContent = trialInfo.invoicesLeft;
+        if (trialInfo.invoicesLeft <= 2) {
+            invoicesRemainingEl.classList.add('warning');
+        }
+    }
+
+    // Update progress bar
+    const progressEl = document.getElementById('trial-progress');
+    if (progressEl) {
+        progressEl.style.width = `${trialInfo.progress}%`;
+        if (trialInfo.progress > 75) {
+            progressEl.classList.add('warning');
+        }
+    }
+
+    // Show/hide based on trial status
+    const bannerEl = document.getElementById('trial-banner');
+    if (bannerEl) {
+        bannerEl.style.display = trialInfo.isExpired ? 'none' : 'block';
+    }
+}
+
+// Add upgrade button handler
+document.getElementById('upgrade-btn')?.addEventListener('click', function() {
+    showUpgradeModal(window.trialInfo);
+});
+</script>
+</body>
+</html>

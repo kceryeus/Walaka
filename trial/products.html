@@ -1,0 +1,862 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Products Page</title>
+  <link rel="stylesheet" href="./styles.css"> <!-- Ensure correct relative path -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.3/html2pdf.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+  <style>
+    :root {
+      --primary-color: #007ec7; /* Corporate blue */
+      --secondary-color: #4f46e5;
+      --accent-color: #818cf8;
+      --background-color: #f8fafc;
+      --sidebar-width: 280px;
+      --topbar-height: 60px;
+      --card-radius: 16px;
+      --transition-speed: 0.3s;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background-color: var(--background-color);
+      color: #1e293b;
+      min-height: 100vh;
+      overflow-x: hidden;
+      opacity: 0;
+      transition: opacity 0.5s ease-in-out;
+    }
+
+    body.loaded {
+      opacity: 1;
+    }
+
+    .dashboard-container {
+      display: grid;
+      grid-template-columns: var(--sidebar-width) 1fr;
+      min-height: 100vh;
+    }
+
+    /* Sidebar */
+    .sidebar {
+      background: linear-gradient(195deg, #007ec7, #02204e);
+      color: white;
+      padding: 1.5rem 1rem;
+      position: fixed;
+      top: 0;
+      left: 0;
+      height: 100vh;
+      width: var(--sidebar-width);
+      overflow-y: auto;
+      transition: transform var(--transition-speed) ease;
+      z-index: 1000;
+    }
+
+    .sidebar-container {
+      width: var(--sidebar-width);
+      flex-shrink: 0;
+    }
+
+    /* Scrollbar styling for sidebar */
+    .sidebar::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .sidebar::-webkit-scrollbar-track {
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    .sidebar::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 3px;
+    }
+
+    .sidebar::-webkit-scrollbar-thumb:hover {
+      background: rgba(255, 255, 255, 0.3);
+    }
+
+    .logo {
+      font-size: 1.5rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.5rem 1rem;
+      border-radius: var(--card-radius);
+      transition: all var(--transition-speed) ease;
+    }
+
+    .logo:hover {
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    .nav-menu {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .nav-section {
+      margin-top: 1.5rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .nav-section h3 {
+      color: rgba(255, 255, 255, 0.5);
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      padding: 0 1rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      padding: 0.75rem 1rem;
+      border-radius: var(--card-radius);
+      color: rgba(255, 255, 255, 0.7);
+      text-decoration: none;
+      transition: all var(--transition-speed) ease;
+      margin-bottom: 0.25rem;
+    }
+
+    .nav-item:hover,
+    .nav-item.active {
+      background: rgba(255, 255, 255, 0.1);
+      color: white;
+    }
+
+    .nav-item i {
+      width: 20px;
+      text-align: center;
+      font-size: 1rem;
+    }
+
+    /* Main Content */
+    .main-content {
+      padding: 2rem;
+      margin-top: var(--topbar-height);
+    }
+
+    .top-bar {
+      position: fixed;
+      top: 0;
+      right: 0;
+      left: var(--sidebar-width);
+      height: var(--topbar-height);
+      background: white;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 2rem;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+      z-index: 100;
+    }
+
+    .search-bar {
+      flex: 1;
+      max-width: 500px;
+      position: relative;
+    }
+
+    .search-bar input {
+      width: 100%;
+      padding: 0.75rem 1rem;
+      border: 1px solid #e2e8f0;
+      border-radius: var(--card-radius);
+      font-size: 0.9rem;
+    }
+
+    .user-menu {
+      display: flex;
+      align-items: center;
+      gap: 1.5rem;
+    }
+
+    .notification-bell {
+      position: relative;
+      cursor: pointer;
+    }
+
+    .badge {
+      position: absolute;
+      top: -5px;
+      right: -5px;
+      background: var(--primary-color);
+      color: white;
+      padding: 2px 6px;
+      border-radius: 10px;
+      font-size: 0.75rem;
+    }
+
+    .user-profile {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      cursor: pointer;
+    }
+
+    .avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: #e2e8f0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .dropdown {
+      position: relative;
+      display: inline-block;
+    }
+
+    .dropdown-toggle {
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: #64748b;
+      padding: 0 8px;
+    }
+
+    .dropdown-menu {
+      display: none;
+      position: absolute;
+      background-color: white;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+      border-radius: var(--card-radius);
+      overflow: hidden;
+      z-index: 1000;
+      left: 50%;
+      transform: translateX(-50%);
+      top: 100%;
+      margin-top: 10px;
+    }
+
+    .dropdown-menu a {
+      color: #1e293b;
+      padding: 12px 16px;
+      text-decoration: none;
+      display: block;
+    }
+
+    .dropdown-menu a:hover {
+      background-color: #f1f5f9;
+    }
+
+    .user-profile:hover .dropdown-menu {
+      display: block;
+    }
+
+    @media (max-width: 768px) {
+      .dashboard-container {
+        grid-template-columns: 1fr;
+      }
+
+      .sidebar {
+        transform: translateX(-100%);
+      }
+
+      .sidebar.active {
+        transform: translateX(0);
+      }
+
+      .top-bar {
+        left: 0;
+      }
+
+      .main-content {
+        margin-top: calc(var(--topbar-height) + 1rem);
+        padding: 1rem;
+      }
+    }
+
+    .sign-out-btn {
+      background: none;
+      border: none;
+      color: #64748b;
+      cursor: pointer;
+      padding: 8px;
+      border-radius: 50%;
+      transition: all 0.2s ease;
+    }
+
+    .sign-out-btn:hover {
+      background: #f1f5f9;
+      color: var(--primary-color);
+    }
+
+    /* Additional styles for product management */
+    .product-management {
+      display: flex;
+      gap: 2rem;
+    }
+
+    .frame {
+      flex: 1;
+      padding: 1rem;
+      border: 1px solid #e2e8f0;
+      border-radius: var(--card-radius);
+      background-color: white;
+    }
+
+    .frame-left {
+      width: 300px; /* Fixed width */
+      height: 600px; /* Fixed height */
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding: 2rem;
+      border-radius: var(--card-radius);
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .frame-right {
+      max-height: 600px;
+      overflow-y: auto;
+      position: relative; /* Add relative positioning */
+    }
+
+    .search-bar-frame {
+      position: sticky; /* Fix the search bar at the top */
+      top: 0;
+      background-color: white; /* Ensure background color matches */
+      z-index: 10; /* Ensure it stays above other elements */
+      padding: 0.5rem 0; /* Add padding for spacing */
+      border-bottom: 1px solid #e2e8f0; /* Add a separator below the search bar */
+    }
+
+    .search-bar-frame input {
+      width: 100%;
+      padding: 0.5rem;
+      border: 1px solid #e2e8f0;
+      border-radius: var(--card-radius);
+    }
+
+    .product-item {
+      display: grid;
+      grid-template-columns: 1fr auto; /* Separate text and buttons into their own "frames" */
+      align-items: center; /* Ensure vertical alignment */
+      padding: 0.75rem 1rem;
+      border: 1px solid #e2e8f0;
+      border-radius: var(--card-radius);
+      margin-bottom: 0.5rem;
+    }
+
+    .product-item button {
+      font-size: 0.7rem; /* Slightly smaller font size */
+      border: none;
+      cursor: pointer;
+      padding: 0.3rem 0.6rem; /* Adjust padding */
+      border-radius: var(--card-radius);
+      transition: background-color 0.3s ease;
+    }
+
+    .product-item .edit-btn {
+      background-color: #fbbf24; /* Yellowish orange */
+      color: white;
+    }
+
+    .product-item .delete-btn {
+      background-color: #ef4444; /* Red */
+      color: white;
+    }
+
+    .product-item .edit-btn:hover {
+      background-color: #f59e0b; /* Darker yellowish orange */
+    }
+
+    .product-item .delete-btn:hover {
+      background-color: #dc2626; /* Darker red */
+    }
+
+    #product-form {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      width: 100%;
+    }
+
+    #product-form label {
+      align-self: flex-start;
+      font-weight: 600;
+      color: var(--primary-color);
+    }
+
+    #product-form input,
+    #product-form select,
+    #product-form button {
+      width: 100%;
+      padding: 0.75rem;
+      border: 1px solid #e2e8f0;
+      border-radius: var(--card-radius);
+      font-size: 0.9rem;
+    }
+
+    #product-form input:focus,
+    #product-form select:focus,
+    #product-form button:focus {
+      outline: none;
+      border-color: var(--primary-color);
+      box-shadow: 0 0 0 3px rgba(0, 126, 199, 0.2);
+    }
+
+    #other-vat-container {
+      display: none;
+      width: 100%;
+    }
+
+    #other-vat-container label {
+      font-weight: 600;
+      color: var(--primary-color);
+    }
+
+    #other-vat-container input {
+      width: 100%;
+      padding: 0.75rem;
+      border: 1px solid #e2e8f0;
+      border-radius: var(--card-radius);
+      font-size: 0.9rem;
+    }
+
+    #other-vat-container input:focus {
+      outline: none;
+      border-color: var(--primary-color);
+      box-shadow: 0 0 0 3px rgba(0, 126, 199, 0.2);
+    }
+
+    #product-form button {
+      background-color: var(--primary-color); /* Blue */
+      color: white;
+      border: none;
+      padding: 0.75rem 1rem;
+      border-radius: var(--card-radius);
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+
+    #product-form button:hover {
+      background-color: #005fa3; /* Darker blue */
+    }
+
+    .search-bar-frame,
+    #product-list h3 {
+      position: sticky; /* Fix both the search bar and header */
+      top: 0;
+      background-color: white;
+      z-index: 10;
+      padding: 0.5rem 0;
+    }
+
+    #product-list h3 {
+      margin: 0; /* Remove default margin for better alignment */
+      border-bottom: 1px solid #e2e8f0; /* Add a separator */
+      position: sticky; /* Fix the header below the search bar */
+      top: 2.5rem; /* Adjust to account for the search bar height */
+      background-color: white;
+      z-index: 9; /* Ensure it stays below the search bar */
+      padding: 0.5rem 0;
+      border-bottom: 1px solid #e2e8f0; /* Add a separator below the header */
+    }
+  </style>
+  <script src="assets/js/sidebar.js"></script>
+</head>
+<body>
+  <div class="dashboard-container">
+    <!-- Sidebar -->
+    <div class="sidebar-container">
+      <!-- Sidebar will be loaded here -->
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+      <!-- Top Bar -->
+      <div class="top-bar">
+        <div class="search-bar">
+          <input type="text" placeholder="Pesquisar...">
+        </div>
+        <div class="user-menu">
+          <div class="notification-bell">
+            <i class="fas fa-bell"></i>
+            <span class="badge">0</span>
+          </div>
+          <div class="user-profile">
+            <div class="avatar">
+              <i class="fas fa-user"></i>
+            </div>
+            <span id="user-name">Loading...</span>
+            <div class="dropdown">
+              <button class="dropdown-toggle"><i class="fas fa-caret-down"></i></button>
+              <div class="dropdown-menu">
+                <a href="profile.html">Profile Management</a>
+                <a href="settings.html">General Settings</a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- User Defined Products Section -->
+      <section id="user-defined-products">
+        <h2>Manage User Defined Products</h2>
+        <div class="product-management">
+          <div class="frame frame-left">
+            <form id="product-form">
+              <label for="description">Description:</label>
+              <input type="text" id="description" name="description" required>
+
+              <label for="price">Price:</label>
+              <input type="number" id="price" name="price" step="0.01" required>
+
+              <label for="tax-code">Tax Code (SAT):</label>
+              <input type="text" id="tax-code" name="tax-code" required placeholder="e.g. 10101">
+
+              <label for="tax-rate">Tax Rate (VAT):</label>
+              <select id="vat" name="vat" required>
+                <option value="0.16">16%</option>
+                <option value="0.05">5%</option>
+                <option value="0">Exempt</option>
+                <option value="other">Other</option>
+              </select>
+              <div id="other-vat-container" style="display: none;">
+                <label for="other-vat">Other VAT Percentage:</label>
+                <input type="number" id="other-vat" name="other-vat" min="0" max="100" step="0.01">
+              </div>
+
+              <label for="industry">Industry (SAT):</label>
+              <input type="text" id="industry" name="industry" required placeholder="e.g. Retail">
+
+              <button type="button" onclick="saveProduct()">Save</button>
+              <button type="button" onclick="discardChanges()">Discard</button>
+            </form>
+          </div>
+          <div class="frame frame-right">
+            <div class="search-bar-frame">
+              <input type="text" id="search-bar" placeholder="Search products..." oninput="filterProducts()">
+            </div>
+            <div id="product-list">
+              <h3>Product List</h3>
+              <!-- List of user defined products will be displayed here -->
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </div>
+  <script type="module">
+    import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.0.0/+esm';
+
+    const supabaseUrl = 'https://qvmtozjvjflygbkjecyj.supabase.co';
+    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF2bXRvemp2amZseWdia2plY3lqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDYxMjc2MjMsImV4cCI6MjA2MTcwMzYyM30.DJMC1eM5_EouM1oc07JaoXsMX_bSLn2AVCozAcdfHmo';
+ // Replace with your actual Supabase key
+    const supabase = createClient(supabaseUrl, supabaseKey);
+
+    async function displayUserName() {
+      try {
+        const { data: { session }, error } = await supabase.auth.getSession();
+        if (error || !session) {
+          console.error('Erro ao obter sessão:', error?.message);
+          document.getElementById('user-name').textContent = 'Não logado';
+          return;
+        }
+
+        const user = session.user;
+        if (!user) {
+          document.getElementById('user-name').textContent = 'Não logado';
+          return;
+        }
+
+        const { data: profileData, error: profileError } = await supabase
+          .from('users')
+          .select('username, logo')
+          .eq('id', user.id)
+          .single();
+
+        if (profileError) {
+          console.error('Erro ao buscar perfil:', profileError.message);
+          return;
+        }
+
+        const userNameSpan = document.getElementById('user-name');
+        if (userNameSpan) {
+          userNameSpan.textContent = profileData.username || 'Usuário Desconhecido';
+        }
+
+        const userAvatar = document.querySelector('.avatar');
+        if (userAvatar && profileData.logo) {
+          userAvatar.innerHTML = `<img src="${profileData.logo}" alt="User Logo" style="width: 100%; height: 100%; border-radius: 50%;">`;
+        }
+      } catch (err) {
+        console.error('Erro inesperado:', err);
+      }
+    }
+
+    window.addEventListener('DOMContentLoaded', displayUserName);
+
+    async function handleSignOut() {
+      const { error } = await supabase.auth.signOut();
+      if (error) {
+        console.error('Erro ao sair:', error);
+      } else {
+        window.location.href = '/login.html';
+      }
+    }
+
+    let products = [];
+
+    function formatCurrency(value) {
+      return `MZN ${value.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ' ').replace('.', ',')}`;
+    }
+
+    function formatVatForDisplay(vat) {
+      return `${(vat * 100).toFixed(0)}%`; // Convert decimal to percentage for display
+    }
+
+    function parseVatFromDisplay(vatDisplay) {
+      return parseFloat(vatDisplay.replace('%', '')); // Convert percentage back to decimal for storage
+    }
+
+    async function fetchProducts() {
+      // Obter o usuário logado
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      if (sessionError || !session || !session.user) {
+        console.error('Erro ao obter sessão:', sessionError?.message);
+        return;
+      }
+      const userId = session.user.id;
+      // Buscar apenas produtos do usuário logado
+      const { data, count, error } = await supabase
+        .from('products')
+        .select('*', { count: 'exact' })
+        .eq('user_id', userId);
+
+      if (error) {
+        console.error('Error fetching products:', error);
+        return;
+      }
+
+      products = data;
+      displayProducts();
+
+      // Update product count in the header
+      const productListHeader = document.querySelector('#product-list h3');
+      if (productListHeader) {
+        productListHeader.textContent = `Product List (${count || 0})`;
+      }
+    }
+
+    async function saveProduct() {
+      // Obter o usuário logado
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      if (sessionError || !session || !session.user) {
+        alert('Usuário não autenticado. Faça login novamente.');
+        return;
+      }
+      const userId = session.user.id;
+      const description = document.getElementById('description').value;
+      const price = parseFloat(document.getElementById('price').value);
+      const taxCode = document.getElementById('tax-code').value;
+      const taxRate = parseFloat(document.getElementById('vat').value);
+      const industry = document.getElementById('industry').value;
+
+      if (!description || isNaN(price) || !taxCode || isNaN(taxRate) || !industry) {
+        alert('Please fill in all required fields.');
+        return;
+      }
+
+      try {
+        const { data, error } = await supabase
+          .from('products')
+          .insert([{ description, price, tax_code: taxCode, tax_rate: taxRate, industry, user_id: userId }])
+          .select();
+
+        if (error) {
+          alert('Error saving product: ' + error.message);
+          return;
+        }
+
+        products.push(data[0]);
+        displayProducts();
+        document.getElementById('product-form').reset();
+      } catch (err) {
+        alert('Unexpected error: ' + err.message);
+      }
+    }
+
+    async function logProductUpdate(productId, oldData, newData, userId) {
+      await supabase.from('product_updates').insert([
+        {
+          product_id: productId,
+          old_data: JSON.stringify(oldData),
+          new_data: JSON.stringify(newData),
+          updated_by: userId
+        }
+      ]);
+    }
+
+    async function editProduct(index) {
+      const product = products[index];
+      document.getElementById('description').value = product.description;
+      document.getElementById('price').value = product.price;
+      document.getElementById('vat').value = product.vat === 0 ? '0' : formatVatForDisplay(product.vat);
+      if (document.getElementById('vat').value === 'other') {
+        document.getElementById('other-vat-container').style.display = 'block';
+        document.getElementById('other-vat').value = (product.vat * 100).toFixed(0); // Show as percentage
+      } else {
+        document.getElementById('other-vat-container').style.display = 'none';
+      }
+
+      const saveButton = document.querySelector('#product-form button[type="button"]');
+      saveButton.textContent = 'Update Product';
+      saveButton.onclick = async function () {
+        const updatedDescription = document.getElementById('description').value;
+        const updatedPrice = parseFloat(document.getElementById('price').value);
+        const updatedVatDisplay = document.getElementById('vat').value === 'other' 
+          ? `${document.getElementById('other-vat').value}%` 
+          : document.getElementById('vat').value;
+        const updatedVat = parseVatFromDisplay(updatedVatDisplay);
+        const updatedTaxCode = document.getElementById('tax-code').value;
+        const updatedTaxRate = parseFloat(document.getElementById('tax-rate').value);
+        const updatedIndustry = document.getElementById('industry').value;
+
+        // Obter usuário logado
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+        const userId = session?.user?.id || null;
+
+        const oldData = { ...product };
+        const newData = {
+          description: updatedDescription,
+          price: updatedPrice,
+          vat: updatedVat,
+          tax_code: updatedTaxCode,
+          tax_rate: updatedTaxRate,
+          industry: updatedIndustry
+        };
+
+        const { error } = await supabase
+          .from('products')
+          .update(newData)
+          .eq('id', product.id);
+
+        if (!error) {
+          await logProductUpdate(product.id, oldData, newData, userId);
+          products[index] = { ...product, ...newData };
+          displayProducts();
+          document.getElementById('product-form').reset();
+          document.getElementById('other-vat-container').style.display = 'none';
+          saveButton.textContent = 'Save';
+          saveButton.onclick = saveProduct;
+        } else {
+          console.error('Error updating product:', error);
+        }
+      };
+    }
+
+    async function deleteProduct(index) {
+      const product = products[index];
+      const { error } = await supabase.from('products').delete().eq('id', product.id);
+      if (error) {
+        console.error('Error deleting product:', error);
+        return;
+      }
+      products.splice(index, 1);
+      displayProducts();
+    }
+
+    function displayProducts() {
+      const productList = document.getElementById('product-list');
+      productList.innerHTML = '<h3>Product List</h3>';
+      products.forEach((product, index) => {
+        const productItem = document.createElement('div');
+        productItem.className = 'product-item';
+        productItem.innerHTML = `
+          <span>
+            ${product.description} - ${formatCurrency(product.price)}<br>
+            <strong>Tax Code:</strong> ${product.tax_code} | 
+            <strong>Tax Rate:</strong> ${product.tax_rate}% | 
+            <strong>Industry:</strong> ${product.industry}
+          </span>
+          <div>
+            <button class="edit-btn" onclick="editProduct(${index})">Update Product</button>
+          </div>
+        `;
+        productList.appendChild(productItem);
+      });
+    }
+
+    function subscribeToProducts() {
+      supabase
+        .channel('products-changes')
+        .on(
+          'postgres_changes',
+          { event: '*', schema: 'public', table: 'products' },
+          (payload) => {
+            console.log('Change received:', payload);
+            fetchProducts(); // Refresh the product list on any change
+          }
+        )
+        .subscribe();
+    }
+
+    // Attach functions to the global window object
+    window.saveProduct = saveProduct;
+    window.editProduct = editProduct;
+    window.deleteProduct = deleteProduct;
+    window.filterProducts = filterProducts; // Attach filterProducts globally
+
+    window.addEventListener('DOMContentLoaded', () => {
+      fetchProducts();
+      subscribeToProducts(); // Start listening for real-time updates
+    });
+
+    function filterProducts() {
+      const searchTerm = document.getElementById('search-bar').value.toLowerCase();
+      const productItems = document.querySelectorAll('.product-item');
+
+      productItems.forEach((item) => {
+        const productText = item.querySelector('span').textContent.toLowerCase();
+        if (productText.includes(searchTerm)) {
+          item.style.display = 'grid';
+        } else {
+          item.style.display = 'none';
+        }
+      });
+    }
+  </script>
+  <script>
+    document.getElementById('vat').addEventListener('change', function() {
+      if (this.value === 'other') {
+        document.getElementById('other-vat-container').style.display = 'block';
+      } else {
+        document.getElementById('other-vat-container').style.display = 'none';
+      }
+    });
+
+    const menuToggle = document.createElement('div');
+    menuToggle.className = 'menu-toggle';
+    menuToggle.innerHTML = '<i class="fas fa-bars"></i>';
+    document.querySelector('.top-bar').prepend(menuToggle);
+
+    menuToggle.addEventListener('click', () => {
+      document.querySelector('.sidebar').classList.toggle('active');
+    });
+
+    window.addEventListener('load', () => {
+      document.body.classList.add('loaded');
+    });
+  </script>
+</body>
+</html>

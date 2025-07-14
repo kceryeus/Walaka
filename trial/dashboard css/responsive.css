@@ -1,0 +1,199 @@
+/* Responsive styles */
+
+/* Large devices (desktops, less than 1200px) */
+@media (max-width: 1199.98px) {
+  .metrics-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .charts-section {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Medium devices (tablets, less than 992px) */
+@media (max-width: 991.98px) {
+  .sidebar {
+    width: 240px;
+  }
+  
+  .main-content {
+    margin-left: 240px;
+  }
+  
+  .metrics-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .charts-section {
+    grid-template-columns: 1fr;
+  }
+  
+  /* Enable sidebar toggle for medium screens */
+  .menu-toggle {
+    display: flex;
+  }
+  
+  /* Start with sidebar collapsed on medium screens */
+  .sidebar {
+    transform: translateX(-240px);
+    width: 0;
+  }
+  
+  .main-content {
+    margin-left: 0;
+  }
+  
+  /* Show sidebar when toggled */
+  .sidebar-active .sidebar {
+    transform: translateX(0);
+    width: 240px;
+  }
+  
+  /* Add overlay when sidebar is active */
+  .sidebar-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: var(--z-sidebar) - 1;
+  }
+  
+  .sidebar-active .sidebar-overlay {
+    display: block;
+  }
+}
+
+/* Small devices (landscape phones, less than 768px) */
+@media (max-width: 767.98px) {
+  .metrics-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .notification-dropdown {
+    width: 300px;
+    right: -120px;
+  }
+  
+  .notification-dropdown:before {
+    right: 130px;
+  }
+  
+  .dropdown-menu {
+    right: -10px;
+  }
+  
+  .search-bar {
+    display: none;
+  }
+  
+  .dashboard-header h2 {
+    font-size: 24px;
+  }
+  
+  .dashboard-header .subtitle {
+    font-size: 14px;
+  }
+  
+  .language-toggle span {
+    display: none;
+  }
+  
+  .language-toggle button {
+    min-width: 30px;
+    padding: 5px;
+  }
+  
+  .chart-period {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 5px;
+  }
+  
+  .activity-item {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .activity-icon {
+    margin-bottom: 10px;
+  }
+  
+  .activity-action {
+    margin-left: 0;
+    margin-top: 10px;
+    align-self: flex-end;
+  }
+}
+
+/* Extra small devices (portrait phones, less than 576px) */
+@media (max-width: 575.98px) {
+  .top-bar {
+    padding: 10px;
+  }
+  
+  .user-menu {
+    gap: 5px;
+  }
+  
+  .user-profile span {
+    display: none;
+  }
+  
+  .user-profile .fa-chevron-down {
+    display: none;
+  }
+  
+  .notification-dropdown {
+    width: 280px;
+    right: -100px;
+  }
+  
+  .dropdown-menu {
+    width: 180px;
+  }
+  
+  .metrics-grid {
+    gap: 15px;
+  }
+  
+  .chart-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  
+  .chart-period {
+    width: 100%;
+  }
+  
+  .chart-body {
+    height: 250px;
+  }
+  
+  .dashboard-content {
+    padding: 15px;
+  }
+  
+  .drilldown-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  
+  .drilldown-actions {
+    width: 100%;
+    justify-content: space-between;
+  }
+  
+  .notification-item {
+    padding: 10px;
+  }
+  
+  .metric-value {
+    font-size: 24px;
+  }
+}

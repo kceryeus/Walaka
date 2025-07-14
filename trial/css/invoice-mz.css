@@ -1,0 +1,48 @@
+.mz-invoice-section {
+    border: 1px solid #ddd;
+    padding: 15px;
+    margin-bottom: 20px;
+    border-radius: 4px;
+}
+
+.tax-info {
+    background: #f8f9fa;
+    padding: 10px;
+    border-left: 3px solid #007bff;
+}
+
+.required-field::after {
+    content: '*';
+    color: red;
+    margin-left: 4px;
+}
+
+.form-group.has-error input,
+.form-group.has-error select {
+    border-color: #dc3545;
+}
+
+.error-message {
+    color: #dc3545;
+    font-size: 0.875rem;
+    margin-top: 4px;
+}
+
+.vat-badge {
+    background: #28a745;
+    color: white;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 0.875rem;
+}
+
+.document-type-badge {
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-weight: 500;
+}
+
+.document-type-badge.FT { background: #e3f2fd; color: #0d47a1; }
+.document-type-badge.FR { background: #e8f5e9; color: #1b5e20; }
+.document-type-badge.NC { background: #fff3e0; color: #e65100; }
+.document-type-badge.ND { background: #fce4ec; color: #880e4f; }

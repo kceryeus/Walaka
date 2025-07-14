@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title data-translate="credit_notes_title">WALAKA - Credit Notes Management</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+    
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Google Fonts - Inter -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap">
+
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="components/sidebar.css">
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/document-styles.css">
+    <link rel="icon" type="image/png" href="assets/images/walaka-assistant.PNG">
+</head>
+
+<body>
+    <div class="dashboard-container">
+        <!-- Sidebar Menu -->
+        <div id="sidebar-container"></div>
+        <script>
+        // Dynamically load the sidebar from components/sidebar.html
+        document.addEventListener('DOMContentLoaded', function() {
+            fetch('components/sidebar.html')
+                .then(response => response.text())
+                .then(html => {
+                    document.getElementById('sidebar-container').innerHTML = html;
+                    // Dynamically load the sidebar-actions.js script after sidebar is injected
+                    var script = document.createElement('script');
+                    script.src = 'components/sidebar-actions.js';
+                    document.body.appendChild(script);
+                })
+                .catch(err => {
+                    console.error('Failed to load sidebar:', err);
+                });
+        });
+        </script>
+        
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Top Bar -->
+            <div class="top-bar">
+                <button class="menu-toggle">
+                    <i class="fas fa-bars"></i>
+                </button>
+                
+                
+                <div class="user-menu" style="margin-left:auto;">
+                    <a href="notifications.html" class="notification-bell">
+                        <i class="fas fa-bell"></i>
+                        <span class="badge">0</span>
+                    </a>
+                    
+                    <div class="user-profile" id="userProfile">
+                        <div class="avatar">
+                            <i class="fas fa-user"></i>
+                        </div>
+                        <span id="user-displayname">Loading...</span>
+                        <div class="dropdown-menu" id="userDropdown">
+                            <a href="#">
+                                <i class="fas fa-user-circle"></i> My Profile
+                            </a>
+                            <a href="settings.html">
+                                <i class="fas fa-cog"></i> Settings
+                            </a>
+                            <a href="#">
+                                <i class="fas fa-sign-out-alt"></i> Logout
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Credit Notes Dashboard Content -->
+            <div class="page-header">
+                <div>
+                    <h2 data-translate="credit_notes_header">Credit Notes Management</h2>
+                    <p class="subtitle" data-translate="credit_notes_subtitle">Create, manage, and track all your credit notes</p>
+                </div>
+                <div class="action-buttons">
+                    <button class="btn primary-btn" id="createCreditNoteBtn">
+                        <i class="fas fa-plus"></i> <span data-translate="create_credit_note_button">Create Credit Note</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="document-table-container">
+                <div class="table-header">
+                    <h3 data-translate="credit_notes_table_header">Credit Notes</h3>
+                    <div class="table-actions">
+                        <div class="search-box">
+                            <i class="fas fa-search"></i>
+                            <input type="text" data-translate-placeholder="search_credit_notes_placeholder" placeholder="Search credit notes...">
+                        </div>
+                        <div class="filter-dropdown">
+                            <select>
+                                <option value="" data-translate="all_status">All Status</option>
+                                <option value="draft" data-translate="draft_status">Draft</option>
+                                <option value="issued" data-translate="issued_status">Issued</option>
+                                <option value="cancelled" data-translate="cancelled_status">Cancelled</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="table-responsive">
+                    <table id="creditNotesTable" class="document-table">
+                        <thead>
+                            <tr>
+                                <th data-translate="credit_note_col_number">Credit Note #</th>
+                                <th data-translate="credit_note_col_client">Client</th>
+                                <th data-translate="credit_note_col_issue_date">Issue Date</th>
+                                <th data-translate="credit_note_col_amount">Amount</th>
+                                <th data-translate="credit_note_col_related_invoice">Related Invoice</th>
+                                <th data-translate="credit_note_col_status">Status</th>
+                                <th data-translate="credit_note_col_actions">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Table content will be populated by JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+                    <!-- Create Credit Note Modal -->
+                    <div id="createCreditNoteModal" class="document-modal">
+                        <div class="document-modal-content">
+                            <div class="document-modal-header">
+                                <h2 data-translate="create_credit_note_modal_title">Create Credit Note</h2>
+                                <button class="close-modal">&times;</button>
+                            </div>
+                            <div class="document-modal-body">
+                                <form id="creditNoteForm" class="document-form">
+                                    <div class="form-section">
+                                        <h3 data-translate="credit_note_info_header">Credit Note Information</h3>
+                                        <div class="form-row">
+                                            <div class="form-group">
+                                                <label for="creditNoteNumber" data-translate="credit_note_number_label">Credit Note Number</label>
+                                                <input type="text" id="creditNoteNumber" name="creditNoteNumber" required>
+                                            </div>
+                                            <div class="form-group">
+                                                <label for="issueDate" data-translate="issue_date_label">Issue Date</label>
+                                                <input type="date" id="issueDate" name="issueDate" required>
+                                            </div>
+                                        </div>
+                                        <div class="form-row">
+                                            <div class="form-group">
+                                                <label for="client" data-translate="client_label">Client</label>
+                                                <select id="client" name="client" required>
+                                                    <option value="" data-translate="select_client_option">Select Client</option>
+                                                </select>
+                                            </div>
+                                            <div class="form-group">
+                                                <label for="amount" data-translate="credit_amount_label">Credit Amount</label>
+                                                <input type="number" id="amount" name="amount" required step="0.01">
+                                            </div>
+                                        </div>
+                                        <div class="form-row">
+                                            <div class="form-group">
+                                                <label for="relatedInvoice" data-translate="related_invoice_label">Related Invoice #</label>
+                                                <select id="relatedInvoice" name="relatedInvoice" required>
+                                                    <option value="" data-translate="select_invoice_option">Select Invoice</option>
+                                                </select>
+                                            </div>
+                                            <div class="form-group">
+                                                <label for="reason" data-translate="reason_for_credit_label">Reason for Credit</label>
+                                                <select id="reason" name="reason" required>
+                                                    <option value="" data-translate="select_reason_option">Select Reason</option>
+                                                    <option value="return" data-translate="reason_return">Product Return</option>
+                                                    <option value="damage" data-translate="reason_damage">Damaged Goods</option>
+                                                    <option value="discount" data-translate="reason_discount">Discount</option>
+                                                    <option value="error" data-translate="reason_billing_error">Billing Error</option>
+                                                    <option value="other" data-translate="reason_other">Other</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <div class="form-row">
+                                            <div class="form-group">
+                                                <label for="description" data-translate="description_label">Description</label>
+                                                <textarea id="description" name="description" rows="3"></textarea>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </form>
+                            </div>
+                            <div class="document-modal-footer">
+                                <button type="button" class="btn secondary-btn close-modal" data-translate="cancel_button">Cancel</button>
+                                <button type="submit" form="creditNoteForm" class="btn primary-btn" data-translate="create_credit_note_button_modal">Create Credit Note</button>
+                            </div>
+                        </div>
+                    </div>
+        
+                    <!-- View Credit Note Modal -->
+                    <div id="viewCreditNoteModal" class="document-modal">
+                        <div class="document-modal-content">
+                            <div class="document-modal-header">
+                                <h2 data-translate="credit_note_details_title">Credit Note Details</h2>
+                                <button class="close-modal">&times;</button>
+                            </div>
+                            <div class="document-modal-body">
+                                <div id="creditNoteDetails" class="document-details">
+                                    <!-- Credit note details will be populated by JavaScript -->
+                                </div>
+                            </div>
+                            <div class="document-modal-footer">
+                                <button class="btn secondary-btn" id="printCreditNoteBtn">
+                                    <i class="fas fa-print"></i> <span data-translate="print_button">Print</span>
+                                </button>
+                                <button class="btn primary-btn close-modal" data-translate="close_button">Close</button>
+                            </div>
+                        </div>
+                    </div>
+    </div>
+
+    <!-- JavaScript Dependencies -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="js/topbar-menu.js"></script>
+    <script type="module">
+        import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.0.0/+esm';
+
+        const supabaseUrl = 'https://qvmtozjvjflygbkjecyj.supabase.co';
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF2bXRvemp2amZseWdia2plY3lqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDYxMjc2MjMsImV4cCI6MjA2MTcwMzYyM30.DJMC1eM5_EouM1oc07JaoXsMX_bSLn2AVCozAcdfHmo';
+        const supabase = createClient(supabaseUrl, supabaseKey);
+        window.supabase = supabase; // Make supabase available globally for auth.js
+    </script>
+    <script src="js/creditnotescripts/credit-note.js"></script>
+    <script src="js/displayname.js"></script>
+    <script src="js/auth.js"></script>
+    <!-- Notification badge synchronization -->
+    <script src="js/notification-badge.js"></script>
+    <script src="services/languageManager.js"></script>
+    <script>
+      // Initialize the language manager with the correct base path
+      window.languageManager = new LanguageManager('./');
+
+      // Initialize the language manager
+      document.addEventListener('DOMContentLoaded', async function() {
+        if (window.languageManager) {
+          const preferredLanguage = localStorage.getItem('preferredLanguage') || 'pt';
+          await window.languageManager.setLanguage(preferredLanguage);
+        }
+      });
+    </script>
+</body>
+</html>

@@ -1,3 +1,15 @@
+// Helper to robustly parse amounts in European/Portuguese format (e.g., '29 000,00' -> 29000.00)
+function parseAmount(str) {
+    if (typeof str !== 'string') str = String(str);
+    // Remove all spaces (thousands separator)
+    str = str.replace(/\s/g, '');
+    // Replace the last comma with a dot (decimal separator)
+    const lastComma = str.lastIndexOf(',');
+    if (lastComma !== -1) {
+        str = str.slice(0, lastComma).replace(/,/g, '') + '.' + str.slice(lastComma + 1);
+    }
+    return parseFloat(str);
+}
 // Invoice Management Module JavaScript
 
 // Add module state tracking
@@ -5,38 +17,29 @@ let invoiceModuleInitialized = false;
 let invoiceDistributionChartInstance = null;
 let revenueByStatusChartInstance = null;
 
-//const supabase = supabase.createClient('https://qvmtozjvjflygbkjecyj.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF2bXRvemp2amZseWdia2plY3lqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDYxMjc2MjMsImV4cCI6MjA2MTcwMzYyM30.DJMC1eM5_EouM1oc07JaoXsMX_bSLn2AVCozAcdfHmo');
- 
-/*const supabase = createClient(
-    'https://qvmtozjvjflygbkjecyj.supabase.co',
-    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InprcWptb3pmdHFteWF5Y3BtbHhuIiwicm9zZSI6ImFub24iLCJpYXQiOjE3Mzk5NjQzNDcsImV4cCI6MjA1NTU0MDM0N30.Zm5OF9jyoc6dbDQIGiOiEen-q0zfZjh_GzjWUmD8eqk'
-  );*/
-
-
-document.addEventListener('DOMContentLoaded', function() {
-    if (!invoiceModuleInitialized) {
-        console.log('Starting invoice module initialization...');
-        initializeInvoiceModule();
-        setupEventListeners();
-        setupCharts();
-        updateCharts();
-        setupChartSubscription();
-        setupInvoiceTable();
-
-        // Initialize client autocomplete only if element exists
-        const clientList = document.getElementById('client-list');
-        if (clientList) {
-            setupClientAutocomplete();
-            setupClientFormHandlers(clientList);
+// Add robust global getCurrentEnvironmentId for invoice environment logic (fetch from users table)
+window.getCurrentEnvironmentId = async function() {
+    let envId = localStorage.getItem('currentEnvironmentId');
+    if (envId) return envId;
+    try {
+        const userRes = await window.supabase.auth.getUser();
+        const user_id = userRes?.data?.user?.id;
+        if (!user_id) return null;
+        const { data: userRow, error } = await window.supabase
+            .from('users')
+            .select('environment_id')
+            .eq('id', user_id)
+            .single();
+        if (!error && userRow && userRow.environment_id) {
+            envId = userRow.environment_id;
+            localStorage.setItem('currentEnvironmentId', envId);
+            return envId;
         }
-
-        // Initialize metrics
-        updateMetricsDisplay();
-        setupMetricsSubscription();
-    } else {
-        console.warn('Invoice module already initialized, skipping initialization');
+    } catch (e) {
+        // fallback
     }
-});
+    return null;
+};
 
 function initializeInvoiceModule() {
     if (invoiceModuleInitialized) {
@@ -47,168 +50,11 @@ function initializeInvoiceModule() {
     console.log('Invoice Management Module initialized');
     invoiceModuleInitialized = true;
     
-    setupItemCalculations();
     initializeDateFields();
 }
 
-function setupEventListeners() {
-    // Create Invoice Button
-    const createInvoiceBtn = document.getElementById('createInvoiceBtn');
-    if (createInvoiceBtn) {
-        createInvoiceBtn.addEventListener('click', function() {
-            openModal('invoiceModal');
-        });
-    }
-    
-    // Close modal buttons
-    const closeButtons = document.querySelectorAll('.close-modal, #closeInvoiceBtn');
-    closeButtons.forEach(button => {
-        button.addEventListener('click', function() {
-            closeAllModals();
-        });
-    });
-    
-    // Modal overlay click to close
-    const modalOverlay = document.querySelector('.modal-overlay');
-    if (modalOverlay) {
-        modalOverlay.addEventListener('click', function() {
-            closeAllModals();
-        });
-    }
-    
-    // Prevent closing when clicking inside modal content
-    const modalContents = document.querySelectorAll('.modal-content');
-    modalContents.forEach(content => {
-        content.addEventListener('click', function(e) {
-            e.stopPropagation();
-        });
-    });
-    
-    // Add item button
-    const addItemBtn = document.getElementById('addItemBtn');
-    if (addItemBtn) {
-        addItemBtn.addEventListener('click', addInvoiceItem);
-    }
-    
- 
-    
-    // View Invoice buttons
-    const viewButtons = document.querySelectorAll('.view-btn');
-    viewButtons.forEach(button => {
-        button.addEventListener('click', function() {
-            const invoiceNumber = this.getAttribute('data-invoice');
-            openViewInvoiceModal(invoiceNumber);
-        });
-    });
-    
-    // Setup invoice item calculations
-    setupItemCalculations();
-    
-    // Payment terms dropdown
-    const paymentTermsSelect = document.getElementById('paymentTerms');
-    if (paymentTermsSelect) {
-        paymentTermsSelect.addEventListener('change', function() {
-            updateDueDate();
-        });
-    }
-    
-    // Issue date field
-    const issueDateField = document.getElementById('issueDate');
-    if (issueDateField) {
-        issueDateField.addEventListener('change', function() {
-            updateDueDate();
-        });
-    }
-    
-    // Form submission
-    const invoiceForm = document.getElementById('invoiceForm');
-    if (invoiceForm) {
-        invoiceForm.addEventListener('submit', async function(event) {
-            event.preventDefault();
-            try {
-                await saveInvoice();
-            } catch (error) {
-                console.error('Error submitting form:', error);
-                showNotification('Error: ' + error.message);
-            }
-        });
-    }
-
-    // Preview button
-    const previewInvoiceBtn = document.getElementById('previewInvoiceBtn');
-    if (previewInvoiceBtn) {
-        previewInvoiceBtn.addEventListener('click', async function() {
-            const invoiceData = getInvoiceData();
-            const invoiceHTML = await generateInvoiceHTML(invoiceData);
-            
-            const previewContainer = document.getElementById('invoicePreviewContent');
-            previewContainer.innerHTML = `
-                <div class="invoice-a4">
-                    ${invoiceHTML}
-                </div>
-            `;
-            
-            document.getElementById('viewInvoiceModal').style.display = 'block';
-        });
-    }
-    
-    // Template selector
-    const templateSelector = document.getElementById('templateSelector');
-    if (templateSelector) {
-        templateSelector.addEventListener('change', function() {
-            updateInvoiceTemplate(this.value);
-        });
-    }
-    
-    // Chart period buttons
-    setupChartPeriodControls();
-    
-    // Table filters
-    setupTableFilters();
-
-    // Remove item button handler
-    document.querySelector('#itemsTable tbody').addEventListener('click', function(e) {
-        if (e.target.classList.contains('fa-trash') || e.target.classList.contains('remove-item-btn')) {
-            const row = e.target.closest('.item-row');
-            if (!row) return;
-
-            const rows = document.querySelectorAll('.item-row');
-            if (rows.length > 1) {
-                row.remove();
-            } else {
-                // Clear last row instead of removing
-                const inputs = row.querySelectorAll('input');
-                inputs.forEach(input => {
-                    if (input.classList.contains('item-quantity')) {
-                        input.value = '1';
-                    } else if (input.classList.contains('item-price')) {
-                        input.value = '0.00';
-                    } else {
-                        input.value = '';
-                    }
-                });
-                row.querySelector('.item-vat').textContent = '0.00';
-                row.querySelector('.item-total').textContent = '0.00';
-            }
-            updateInvoiceTotals();
-        }
-    });
-}
-
 function openModal(modalId) {
-    const modal = document.getElementById(modalId);
-    const overlay = document.querySelector('.modal-overlay');
-    
-    if (modal && overlay) {
-        modal.style.display = 'block';
-        overlay.style.display = 'block';
-        document.body.style.overflow = 'hidden'; // Prevent scrolling
-        
-        // Initialize or reset form if it's the invoice creation modal
-        if (modalId === 'invoiceModal') {
-            resetInvoiceForm();
-        }
-    }
+    window.modalManager.openModal(modalId);
 }
 
 function closeAllModals() {
@@ -237,74 +83,78 @@ function closeAllModals() {
     document.body.style.overflow = ''; // Re-enable scrolling
 }
 
-async function setupItemCalculations() {
+function setupItemCalculations() {
     // Add event listeners for quantity and price changes
-    document.addEventListener('input', function(e) {
-        if (e.target.classList.contains('item-description')) {
-            const searchTerm = e.target.value.toLowerCase().trim();
-            const row = e.target.closest('.item-row');
+    // Removed global listeners as they are handled by InvoiceItems class
+    // document.addEventListener('input', function(e) {
+    //     if (e.target.classList.contains('item-description')) {
+    //         const searchTerm = e.target.value.toLowerCase().trim();
+    //         const row = e.target.closest('.item-row');
             
-            if (searchTerm.length < 2) {
-                hideProductSuggestions(row);
-                hideNewProductForm(row);
-                return;
-            }
+    //         if (searchTerm.length < 2) {
+    //             hideProductSuggestions(row);
+    //             hideNewProductForm(row);
+    //             return;
+    //         }
 
-            handleProductSearch(searchTerm, row);
-        }
+    //         handleProductSearch(searchTerm, row);
+    //     }
 
-        if (e.target.classList.contains('item-quantity') || e.target.classList.contains('item-price')) {
-            const row = e.target.closest('.item-row');
-            if (row) {
-                calculateRowTotal(row);
-                updateInvoiceTotals();
-            }
-        }
-    });
+    //     if (e.target.classList.contains('item-quantity') || e.target.classList.contains('item-price')) {
+    //         const row = e.target.closest('.item-row');
+    //         if (row) {
+    //             calculateRowTotal(row);
+    //             updateInvoiceTotals();
+    //         }
+    //     }
+    // });
 }
 
-async function handleProductSearch(searchTerm, row) {
-    try {
-        const { data: products, error } = await window.supabase
-            .from('products')
-            .select('*')
-            .ilike('description', `%${searchTerm}%`)
-            .limit(5);
+function handleProductSearch(searchTerm, row) {
+    (async function() {
+        try {
+            const { data: products, error } = await window.supabase
+                .from('products')
+                .select('*')
+                .or(`name.ilike.%${searchTerm}%,description.ilike.%${searchTerm}%`)
+                .limit(5);
 
-        if (error) throw error;
+            if (error) throw error;
 
-        if (products && products.length > 0) {
-            showProductSuggestions(row, products);
-            hideNewProductForm(row);
-        } else {
-            hideProductSuggestions(row);
-            showNewProductForm(row);
+            if (products && products.length > 0) {
+                showProductSuggestions(row, products);
+                hideNewProductForm(row);
+            } else {
+                hideProductSuggestions(row);
+                showNewProductForm(row);
+            }
+        } catch (err) {
+            console.error('Error searching products:', err);
         }
-    } catch (err) {
-        console.error('Error searching products:', err);
-    }
+    })();
 }
 
 function showProductSuggestions(row, products) {
     const input = row.querySelector('.item-description');
-    const rect = input.getBoundingClientRect();
+    if (!input) return;
     
     let suggestionsBox = row.querySelector('.product-suggestions');
     if (!suggestionsBox) {
         suggestionsBox = document.createElement('div');
         suggestionsBox.className = 'product-suggestions';
-        row.querySelector('td:first-child').appendChild(suggestionsBox);
+        input.parentNode.appendChild(suggestionsBox);
     }
 
     suggestionsBox.innerHTML = products.map(product => `
         <div class="suggestion-item" data-product='${JSON.stringify(product)}'>
-            <div>${product.description}</div>
+            <div class="suggestion-content">
+                <strong>${product.name || ''}</strong>
+                <small>${product.description || ''}</small>
+            </div>
             <div class="suggestion-price">${formatCurrency(product.price)}</div>
         </div>
     `).join('');
 
-    // Position suggestions box
-    suggestionsBox.style.top = (rect.height) + 'px';
     suggestionsBox.style.display = 'block';
 
     // Add click handlers
@@ -325,7 +175,7 @@ function fillProductDetails(row, product) {
     const quantityInput = row.querySelector('.item-quantity');
     
     // Fill in the product details
-    if (descriptionInput) descriptionInput.value = product.description || '';
+    if (descriptionInput) descriptionInput.value = product.name || product.description || '';
     if (priceInput) priceInput.value = product.price || 0;
     if (quantityInput) quantityInput.value = 1; // Default quantity
     
@@ -367,7 +217,8 @@ function showNewProductForm(row) {
             await saveNewProduct(row);
         });
     }
-    newProductForm.style.display = 'block';
+    newProductForm.style.display = 'block'; // Ensure the form is visible
+    newProductForm.querySelector('.new-product-price').focus(); // Focus the input field
 }
 
 function hideProductSuggestions(row) {
@@ -387,19 +238,21 @@ function hideNewProductForm(row) {
 function formatCurrency(amount) {
     return new Intl.NumberFormat('pt-MZ', {
         style: 'currency',
-        currency: 'MZN'
+        currency: 'MZN',
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
     }).format(amount);
 }
 
 function calculateRowTotal(row) {
-    const quantity = parseFloat(row.querySelector('.item-quantity').value) || 0;
-    const price = parseFloat(row.querySelector('.item-price').value) || 0;
+    const quantity = parseAmount(row.querySelector('.item-quantity').value) || 0;
+    const price = parseAmount(row.querySelector('.item-price').value) || 0;
     
     const subtotal = quantity * price;
     const vat = subtotal * 0.16; // 16% VAT
     
-    row.querySelector('.item-vat').textContent = vat.toFixed(2);
-    row.querySelector('.item-total').textContent = (subtotal + vat).toFixed(2);
+    row.querySelector('.item-vat').textContent = formatCurrency(vat);
+    row.querySelector('.item-total').textContent = formatCurrency(subtotal + vat);
 }
 
 function updateInvoiceTotals() {
@@ -408,8 +261,8 @@ function updateInvoiceTotals() {
     let totalVat = 0;
     
     rows.forEach(row => {
-        const quantity = parseFloat(row.querySelector('.item-quantity').value) || 0;
-        const price = parseFloat(row.querySelector('.item-price').value) || 0;
+        const quantity = parseAmount(row.querySelector('.item-quantity').value) || 0;
+        const price = parseAmount(row.querySelector('.item-price').value) || 0;
         
         const rowSubtotal = quantity * price;
         const rowVat = rowSubtotal * 0.16;
@@ -420,9 +273,9 @@ function updateInvoiceTotals() {
     
     const grandTotal = subtotal + totalVat;
     
-    document.getElementById('subtotal').textContent = subtotal.toFixed(2);
-    document.getElementById('totalVat').textContent = totalVat.toFixed(2);
-    document.getElementById('invoiceTotal').textContent = grandTotal.toFixed(2);
+    document.getElementById('subtotal').textContent = formatCurrency(subtotal);
+    document.getElementById('totalVat').textContent = formatCurrency(totalVat);
+    document.getElementById('invoiceTotal').textContent = formatCurrency(grandTotal);
 }
 
 function addInvoiceItem() {
@@ -454,8 +307,16 @@ function addInvoiceItem() {
     
     itemsTableBody.insertAdjacentHTML('beforeend', newRowHTML);
     
-    // Initialize the new row
+    // Initialize the new row and set up event listeners
     const newRow = itemsTableBody.lastElementChild;
+    if (window.invoiceItems && typeof window.invoiceItems.setupRowEventListeners === 'function') {
+        window.invoiceItems.setupRowEventListeners(newRow);
+    } else {
+        console.error('InvoiceItems module or setupRowEventListeners not available.');
+        // Fallback: Manually add listeners if the module is not available
+        setupRowEventListeners(newRow); // Assuming a local fallback function exists
+    }
+    
     calculateRowTotal(newRow);
     updateInvoiceTotals();
 }
@@ -514,26 +375,30 @@ function updateDueDate() {
     }
 }
 
-function resetInvoiceForm() {
+// Import InvoiceNumberGenerator if not already imported
+// (for non-module, attach to window if needed)
+if (!window.InvoiceNumberGenerator) {
+    // Dynamically load if not present
+    const script = document.createElement('script');
+    script.src = 'js/invoiceNumberGenerator.js';
+    document.head.appendChild(script);
+}
+
+async function resetInvoiceForm() {
     const form = document.getElementById('invoiceForm');
     if (form) {
         form.reset();
-        
         // Set currency to MZN by default
         const currencySelect = document.getElementById('currency');
         if (currencySelect) {
             currencySelect.value = 'MZN';
         }
-        
         // Clear all invoice items except the first row
         const itemsTableBody = document.querySelector('#itemsTable tbody');
         const rows = itemsTableBody.querySelectorAll('.item-row');
-        
-        // Remove all rows except the first one
         for (let i = 1; i < rows.length; i++) {
             rows[i].remove();
         }
-        
         // Reset the first row
         const firstRow = itemsTableBody.querySelector('.item-row');
         if (firstRow) {
@@ -547,29 +412,42 @@ function resetInvoiceForm() {
                     input.value = '';
                 }
             });
-            
-            // Reset calculated values
             firstRow.querySelector('.item-vat').textContent = '0.00';
             firstRow.querySelector('.item-total').textContent = '0.00';
         }
-        
-        // Reset totals
         document.getElementById('subtotal').textContent = '0.00';
         document.getElementById('totalVat').textContent = '0.00';
         document.getElementById('invoiceTotal').textContent = '0.00';
-        
-        // Initialize date fields with fresh values
         initializeDateFields();
-        
-        // Generate a new invoice number
+        // Generate a new unique invoice number
         const invoiceNumberField = document.getElementById('invoiceNumber');
         if (invoiceNumberField) {
-            const currentDate = new Date();
-            const year = currentDate.getFullYear();
-            // In a real app, we would get the next sequence number from the server
-            const nextNumber = Math.floor(Math.random() * 1000) + 1;
-            invoiceNumberField.value = `INV-${year}-${nextNumber.toString().padStart(4, '0')}`;
+            try {
+                const generator = new window.InvoiceNumberGenerator();
+                // Fetch user_id from Supabase session
+                let userId = null;
+                try {
+                    const session = await window.supabase.auth.getSession();
+                    userId = session.data?.session?.user?.id;
+                } catch (e) {
+                    console.error('Could not fetch user session:', e);
+                }
+                // Get serie from form (default to 'A')
+                let serie = document.getElementById('serie')?.value || 'A';
+                if (!userId) throw new Error('User not authenticated. Please log in.');
+                const newInvoiceNumber = await generator.getNextNumber(userId, serie);
+                invoiceNumberField.value = newInvoiceNumber;
+            } catch (err) {
+                console.error('Error generating invoice number:', err);
+                invoiceNumberField.value = '';
+                showNotification('Error generating invoice number');
+            }
         }
+        // Show only the first step
+        const steps = form.querySelectorAll('.step');
+        steps.forEach((step, idx) => {
+            step.style.display = idx === 0 ? '' : 'none';
+        });
     }
 }
 
@@ -577,43 +455,56 @@ function collectInvoiceData() {
     try {
         // Get required form elements with null checks
         const clientList = document.getElementById('client-list');
-        const invoiceNumber = document.getElementById('invoiceNumber');
-        const issueDate = document.getElementById('issueDate');
-        const dueDate = document.getElementById('dueDate');
-        const currency = document.getElementById('currency');
+        const invoiceNumberInput = document.getElementById('invoiceNumber');
+        const issueDateInput = document.getElementById('issueDate');
+        const dueDateInput = document.getElementById('dueDate');
+        const currencySelect = document.getElementById('currency');
+        const paymentTermsSelect = document.getElementById('paymentTerms');
+        const notesTextarea = document.getElementById('notes');
+        const subtotalSpan = document.getElementById('subtotal');
+        const totalVatSpan = document.getElementById('totalVat');
+        const invoiceTotalSpan = document.getElementById('invoiceTotal');
 
         // Validate all required fields exist
-        if (!clientList || !invoiceNumber || !issueDate || !dueDate || !currency) {
-            throw new Error('Required form fields are missing');
+        if (!clientList || !invoiceNumberInput || !issueDateInput || !dueDateInput || !currencySelect || !paymentTermsSelect || !notesTextarea || !subtotalSpan || !totalVatSpan || !invoiceTotalSpan) {
+            throw new Error('One or more required form fields are missing');
         }
 
         // Get client data safely
-        let clientData = {};
-        try {
-            clientData = JSON.parse(clientList.getAttribute('data-client') || '{}');
-        } catch (e) {
-            console.warn('Could not parse client data:', e);
-        }
+        const clientName = clientList.value || '';
+        const clientEmail = document.getElementById('clientEmail')?.value || '';
+        const clientAddress = document.getElementById('clientAddress')?.value || '';
+        const clientTaxId = document.getElementById('clientTaxId')?.value || '';
+        // Assuming clientContact might be a separate field or part of client data
+        const clientContact = ''; // Replace with actual field if it exists
+
+        // Assuming companyData is available in the global scope or passed to this function
+        // Ensure companyData structure matches what's needed
+        const companyData = window.companyData || {}; // Replace with actual way companyData is accessed
 
         const invoiceData = {
-            invoiceNumber: invoiceNumber.value,
-            issueDate: issueDate.value,
-            dueDate: dueDate.value,
-            currency: currency.value || 'MZN',
+            invoiceNumber: invoiceNumberInput.value,
+            issueDate: issueDateInput.value,
+            dueDate: dueDateInput.value,
+            currency: currencySelect.value || 'MZN',
+            // Use standardized client data keys
             client: {
-                id: clientData.customer_id || '',
-                name: clientList.value || '',
-                email: document.getElementById('clientEmail')?.value || '',
-                address: document.getElementById('clientAddress')?.value || '',
-                taxId: document.getElementById('clientTaxId')?.value || ''
+                name: clientName,
+                email: clientEmail,
+                address: clientAddress,
+                taxId: clientTaxId,
+                contact: clientContact // Included as per your snippet
             },
-            paymentTerms: document.getElementById('paymentTerms')?.value || 'net30',
-            notes: document.getElementById('notes')?.value || '',
-            status: 'pending',
+            // Include company data
+            company: companyData, // Included as per your snippet
+            paymentTerms: paymentTermsSelect.value || 'net30',
+            notes: notesTextarea.value || '',
+            status: 'pending', // Default status for new invoices
             items: [],
-            subtotal: parseFloat(document.getElementById('subtotal')?.textContent || '0'),
-            totalVat: parseFloat(document.getElementById('totalVat')?.textContent || '0'),
-            total: parseFloat(document.getElementById('invoiceTotal')?.textContent || '0')
+            // Ensure these are numbers, not text content
+            subtotal: parseAmount(subtotalSpan.textContent) || 0,
+            totalVat: parseAmount(totalVatSpan.textContent) || 0,
+            total: parseAmount(invoiceTotalSpan.textContent) || 0
         };
 
         // Validate required fields have values
@@ -625,12 +516,13 @@ function collectInvoiceData() {
         const itemRows = document.querySelectorAll('.item-row');
         itemRows.forEach(row => {
             const description = row.querySelector('.item-description')?.value;
-            const quantity = parseFloat(row.querySelector('.item-quantity')?.value) || 0;
-            const price = parseFloat(row.querySelector('.item-price')?.value) || 0;
-            const vat = parseFloat(row.querySelector('.item-vat')?.textContent) || 0;
-            const total = parseFloat(row.querySelector('.item-total')?.textContent) || 0;
+            const quantity = parseAmount(row.querySelector('.item-quantity')?.value) || 0;
+            const price = parseAmount(row.querySelector('.item-price')?.value) || 0;
+            // Get VAT and Total directly from calculated spans
+            const vat = parseAmount(row.querySelector('.item-vat')?.textContent) || 0; // Assuming item-vat is a span with text content
+            const total = parseAmount(row.querySelector('.item-total')?.textContent) || 0; // Assuming item-total is a span with text content
 
-            if (description && quantity > 0) {
+            if (description && quantity > 0 && price >= 0) { // Ensure price is not negative and description/quantity are present
                 invoiceData.items.push({
                     description,
                     quantity,
@@ -653,8 +545,47 @@ function collectInvoiceData() {
     }
 }
 
+// Utility: Fetch currency rate (MZN as base, similar to invoiceForm.js)
+async function fetchCurrencyRate(currency) {
+    if (currency === 'MZN') return 1;
+    const cacheKey = `walaka_rates_${currency}`;
+    const cached = sessionStorage.getItem(cacheKey);
+    let rate = null;
+    if (cached) {
+        const { value, timestamp } = JSON.parse(cached);
+        if (Date.now() - timestamp < 60 * 60 * 1000) {
+            rate = value;
+        }
+    }
+    if (!rate) {
+        try {
+            const res = await fetch('https://openexchangerates.org/api/latest.json?app_id=0a2208bb4ead48929a4485ae45dff65d&symbols=USD,EUR,GBP,MZN');
+            const data = await res.json();
+            if (data && data.rates && data.rates['MZN']) {
+                if (currency === 'USD') {
+                    rate = data.rates['USD'] / data.rates['MZN'];
+                } else if (currency === 'EUR') {
+                    rate = data.rates['EUR'] / data.rates['MZN'];
+                } else if (currency === 'GBP') {
+                    rate = data.rates['GBP'] / data.rates['MZN'];
+                }
+            }
+            if (rate) {
+                sessionStorage.setItem(cacheKey, JSON.stringify({ value: rate, timestamp: Date.now() }));
+            }
+        } catch (err) {
+            rate = null;
+        }
+    }
+    return rate && !isNaN(rate) ? rate : null;
+}
+
 async function saveInvoice() {
     try {
+        // Prevent duplicate submissions
+        const submitButton = document.querySelector('#invoiceForm button[type="submit"]');
+        if (submitButton) submitButton.disabled = true;
+
         // Show loading state
         showNotification('Saving invoice...');
         
@@ -665,8 +596,20 @@ async function saveInvoice() {
             throw new Error('Missing required fields');
         }
 
+        // --- Fetch currency rate ---
+        let currency_rate = 1;
+        if (invoiceData.currency !== 'MZN') {
+            currency_rate = await fetchCurrencyRate(invoiceData.currency);
+            if (!currency_rate) {
+                showNotification('Could not fetch currency rate. Please try again.', 'error');
+                if (submitButton) submitButton.disabled = false;
+                return;
+            }
+        }
+        console.log('Using currency_rate:', currency_rate, 'for currency:', invoiceData.currency);
+
         // Generate PDF
-        const pdfBlob = await generatePDF(invoiceData);
+        const pdfBlob = await window.generatePDF(invoiceData);
         
         if (!pdfBlob) {
             throw new Error('Failed to generate PDF');
@@ -679,7 +622,7 @@ async function saveInvoice() {
         }
 
         // Upload PDF to Supabase Storage with proper permissions
-        const pdfFileName = `${invoiceData.invoiceNumber.replace(/\s+/g, '_')}.pdf`;
+        const pdfFileName = `${invoiceData.invoiceNumber.replace(/\s+/g, '_')}_${session.user.id}.pdf`;
         const { data: uploadData, error: uploadError } = await window.supabase.storage
             .from('invoice_pdfs')
             .upload(pdfFileName, pdfBlob, {
@@ -704,10 +647,16 @@ async function saveInvoice() {
         const dueDate = new Date(invoiceData.dueDate);
 
         // Save invoice data to database
+        let environment_id = null;
+        if (typeof window.getCurrentEnvironmentId === 'function') {
+            environment_id = await window.getCurrentEnvironmentId();
+        } else {
+            console.warn('getCurrentEnvironmentId is not available, environment_id will be null');
+        }
         const { data: invoice, error: insertError } = await window.supabase
             .from('invoices')
             .insert([{
-                invoice_number: invoiceData.invoiceNumber,
+                invoiceNumber: invoiceData.invoiceNumber,
                 issue_date: issueDate.toISOString(),
                 due_date: dueDate.toISOString(),
                 client_id: invoiceData.client.id || null,
@@ -720,14 +669,27 @@ async function saveInvoice() {
                 notes: invoiceData.notes,
                 pdf_url: publicUrl,
                 customer_name: invoiceData.client.name,
-                user_id: session.user.id // Add user_id for RLS
+                user_id: session.user.id, // Add user_id for RLS
+                environment_id, // Add environment_id for multi-tenancy
+                currency_rate // <--- Add the currency rate here
             }])
             .select();
 
-        if (insertError) {
-            console.error('Database insert error:', insertError);
-            throw new Error('Failed to save invoice data');
+        console.log('Invoice insert result:', invoice, insertError);
+
+        if (insertError) throw insertError;
+        if (!invoice || invoice.length === 0) {
+            throw new Error('Invoice insert did not return any data');
         }
+
+        // Get the first (and should be only) inserted invoice
+        const insertedInvoice = invoice[0];
+        if (!insertedInvoice.invoiceNumber) {
+            throw new Error('Invoice insert did not return invoiceNumber');
+        }
+
+        // Create invoice notification
+        await createInvoiceNotification(session.user.id, insertedInvoice.invoiceNumber);
 
         // Show success message
         showNotification('Invoice saved successfully!');
@@ -743,12 +705,20 @@ async function saveInvoice() {
         URL.revokeObjectURL(downloadUrl);
 
         // Close modal and refresh list
-        closeAllModals();
+        window.modalManager.closeModal('invoiceModal');
         await refreshInvoiceList();
+
+        // Enable the submit button after processing
+        if (submitButton) submitButton.disabled = false;
 
     } catch (error) {
         console.error('Error saving invoice:', error);
         showNotification('Error saving invoice: ' + (error.message || 'Unknown error'));
+
+        // Re-enable the submit button in case of error
+        const submitButton = document.querySelector('#invoiceForm button[type="submit"]');
+        if (submitButton) submitButton.disabled = false;
+
         throw error;
     }
 }
@@ -756,90 +726,73 @@ async function saveInvoice() {
 // Add refresh function
 async function refreshInvoiceList() {
     try {
-        const currentPage = 1; // Get current page from state if needed
-        const currentLimit = 10; // Get current limit from state if needed
-        await fetchAndDisplayInvoices(currentPage, currentLimit);
+        // Use the invoice table module if available
+        if (window.invoiceTable && typeof window.invoiceTable.refreshTable === 'function') {
+            await window.invoiceTable.refreshTable();
+        } else {
+            // Fallback to direct function call
+            const currentPage = 1;
+            const currentLimit = 10;
+            await fetchAndDisplayInvoices(currentPage, currentLimit);
+        }
         
         // Refresh metrics
-        await updateMetricsDisplay();
+        if (typeof window.updateMetricsDisplay === 'function') {
+            await window.updateMetricsDisplay();
+        }
         
         // Refresh charts
-        await updateCharts();
+        if (typeof window.updateCharts === 'function') {
+            await window.updateCharts();
+        }
     } catch (error) {
         console.error('Error refreshing invoice list:', error);
         showNotification('Error refreshing data');
     }
 }
 
-async function generatePDF(invoiceData) {
-    // Generate invoice HTML
-    const invoiceHTML = await generateInvoiceHTML(invoiceData);
-    
-    // Create a temporary container
-    const container = document.createElement('div');
-    container.innerHTML = invoiceHTML;
-    container.style.width = '210mm';
-    container.style.padding = '10mm';
-    document.body.appendChild(container);
-    
-    // Generate PDF using html2pdf
-    const opt = {
-        margin: 10,
-        filename: `${invoiceData.invoiceNumber}.pdf`,
-        image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { scale: 2 },
-        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-    };
-    
-    try {
-        const pdf = await html2pdf().from(container).set(opt).outputPdf('blob');
-        document.body.removeChild(container);
-        return pdf;
-    } catch (error) {
-        document.body.removeChild(container);
-        throw error;
-    }
-}
+// Remove generatePDF and generateInvoiceHTML from this file, now provided by js/invoicescripts/pdf.js
 
-function previewInvoice() {
-    // Get invoice modal and set it to keep in background
-    const invoiceModal = document.getElementById('invoiceModal');
-    if (invoiceModal) {
-        invoiceModal.style.display = 'none'; // Hide but don't fully close
-    }
+// Removed previewInvoice function - moved to js/invoicescripts/invoicePreview.js
+// function previewInvoice() {
+//     // Get invoice modal and set it to keep in background
+//     const invoiceModal = document.getElementById('invoiceModal');
+//     if (invoiceModal) {
+//         invoiceModal.style.display = 'none'; // Hide but don't fully close
+//     }
 
-    const invoiceData = getInvoiceData();
+//     const invoiceData = getInvoiceData();
     
-    // Update view modal for preview mode
-    const timelineSection = document.querySelector('.invoice-view-footer');
-    const modalFooter = document.querySelector('#viewInvoiceModal .modal-footer');
-    if (timelineSection) timelineSection.style.display = 'none';
-    if (modalFooter) modalFooter.style.display = 'none';
+//     // Update view modal for preview mode
+//     const timelineSection = document.querySelector('.invoice-view-footer');
+//     const modalFooter = document.querySelector('#viewInvoiceModal .modal-footer');
+//     if (timelineSection) timelineSection.style.display = 'none';
+//     if (modalFooter) modalFooter.style.display = 'none';
     
-    // Update modal title and close button behavior
-    const modalTitle = document.querySelector('#viewInvoiceModal .modal-header h2');
-    const closeBtn = document.querySelector('#viewInvoiceModal .close-modal');
-    if (modalTitle) modalTitle.textContent = 'Invoice Preview';
-    if (closeBtn) {
-        // Remove existing listeners
-        closeBtn.replaceWith(closeBtn.cloneNode(true));
-        // Add new close behavior
-        document.querySelector('#viewInvoiceModal .close-modal').addEventListener('click', function() {
-            document.getElementById('viewInvoiceModal').style.display = 'none';
-            document.getElementById('invoiceModal').style.display = 'block';
-        });
-    }
+//     // Update modal title and close button behavior
+//     const modalTitle = document.querySelector('#viewInvoiceModal .modal-header h2');
+//     const closeBtn = document.querySelector('#viewInvoiceModal .close-modal');
+//     if (modalTitle) modalTitle.textContent = 'Invoice Preview';
+//     if (closeBtn) {
+//         // Remove existing listeners
+//         closeBtn.replaceWith(closeBtn.cloneNode(true));
+//         // Add new close behavior
+//         document.querySelector('#viewInvoiceModal .close-modal').addEventListener('click', function() {
+//             document.getElementById('viewInvoiceModal').style.display = 'none';
+//             document.getElementById('invoiceModal').style.display = 'block';
+//         });
+//     }
     
-    // Generate and display preview
-    generateInvoiceHTML(invoiceData).then(invoiceHTML => {
-        const frame = document.getElementById('invoicePreviewFrame');
-        frame.contentWindow.document.open();
-        frame.contentWindow.document.write(invoiceHTML);
-        frame.contentWindow.document.close();
+//     // Generate and display preview
+//     generateInvoiceHTML(invoiceData).then(invoiceHTML => {
+//         const frame = document.getElementById('invoicePreviewFrame');
+//         frame.contentWindow.document.open();
+//         frame.contentWindow.document.write(invoiceHTML);
+//         frame.contentWindow.document.close();
         
-        document.getElementById('viewInvoiceModal').style.display = 'block';
-    });
-}
+//         document.getElementById('viewInvoiceModal').style.display = 'block';
+//     });
+// }
 
 function openViewInvoiceModal(invoiceNumber) {
     // Show timeline and buttons for view mode
@@ -864,12 +817,37 @@ async function fetchInvoiceDetails(invoiceNumber) {
             previewContainer.innerHTML = '<div class="loading">Loading invoice...</div>';
         }
 
-        // Fetch invoice data
-        const { data: invoice, error } = await window.supabase
+        // Ensure invoiceNumber is a string
+        console.log('[fetchInvoiceDetails] Raw input:', invoiceNumber, 'Type:', typeof invoiceNumber);
+        const invNum = typeof invoiceNumber === 'object' ? invoiceNumber.invoiceNumber : invoiceNumber;
+        console.log('[fetchInvoiceDetails] Using invoiceNumber:', invNum);
+        const environment_id = await window.getCurrentEnvironmentId();
+        console.log('[fetchInvoiceDetails] environment_id:', environment_id);
+
+        // Build query
+        let query = window.supabase
             .from('invoices')
             .select('*, clients(*)')
-            .eq('invoice_number', invoiceNumber)
-            .single();
+            .eq('invoiceNumber', invNum);
+        if (environment_id) {
+            query = query.eq('environment_id', environment_id);
+            console.log('[fetchInvoiceDetails] Querying with environment_id filter');
+        } else {
+            console.log('[fetchInvoiceDetails] Querying WITHOUT environment_id filter');
+        }
+        let { data: invoice, error } = await query.single();
+        console.log('[fetchInvoiceDetails] Query result:', invoice, 'Error:', error);
+
+        // Fallback: If no rows and environment_id was used, try again without it
+        if ((error && error.code === 'PGRST116') && environment_id) {
+            console.warn('[fetchInvoiceDetails] No rows found with environment_id, retrying without environment_id...');
+            query = window.supabase
+                .from('invoices')
+                .select('*, clients(*)')
+                .eq('invoiceNumber', invNum);
+            ({ data: invoice, error } = await query.single());
+            console.log('[fetchInvoiceDetails] Fallback query result:', invoice, 'Error:', error);
+        }
 
         if (error) throw error;
         if (!invoice) throw new Error('Invoice not found');
@@ -882,10 +860,10 @@ async function fetchInvoiceDetails(invoiceNumber) {
         }
 
         // Update invoice number display
-        document.getElementById('viewInvoiceNumber').textContent = invoice.invoice_number;
+        document.getElementById('viewInvoiceNumber').textContent = invoice.invoiceNumber;
 
         // Fetch and populate timeline
-        const timeline = await fetchInvoiceTimeline(invoiceNumber);
+        const timeline = await fetchInvoiceTimeline(invNum);
         populateTimeline(timeline);
 
         // Show/hide "Mark as Paid" button based on status
@@ -893,24 +871,75 @@ async function fetchInvoiceDetails(invoiceNumber) {
         if (markPaidBtn) {
             markPaidBtn.style.display = invoice.status === 'paid' ? 'none' : '';
             if (invoice.status !== 'paid') {
-                markPaidBtn.onclick = () => markInvoiceAsPaid(invoiceNumber);
+                markPaidBtn.onclick = () => markInvoiceAsPaid(invNum);
             }
         }
 
-        // Load PDF from storage if available
-        if (invoice.pdf_url) {
-            const previewContainer = document.getElementById('invoicePreviewContent');
-            previewContainer.innerHTML = `
-                <iframe src="${invoice.pdf_url}" width="100%" height="600px" frameborder="0"></iframe>
-            `;
+        // Build invoice details HTML (form-like layout, no items)
+        const client = invoice.clients || {};
+        const detailsHtml = `
+          <div class="invoice-details-form">
+            <div><strong>Client:</strong> ${invoice.client_name || client.customer_name || '-'}</div>
+            <div><strong>Email:</strong> ${client.email || '-'}</div>
+            <div><strong>NUIT:</strong> ${client.customer_tax_id || '-'}</div>
+            <div><strong>Address:</strong> ${client.billing_address || '-'}</div>
+            <div><strong>Invoice #:</strong> ${invoice.invoiceNumber}</div>
+            <div><strong>Issue Date:</strong> ${invoice.issue_date ? new Date(invoice.issue_date).toLocaleDateString() : '-'}</div>
+            <div><strong>Due Date:</strong> ${invoice.due_date ? new Date(invoice.due_date).toLocaleDateString() : '-'}</div>
+            <div><strong>Status:</strong> ${invoice.status || '-'}</div>
+            <div><strong>Currency:</strong> ${invoice.currency || '-'}</div>
+            <div><strong>Payment Terms:</strong> ${invoice.payment_terms || '-'}</div>
+            <div><strong>Notes:</strong> ${invoice.notes || '-'}</div>
+            <div><strong>Subtotal:</strong> ${invoice.subtotal != null ? invoice.subtotal.toFixed(2) : '-'}</div>
+            <div><strong>VAT Amount:</strong> ${invoice.vat_amount != null ? invoice.vat_amount.toFixed(2) : '-'}</div>
+            <div><strong>Total Amount:</strong> ${invoice.total_amount != null ? invoice.total_amount.toFixed(2) : '-'}</div>
+          </div>
+        `;
+        if (previewContainer) {
+            previewContainer.innerHTML = detailsHtml;
+        }
+
+        // Attach download button logic
+        const downloadBtn = document.getElementById('downloadInvoicePdfBtn');
+        if (downloadBtn) {
+            downloadBtn.onclick = async function() {
+                const fileName = `${invoice.invoiceNumber}.pdf`;
+                console.log('[Download PDF] Attempting to create signed URL for:', fileName);
+                const { data: signedUrlData, error: signedUrlError } = await window.supabase
+                    .storage
+                    .from('invoice_pdfs')
+                    .createSignedUrl(fileName, 60 * 60); // 1 hour expiry
+                if (!signedUrlError && signedUrlData && signedUrlData.signedUrl) {
+                    window.open(signedUrlData.signedUrl, '_blank');
+                    console.log('[Download PDF] Signed URL opened:', signedUrlData.signedUrl);
+                } else {
+                    console.error('[Download PDF] Could not generate signed URL:', signedUrlError, signedUrlData);
+                    showNotification('Could not generate PDF download link.', 'error');
+                }
+            };
+        }
+
+        // Attach send button logic
+        const sendBtn = document.getElementById('sendInvoiceBtn');
+        if (sendBtn) {
+            sendBtn.onclick = function() {
+                const client = invoice.clients || {};
+                const subject = `Invoice ${invoice.invoiceNumber}`;
+                const message = `Dear ${invoice.client_name || client.customer_name || 'Client'},\n\nPlease find attached invoice ${invoice.invoiceNumber} for the amount of ${invoice.total_amount != null ? invoice.total_amount.toFixed(2) : '-'} ${invoice.currency || ''}.\n\nThank you.`;
+                if (typeof openEmailModal === 'function') {
+                    openEmailModal(invoice.invoiceNumber, client.email, subject, message);
+                } else {
+                    showNotification('Email modal function not found.', 'error');
+                }
+            };
         }
 
         // Open the modal
-        openModal('viewInvoiceModal');
+        window.modalManager.openModal('viewInvoiceModal');
 
     } catch (error) {
-        console.error('Error fetching invoice:', error);
-        showNotification('Error loading invoice: ' + error.message);
+        console.error('[fetchInvoiceDetails] Error fetching invoice:', error);
+        showNotification('Error loading invoice: ' + (error.message || error));
     }
 }
 
@@ -919,7 +948,7 @@ async function fetchInvoiceTimeline(invoiceNumber) {
         const { data: timeline, error } = await window.supabase
             .from('invoice_timeline')
             .select('*')
-            .eq('invoice_number', invoiceNumber)
+            .eq('invoiceNumber', invoiceNumber)
             .order('created_at', { ascending: true });
 
         if (error) throw error;
@@ -954,19 +983,20 @@ function populateTimeline(timeline) {
 
 async function markInvoiceAsPaid(invoiceNumber) {
     try {
+        const environment_id = await window.getCurrentEnvironmentId();
         // Update invoice status
         const { error: updateError } = await window.supabase
             .from('invoices')
-            .update({ status: 'paid', paid_date: new Date().toISOString() })
-            .eq('invoice_number', invoiceNumber);
-
+            .update({ status: 'paid', payment_date: new Date().toISOString() })
+            .eq('invoiceNumber', invoiceNumber)
+            .eq('environment_id', environment_id);
         if (updateError) throw updateError;
 
         // Add timeline event
         const { error: timelineError } = await window.supabase
             .from('invoice_timeline')
             .insert([{
-                invoice_number: invoiceNumber,
+                invoiceNumber: invoiceNumber,
                 title: 'Payment Received',
                 active: true,
                 date: new Date().toISOString()
@@ -995,2238 +1025,367 @@ async function markInvoiceAsPaid(invoiceNumber) {
     }
 }
 
-// Chart.js chart instances
+// Remove setupCharts, setupChartPeriodControls, updateChartPeriodButtons, updateInvoiceDistributionChart, updateRevenueByStatusChart from this file, now provided by js/invoicescripts/charts.js
 
-function setupCharts() {
-    // Clean up existing charts
-    if (invoiceDistributionChartInstance) {
-        invoiceDistributionChartInstance.destroy();
-        invoiceDistributionChartInstance = null;
-    }
-    if (revenueByStatusChartInstance) {
-        revenueByStatusChartInstance.destroy();
-        revenueByStatusChartInstance = null;
-    }
+// Remove setupTableFilters and setupTableSorting from this file, now provided by js/invoicescripts/tableFilters.js
 
-    // Setup Invoice Distribution Chart
-    const invoiceDistributionCtx = document.getElementById('invoiceDistributionChart');
-    if (invoiceDistributionCtx) {
-        invoiceDistributionChartInstance = new Chart(invoiceDistributionCtx, {
-            type: 'line',
-            data: {
-                labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
-                datasets: [{
-                    label: 'Invoices Created',
-                    data: Array(7).fill(0),
-                    borderColor: '#007ec7',
-                    backgroundColor: 'rgba(0, 126, 199, 0.1)',
-                    tension: 0.3,
-                    fill: true
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        display: false
-                    }
-                },
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        grid: {
-                            color: 'rgba(0, 0, 0, 0.05)'
-                        }
-                    },
-                    x: {
-                        grid: {
-                            display: false
-                        }
-                    }
-                }
-            }
-        });
-        window.invoiceDistributionChart = invoiceDistributionChartInstance;
-    }
-
-    // Setup Revenue by Status Chart
-    const revenueByStatusCtx = document.getElementById('revenueByStatusChart');
-    if (revenueByStatusCtx) {
-        revenueByStatusChartInstance = new Chart(revenueByStatusCtx, {
-            type: 'doughnut',
-            data: {
-                labels: ['Paid', 'Pending', 'Overdue', 'Draft'],
-                datasets: [{
-                    data: Array(4).fill(0),
-                    backgroundColor: [
-                        '#3bb077',
-                        '#f0ad4e',
-                        '#e55353',
-                        '#6c757d'
-                    ],
-                    borderWidth: 0,
-                    hoverOffset: 4
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        position: 'right'
-                    }
-                },
-                cutout: '70%'
-            }
-        });
-        window.revenueByStatusChart = revenueByStatusChartInstance;
-    }
-}
-
-function setupChartPeriodControls() {
-    const weeklyBtn = document.getElementById('weeklyBtn');
-    const monthlyBtn = document.getElementById('monthlyBtn');
-    const quarterlyBtn = document.getElementById('quarterlyBtn');
-    
-    // Log button elements to verify they exist
-    console.log('Chart period buttons:', {
-        weeklyBtn: !!weeklyBtn,
-        monthlyBtn: !!monthlyBtn,
-        quarterlyBtn: !!quarterlyBtn
-    });
-
-    if (weeklyBtn && monthlyBtn && quarterlyBtn) {
-        weeklyBtn.addEventListener('click', function() {
-            console.log('Weekly button clicked');
-            updateChartPeriodButtons(this, [monthlyBtn, quarterlyBtn]);
-            updateInvoiceDistributionChart('weekly');
-        });
-        
-        monthlyBtn.addEventListener('click', function() {
-            console.log('Monthly button clicked');
-            updateChartPeriodButtons(this, [weeklyBtn, quarterlyBtn]);
-            updateInvoiceDistributionChart('monthly');
-        });
-        
-        quarterlyBtn.addEventListener('click', function() {
-            console.log('Quarterly button clicked');
-            updateChartPeriodButtons(this, [weeklyBtn, monthlyBtn]);
-            updateInvoiceDistributionChart('quarterly');
-        });
-    }
-
-    const revenueMonthlyBtn = document.getElementById('revenueMonthlyBtn');
-    const revenueYearlyBtn = document.getElementById('revenueYearlyBtn');
-    
-    // Log revenue button elements
-    console.log('Revenue period buttons:', {
-        revenueMonthlyBtn: !!revenueMonthlyBtn,
-        revenueYearlyBtn: !!revenueYearlyBtn
-    });
-
-    if (revenueMonthlyBtn && revenueYearlyBtn) {
-        revenueMonthlyBtn.addEventListener('click', function() {
-            console.log('Revenue monthly button clicked');
-            updateChartPeriodButtons(this, [revenueYearlyBtn]);
-            updateRevenueByStatusChart('monthly');
-        });
-        
-        revenueYearlyBtn.addEventListener('click', function() {
-            console.log('Revenue yearly button clicked');
-            updateChartPeriodButtons(this, [revenueMonthlyBtn]);
-            updateRevenueByStatusChart('yearly');
-        });
-    }
-}
-
-function updateChartPeriodButtons(activeButton, inactiveButtons) {
-    activeButton.classList.add('active');
-    inactiveButtons.forEach(button => button.classList.remove('active'));
-}
-
-function updateInvoiceDistributionChart(period, data = null) {
-    console.log('updateInvoiceDistributionChart called with:', {
-        period,
-        data,
-        type: typeof period
-    });
-
-    try {
-        const chart = window.invoiceDistributionChart;
-        if (!chart) throw new Error('Chart instance not found');
-
-        // If data is provided, use it. Otherwise, use period-based default data
-        if (data) {
-            chart.data.datasets[0].data = data.values;
-            chart.data.labels = data.labels;
-        } else if (typeof period === 'string') {
-            let labels = [];
-            let values = [];
-
-            switch (period.toLowerCase()) {
-                case 'weekly':
-                    labels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-                    values = [5, 7, 10, 8, 12, 3, 1];
-                    break;
-                // ...existing cases...
-            }
-
-            chart.data.labels = labels;
-            chart.data.datasets[0].data = values;
-        }
-
-        chart.update();
-
-    } catch (error) {
-        console.error('Error updating distribution chart:', error);
-    }
-}
-
-function updateRevenueByStatusChart(period, data = null) {
-    console.log('updateRevenueByStatusChart called with:', {
-        period,
-        data,
-        type: typeof period
-    });
-
-    try {
-        const chart = window.revenueByStatusChart;
-        if (!chart) throw new Error('Chart instance not found');
-
-        // If data is provided, use it directly
-        if (data) {
-            chart.data.datasets[0].data = [
-                data.paid || 0,
-                data.pending || 0,
-                data.overdue || 0,
-                data.draft || 0
-            ];
-        } else if (typeof period === 'string') {
-            chart.data.datasets[0].data = period.toLowerCase() === 'monthly' 
-                ? [65, 15, 12, 8] 
-                : [78, 10, 8, 4];
-        }
-
-        chart.update();
-
-    } catch (error) {
-        console.error('Error updating revenue chart:', error);
-    }
-}
-
-function setupTableFilters() {
-    // Get filter elements
-    const statusFilter = document.getElementById('statusFilter');
-    const dateFilter = document.getElementById('dateFilter');
-    const clientFilter = document.getElementById('clientFilter');
-    const searchInput = document.getElementById('searchInvoices');
-    const clearFiltersBtn = document.getElementById('clearFilters');
-    const resetFiltersLink = document.getElementById('resetFiltersLink');
-    
-    // Get table elements
-    const table = document.getElementById('invoicesTable');
-    const rows = table ? Array.from(table.querySelectorAll('tbody tr')) : [];
-    
-    if (!table || rows.length === 0) return;
-
-    // Populate client filter with data from Supabase
-    async function populateClientFilter() {
-        try {
-            if (!window.supabase) {
-                throw new Error('Supabase client not initialized');
-            }
-
-            const { data: clients, error } = await window.supabase
-                .from('clients')
-                .select('customer_id, company_name')
-                .order('company_name', { ascending: true });
-
-            if (error) throw error;
-
-            if (clientFilter) {
-                // Clear existing options except "All Clients"
-                clientFilter.innerHTML = '<option value="all">All Clients</option>';
-
-                // Add clients to select
-                clients.forEach(client => {
-                    const option = document.createElement('option');
-                    option.value = client.customer_id;
-                    option.textContent = client.company_name;
-                    clientFilter.appendChild(option);
-                });
-            }
-        } catch (err) {
-            console.error('Error populating client filter:', err);
-        }
-    }
-
-    // Call the function to populate client filter
-    populateClientFilter();
-    
-    // Function to apply all filters
-    function applyFilters() {
-        const status = statusFilter ? statusFilter.value : 'all';
-        const date = dateFilter ? dateFilter.value : 'all';
-        const client = clientFilter ? clientFilter.value : 'all';
-        const searchText = searchInput ? searchInput.value.toLowerCase() : '';
-        
-        let visibleCount = 0;
-        
-        rows.forEach(row => {
-            const rowStatus = row.getAttribute('data-status');
-            const rowDate = new Date(row.getAttribute('data-date'));
-            const rowClientId = row.getAttribute('data-client-id');
-            const rowInvoice = row.querySelector('td:first-child').textContent.toLowerCase();
-            
-            // Match status
-            const statusMatch = status === 'all' || rowStatus === status;
-            
-            // Match date range
-            let dateMatch = true;
-            
-            if (date !== 'all') {
-                const today = new Date();
-                const oneWeek = new Date(today);
-                oneWeek.setDate(today.getDate() - 7);
-                
-                const oneMonth = new Date(today);
-                oneMonth.setMonth(today.getMonth() - 1);
-                
-                const oneQuarter = new Date(today);
-                oneQuarter.setMonth(today.getMonth() - 3);
-                
-                const oneYear = new Date(today);
-                oneYear.setFullYear(today.getFullYear() - 1);
-                
-                switch (date) {
-                    case 'today':
-                        dateMatch = rowDate.toDateString() === today.toDateString();
-                        break;
-                    case 'week':
-                        dateMatch = rowDate >= oneWeek;
-                        break;
-                    case 'month':
-                        dateMatch = rowDate >= oneMonth;
-                        break;
-                    case 'quarter':
-                        dateMatch = rowDate >= oneQuarter;
-                        break;
-                    case 'year':
-                        dateMatch = rowDate >= oneYear;
-                        break;
-                }
-            }
-            
-            // Match client
-            const clientMatch = client === 'all' || rowClientId === client;
-            
-            // Match search text
-            const searchMatch = !searchText || 
-                                rowInvoice.includes(searchText) || 
-                                rowClientId.includes(searchText);
-            
-            // Apply all filters
-            const shouldShow = statusMatch && dateMatch && clientMatch && searchMatch;
-            row.style.display = shouldShow ? '' : 'none';
-            
-            if (shouldShow) visibleCount++;
-        });
-        
-        // Show/hide "No results" message
-        const noResultsMessage = document.getElementById('noResultsMessage');
-        if (noResultsMessage) {
-            if (visibleCount === 0) {
-                table.style.display = 'none';
-                noResultsMessage.style.display = 'block';
-            } else {
-                table.style.display = '';
-                noResultsMessage.style.display = 'none';
-            }
-        }
-        
-        // Update page info
-        const pageInfo = document.querySelector('.page-info');
-        if (pageInfo) {
-            pageInfo.textContent = `Showing ${visibleCount} of ${rows.length} invoices`;
-        }
-    }
-    
-    // Add event listeners to filters
-    if (statusFilter) {
-        statusFilter.addEventListener('change', applyFilters);
-    }
-    
-    if (dateFilter) {
-        dateFilter.addEventListener('change', applyFilters);
-    }
-    
-    if (clientFilter) {
-        clientFilter.addEventListener('change', applyFilters);
-    }
-    
-    if (searchInput) {
-        searchInput.addEventListener('input', function() {
-            // Debounce search for better performance
-            clearTimeout(this.debounceTimer);
-            this.debounceTimer = setTimeout(applyFilters, 300);
-        });
-    }
-    
-    // Reset filters function
-    function resetFilters() {
-        if (statusFilter) statusFilter.value = 'all';
-        if (dateFilter) dateFilter.value = 'month';
-        if (clientFilter) clientFilter.value = 'all';
-        if (searchInput) searchInput.value = '';
-        
-        applyFilters();
-    }
-    
-    // Clear filters button
-    if (clearFiltersBtn) {
-        clearFiltersBtn.addEventListener('click', resetFilters);
-    }
-    
-    // Reset filters link (in no results message)
-    if (resetFiltersLink) {
-        resetFiltersLink.addEventListener('click', function(e) {
-            e.preventDefault();
-            resetFilters();
-        });
-    }
-    
-    // Initialize sorting
-    setupTableSorting(table, rows);
-}
-
-function setupTableSorting(table, rows) {
-    const sortIcons = table ? table.querySelectorAll('.sort-icon') : [];
-    
-    sortIcons.forEach(icon => {
-        icon.addEventListener('click', function() {
-            const sortKey = this.getAttribute('data-sort');
-            const ascending = !this.classList.contains('ascending');
-            
-            // Reset all icons
-            sortIcons.forEach(i => {
-                i.classList.remove('ascending', 'descending');
-            });
-            
-            // Set this icon's state
-            this.classList.add(ascending ? 'ascending' : 'descending');
-            
-            // Sort rows
-            rows.sort((a, b) => {
-                let aVal, bVal;
-                
-                // Get appropriate values based on sort key
-                switch (sortKey) {
-                    case 'invoice':
-                        aVal = a.querySelector('td:nth-child(1)').textContent.trim();
-                        bVal = b.querySelector('td:nth-child(1)').textContent.trim();
-                        break;
-                    case 'client':
-                        aVal = a.querySelector('td:nth-child(2)').textContent.trim();
-                        bVal = b.querySelector('td:nth-child(2)').textContent.trim();
-                        break;
-                    case 'date':
-                        aVal = new Date(a.getAttribute('data-date'));
-                        bVal = new Date(b.getAttribute('data-date'));
-                        return ascending ? aVal - bVal : bVal - aVal;
-                    case 'dueDate':
-                        aVal = new Date(a.getAttribute('data-duedate'));
-                        bVal = new Date(b.getAttribute('data-duedate'));
-                        return ascending ? aVal - bVal : bVal - aVal;
-                    case 'amount':
-                        aVal = parseFloat(a.getAttribute('data-amount'));
-                        bVal = parseFloat(b.getAttribute('data-amount'));
-                        return ascending ? aVal - bVal : bVal - aVal;
-                    case 'status':
-                        aVal = a.getAttribute('data-status');
-                        bVal = b.getAttribute('data-status');
-                        break;
-                }
-                
-                // String comparison for non-numeric fields
-                if (typeof aVal === 'string' && typeof bVal === 'string') {
-                    return ascending ? aVal.localeCompare(bVal) : bVal.localeCompare(aVal);
-                }
-                
-                return 0;
-            });
-            
-            // Reattach rows in new sorted order
-            const tbody = table.querySelector('tbody');
-            rows.forEach(row => tbody.appendChild(row));
-        });
-    });
-}
-
-function showNotification(message) {
-    // In a real application, you would use a proper notification system
-    alert(message);
-}
-
-// Template Selection Script
-
-    document.addEventListener('DOMContentLoaded', function() {
-        const templateModal = document.getElementById('templateModal');
-        const chooseTemplateBtn = document.getElementById('chooseTemplate');
-        const closeTemplateBtn = document.querySelector('.close-template-modal');
-        const closeModalX = templateModal.querySelector('.close-modal');
-        let selectedTemplate = 'classic'; // Default template
-
-        // Add styles for wider centered content with centered buttons
-        const modalContent = templateModal.querySelector('.modal-content');
-        modalContent.style.maxWidth = '800px'; // Make modal wider
-        modalContent.style.margin = '5vh auto'; // Center vertically and horizontally
-        modalContent.style.transform = 'scale(0.95)'; // Slightly reduce overall size
-
-        // Style the template grid for vertical layout
-        const templateGrid = templateModal.querySelector('.template-grid');
-        if (templateGrid) {
-            templateGrid.style.display = 'flex';
-            templateGrid.style.flexDirection = 'column'; // Stack items vertically
-            templateGrid.style.alignItems = 'center'; // Center items horizontally
-            templateGrid.style.gap = '20px';
-            templateGrid.style.padding = '20px';
-        }
-
-        // Style the template cards
-        const templateCards = document.querySelectorAll('.template-card');
-        templateCards.forEach(card => {
-            card.style.width = '100%';
-            card.style.maxWidth = '600px'; // Make cards wider
-            card.style.textAlign = 'center';
-            card.style.padding = '15px';
-            
-            // Center the buttons within each card
-            const button = card.querySelector('.select-template');
-            if (button) {
-                button.style.display = 'block';
-                button.style.margin = '10px auto'; // Center horizontally with margin
-            }
-        });
-
-        // Open template modal
-        chooseTemplateBtn.addEventListener('click', function() {
-            templateModal.style.display = 'block';
-            document.querySelector('.modal-overlay').style.display = 'block';
-        });
-
-        // Close template modal
-        function closeTemplateModal() {
-            templateModal.style.display = 'none';
-            document.querySelector('.modal-overlay').style.display = 'none';
-        }
-
-        closeTemplateBtn.addEventListener('click', closeTemplateModal);
-        closeModalX.addEventListener('click', closeTemplateModal);
-
-        // Update the template selection handler
-        templateCards.forEach(card => {
-            card.addEventListener('click', function() {
-                selectedTemplate = this.dataset.template;
-                // Save to localStorage
-                localStorage.setItem('selectedInvoiceTemplate', selectedTemplate);
-                templateCards.forEach(c => c.classList.remove('selected'));
-                this.classList.add('selected');
-            });
-
-            const selectBtn = card.querySelector('.select-template');
-            selectBtn.addEventListener('click', function(e) {
-                e.stopPropagation();
-                selectedTemplate = card.dataset.template;
-                // Save to localStorage
-                localStorage.setItem('selectedInvoiceTemplate', selectedTemplate);
-                console.log(`Selected template: ${selectedTemplate}`);
-                closeTemplateModal();
-            });
-        });
-
-        // Close modal when clicking outside
-        window.addEventListener('click', function(e) {
-            if (e.target === templateModal) {
-                closeTemplateModal();
-            }
-        });
-    });
-
-document.getElementById('invoiceForm').addEventListener('submit', function(event) {
-    event.preventDefault();
-
-    // Collect data from the form
-    const clientName = document.getElementById('clientName').value;
-    const clientEmail = document.getElementById('clientEmail').value;
-    const clientAddress = document.getElementById('clientAddress').value;
-    const clientTaxId = document.getElementById('clientTaxId').value;
-    const invoiceNumber = document.getElementById('invoiceNumber').value;
-    const issueDate = document.getElementById('issueDate').value;
-    const dueDate = document.getElementById('dueDate').value;
-    const paymentTerms = document.getElementById('paymentTerms').value;
-    const issuerName = document.getElementById('issuerName').value;
-    const issuerNuit = document.getElementById('issuerNuit').value;
-    const issuerAddress = document.getElementById('issuerAddress').value;
-    const description = document.getElementById('description').value;
-    const totalWithoutTaxes = document.getElementById('totalWithoutTaxes').value;
-    const vatRate = document.getElementById('vatRate').value;
-    const vatAmount = document.getElementById('vatAmount').value;
-    const totalAmountPayable = document.getElementById('totalAmountPayable').value;
-    const paymentConditions = document.getElementById('paymentConditions').value;
-    const legalInfo = document.getElementById('legalInfo').value;
-});
-
-
-// Generate Invoice HTML
-async function generateInvoiceHTML(invoiceData) {
-    try {
-        const selectedTemplate = localStorage.getItem('selectedInvoiceTemplate') || 'classic';
-        const templatePath = `/templates/${TEMPLATE_PATHS[selectedTemplate]}`;
-        
-        const response = await fetch(templatePath);
-        if (!response.ok) throw new Error('Template not found');
-        
-        const templateContent = await response.text();
-        return await populateTemplate(templateContent, invoiceData);
-    } catch (error) {
-        console.error('Error generating invoice HTML:', error);
-        throw error;
-    }
+window.initializeInvoiceModule = initializeInvoiceModule;
+window.openModal = openModal;
+// Expose setupProductSuggestions if defined
+if (typeof setupProductSuggestions === 'function') {
+    window.setupProductSuggestions = setupProductSuggestions;
 }
 
 function getInvoiceData() {
     const form = document.getElementById('invoiceForm');
-    const itemRows = document.querySelectorAll('.item-row');
+    if (!form) throw new Error('Invoice form not found');
 
-    // Fetch client name from the input field (handles both new and existing clients)
-    const clientInput = document.getElementById('client-input');
-    const clientName = clientInput ? clientInput.value : '';
-
+    const items = window.invoiceItems ? window.invoiceItems.getInvoiceItems() : [];
+    
     return {
         invoiceNumber: document.getElementById('invoiceNumber').value,
         issueDate: document.getElementById('issueDate').value,
         dueDate: document.getElementById('dueDate').value,
+        client: {
+            name: document.getElementById('client-list').value,
+            email: document.getElementById('clientEmail').value,
+            taxId: document.getElementById('clientTaxId').value,
+            address: document.getElementById('clientAddress').value
+        },
+        items: items,
+        subtotal: parseAmount(document.getElementById('subtotal').textContent) || 0,
+        taxAmount: parseAmount(document.getElementById('totalVat').textContent) || 0,
+        total: parseAmount(document.getElementById('invoiceTotal').textContent) || 0,
+        notes: document.getElementById('notes').value,
         currency: document.getElementById('currency').value,
-        clientName: clientName, // Use the value from the input field
-        clientAddress: document.getElementById('clientAddress').value,
-        clientTaxId: document.getElementById('clientTaxId').value,
-        items: Array.from(itemRows).map(row => ({
-            description: row.querySelector('.item-description').value,
-            quantity: row.querySelector('.item-quantity').value,
-            price: row.querySelector('.item-price').value,
-            vat: row.querySelector('.item-vat').textContent,
-            total: row.querySelector('.item-total').textContent
-        })),
-        subtotal: document.getElementById('subtotal').textContent,
-        totalVat: document.getElementById('totalVat').textContent,
-        total: document.getElementById('invoiceTotal').textContent,
-        notes: document.getElementById('notes').value
+        paymentTerms: document.getElementById('paymentTerms').value
     };
 }
 
-// Download functionality
-document.getElementById('downloadPdfBtn').addEventListener('click', async function() {
-    const invoiceData = getInvoiceData();
-    const invoiceHTML = await generateInvoiceHTML(invoiceData);
-    
-    const printWindow = window.open('', '_blank');
-    printWindow.document.write(`
-        <html>
-            <head>
-                <title>Invoice ${invoiceData.invoiceNumber}</title>
-                <link rel="stylesheet" href="css/invoice-layout.css">
-                <style>
-                    body { margin: 0; background: white; }
-                </style>
-            </head>
-            <body>
-                <div class="invoice-a4">
-                    ${invoiceHTML}
-                </div>
-                <script>
-                    window.onload = function() {
-                        window.print();
-                        window.onafterprint = function() {
-                            window.close();
-                        };
-                    };
-                </script>
-            </body>
-        </html>
-    `);
-    printWindow.document.close();
-});
-
-document.addEventListener('input', async function(e) {
-    if (e.target.id !== 'client-list') return;
-    
-    const searchTerm = e.target.value.toLowerCase().trim();
-    const expandClientForm = document.getElementById('expand-client-form');
-    
-    if (searchTerm.length < 2) {
-        hideClientSuggestions();
-        return;
-    }
-
-    try {
-        const { data: clients, error } = await supabase
-            .from('clients')
-            .select('*')
-            .ilike('name', `%${searchTerm}%`)
-            .limit(5);
-
-        if (error) throw error;
-
-        if (clients.length > 0) {
-            showClientSuggestions(clients);
-            expandClientForm.style.display = 'none';
-        } else {
-            hideClientSuggestions();
-            expandClientForm.style.display = 'block';
-        }
-    } catch (err) {
-        console.error('Error fetching clients:', err);
-    }
-});
-
-function showClientSuggestions(clients) {
-    let suggestionsBox = document.querySelector('.client-suggestions');
-    if (!suggestionsBox) {
-        suggestionsBox = document.createElement('div');
-        suggestionsBox.className = 'client-suggestions';
-        document.getElementById('client-list').parentNode.appendChild(suggestionsBox);
-    }
-
-    suggestionsBox.innerHTML = clients.map(client => `
-        <div class="suggestion-item" data-client='${JSON.stringify(client)}'>
-            ${client.name} (${client.nuit || 'No NUIT'})
-        </div>
-    `).join('');
-
-    suggestionsBox.style.display = 'block';
-}
-
-function hideClientSuggestions() {
-    const suggestionsBox = document.querySelector('.client-suggestions');
-    if (suggestionsBox) {
-        suggestionsBox.style.display = 'none';
-    }
-}
-
-function fillInvoiceFields(client) {
-    document.getElementById('clientTaxId').value = client.nuit || '';
-    document.getElementById('clientEmail').value = client.email || '';
-    document.getElementById('clientAddress').value = client.billing_address || '';
-    // Fill other relevant fields
-}
-
-// Add click handler for suggestions
-document.addEventListener('click', function(e) {
-    if (e.target.closest('.suggestion-item')) {
-        const client = JSON.parse(e.target.closest('.suggestion-item').dataset.client);
-        document.getElementById('client-list').value = client.name;
-        fillInvoiceFields(client);
-        hideClientSuggestions();
-    } else if (!e.target.closest('.client-suggestions') && !e.target.closest('#client-list')) {
-        hideClientSuggestions();
-    }
-});
-
-// Save new client
-async function saveNewClient(clientData) {
-    try {
-        const { data, error } = await supabase
-            .from('clients')
-            .insert([clientData])
-            .select()
-            .single();
-
-        if (error) throw error;
-
-        document.getElementById('client-list').value = data.name;
-        fillInvoiceFields(data);
-        document.getElementById('expand-client-form').style.display = 'none';
-        
-        return data;
-    } catch (err) {
-        console.error('Error saving client:', err);
-        throw err;
-    }
-}
-
-function setupClientAutocomplete() {
-    const clientInput = document.getElementById('client-list');
-    const expandClientForm = document.getElementById('expand-client-form');
-    
-    if (!clientInput) return;
-
-    clientInput.addEventListener('input', async function() {
-        const searchTerm = this.value.toLowerCase().trim();
-        
-        if (searchTerm.length < 2) {
-            hideClientSuggestions();
-            if (expandClientForm) {
-                expandClientForm.style.display = 'none';
-            }
-            return;
-        }
-
-        try {
-            const { data: clients, error } = await window.supabase
-                .from('clients')
-                .select('*')
-                .ilike('company_name', `%${searchTerm}%`)
-                .limit(5);
-
-            if (error) throw error;
-
-            if (clients && clients.length > 0) {
-                showClientSuggestions(clients);
-                if (expandClientForm) {
-                    expandClientForm.style.display = 'none';
-                }
-            } else {
-                hideClientSuggestions();
-                if (expandClientForm) {
-                    expandClientForm.style.display = 'block';
-                }
-            }
-        } catch (err) {
-            console.error('Error fetching clients:', err);
-        }
-    });
-}
-
-function showClientSuggestions(clients) {
-    const clientInput = document.getElementById('client-list');
-    if (!clientInput) return;
-    
-    let suggestionsBox = document.querySelector('.client-suggestions');
-    
-    if (!suggestionsBox) {
-        suggestionsBox = document.createElement('div');
-        suggestionsBox.className = 'client-suggestions';
-        clientInput.parentNode.appendChild(suggestionsBox);
-    }
-
-    suggestionsBox.innerHTML = clients.map(client => `
-        <div class="suggestion-item" data-client='${JSON.stringify(client)}'>
-            ${client.company_name || client.name} ${client.customer_tax_id ? `(${client.customer_tax_id})` : ''}
-        </div>
-    `).join('');
-
-    suggestionsBox.style.display = 'block';
-
-    // Add click handlers for suggestions
-    suggestionsBox.querySelectorAll('.suggestion-item').forEach(item => {
-        item.addEventListener('click', function() {
-            const client = JSON.parse(this.dataset.client);
-            fillClientFields(client);
-            hideClientSuggestions();
-        });
-    });
-}
-
-function hideClientSuggestions() {
-    const suggestionsBox = document.querySelector('.client-suggestions');
-    if (suggestionsBox) {
-        suggestionsBox.style.display = 'none';
-    }
-}
-
-function fillClientFields(client) {
-    const fields = {
-        'client-list': client.company_name || client.name,
-        'clientEmail': client.email,
-        'clientAddress': client.billing_address,
-        'clientTaxId': client.customer_tax_id || client.nuit
-    };
-
-    Object.keys(fields).forEach(id => {
-        const element = document.getElementById(id);
-        if (element && fields[id]) {
-            element.value = fields[id];
-        }
-    });
-}
-
-async function saveNewClient(clientData) {
-    try {
-        // Validate required data
-        if (!clientData?.name) {
-            throw new Error('Client name is required');
-        }
-
-        const { data, error } = await window.supabase
-            .from('clients')
-            .insert([{
-                company_name: clientData.name,
-                customer_tax_id: clientData.nuit,
-                email: clientData.email,
-                billing_address: clientData.billing_address,
-                telephone: clientData.telephone,
-                status: 'active'
-            }])
-            .select()
-            .single();
-
-        if (error) throw error;
-
-        fillClientFields(data);
-        const expandClientForm = document.getElementById('expand-client-form');
-        if (expandClientForm) {
-            expandClientForm.style.display = 'none';
-        }
-        
-        return data;
-    } catch (err) {
-        console.error('Error saving client:', err);
-        alert('Error saving client: ' + (err.message || 'Unknown error'));
-        throw err;
-    }
-}
-
-// ...existing code...
-
-async function fillClientFields(client) {
-    const fields = {
-        'client-list': client.company_name || client.name,
-        'clientEmail': client.email,
-        'clientAddress': client.billing_address,
-        'clientTaxId': client.customer_tax_id || client.nuit
-    };
-
-    Object.keys(fields).forEach(id => {
-        const element = document.getElementById(id);
-        if (element && fields[id]) {
-            element.value = fields[id];
-        }
-    });
-
-    // Generate new invoice number when client is selected
-    try {
-        const invoiceNumber = await invoiceNumberService.getNextInvoiceNumber(client.customer_id);
-        document.getElementById('invoiceNumber').value = invoiceNumber;
-    } catch (error) {
-        console.error('Error generating invoice number:', error);
-        showNotification('Error generating invoice number');
-    }
-}
-
-// ...existing code...
-
-async function updateMetricsDisplay() {
-    try {
-        // Fetch all invoices
-        const { data: invoices, error: invoiceError } = await window.supabase
-            .from('invoices')
-            .select('*');
-
-        if (invoiceError) throw invoiceError;
-
-        // Calculate metrics
-        const totalInvoices = invoices.length;
-        const totalPaid = invoices.filter(inv => inv.status === 'paid').length;
-        const totalPending = invoices.filter(inv => inv.status === 'pending').length;
-        const totalOverdue = invoices.filter(inv => inv.status === 'overdue').length;
-
-        // Calculate percentages
-        const paidPercentage = ((totalPaid / totalInvoices) * 100).toFixed(1);
-        const pendingPercentage = ((totalPending / totalInvoices) * 100).toFixed(1);
-        const overduePercentage = ((totalOverdue / totalInvoices) * 100).toFixed(1);
-
-        // Update metrics cards
-        document.querySelector('#totalInvoicesCard .metric-value').textContent = totalInvoices;
-        document.querySelector('#paidInvoicesCard .metric-value').textContent = totalPaid;
-        document.querySelector('#paidInvoicesCard .metric-footer .metric-label').textContent = 
-            `${paidPercentage}% of Total`;
-
-        document.querySelector('#pendingInvoicesCard .metric-value').textContent = totalPending;
-        document.querySelector('#pendingInvoicesCard .metric-footer .metric-label').textContent = 
-            `${pendingPercentage}% of Total`;
-
-        document.querySelector('#overdueInvoicesCard .metric-value').textContent = totalOverdue;
-        document.querySelector('#overdueInvoicesCard .metric-footer .metric-label').textContent = 
-            `${overduePercentage}% of Total`;
-
-    } catch (error) {
-        console.error('Error updating metrics:', error);
-        // Set default values in case of error
-        document.querySelector('#totalInvoicesCard .metric-value').textContent = '0';
-        document.querySelector('#paidInvoicesCard .metric-value').textContent = '0';
-        document.querySelector('#pendingInvoicesCard .metric-value').textContent = '0';
-        document.querySelector('#overdueInvoicesCard .metric-value').textContent = '0';
-    }
-}
-
-// Setup realtime subscription for metrics updates
-function setupMetricsSubscription() {
-    const subscription = window.supabase
-        .channel('public:invoices')
-        .on('postgres_changes', 
-            {
-                event: '*',
-                schema: 'public',
-                table: 'invoices'
-            }, 
-            () => {
-                updateMetricsDisplay();
-            }
-        )
-        .subscribe();
-
-    return () => {
-        subscription.unsubscribe();
-    };
-}
-
-async function updateCharts() {
-    try {
-        // Fetch all invoices
-        const { data: invoices, error: invoiceError } = await window.supabase
-            .from('invoices')
-            .select('*');
-
-        if (invoiceError) throw invoiceError;
-
-        // Update both charts with the invoice data
-        if (Array.isArray(invoices)) {
-            processInvoiceDataForCharts(invoices);
-        }
-
-    } catch (error) {
-        console.error('Error updating charts:', error);
-        resetCharts();
-    }
-}
-
-function processInvoiceDataForCharts(invoices) {
-    // Update Distribution Chart
-    const weeklyData = calculateWeeklyDistribution(invoices);
-    updateInvoiceDistributionChart('weekly', weeklyData);
-    
-    // Update Revenue Chart
-    const revenueData = calculateRevenueByStatus(invoices);
-    updateRevenueByStatusChart('monthly', revenueData);
-}
-
-function calculateWeeklyDistribution(invoices) {
-    const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-    const dailyCounts = Array(7).fill(0);
-    
-    invoices.forEach(invoice => {
-        const date = new Date(invoice.issue_date);
-        const dayIndex = date.getDay();
-        dailyCounts[dayIndex]++;
-    });
-
-    // Rotate array to start from Monday
-    const values = [...dailyCounts.slice(1), dailyCounts[0]];
-    const labels = [...days.slice(1), days[0]];
-
-    return { labels, values };
-}
-
-function calculateRevenueByStatus(invoices) {
-    return invoices.reduce((acc, invoice) => {
-        const status = invoice.status || 'pending';
-        const amount = parseFloat(invoice.total_amount) || 0;
-        acc[status] = (acc[status] || 0) + amount;
-        return acc;
-    }, {});
-}
-
-function resetCharts() {
-    // Reset Invoice Distribution Chart
-    if (window.invoiceDistributionChart) {
-        window.invoiceDistributionChart.data.datasets[0].data = Array(7).fill(0);
-        window.invoiceDistributionChart.update();
-    }
-
-    // Reset Revenue by Status Chart
-    if (window.revenueByStatusChart) {
-        window.revenueByStatusChart.data.datasets[0].data = Array(4).fill(0);
-        window.revenueByStatusChart.update();
-    }
-}
-
-// Setup realtime subscription for chart updates
-function setupChartSubscription() {
-    const subscription = window.supabase
-        .channel('public:invoices')
-        .on('postgres_changes', 
-            {
-                event: '*',
-                schema: 'public',
-                table: 'invoices'
-            }, 
-            () => {
-                updateCharts();
-            }
-        )
-        .subscribe();
-
-    return () => {
-        subscription.unsubscribe();
-    };
-}
-
-// ...existing code...
-
-async function setupInvoiceTable() {
-    try {
-        const tbody = document.querySelector('#invoicesTable tbody');
-        if (tbody) {
-            tbody.innerHTML = '<tr><td colspan="7" class="text-center">Loading invoices...</td></tr>';
-        }
-
-        // Initial fetch with default filters
-        await fetchAndDisplayInvoices();
-
-    } catch (error) {
-        console.error('Error setting up invoice table:', error);
-        showError('Failed to load invoices');
-    }
-}
-
-async function fetchAndDisplayInvoices(page = 1, limit = 10, filters = {}) {
-    try {
-        // Ensure Supabase client is available
-        if (!window.supabase) {
-            throw new Error('Supabase client is not initialized');
-        }
-
-        // Initialize query builder
-        let queryBuilder = window.supabase
-            .from('invoices')
-            .select('*', { count: 'exact' });
-
-        // Apply filters
-        if (filters.status && filters.status !== 'all') {
-            queryBuilder = queryBuilder.eq('status', filters.status);
-        }
-
-        if (filters.clientId && filters.clientId !== 'all') {
-            queryBuilder = queryBuilder.eq('client_id', filters.clientId);
-        }
-
-        if (filters.dateRange) {
-            const now = new Date();
-            const startDate = new Date();
-
-            switch (filters.dateRange) {
-                case 'today':
-                    startDate.setHours(0, 0, 0, 0);
-                    queryBuilder = queryBuilder.gte('created_at', startDate.toISOString())
-                        .lte('created_at', now.toISOString());
-                    break;
-                case 'week':
-                    startDate.setDate(startDate.getDate() - 7);
-                    queryBuilder = queryBuilder.gte('created_at', startDate.toISOString());
-                    break;
-                case 'month':
-                    startDate.setMonth(startDate.getMonth() - 1);
-                    queryBuilder = queryBuilder.gte('created_at', startDate.toISOString());
-                    break;
-                case 'quarter':
-                    startDate.setMonth(startDate.getMonth() - 3);
-                    queryBuilder = queryBuilder.gte('created_at', startDate.toISOString());
-                    break;
-            }
-        }
-
-        if (filters.search) {
-            queryBuilder = queryBuilder.or(
-                `invoice_number.ilike.%${filters.search}%,client_name.ilike.%${filters.search}%`
-            );
-        }
-
-        // Add pagination
-        const from = (page - 1) * limit;
-        const to = from + limit - 1;
-
-        queryBuilder = queryBuilder
-            .range(from, to)
-            .order('created_at', { ascending: false });
-
-        // Execute query
-        const { data: invoices, error, count } = await queryBuilder;
-
-        if (error) throw error;
-
-        // Update table
-        const tbody = document.querySelector('#invoicesTable tbody');
-        if (!tbody) return;
-
-        // Clear existing rows
-        tbody.innerHTML = '';
-
-        if (!invoices || invoices.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="7" class="text-center">No invoices found</td></tr>';
-            return;
-        }
-
-        // Add invoice rows
-        invoices.forEach(invoice => {
-            const row = `
-                <tr>
-                    <td>${invoice.invoice_number || ''}</td>
-                    <td>${invoice.customer_name || ''}</td>
-                    <td>${formatDate(invoice.issue_date)}</td>
-                    <td>${formatDate(invoice.due_date)}</td>
-                    <td>${formatCurrency(invoice.total_amount)}</td>
-                    <td><span class="status ${invoice.status?.toLowerCase()}">${invoice.status || 'Pending'}</span></td>
-                    <td class="actions">
-                        <button class="action-btn view-btn" data-invoice="${invoice.invoice_number}" title="View">
-                            <i class="fas fa-eye"></i>
-                        </button>
-                        <button class="action-btn send-btn" title="Send">
-                            <i class="fas fa-paper-plane"></i>
-                        </button>
-                        <button class="action-btn more-btn" title="More">
-                            <i class="fas fa-ellipsis-v"></i>
-                        </button>
-                    </td>
-                </tr>
-            `;
-            tbody.insertAdjacentHTML('beforeend', row);
-        });
-
-        // Update pagination if count is available
-        if (count !== null) {
-            updatePaginationDisplay(page, Math.ceil(count / limit), count);
-        }
-
-        // Setup action buttons for new rows
-        setupActionButtons();
-
-    } catch (error) {
-        console.error('Error fetching invoices:', error);
-        const tbody = document.querySelector('#invoicesTable tbody');
-        if (tbody) {
-            tbody.innerHTML = '<tr><td colspan="7" class="text-center">Error loading invoices</td></tr>';
-        }
-        throw error;
-    }
-}
-
-function showError(message) {
-    const tbody = document.querySelector('#invoicesTable tbody');
-    if (tbody) {
-        tbody.innerHTML = `<tr><td colspan="7" class="text-center text-error">${message}</td></tr>`;
-    }
-}
-
-// ...existing code...
-
-function setupPagination() {
-    const controls = document.querySelector('.page-controls');
-    if (!controls) return;
-
-    controls.addEventListener('click', (e) => {
-        const button = e.target.closest('.pagination-btn');
-        if (!button || button.disabled) return;
-
-        const currentPage = parseInt(document.querySelector('.pagination-btn.active')?.textContent || '1');
-        let newPage = currentPage;
-
-        if (button.classList.contains('active')) return;
-
-        if (button.querySelector('.fa-chevron-left')) {
-            newPage = currentPage - 1;
-        } else if (button.querySelector('.fa-chevron-right')) {
-            newPage = currentPage + 1;
-        } else {
-            newPage = parseInt(button.textContent);
-        }
-
-        fetchAndDisplayInvoices(newPage);
-    });
-}
-
-function setupInvoiceSubscription() {
-    const subscription = supabase
-        .channel('public:invoices')
-        .on('postgres_changes', 
-            {
-                event: '*',
-                schema: 'public',
-                table: 'invoices'
-            }, 
-            () => {
-                fetchAndDisplayInvoices();
-            }
-        )
-        .subscribe();
-
-    return () => {
-        subscription.unsubscribe();
-    };
-}
-
-// Helper function for debouncing
-function debounce(func, wait) {
-    let timeout;
-    return function executedFunction(...args) {
-        const later = () => {
-            clearTimeout(timeout);
-            func(...args);
-        };
-        clearTimeout(timeout);
-        timeout = setTimeout(later, wait);
-    };
-}
-
-// Initialize invoice table when DOM is loaded
-document.addEventListener('DOMContentLoaded', () => {
-    setupInvoiceTable();
-});
-
-// Helper Functions
-function formatDate(dateString) {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-GB', {
-        day: '2-digit',
-        month: 'short',
-        year: 'numeric'
-    });
-}
-
-function showNoResults(message = 'No invoices found') {
-    const table = document.getElementById('invoicesTable');
-    const noResults = document.getElementById('noResultsMessage');
-    
-    if (table) table.style.display = 'none';
-    if (noResults) {
-        noResults.style.display = 'block';
-        const messageEl = noResults.querySelector('p');
-        if (messageEl) messageEl.textContent = message;
-    }
-}
-
-function hideNoResults() {
-    const table = document.getElementById('invoicesTable');
-    const noResults = document.getElementById('noResultsMessage');
-    
-    if (table) table.style.display = 'table';
-    if (noResults) noResults.style.display = 'none';
-}
-
-function updatePaginationDisplay(currentPage, totalPages, totalItems) {
-    const controls = document.querySelector('.page-controls');
-    const pageInfo = document.querySelector('.page-info');
-    if (!controls || !pageInfo) return;
-
-    // Update page info text
-    const start = ((currentPage - 1) * 6) + 1;
-    const end = Math.min(currentPage * 6, totalItems);
-    pageInfo.textContent = `Showing ${start}-${end} of ${totalItems} invoices`;
-
-    // Clear existing pagination buttons
-    controls.innerHTML = '';
-
-    // Add previous button
-    controls.innerHTML += `
-        <button class="pagination-btn ${currentPage === 1 ? 'disabled' : ''}" 
-                ${currentPage === 1 ? 'disabled' : ''}>
-            <i class="fas fa-chevron-left"></i>
-        </button>
-    `;
-
-    // Add page numbers
-    for (let i = 1; i <= totalPages; i++) {
-        if (i === 1 || i === totalPages || (i >= currentPage - 1 && i <= currentPage + 1)) {
-            controls.innerHTML += `
-                <button class="pagination-btn ${i === currentPage ? 'active' : ''}">${i}</button>
-            `;
-        } else if (i === currentPage - 2 || i === currentPage + 2) {
-            controls.innerHTML += '<span class="pagination-ellipsis">...</span>';
-        }
-    }
-
-    // Add next button
-    controls.innerHTML += `
-        <button class="pagination-btn ${currentPage === totalPages ? 'disabled' : ''}"
-                ${currentPage === totalPages ? 'disabled' : ''}>
-            <i class="fas fa-chevron-right"></i>
-        </button>
-    `;
-
-    // Add click handlers for new buttons
-    setupPaginationHandlers(currentPage, totalPages);
-}
-
-function setupPaginationHandlers(currentPage, totalPages) {
-    const controls = document.querySelector('.page-controls');
-    if (!controls) return;
-
-    controls.addEventListener('click', (e) => {
-        const button = e.target.closest('.pagination-btn');
-        if (!button || button.disabled) return;
-
-        let newPage = currentPage;
-
-        if (button.querySelector('.fa-chevron-left')) {
-            newPage = currentPage - 1;
-        } else if (button.querySelector('.fa-chevron-right')) {
-            newPage = currentPage + 1;
-        } else {
-            newPage = parseInt(button.textContent);
-        }
-
-        if (newPage >= 1 && newPage <= totalPages) {
-            fetchAndDisplayInvoices(newPage);
-        }
-    });
-}
-
-// Add this at the beginning of the file
-document.addEventListener('DOMContentLoaded', function() {
-    const downloadPdfBtn = document.getElementById('downloadPdfBtn');
-    if (downloadPdfBtn) {
-        downloadPdfBtn.addEventListener('click', async function() {
-            // ... existing download PDF logic ...
-        });
-    }
-    
-    // Initialize invoice module
-    initializeInvoiceModule();
-    setupEventListeners();
-    setupCharts();
-    updateCharts();
-    setupChartSubscription();
-    setupInvoiceTable();
-
-    // Initialize client autocomplete
-    const clientList = document.getElementById('client-list');
-    if (clientList) {
-        setupClientAutocomplete();
-    }
-
-    // Initialize metrics
-    updateMetricsDisplay();
-    setupMetricsSubscription();
-});
-
-// Update fetchAndDisplayInvoices to use the new pagination
-async function fetchAndDisplayInvoices(page = 1, limit = 6, filters = {}) {
-    try {
-        // ... existing query setup code ...
-
-        const { data: invoices, count, error } = await queryBuilder;
-
-        if (error) throw error;
-
-        // Update table body
-        const tbody = document.querySelector('#invoicesTable tbody');
-        if (!tbody) return;
-
-        tbody.innerHTML = '';
-
-        if (!invoices || invoices.length === 0) {
-            showNoResults();
-            return;
-        }
-
-        hideNoResults();
-
-        invoices.forEach(invoice => {
-            // ... existing row creation code ...
-        });
-
-        // Update pagination with new utility function
-        updatePaginationDisplay(page, Math.ceil(count / limit), count);
-
-    } catch (error) {
-        console.error('Error fetching invoices:', error);
-        showNoResults('Error loading invoices');
-    }
-}
-
-// ...existing code...
-
-async function fetchAndDisplayInvoices() {
-    try {
-        if (!window.supabase) {
-            throw new Error('Supabase client not initialized');
-        }
-
-        const tbody = document.querySelector('#invoicesTable tbody');
-        if (tbody) {
-            tbody.innerHTML = '<tr><td colspan="7" class="text-center">Loading invoices...</td></tr>';
-        }
-
-        // Fetch invoices from Supabase
-        const { data: invoices, error } = await window.supabase
-            .from('invoices')
-            .select(`
-                *,
-                clients (*)
-            `)
-            .order('created_at', { ascending: false });
-
-        if (error) throw error;
-
-        // Clear loading message
-        if (tbody) {
-            tbody.innerHTML = '';
-        }
-
-        // Handle no invoices case
-        if (!invoices || invoices.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="7" class="text-center">No invoices found</td></tr>';
-            return;
-        }
-
-        // Populate table with real data
-        invoices.forEach(invoice => {
-            const row = `
-                <tr data-invoice-id="${invoice.id}">
-                    <td>${invoice.invoice_number || ''}</td>
-                    <td>${invoice.customer_name || ''}</td>
-                    <td>${formatDate(invoice.issue_date)}</td>
-                    <td>${formatDate(invoice.due_date)}</td>
-                    <td>${formatCurrency(invoice.total_amount)}</td>
-                    <td><span class="status ${invoice.status?.toLowerCase() || 'pending'}">${invoice.status || 'Pending'}</span></td>
-                    <td class="actions">
-                        <button class="action-btn view-btn" data-invoice="${invoice.invoice_number}" title="View">
-                            <i class="fas fa-eye"></i>
-                        </button>
-                        <button class="action-btn send-btn" title="Send">
-                            <i class="fas fa-paper-plane"></i>
-                        </button>
-                        <button class="action-btn more-btn" title="More">
-                            <i class="fas fa-ellipsis-v"></i>
-                        </button>
-                    </td>
-                </tr>
-            `;
-            tbody.insertAdjacentHTML('beforeend', row);
-        });
-
-        // Setup action buttons for the newly added rows
-        setupActionButtons();
-
-    } catch (error) {
-        console.error('Error fetching invoices:', error);
-        const tbody = document.querySelector('#invoicesTable tbody');
-        if (tbody) {
-            tbody.innerHTML = '<tr><td colspan="7" class="text-center text-error">Error loading invoices</td></tr>';
-        }
-    }
-}
-
-function updateInvoiceDistributionChart(period) {
-    console.log('updateInvoiceDistributionChart called with:', {
-        period: period,
-        type: typeof period,
-        stack: new Error().stack
-    });
-
-    try {
-        if (!window.invoiceDistributionChart) {
-            throw new Error('Chart instance not found');
-        }
-
-        // Type validation with detailed logging
-        if (typeof period !== 'string') {
-            console.error('Invalid period type:', {
-                received: period,
-                type: typeof period,
-                stack: new Error().stack
-            });
-            return;
-        }
-
-        // Log right before toLowerCase()
-        console.log('About to process period:', period);
-        const lowerPeriod = period.toLowerCase();
-
-        let labels = [];
-        let data = [];
-
-        switch (lowerPeriod) {
-            case 'weekly':
-                labels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-                data = [5, 7, 10, 8, 12, 3, 1];
-                break;
-            case 'monthly':
-                labels = ['Week 1', 'Week 2', 'Week 3', 'Week 4'];
-                data = [25, 38, 42, 35];
-                break;
-            case 'quarterly':
-                labels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-                data = [42, 38, 55, 40, 45, 42, 38, 35, 42, 48, 50, 65];
-                break;
-            default:
-                console.error('Invalid period value:', lowerPeriod);
-                return;
-        }
-
-        window.invoiceDistributionChart.data.labels = labels;
-        window.invoiceDistributionChart.data.datasets[0].data = data;
-        window.invoiceDistributionChart.update();
-        console.log('Chart updated successfully with period:', lowerPeriod);
-
-    } catch (error) {
-        console.error('Error updating distribution chart:', {
-            error: error.message,
-            period: period,
-            stack: error.stack
-        });
-    }
-}
-
-function updateRevenueByStatusChart(period) {
-    console.log('updateRevenueByStatusChart called with:', {
-        period: period,
-        type: typeof period,
-        stack: new Error().stack
-    });
-
-    try {
-        if (!window.revenueByStatusChart) {
-            throw new Error('Chart instance not found');
-        }
-
-        // Type validation with detailed logging
-        if (typeof period !== 'string') {
-            console.error('Invalid period type:', {
-                received: period,
-                type: typeof period,
-                stack: new Error().stack
-            });
-            return;
-        }
-
-        // Log right before toLowerCase()
-        console.log('About to process period:', period);
-        const lowerPeriod = period.toLowerCase();
-
-        const data = lowerPeriod === 'monthly' ? [65, 15, 12, 8] : [78, 10, 8, 4];
-        window.revenueByStatusChart.data.datasets[0].data = data;
-        window.revenueByStatusChart.update();
-        console.log('Chart updated successfully with period:', lowerPeriod);
-
-    } catch (error) {
-        console.error('Error updating revenue chart:', {
-            error: error.message,
-            period: period,
-            stack: error.stack
-        });
-    }
-}
-
-// ...existing code...
-
-function setupClientFormHandlers(clientList) {
-    const addClientBtn = document.getElementById('add-client-btn');
-    const newClientForm = document.getElementById('new-client-form');
-    const saveNewClientBtn = document.getElementById('save-new-client');
-
-    // Handle client input changes
-    clientList.addEventListener('input', async function() {
-        const value = this.value.trim();
-        if (!value) return;
-
-        const { data: existingClient, error } = await window.supabase
-            .from('clients')
-            .select('customer_id')
-            .eq('company_name', value)
-            .maybeSingle();
-
-        if (addClientBtn) {
-            addClientBtn.style.display = (!existingClient && value) ? 'inline-block' : 'none';
-        }
-    });
-
-    // Show new client form
-    if (addClientBtn) {
-        addClientBtn.addEventListener('click', function() {
-            if (newClientForm) {
-                newClientForm.style.display = 'block';
-                const newClientName = document.getElementById('new-client-name');
-                if (newClientName) {
-                    newClientName.value = clientList.value;
-                }
-            }
-        });
-    }
-
-    // Handle new client save
-    if (saveNewClientBtn) {
-        saveNewClientBtn.addEventListener('click', async function() {
-            try {
-                const newClient = {
-                    company_name: document.getElementById('new-client-name')?.value,
-                    customer_tax_id: document.getElementById('new-client-nuit')?.value,
-                    email: document.getElementById('new-client-email')?.value,
-                    billing_address: document.getElementById('new-client-address')?.value,
-                    status: 'active'
-                };
-
-                const { data, error } = await window.supabase
-                    .from('clients')
-                    .insert([newClient])
-                    .select()
-                    .single();
-
-                if (error) throw error;
-
-                // Update form with new client
-                clientList.value = data.company_name;
-                if (newClientForm) newClientForm.style.display = 'none';
-                if (addClientBtn) addClientBtn.style.display = 'none';
-
-                // Fill client details in invoice form
-                fillClientFields(data);
-                
-                showNotification('Client added successfully!', 'success');
-                
-            } catch (error) {
-                console.error('Error saving client:', error);
-                showNotification('Error adding client: ' + error.message, 'error');
-            }
-        });
-    }
-}
-
-// ...existing code...
-
-function setupActionButtons() {
-    // View Button (Opens PDF)
-    document.querySelectorAll('.view-btn').forEach(btn => {
-        btn.addEventListener('click', async function() {
-            const invoiceNumber = this.dataset.invoice;
-            try {
-                const { data: invoice, error } = await window.supabase
-                    .from('invoices')
-                    .select('pdf_url')
-                    .eq('invoice_number', invoiceNumber)
-                    .single();
-                
-                if (error) throw error;
-                
-                if (invoice?.pdf_url) {
-                    // Open PDF in a new window
-                    const previewContainer = document.getElementById('invoicePreviewContent');
-                    if (previewContainer) {
-                        previewContainer.innerHTML = `
-                            <iframe src="${invoice.pdf_url}" width="100%" height="600px" frameborder="0"></iframe>
-                        `;
-                        openModal('viewInvoiceModal');
-                    }
-                } else {
-                    throw new Error('PDF not found');
-                }
-            } catch (error) {
-                console.error('Error viewing invoice:', error);
-                showNotification('Error opening invoice PDF');
-            }
-        });
-    });
-
-    // Send Button (Email Modal)
-    document.querySelectorAll('.send-btn').forEach(btn => {
-        btn.addEventListener('click', async function() {
-            const row = this.closest('tr');
-            const invoiceNumber = row.querySelector('.view-btn').dataset.invoice;
-            
-            // Get client email from database
-            try {
-                const invoice = await fetchInvoiceForEmail(invoiceNumber);
-                if (!invoice) throw new Error('Invoice not found');
-
-                const emailModal = document.getElementById('emailInvoiceModal');
-                const emailInput = document.getElementById('emailTo');
-                const subjectInput = document.getElementById('emailSubject');
-                
-                if (emailInput) {
-                    emailInput.value = invoice.clients?.email || '';
-                }
-                
-                if (subjectInput) {
-                    subjectInput.value = `Invoice ${invoiceNumber}`;
-                }
-
-                openModal('emailInvoiceModal');
-                setupEmailFormHandler(emailModal, invoiceNumber);
-
-            } catch (error) {
-                console.error('Error preparing email:', error);
-                showNotification('Error preparing email: ' + error.message);
-            }
-        });
-    });
-
-    // ...existing more button code...
-
-    // More Button (Status Change Dropdown)
-    document.querySelectorAll('.more-btn').forEach(btn => {
-        btn.addEventListener('click', function(e) {
-            e.stopPropagation(); // Prevent event bubbling
-            
-            const row = this.closest('tr');
-            const invoiceNumber = row.querySelector('.view-btn').dataset.invoice;
-            
-            // Remove any existing dropdowns
-            document.querySelectorAll('.status-dropdown').forEach(d => d.remove());
-            
-            // Create and position dropdown
-            const dropdown = document.createElement('div');
-            dropdown.className = 'status-dropdown';
-            dropdown.innerHTML = `
-                <div class="dropdown-item" data-status="paid">Mark as Paid</div>
-                <div class="dropdown-item" data-status="pending">Mark as Pending</div>
-                <div class="dropdown-item" data-status="overdue">Mark as Overdue</div>
-                <div class="dropdown-item" data-status="cancelled">Mark as Cancelled</div>
-            `;
-            
-            // Position dropdown below button
-            const rect = this.getBoundingClientRect();
-            dropdown.style.position = 'absolute';
-            dropdown.style.top = `${rect.bottom + window.scrollY}px`;
-            dropdown.style.left = `${rect.left}px`;
-            document.body.appendChild(dropdown);
-            
-            // Add click handlers for status changes
-            dropdown.querySelectorAll('.dropdown-item').forEach(item => {
-                item.addEventListener('click', async function() {
-                    const newStatus = this.dataset.status;
-                    try {
-                        const { error } = await window.supabase
-                            .from('invoices')
-                            .update({ status: newStatus })
-                            .eq('invoice_number', invoiceNumber);
-                        
-                        if (error) throw error;
-                        
-                        // Update UI
-                        const statusSpan = row.querySelector('.status');
-                        if (statusSpan) {
-                            statusSpan.className = `status ${newStatus}`;
-                            statusSpan.textContent = newStatus.charAt(0).toUpperCase() + newStatus.slice(1);
-                        }
-                        
-                        // Update metrics and charts
-                        await updateMetricsDisplay();
-                        await updateCharts();
-                        
-                        showNotification(`Invoice marked as ${newStatus}`);
-                    } catch (error) {
-                        console.error('Error updating status:', error);
-                        showNotification('Error updating invoice status');
-                    } finally {
-                        dropdown.remove();
-                    }
-                });
-            });
-            
-            // Close dropdown when clicking outside
-            document.addEventListener('click', function closeDropdown(e) {
-                if (!dropdown.contains(e.target) && !btn.contains(e.target)) {
-                    dropdown.remove();
-                    document.removeEventListener('click', closeDropdown);
-                }
-            });
-        });
-    });
-}
-
-// ...existing code...
-
-// Add invoice number service
-const invoiceNumberService = {
-    async getNextInvoiceNumber(clientId) {
-        try {
-            const { data, error } = await window.supabase
-                .from('invoices')
-                .select('invoice_number')
-                .order('created_at', { ascending: false })
-                .limit(1);
-
-            if (error) throw error;
-
-            const currentDate = new Date();
-            const year = currentDate.getFullYear();
-            const lastNumber = data?.[0]?.invoice_number?.split('-')?.[2] || '0000';
-            const nextNumber = (parseInt(lastNumber) + 1).toString().padStart(4, '0');
-            
-            return `INV-${year}-${nextNumber}`;
-        } catch (error) {
-            console.error('Error generating invoice number:', error);
-            const randomNumber = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
-            return `INV-${new Date().getFullYear()}-${randomNumber}`;
-        }
+// Add fetchAndDisplayInvoices to global scope
+window.fetchAndDisplayInvoices = async function(page = 1, limit = 10, filters = {}) {
+    if (window.invoiceTable && typeof window.invoiceTable.fetchAndDisplayInvoices === 'function') {
+        await window.invoiceTable.fetchAndDisplayInvoices(page, limit, filters);
+        window.invoiceTable.setupSorting(); // Setup sorting after table is displayed
+    } else {
+        console.error('invoiceTable not found');
     }
 };
 
-// Update client search to use company_name instead of name
-async function fetchClients(searchTerm) {
+// Initialize InvoiceTableModule
+document.addEventListener('DOMContentLoaded', async function() {
     try {
-        const { data: clients, error } = await window.supabase
-            .from('clients')
-            .select('*')
-            .ilike('company_name', `%${searchTerm}%`)
-            .limit(5);
-
-        if (error) throw error;
-        return clients;
-    } catch (error) {
-        console.error('Error fetching clients:', error);
-        return [];
-    }
-}
-
-// Update client input handler
-document.addEventListener('input', async function(e) {
-    if (e.target.id !== 'client-list') return;
-    
-    const searchTerm = e.target.value.toLowerCase().trim();
-    const expandClientForm = document.getElementById('expand-client-form');
-    
-    if (searchTerm.length < 2) {
-        if (expandClientForm) expandClientForm.style.display = 'none';
-        hideClientSuggestions();
-        return;
-    }
-
-    const clients = await fetchClients(searchTerm);
-    if (clients.length > 0) {
-        showClientSuggestions(clients);
-        if (expandClientForm) expandClientForm.style.display = 'none';
-    } else {
-        hideClientSuggestions();
-        if (expandClientForm) expandClientForm.style.display = 'block';
-    }
-});
-
-// ...existing code...
-
-async function fetchClients(searchTerm) {
-    try {
-        const { data: clients, error } = await window.supabase
-            .from('clients')
-            .select('*')
-            .ilike('company_name', `%${searchTerm}%`)
-            .limit(5);
-
-        if (error) throw error;
-        return clients || [];
-    } catch (error) {
-        console.error('Error fetching clients:', error);
-        return [];
-    }
-}
-
-document.addEventListener('input', async function(e) {
-    if (e.target.id !== 'client-list') return;
-    
-    const searchTerm = e.target.value.toLowerCase().trim();
-    const expandClientForm = document.getElementById('expand-client-form');
-    
-    if (searchTerm.length < 2) {
-        hideClientSuggestions();
-        if (expandClientForm) {
-            expandClientForm.style.display = 'none';
+        // Initialize table filters first
+        if (typeof window.setupTableFilters === 'function') {
+            window.setupTableFilters();
+            console.log('Table filters initialized successfully');
         }
-        return;
-    }
 
-    try {
-        const clients = await fetchClients(searchTerm);
-        
-        if (clients.length > 0) {
-            showClientSuggestions(clients);
-            if (expandClientForm) {
-                expandClientForm.style.display = 'none';
-            }
+        // Initialize invoice table
+        if (typeof window.fetchAndDisplayInvoices === 'function' && window.invoiceTable) {
+            await window.fetchAndDisplayInvoices(1, 10, {});
+            console.log('Invoice table initialized successfully');
         } else {
-            hideClientSuggestions();
-            if (expandClientForm) {
-                expandClientForm.style.display = 'block';
-            }
+            console.error('Invoice table functions not found or invoiceTable not available');
         }
-    } catch (err) {
-        console.error('Error fetching clients:', err);
+
+        // Initialize other components
+        if (window.invoiceActions) {
+            window.invoiceActions.setupEventListeners();
+            console.log('Invoice actions initialized successfully');
+        }
+
+    } catch (error) {
+        console.error('Error during initialization:', error);
+        showNotification('Error initializing application: ' + error.message);
     }
 });
 
-function showClientSuggestions(clients) {
-    const clientInput = document.getElementById('client-list');
-    if (!clientInput) return;
-    
-    let suggestionsBox = document.querySelector('.client-suggestions');
-    
-    if (!suggestionsBox) {
-        suggestionsBox = document.createElement('div');
-        suggestionsBox.className = 'client-suggestions';
-        const parent = clientInput.parentNode;
-        if (parent) {
-            parent.appendChild(suggestionsBox);
-        }
-    }
+(function() {
+  const steps = Array.from(document.querySelectorAll('#invoiceModal .step'));
+  const stepIndicators = Array.from(document.querySelectorAll('#invoiceModal .step-indicator'));
+  let currentStep = 0;
+  let maxStepReached = 0;
 
-    suggestionsBox.innerHTML = clients.map(client => `
-        <div class="suggestion-item" data-client='${JSON.stringify(client)}'>
-            ${client.company_name || ''} ${client.customer_tax_id ? `(${client.customer_tax_id})` : ''}
-        </div>
-    `).join('');
-
-    suggestionsBox.style.display = 'block';
-}
-
-// ...existing code...
-
-async function fillClientFields(client) {
-    const fields = {
-        'client-list': client.company_name,
-        'clientEmail': client.email,
-        'clientAddress': `${client.street_name || ''} ${client.address_detail || ''}, ${client.city || ''}, ${client.province || ''} ${client.postal_code || ''}`,
-        'clientTaxId': client.customer_tax_id,
-        'clientContact': client.contact,
-        'clientTelephone': client.telephone
-    };
-
-    Object.keys(fields).forEach(id => {
-        const element = document.getElementById(id);
-        if (element && fields[id]) {
-            element.value = fields[id];
-        }
+  function showStep(index) {
+    steps.forEach((step, i) => {
+      step.style.display = i === index ? 'block' : 'none';
+      step.classList.toggle('active', i === index);
     });
-}
+    stepIndicators.forEach((ind, i) => {
+      ind.classList.toggle('active', i === index);
+    });
+    currentStep = index;
+    if (index > maxStepReached) maxStepReached = index;
+    // Always populate review when entering review step
+    if (index === 3) populateReview();
+  }
 
-async function saveNewClient(clientData) {
+  function validateStep(index) {
+    // Basic validation for each step (expand as needed)
+    if (index === 0) {
+      const clientName = document.getElementById('client-list').value.trim();
+      if (!clientName) {
+        showNotification('Please enter/select a client name', 'error');
+        return false;
+      }
+    }
+    if (index === 1) {
+      const issueDate = document.getElementById('issueDate').value;
+      const dueDate = document.getElementById('dueDate').value;
+      if (!issueDate || !dueDate) {
+        showNotification('Please select both issue and due dates', 'error');
+        return false;
+      }
+    }
+    if (index === 2) {
+      const itemRows = document.querySelectorAll('#itemsTable .item-row');
+      let valid = false;
+      itemRows.forEach(row => {
+        const desc = row.querySelector('.item-description').value.trim();
+        const qty = parseAmount(row.querySelector('.item-quantity').value);
+        if (desc && qty > 0) valid = true;
+      });
+      if (!valid) {
+        showNotification('Please add at least one valid item', 'error');
+        return false;
+      }
+    }
+    return true;
+  }
+
+  function nextStep() {
+    if (!validateStep(currentStep)) return;
+    if (currentStep < steps.length - 1) {
+      showStep(currentStep + 1);
+      if (currentStep + 1 === 3) populateReview();
+    }
+  }
+  function prevStep() {
+    if (currentStep > 0) showStep(currentStep - 1);
+  }
+
+  function populateReview() {
+    // Fill the review summary with entered data
+    const clientName = document.getElementById('client-list').value;
+    const clientEmail = document.getElementById('clientEmail').value;
+    const clientTaxId = document.getElementById('clientTaxId').value;
+    const clientAddress = document.getElementById('clientAddress').value;
+    const invoiceNumber = document.getElementById('invoiceNumber').value;
+    const issueDate = document.getElementById('issueDate').value;
+    const dueDate = document.getElementById('dueDate').value;
+    const currency = document.getElementById('currency').value;
+    const paymentTerms = document.getElementById('paymentTerms').options[document.getElementById('paymentTerms').selectedIndex].text;
+    const notes = document.getElementById('notes').value;
+    // Items
+    const itemRows = document.querySelectorAll('#itemsTable .item-row');
+    let itemsHtml = '';
+    itemRows.forEach(row => {
+      const desc = row.querySelector('.item-description').value;
+      const qty = parseAmount(row.querySelector('.item-quantity').value);
+      const price = parseAmount(row.querySelector('.item-price').value);
+      const vat = row.querySelector('.item-vat') ? row.querySelector('.item-vat').textContent : '0.00';
+      const total = row.querySelector('.item-total') ? row.querySelector('.item-total').textContent : '0.00';
+      if (desc && qty > 0) {
+        itemsHtml += `<tr><td>${desc}</td><td>${qty}</td><td>${price}</td><td>${vat}</td><td>${total}</td></tr>`;
+      }
+    });
+    const serie = document.getElementById('serie')?.value || '';
+    const discountType = document.getElementById('discountType')?.value || 'none';
+    const discountValue = parseFloat(document.getElementById('discountValue')?.value) || 0;
+    const discountAmount = document.getElementById('discountTotal')?.textContent || '0.00';
+    const subtotalAfterDiscount = document.getElementById('subtotalAfterDiscount')?.textContent || '0.00';
+    // Invoice number display
+    let invoiceNumberDisplay = invoiceNumber;
+    const reviewHtml = `
+      <div><strong>Client:</strong> ${clientName} (${clientEmail}, NUIT: ${clientTaxId})<br><strong>Address:</strong> ${clientAddress}</div>
+      <div><strong>Invoice #:</strong> ${invoiceNumberDisplay} | <strong>Issue:</strong> ${issueDate} | <strong>Due:</strong> ${dueDate}</div>
+      <div><strong>Currency:</strong> ${currency} | <strong>Terms:</strong> ${paymentTerms}</div>
+      <div><strong>Discount:</strong> ${discountType === 'percent' ? discountValue + '%' : discountAmount} | <strong>Subtotal after Discount:</strong> ${subtotalAfterDiscount}</div>
+      <div><strong>Notes:</strong> ${notes || '\u2014'}</div>
+      <table class="items-table" style="margin-top:12px;width:100%"><thead><tr><th>Description</th><th>Qty</th><th>Unit Price</th><th>VAT</th><th>Total</th></tr></thead><tbody>${itemsHtml}</tbody></table>
+      <div style="margin-top:16px;text-align:right;">
+        <button type="button" class="btn secondary-btn" id="previewInvoiceBtn">
+          <i class="fas fa-eye"></i> <span data-translate="preview">Preview</span>
+        </button>
+      </div>
+    `;
+    document.getElementById('invoiceReviewSummary').innerHTML = reviewHtml;
+    // Copy totals
+    document.getElementById('reviewSubtotal').textContent = document.getElementById('subtotal').textContent;
+    document.getElementById('reviewTotalVat').textContent = document.getElementById('totalVat').textContent;
+    document.getElementById('reviewInvoiceTotal').textContent = document.getElementById('invoiceTotal').textContent;
+    // Attach preview button event
+    setTimeout(() => {
+      const previewBtn = document.getElementById('previewInvoiceBtn');
+      if (previewBtn) {
+        previewBtn.addEventListener('click', function() {
+          // Use the InvoiceForm class to collect the latest form data
+          let invoiceData = null;
+          if (window.invoiceForm && typeof window.invoiceForm.collectInvoiceData === 'function') {
+            try {
+              invoiceData = window.invoiceForm.collectInvoiceData();
+            } catch (err) {
+              showNotification('Cannot preview: ' + err.message, 'error');
+              return;
+            }
+          } else if (typeof getInvoiceData === 'function') {
+            invoiceData = getInvoiceData();
+          }
+          if (invoiceData && typeof window.previewInvoice === 'function') {
+            window.previewInvoice(invoiceData);
+          } else if (window.invoicePreview && typeof window.invoicePreview.showPreview === 'function') {
+            window.invoicePreview.showPreview(invoiceData);
+          } else if (window.invoicePreview && typeof window.invoicePreview.openPreview === 'function') {
+            window.invoicePreview.openPreview();
+          } else if (typeof window.openInvoicePreview === 'function') {
+            window.openInvoicePreview();
+          } else {
+            showNotification('Preview function not found', 'error');
+          }
+        });
+      }
+    }, 100);
+  }
+
+  // Event listeners
+  document.querySelectorAll('#invoiceModal .next-step').forEach(btn => {
+    btn.addEventListener('click', nextStep);
+  });
+  document.querySelectorAll('#invoiceModal .prev-step').forEach(btn => {
+    btn.addEventListener('click', prevStep);
+  });
+
+  // Stepper tab click logic
+  stepIndicators.forEach((ind, i) => {
+    ind.style.cursor = 'pointer';
+    ind.addEventListener('click', function() {
+      if (i <= maxStepReached) {
+        showStep(i);
+        if (i === 3) populateReview();
+      }
+    });
+  });
+
+  // Show first step on modal open
+  document.addEventListener('DOMContentLoaded', function() {
+    showStep(0);
+  });
+
+  // Optional: Reset to first step when modal is closed
+  document.querySelectorAll('#invoiceModal .close-modal').forEach(btn => {
+    btn.addEventListener('click', function() {
+      showStep(0);
+      maxStepReached = 0;
+    });
+  });
+})();
+
+// --- Currency Logic Integration Start ---
+// Remove any global let currentCurrency, currentRate, fetchingRate, setupCurrencyListener, getConvertedAmount, updateExchangeRate, updateExchangeRateInfo, updateReviewTotals ...
+
+// Insert the class-based InvoiceForm implementation
+
+// Create invoice notification
+async function createInvoiceNotification(userId, invoiceNumber) {
+    console.log('[InvoiceJS] createInvoiceNotification called with:', { userId, invoiceNumber });
     try {
-        // Validate required data
-        if (!clientData?.company_name) {
-            throw new Error('Company name is required');
-        }
-
-        const { data, error } = await window.supabase
-            .from('clients')
-            .insert([{
-                company_name: clientData.company_name,
-                customer_tax_id: clientData.customer_tax_id,
-                email: clientData.email,
-                street_name: clientData.street_name,
-                address_detail: clientData.address_detail,
-                city: clientData.city,
-                postal_code: clientData.postal_code,
-                province: clientData.province,
-                country: clientData.country || 'Mozambique',
-                telephone: clientData.telephone,
-                contact: clientData.contact,
-                status: 'active'
-            }])
-            .select()
+        // Check if user has notification settings enabled for invoice notifications
+        console.log('[InvoiceJS] Checking notification settings for user:', userId);
+        const { data: notificationSettings, error: settingsError } = await window.supabase
+            .from('notification_settings')
+            .select('invoice_created')
+            .eq('user_id', userId)
             .single();
 
-        if (error) throw error;
+        console.log('[InvoiceJS] Notification settings result:', { notificationSettings, settingsError });
 
-        fillClientFields(data);
-        const expandClientForm = document.getElementById('expand-client-form');
-        if (expandClientForm) {
-            expandClientForm.style.display = 'none';
-        }
-        
-        return data;
-    } catch (err) {
-        console.error('Error saving client:', err);
-        alert('Error saving client: ' + (err.message || 'Unknown error'));
-        throw err;
-    }
-}
-
-async function saveInvoice(invoiceData) {
-    try {
-        // Show loading state
-        showNotification('Saving invoice...');
-
-        if (!invoiceData.invoice_number || !invoiceData.customer_name) {
-            throw new Error('Missing required fields');
-        }
-
-        // Format dates
-        const issueDate = new Date(invoiceData.issue_date);
-        const dueDate = new Date(invoiceData.due_date);
-
-        // Save invoice data to database
-        const { data: invoice, error: insertError } = await window.supabase
-            .from('invoices')
-            .insert([{
-                invoice_number: invoiceData.invoice_number,
-                issue_date: issueDate.toISOString(),
-                due_date: dueDate.toISOString(),
-                client_id: invoiceData.client_id,
-                status: 'pending',
-                subtotal: invoiceData.subtotal,
-                vat_amount: invoiceData.vat_amount,
-                total_amount: invoiceData.total_amount,
-                currency: invoiceData.currency,
-                payment_terms: invoiceData.payment_terms,
-                notes: invoiceData.notes,
-                customer_name: invoiceData.customer_name
-            }])
-            .select();
-
-        if (insertError) throw insertError;
-
-        showNotification('Invoice saved successfully!');
-        closeAllModals();
-        await refreshInvoiceList();
-
-        return invoice;
-
-    } catch (error) {
-        console.error('Error saving invoice:', error);
-        showNotification('Error saving invoice: ' + (error.message || 'Unknown error'));
-        throw error;
-    }
-}
-
-// ...existing code...
-
-function setupActionButtons() {
-    // View Button (Opens PDF)
-    document.querySelectorAll('.view-btn').forEach(btn => {
-        btn.addEventListener('click', async function() {
-            const invoiceNumber = this.dataset.invoice;
-            try {
-                const { data: invoice, error } = await window.supabase
-                    .from('invoices')
-                    .select('pdf_url')
-                    .eq('invoice_number', invoiceNumber)
-                    .single();
+        // If no settings found or invoice notifications are disabled, don't create notification
+        if (settingsError || !notificationSettings || !notificationSettings.invoice_created) {
+            console.log('[InvoiceJS] Invoice notifications disabled or no settings found, skipping notification');
+            console.log('[InvoiceJS] Settings error:', settingsError);
+            console.log('[InvoiceJS] Notification settings:', notificationSettings);
+            
+            // If no settings exist, create default settings for the user
+            if (settingsError && settingsError.code === 'PGRST116') {
+                console.log('[InvoiceJS] No notification settings found, creating default settings...');
+                const { error: createError } = await window.supabase
+                    .from('notification_settings')
+                    .insert({
+                        user_id: userId,
+                        payment_received: true,
+                        invoice_created: true,
+                        invoice_due: true,
+                        invoice_overdue: true,
+                        product_low_stock: true,
+                        system_updates: true,
+                        client_activity: false,
+                        login_attempts: true
+                    });
                 
-                if (error) throw error;
-                
-                if (invoice?.pdf_url) {
-                    // Open PDF in a new window
-                    const previewContainer = document.getElementById('invoicePreviewContent');
-                    if (previewContainer) {
-                        previewContainer.innerHTML = `
-                            <iframe src="${invoice.pdf_url}" width="100%" height="600px" frameborder="0"></iframe>
-                        `;
-                        openModal('viewInvoiceModal');
-                    }
+                if (createError) {
+                    console.error('[InvoiceJS] Error creating default notification settings:', createError);
+                    return;
                 } else {
-                    throw new Error('PDF not found');
+                    console.log('[InvoiceJS] Default notification settings created successfully');
+                    // Now proceed with creating the notification
                 }
-            } catch (error) {
-                console.error('Error viewing invoice:', error);
-                showNotification('Error opening invoice PDF');
+            } else {
+                return;
             }
-        });
-    });
+        }
 
-    // Send Button (Email Modal)
-    document.querySelectorAll('.send-btn').forEach(btn => {
-        btn.addEventListener('click', async function() {
-            const row = this.closest('tr');
-            const invoiceNumber = row.querySelector('.view-btn').dataset.invoice;
+        // For invoices, we'll create a notification every time since invoice creation is a unique event
+        console.log('[InvoiceJS] Creating new invoice notification...');
+        
+        // Create invoice notification
+        console.log('[InvoiceJS] Creating invoice notification in database...');
+        const { error } = await window.supabase
+            .from('notifications')
+            .insert({
+                user_id: userId,
+                type: 'invoice',
+                title: 'Invoice Created Successfully',
+                message: `Invoice ${invoiceNumber} has been created and is ready for sending to your client.`,
+                action_url: 'invoices.html',
+                read: false
+            });
+
+        if (error) {
+            console.error('[InvoiceJS] Error creating invoice notification:', error);
+        } else {
+            console.log('[InvoiceJS] Invoice notification created successfully');
             
-            // Get client email from database
-            try {
-                const invoice = await fetchInvoiceForEmail(invoiceNumber);
-                if (!invoice) throw new Error('Invoice not found');
-
-                const emailModal = document.getElementById('emailInvoiceModal');
-                const emailInput = document.getElementById('emailTo');
-                const subjectInput = document.getElementById('emailSubject');
-                
-                if (emailInput) {
-                    emailInput.value = invoice.clients?.email || '';
-                }
-                
-                if (subjectInput) {
-                    subjectInput.value = `Invoice ${invoiceNumber}`;
-                }
-
-                openModal('emailInvoiceModal');
-                setupEmailFormHandler(emailModal, invoiceNumber);
-
-            } catch (error) {
-                console.error('Error preparing email:', error);
-                showNotification('Error preparing email: ' + error.message);
+            // Verify the notification was created by fetching it
+            const { data: verifyNotification, error: verifyError } = await window.supabase
+                .from('notifications')
+                .select('*')
+                .eq('user_id', userId)
+                .eq('type', 'invoice')
+                .order('created_at', { ascending: false })
+                .limit(1);
+            
+            if (verifyError) {
+                console.error('[InvoiceJS] Error verifying notification creation:', verifyError);
+            } else {
+                console.log('[InvoiceJS] Notification verification successful:', verifyNotification);
             }
-        });
-    });
-
-    // ...existing more button code...
-
-    // More Button (Status Change Dropdown)
-    document.querySelectorAll('.more-btn').forEach(btn => {
-        btn.addEventListener('click', function(e) {
-            e.stopPropagation(); // Prevent event bubbling
             
-            const row = this.closest('tr');
-            const invoiceNumber = row.querySelector('.view-btn').dataset.invoice;
-            
-            // Remove any existing dropdowns
-            document.querySelectorAll('.status-dropdown').forEach(d => d.remove());
-            
-            // Create and position dropdown
-            const dropdown = document.createElement('div');
-            dropdown.className = 'status-dropdown';
-            dropdown.innerHTML = `
-                <div class="dropdown-item" data-status="paid">Mark as Paid</div>
-                <div class="dropdown-item" data-status="pending">Mark as Pending</div>
-                <div class="dropdown-item" data-status="overdue">Mark as Overdue</div>
-                <div class="dropdown-item" data-status="cancelled">Mark as Cancelled</div>
-            `;
-            
-            // Position dropdown below button
-            const rect = this.getBoundingClientRect();
-            dropdown.style.position = 'absolute';
-            dropdown.style.top = `${rect.bottom + window.scrollY}px`;
-            dropdown.style.left = `${rect.left}px`;
-            document.body.appendChild(dropdown);
-            
-            // Add click handlers for status changes
-            dropdown.querySelectorAll('.dropdown-item').forEach(item => {
-                item.addEventListener('click', async function() {
-                    const newStatus = this.dataset.status;
-                    try {
-                        const { error } = await window.supabase
-                            .from('invoices')
-                            .update({ status: newStatus })
-                            .eq('invoice_number', invoiceNumber);
-                        
-                        if (error) throw error;
-                        
-                        // Update UI
-                        const statusSpan = row.querySelector('.status');
-                        if (statusSpan) {
-                            statusSpan.className = `status ${newStatus}`;
-                            statusSpan.textContent = newStatus.charAt(0).toUpperCase() + newStatus.slice(1);
-                        }
-                        
-                        // Update metrics and charts
-                        await updateMetricsDisplay();
-                        await updateCharts();
-                        
-                        showNotification(`Invoice marked as ${newStatus}`);
-                    } catch (error) {
-                        console.error('Error updating status:', error);
-                        showNotification('Error updating invoice status');
-                    } finally {
-                        dropdown.remove();
-                    }
-                });
-            });
-            
-            // Close dropdown when clicking outside
-            document.addEventListener('click', function closeDropdown(e) {
-                if (!dropdown.contains(e.target) && !btn.contains(e.target)) {
-                    dropdown.remove();
-                    document.removeEventListener('click', closeDropdown);
+            // Dispatch event to notify other parts of the app about new notification
+            window.dispatchEvent(new CustomEvent('notificationCreated', {
+                detail: {
+                    type: 'invoice',
+                    title: 'Invoice Created Successfully',
+                    message: `Invoice ${invoiceNumber} has been created and is ready for sending to your client.`
                 }
-            });
-        });
-    });
+            }));
+            
+            // Update notification badge count
+            if (window.notificationBadgeManager) {
+                await window.notificationBadgeManager.refresh();
+            }
+        }
+    } catch (error) {
+        console.error('[InvoiceJS] Error in createInvoiceNotification:', error);
+    }
 }
-
-// ...existing code...
-
