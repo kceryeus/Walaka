@@ -1,3 +1,4 @@
+/*
 :root {
   --primary-color: #007ec7;
   --secondary-color: #4f46e5;
@@ -47,7 +48,7 @@ body {
   min-height: 100vh;
 }
 
-/* Sidebar */
+/* Sidebar 
 .sidebar {
   background: linear-gradient(195deg, #007ec7, #02204e);
   color: white;
@@ -106,7 +107,7 @@ body {
   text-align: center;
 }
 
-/* Main Content */
+/* Main Content 
 .main-content {
   padding: 2rem;
   margin-top: var(--topbar-height);
@@ -224,7 +225,7 @@ body {
   display: block;
 }
 
-/* Settings specific styles */
+/* Settings specific styles 
 .settings-header {
   margin-bottom: 2rem;
 }
@@ -328,7 +329,7 @@ body {
   font-size: 0.9rem;
 }
 
-/* Form styling */
+/* Form styling 
 .form-group {
   margin-bottom: 2rem;
 }
@@ -404,7 +405,7 @@ input[type="color"] {
   color: var(--text-light);
 }
 
-/* Checkbox styling */
+/* Checkbox styling 
 .checkbox-control {
   flex-direction: row;
   align-items: center;
@@ -438,7 +439,7 @@ input[type="color"] {
   font-size: 12px;
 }
 
-/* Toggle switch styling */
+/* Toggle switch styling 
 .toggle-control {
   flex-direction: row;
   align-items: center;
@@ -494,7 +495,7 @@ input:checked + .toggle-slider:before {
   transform: translateX(20px);
 }
 
-/* Button styling */
+/* Button styling 
 .form-actions {
   display: flex;
   justify-content: flex-start;
@@ -560,7 +561,7 @@ input:checked + .toggle-slider:before {
   background-color: rgba(239, 68, 68, 0.1);
 }
 
-/* Logo upload styling */
+/* Logo upload styling 
 .logo-upload-container {
   display: flex;
   gap: 2rem;
@@ -612,7 +613,7 @@ input:checked + .toggle-slider:before {
   color: var(--text-light);
 }
 
-/* Integrations styling */
+/* Integrations styling 
 .integrations-container {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
@@ -679,7 +680,7 @@ input:checked + .toggle-slider:before {
   color: var(--danger-color);
 }
 
-/* Password strength meter */
+/* Password strength meter 
 .password-strength-meter {
   height: 4px;
   background-color: var(--border-color);
@@ -700,7 +701,7 @@ input:checked + .toggle-slider:before {
   color: var(--text-light);
 }
 
-/* QR code placeholder */
+/* QR code placeholder 
 .qr-placeholder {
   width: 160px;
   height: 160px;
@@ -725,7 +726,7 @@ input:checked + .toggle-slider:before {
   text-align: center;
 }
 
-/* Toast notifications */
+/* Toast notifications
 #toast-container {
   position: fixed;
   bottom: 20px;
@@ -831,7 +832,7 @@ input:checked + .toggle-slider:before {
   }
 }
 
-/* Loading overlay */
+/* Loading overlay
 #loading-overlay {
   position: fixed;
   top: 0;
@@ -860,7 +861,7 @@ input:checked + .toggle-slider:before {
   }
 }
 
-/* Modal styling */
+/* Modal styling 
 .modal {
   position: fixed;
   top: 0;
@@ -936,7 +937,7 @@ input:checked + .toggle-slider:before {
   display: none !important;
 }
 
-/* Responsive styles */
+/* Responsive styles 
 @media (max-width: 1100px) {
   .settings-container {
     grid-template-columns: 1fr;

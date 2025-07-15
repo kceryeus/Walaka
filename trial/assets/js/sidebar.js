@@ -1,4 +1,4 @@
-async function loadSidebar() {
+/*async function loadSidebar() {
     try {
         const response = await fetch('/components/sidebar.html');
         const sidebarHtml = await response.text();
@@ -18,3 +18,4 @@ async function loadSidebar() {
 
 // Load sidebar when DOM is ready
 document.addEventListener('DOMContentLoaded', loadSidebar);
+*/

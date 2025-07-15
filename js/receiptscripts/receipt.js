@@ -792,9 +792,9 @@ async function downloadReceiptPdf(receiptId) {
             user_id = user?.id;
         } catch (e) {}
         let company = {
-            company_name: 'WALAKA',
+            company_name: 'WALAKA SOFTWARE, LDA.',
             address: 'Maputo, Mozambique',
-            email: 'info@walaka.co.mz',
+            email: 'info@walakasoftware.com',
             tax_id: 'N/A'
         };
         if (user_id) {

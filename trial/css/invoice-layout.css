@@ -1,4 +1,4 @@
-/* A4 Page Styles */
+/* A4 Page Styles 
 .invoice-a4 {
     width: 210mm;
     min-height: 297mm;
@@ -22,7 +22,7 @@
     height: 100%;
 }
 
-/* Print styles */
+/* Print styles 
 @media print {
     body {
         margin: 0;

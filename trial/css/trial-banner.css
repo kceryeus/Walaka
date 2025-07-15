@@ -1,4 +1,4 @@
-.trial-banner {
+/*.trial-banner {
     background: linear-gradient(to right, #007ec7, #1e3aa1);
     border-radius: 8px;
     padding: 1.5rem;
@@ -144,7 +144,7 @@
     transform: translateY(-1px);
 }
 
-/* Create Invoice Modal */
+/* Create Invoice Modal 
 .create-invoice-modal {
     max-width: 800px;
     width: 90%;

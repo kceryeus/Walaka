@@ -1,7 +1,7 @@
 /**
  * Main application script for the client management interface
  * Handles sidebar, navigation, and common functionality
- */
+ 
 
 // Wait for DOM to be fully loaded
 document.addEventListener('DOMContentLoaded', () => {
@@ -18,7 +18,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 /**
  * Initialize sidebar toggle functionality
- */
+ 
 function initSidebar() {
   const dashboardContainer = document.querySelector('.dashboard-container');
   const sidebar = document.querySelector('.sidebar');
@@ -46,7 +46,7 @@ function initSidebar() {
 
 /**
  * Initialize mobile menu functionality
- */
+ 
 function initMobileMenu() {
   const hamburgerMenu = document.getElementById('sidebar-toggle');
   const sidebar = document.querySelector('.sidebar');
@@ -71,7 +71,7 @@ function initMobileMenu() {
 
 /**
  * Initialize dropdown functionality
- */
+ 
 function initDropdowns() {
   const dropdowns = document.querySelectorAll('.dropdown');
   
@@ -97,7 +97,7 @@ function initDropdowns() {
 
 /**
  * Initialize toast notification system
- */
+ 
 function initToasts() {
   const toastElement = document.getElementById('toast');
   const toastCloseBtn = document.getElementById('toast-close');
@@ -114,7 +114,7 @@ function initToasts() {
  * @param {string} message - The message to display
  * @param {string} type - Type of toast: 'success', 'warning', or 'error'
  * @param {number} duration - Duration in milliseconds
- */
+ 
 function showToast(message, type = 'success', duration = 3000) {
   const toast = document.getElementById('toast');
   const toastMessage = document.getElementById('toast-message');
@@ -155,7 +155,7 @@ function showToast(message, type = 'success', duration = 3000) {
 /**
  * Tab switching functionality
  * @param {HTMLElement} tabContainer - The container element for the tabs
- */
+ 
 function initTabs(tabContainer) {
   if (!tabContainer) return;
   
@@ -186,7 +186,7 @@ function initTabs(tabContainer) {
  * Utility function to format date to YYYY-MM-DD
  * @param {Date} date - The date to format
  * @returns {string} - Formatted date string
- */
+ 
 function formatDate(date) {
   const d = new Date(date);
   const year = d.getFullYear();
@@ -200,7 +200,7 @@ function formatDate(date) {
  * @param {number} amount - The amount to format
  * @param {string} currency - Currency code (default: USD)
  * @returns {string} - Formatted currency string
- */
+ 
 function formatCurrency(amount, currency = 'USD') {
   return new Intl.NumberFormat('en-US', {
     style: 'currency',
@@ -212,7 +212,7 @@ function formatCurrency(amount, currency = 'USD') {
  * Utility function to validate email
  * @param {string} email - The email to validate
  * @returns {boolean} - True if valid, false otherwise
- */
+ 
 function isValidEmail(email) {
   const re = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
   return re.test(String(email).toLowerCase());
@@ -222,7 +222,7 @@ function isValidEmail(email) {
  * Utility function to validate phone number
  * @param {string} phone - The phone number to validate
  * @returns {boolean} - True if valid, false otherwise
- */
+ 
 function isValidPhone(phone) {
   // This is a basic validation, adjust as needed
   return /^[+]?[(]?[0-9]{3}[)]?[-\s.]?[0-9]{3}[-\s.]?[0-9]{4,6}$/im.test(phone);
@@ -233,7 +233,7 @@ function isValidPhone(phone) {
  * @param {Function} func - The function to debounce
  * @param {number} wait - Wait time in milliseconds
  * @returns {Function} - Debounced function
- */
+ 
 function debounce(func, wait = 300) {
   let timeout;
   return function executedFunction(...args) {
@@ -248,7 +248,7 @@ function debounce(func, wait = 300) {
 
 /**
  * Initialize New Client functionality
- */
+ 
 function initNewClientForm() {
   const addNewClientBtn = document.getElementById('add-new-client-btn');
   const clientForm = document.getElementById('client-form');
@@ -300,7 +300,7 @@ function initNewClientForm() {
 /**
  * Get all form data as a structured object
  * @returns {Object} Formatted client data
- */
+ 
 function getClientFormData() {
   // Simplified structure that matches database schema
   return {
@@ -327,7 +327,7 @@ function getClientFormData() {
  * Save client data to the backend
  * @param {Object} clientData - The client data to save
  * @returns {Promise} Response from the save operation
- */
+ 
 async function saveClientData(clientData) {
   try {
     const { data, error } = await window.supabase
@@ -354,7 +354,7 @@ async function saveClientData(clientData) {
  * Validate the client form
  * @param {HTMLFormElement} form - The form to validate
  * @returns {boolean} True if valid, false otherwise
- */
+ 
 function validateClientForm(form) {
   let isValid = true;
   
@@ -394,7 +394,7 @@ function validateClientForm(form) {
 
 /**
  * Reset the client form to its initial state
- */
+ 
 function resetClientForm() {
   const form = document.getElementById('client-form');
   if (!form) return;
@@ -435,3 +435,4 @@ window.appUtils = {
   debounce,
   initTabs
 };
+*/

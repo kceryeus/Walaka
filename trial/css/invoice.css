@@ -1,6 +1,6 @@
-/* Invoice Module Styles */
+/* Invoice Module Styles 
 
-/* Page Header */
+/* Page Header 
 .page-header {
     display: flex;
     justify-content: space-between;
@@ -25,7 +25,7 @@
     gap: 0.75rem;
 }
 
-/* Buttons */
+/* Buttons 
 .btn {
     padding: 0.65rem 1.25rem;
     border-radius: var(--card-radius);
@@ -69,7 +69,7 @@
     transform: translateY(-1px);
 }
 
-/* Invoice Table */
+/* Invoice Table 
 .invoice-table-container {
     background: rgb(255, 255, 255);
     border-radius: var(--card-radius);
@@ -126,7 +126,7 @@
     color: #333;
 }
 
-/* Status Badges */
+/* Status Badges 
 .status {
     display: inline-block;
     padding: 0.4rem 0.8rem;
@@ -157,7 +157,7 @@
     color: #777;
 }
 
-/* Action Buttons */
+/* Action Buttons 
 .actions {
     display: flex;
     gap: 0.5rem;
@@ -199,7 +199,7 @@
     color: #f0ad4e;
 }
 
-/* Pagination */
+/* Pagination 
 .pagination {
     display: flex;
     justify-content: space-between;
@@ -251,7 +251,7 @@
     color: #777;
 }
 
-/* Chart Period Controls */
+/* Chart Period Controls 
 .chart-period-btn {
     background: #f0f0f0;
     border: none;
@@ -272,7 +272,7 @@
     color: white;
 }
 
-/* Modal Styling */
+/* Modal Styling 
 .modal {
     display: none;
     position: fixed;
@@ -360,7 +360,7 @@
     gap: 0.75rem;
 }
 
-/* Locked Modal Styling */
+/* Locked Modal Styling 
 .modal-content.locked {
     text-align: center;
     padding: 3rem 2rem;
@@ -438,7 +438,7 @@
     50% { transform: translateY(-10px); }
 }
 
-/* Form Styling */
+/* Form Styling 
 .form-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
@@ -499,7 +499,7 @@
     cursor: not-allowed;
 }
 
-/* Items Table */
+/* Items Table 
 .items-table-container {
     margin-bottom: 1rem;
     border: 1px solid #c7c7c7;
@@ -572,7 +572,7 @@
     margin-top: 0.5rem;
 }
 
-/* View Invoice Modal */
+/* View Invoice Modal 
 .invoice-view-header {
     display: flex;
     justify-content: space-between;
@@ -698,7 +698,7 @@
     font-weight: 500;
 }
 
-/* Responsive Design */
+/* Responsive Design 
 @media (max-width: 768px) {
     .form-grid {
         grid-template-columns: 1fr;
@@ -732,7 +732,7 @@
     }
 }
 
-/* Dark Mode */
+/* Dark Mode 
 @media (prefers-color-scheme: dark) {
     .modal-content,
     .invoice-table-container,
@@ -790,7 +790,7 @@
     }
 }
 
-/* Chart Card */
+/* Chart Card 
 .chart-card {
     background: white;
     color: black;

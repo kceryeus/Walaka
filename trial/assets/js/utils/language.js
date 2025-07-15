@@ -1,4 +1,4 @@
-class LanguageManager {
+/*class LanguageManager {
     constructor() {
         this.currentLang = localStorage.getItem('preferredLanguage') || 'pt';
         this.translations = {};
@@ -45,3 +45,4 @@ class LanguageManager {
 
 const langManager = new LanguageManager();
 export default langManager;
+*/

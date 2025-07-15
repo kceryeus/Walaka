@@ -1,7 +1,7 @@
 /**
  * Client List Handler
  * Manages the client list functionality
- */
+ 
 
 // Make initialization function globally available
 window.initClientList = async () => {
@@ -28,7 +28,7 @@ let viewMode = 'grid';
 
 /**
  * Fetch clients from Supabase
- */
+ 
 async function fetchClientsFromSupabase() {
   try {
     if (!window.supabase) {
@@ -51,7 +51,7 @@ async function fetchClientsFromSupabase() {
 
 /**
  * Initialize search and filter functionality
- */
+ 
 function initSearchAndFilters() {
   const searchInput = document.getElementById('client-search');
   const statusFilterSelect = document.getElementById('status-filter');
@@ -83,7 +83,7 @@ function initSearchAndFilters() {
 
 /**
  * Initialize view toggle (grid/list)
- */
+ 
 function initViewToggle() {
   const gridViewBtn = document.getElementById('grid-view-btn');
   const listViewBtn = document.getElementById('list-view-btn');
@@ -124,7 +124,7 @@ function initViewToggle() {
 
 /**
  * Initialize delete confirmation modal
- */
+ 
 function initDeleteModal() {
   const deleteModal = document.getElementById('delete-modal');
   const confirmDeleteBtn = document.getElementById('confirm-delete-btn');
@@ -174,7 +174,7 @@ function initDeleteModal() {
 
 /**
  * Initialize pagination controls
- */
+ 
 function initPagination() {
   const prevPageBtn = document.getElementById('prev-page');
   const nextPageBtn = document.getElementById('next-page');
@@ -204,7 +204,7 @@ function initPagination() {
  * Update pagination controls
  * @param {number} currentPage - Current page number
  * @param {number} totalPages - Total number of pages
- */
+ 
 function updatePaginationControls(currentPage, totalPages) {
   const pageInfo = document.getElementById('page-info');
   const prevPageBtn = document.getElementById('prev-page');
@@ -220,7 +220,7 @@ function updatePaginationControls(currentPage, totalPages) {
 /**
  * Show error message in the client list container
  * @param {string} message - Error message to display
- */
+ 
 function showErrorMessage(message) {
   const clientList = document.getElementById('client-list');
   if (!clientList) return;
@@ -237,7 +237,7 @@ function showErrorMessage(message) {
 /**
  * Render client list
  * @param {Array} clients - Array of clients to render
- */
+ 
 function renderClientList(clients) {
   const clientList = document.getElementById('client-list');
   if (!clientList) return;
@@ -292,7 +292,7 @@ function renderClientList(clients) {
  * Toggle client status between active and inactive
  * @param {string} clientId - ID of the client
  * @param {string} currentStatus - Current status of the client
- */
+ 
 async function toggleClientStatus(clientId, currentStatus) {
   try {
     const newStatus = currentStatus === 'active' ? 'inactive' : 'active';
@@ -317,7 +317,7 @@ window.toggleClientStatus = toggleClientStatus;
 
 /**
  * Refresh the client list with current filters and pagination
- */
+ 
 async function refreshClientList() {
   try {
     const clientList = document.getElementById('client-list');
@@ -395,3 +395,4 @@ async function deleteClient(clientId) {
     window.appUtils.showToast('Error deleting client: ' + error.message, 'error');
   }
 }
+*/

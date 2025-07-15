@@ -1,3 +1,4 @@
+/*
 import langManager from './utils/language.js';
 import { settingsManager } from '../../services/settingsManager.js';
 import { languageManager } from '../../services/languageManager.js';
@@ -849,3 +850,4 @@ document.addEventListener('DOMContentLoaded', async () => {
     );
   };
 });
+*/

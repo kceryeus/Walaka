@@ -1,7 +1,7 @@
 /**
  * Client Form Handler
  * Manages the client form functionality
- */
+ 
 
 // Wait for DOM to be fully loaded
 document.addEventListener('DOMContentLoaded', () => {
@@ -17,7 +17,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 /**
  * Initialize the client form and its event listeners
- */
+ 
 async function initClientForm() {
   const clientForm = document.getElementById('client-form');
   const cancelBtn = document.getElementById('cancel-btn');
@@ -151,7 +151,7 @@ async function initClientForm() {
 
 /**
  * Initialize the display name dropdown with dynamic options
- */
+
 function initDisplayNameDropdown() {
   const firstNameInput = document.getElementById('first-name');
   const lastNameInput = document.getElementById('last-name');
@@ -193,7 +193,7 @@ function initDisplayNameDropdown() {
 
 /**
  * Initialize the client type toggle functionality
- */
+ 
 function initClientTypeToggle() {
   const businessType = document.getElementById('business-type');
   const individualType = document.getElementById('individual-type');
@@ -222,7 +222,7 @@ function initClientTypeToggle() {
 
 /**
  * Initialize the copy billing address functionality
- */
+ 
 function initCopyBillingAddress() {
   const copyBillingBtn = document.getElementById('copy-billing');
   
@@ -271,7 +271,7 @@ function initCopyBillingAddress() {
 
 /**
  * Initialize the tab system
- */
+ 
 function initTabSystem() {
   const tabContainer = document.querySelector('.tab-container');
   if (tabContainer) {
@@ -281,7 +281,7 @@ function initTabSystem() {
 
 /**
  * Initialize the tax rate handler
- */
+ 
 function initTaxRateHandler() {
   const taxRateSelect = document.getElementById('tax-rate');
   const otherVatContainer = document.getElementById('other-vat-container');
@@ -301,7 +301,7 @@ function initTaxRateHandler() {
 
 /**
  * Initialize the contact person modal
- */
+ 
 function initContactModal() {
   const addContactBtn = document.getElementById('add-contact-btn');
   const contactModal = document.getElementById('contact-modal');
@@ -420,7 +420,7 @@ function initContactModal() {
 
 /**
  * Initialize form validation
- */
+ 
 function initFormValidation() {
   const form = document.getElementById('client-form');
   
@@ -467,11 +467,11 @@ function initFormValidation() {
   });
 }
 
-/**
- * Validate an individual input field
- * @param {HTMLElement} input - Input element to validate
- * @returns {boolean} - True if valid, false otherwise
- */
+/*
+  Validate an individual input field
+ param {HTMLElement} input - Input element to validate
+ returns {boolean} - True if valid, false otherwise
+ 
 function validateInput(input) {
   if (input.hasAttribute('required') && !input.value.trim()) {
     input.classList.add('error');
@@ -498,7 +498,7 @@ function validateInput(input) {
  * Validate the entire form
  * @param {HTMLFormElement} form - Form to validate
  * @returns {boolean} - True if valid, false otherwise
- */
+ 
 function validateForm(form) {
   let isValid = true;
   
@@ -517,7 +517,7 @@ function validateForm(form) {
  * Helper function to add an option to a select element
  * @param {HTMLSelectElement} selectElement - The select element
  * @param {string} value - Option value and text
- */
+ 
 function addOption(selectElement, value) {
   const option = document.createElement('option');
   option.value = value;
@@ -529,7 +529,7 @@ function addOption(selectElement, value) {
  * Get form data as an object
  * @param {HTMLFormElement} form - Form to get data from
  * @returns {Object} - Form data as an object
- */
+ 
 function getFormData(form) {
   const formData = new FormData(form);
   const data = Object.fromEntries(formData.entries());
@@ -576,7 +576,7 @@ function getFormData(form) {
  * Populate form with client data
  * @param {HTMLFormElement} form - Form to populate
  * @param {Object} client - Client data
- */
+ 
 function populateForm(form, client) {
   // Set form fields
   form.querySelector(`input[name="client-type"][value="${client.clientType}"]`).checked = true;
@@ -649,7 +649,7 @@ function populateForm(form, client) {
 /**
  * Reset form to initial state
  * @param {HTMLFormElement} form - Form to reset
- */
+ 
 function resetForm(form) {
   if (!form) return;
   
@@ -668,7 +668,7 @@ function resetForm(form) {
 /**
  * Add a new client
  * @param {Object} clientData - Client data to add
- */
+ 
 function addClient(clientData) {
   // Get existing clients from localStorage
   const clients = JSON.parse(localStorage.getItem('clients') || '[]');
@@ -693,7 +693,7 @@ function addClient(clientData) {
  * Update an existing client
  * @param {number} clientId - ID of client to update
  * @param {Object} clientData - Updated client data
- */
+ 
 function updateClient(clientId, clientData) {
   // Get existing clients from localStorage
   const clients = JSON.parse(localStorage.getItem('clients') || '[]');
@@ -722,7 +722,7 @@ function updateClient(clientId, clientData) {
  * Get client by ID
  * @param {number} clientId - ID of client to retrieve
  * @returns {Object|null} - Client data or null if not found
- */
+ 
 function getClientById(clientId) {
   // Get existing clients from localStorage
   const clients = JSON.parse(localStorage.getItem('clients') || '[]');
@@ -730,3 +730,4 @@ function getClientById(clientId) {
   // Find client by ID
   return clients.find(client => client.id === clientId) || null;
 }
+*/

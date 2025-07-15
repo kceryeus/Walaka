@@ -1,6 +1,5 @@
-/* Base Styles and Reset */
-:root {
-  --primary-color: #3b82f6; /* Blue color */
+/* Base Styles and Reset:root {
+  --primary-color: #3b82f6; /* Blue color 
   --primary-dark: #2563eb;
   --primary-light: #dbeafe;
   --primary-100: #eff6ff;
@@ -20,7 +19,7 @@
   --yellow-500: #f59e0b;
   --red-500: #ef4444;
   
-  /* Background and text colors */
+  /* Background and text colors 
   --bg-color: #fff;
   --text-color: var(--gray-700);
   --heading-color: var(--gray-900);
@@ -29,7 +28,7 @@
   --shadow-color: rgba(0, 0, 0, 0.1);
 }
 
-/* Dark mode theme */
+/* Dark mode theme 
 html[data-theme="dark"] {
   --primary-color: #60a5fab8;
   --primary-dark: #3b82f6;
@@ -48,7 +47,7 @@ html[data-theme="dark"] {
   --gray-800: #f3f4f6;
   --gray-900: #f9fafb;
   
-  /* Background and text colors */
+  /* Background and text colors 
   --bg-color: #0f172a;
   --text-color: var(--gray-500);
   --heading-color: var(--gray-300);
@@ -97,7 +96,7 @@ img {
   height: auto;
 }
 
-/* Typography */
+/* Typography 
 h1, h2, h3, h4, h5, h6 {
   font-weight: 700;
   line-height: 1.2;
@@ -125,7 +124,7 @@ p {
   margin-bottom: 16px;
 }
 
-/* Buttons */
+/* Buttons 
 .primary-btn, .secondary-btn, .plan-btn, .cta-primary-btn, .cta-secondary-btn {
   display: inline-flex;
   align-items: center;
@@ -175,7 +174,7 @@ p {
   border-color: rgba(255, 255, 255, 0.5);
 }
 
-/* Header */
+/* Header 
 .header {
   position: fixed;
   top: 0;
@@ -421,7 +420,7 @@ p {
   padding: 12px 0;
 }
 
-/* Hero Section */
+/* Hero Section 
 .hero {
   padding-top: 120px;
   padding-bottom: 80px;
@@ -504,7 +503,7 @@ p {
   background: linear-gradient(to top right, rgba(0, 0, 0, 0.4), transparent);
 }
 
-/* Section Headers */
+/* Section Headers
 .section-header {
   text-align: center;
   max-width: 800px;
@@ -520,7 +519,7 @@ p {
   color: var(--gray-600);
 }
 
-/* Product Preview Section */
+/* Product Preview Section
 .product-preview {
   padding: 80px 0;
   background-color: var(--bg-color);
@@ -613,7 +612,7 @@ p {
   color: var(--gray-600);
 }
 
-/* Templates Section */
+/* Templates Section 
 .templates {
   padding: 60px 0;
   background-color: var(--gray-50);
@@ -703,7 +702,7 @@ p {
   margin: 0;
 }
 
-/* Features Section */
+/* Features Section 
 .features {
   padding: 80px 0;
   background-color: var(--bg-color);
@@ -755,7 +754,7 @@ p {
   color: var(--gray-600);
 }
 
-/* Use Cases Section */
+/* Use Cases Section
 .use-cases {
   padding: 80px 0;
   background-color: var(--gray-50);
@@ -803,7 +802,7 @@ p {
   margin-bottom: 0;
 }
 
-/* Testimonials Section */
+/* Testimonials Section
 .testimonials {
   padding: 80px 0;
   background-color: var(--bg-color);
@@ -915,7 +914,7 @@ p {
   border-radius: 10px;
 }
 
-/* Trust Section */
+/* Trust Section
 .trust-section {
   padding: 60px 0;
   background-color: var(--primary-800);
@@ -956,7 +955,7 @@ p {
   font-size: 14px;
 }
 
-/* Pricing Section */
+/* Pricing Section
 .pricing {
   padding: 80px 0;
   background-color: var(--gray-50);
@@ -1150,7 +1149,7 @@ input:checked + .slider:before {
   font-weight: 600;
 }
 
-/* CTA Section */
+/* CTA Section
 .cta-section {
   padding: 80px 0;
   background: linear-gradient(135deg, var(--primary-700), var(--primary-800));
@@ -1190,7 +1189,7 @@ input:checked + .slider:before {
   color: rgba(255, 255, 255, 0.8);
 }
 
-/* Contact Section */
+/* Contact Section
 .contact-section {
   padding: 80px 0;
   background-color: var(--bg-color);
@@ -1285,7 +1284,7 @@ input:checked + .slider:before {
   background-color: var(--primary-dark);
 }
 
-/* Footer */
+/* Footer
 .footer {
   background-color: var(--gray-900);
   color: white;
@@ -1405,7 +1404,7 @@ input:checked + .slider:before {
   margin: 0;
 }
 
-/* Animations */
+/* Animations
 .fade-in {
   animation: fadeIn 1s ease forwards;
 }
@@ -1432,7 +1431,7 @@ input:checked + .slider:before {
   }
 }
 
-/* Responsive Styles */
+/* Responsive Styles
 @media (min-width: 768px) {
   .hero-title {
     font-size: 56px;
@@ -1527,7 +1526,7 @@ input:checked + .slider:before {
   }
 }
 
-/* Template Dialog */
+/* Template Dialog
 .template-dialog {
   position: fixed;
   top: 0;

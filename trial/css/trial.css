@@ -1,4 +1,4 @@
-.trial-banner {
+/*.trial-banner {
     background: linear-gradient(to right, #0078BE, #1146C6);
     color: white;
     padding: 1.5rem 2rem;
@@ -113,7 +113,7 @@
     color: #ffd700;
 }
 
-/* Warning states */
+/* Warning states 
 .warning {
     color: #ffd700;
 }
@@ -122,7 +122,7 @@
     background: #ffd700;
 }
 
-/* Responsive adjustments */
+/* Responsive adjustments 
 @media (max-width: 768px) {
     .trial-banner {
         flex-direction: column;

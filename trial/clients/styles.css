@@ -1,6 +1,6 @@
-/* ===== VARIABLES ===== */
+/* ===== VARIABLES ===== 
 :root {
-  --primary-color: #007ec7; /* Corporate blue */
+  --primary-color: #007ec7; /* Corporate blue 
   --primary-dark: #005fa3;
   --primary-light: #e6f4fb;
   --secondary-color: #4f46e5;
@@ -25,7 +25,7 @@
   --box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
 }
 
-/* ===== RESET & BASE STYLES ===== */
+/* ===== RESET & BASE STYLES ===== 
 * {
   margin: 0;
   padding: 0;
@@ -59,7 +59,7 @@ ul {
   list-style: none;
 }
 
-/* ===== LAYOUT ===== */
+/* ===== LAYOUT ===== 
 .dashboard-container {
   display: flex;
   min-height: 100vh;
@@ -125,8 +125,8 @@ ul {
   justify-content: center;
 }
 
-/* ===== SIDEBAR ===== */
-/* Sidebar */
+/* ===== SIDEBAR ===== 
+/* Sidebar 
 .sidebar {
   background: linear-gradient(195deg, #007ec7, #02204e);
   color: white;
@@ -205,7 +205,7 @@ ul {
   font-size: 1rem;
 }
 
-/* Main Content */
+/* Main Content 
 .main-content {
   flex: 1;
   margin-left: var(--sidebar-width);
@@ -214,7 +214,7 @@ ul {
   background-color: var(--background-color);
 }
 
-/* Top Bar */
+/* Top Bar 
 .top-bar {
   position: fixed;
   top: 0;
@@ -340,7 +340,7 @@ ul {
 }
 
 
-/* ===== PAGE HEADER ===== */
+/* ===== PAGE HEADER ===== 
 .page-header {
   display: flex;
   align-items: center;
@@ -356,7 +356,7 @@ ul {
   color: var(--text-primary);
 }
 
-/* ===== BUTTONS ===== */
+/* ===== BUTTONS ===== 
 .primary-btn {
   background-color: var(--primary-color);
   color: white;
@@ -429,7 +429,7 @@ ul {
   text-decoration: underline;
 }
 
-/* ===== CLIENT MANAGEMENT ===== */
+/* ===== CLIENT MANAGEMENT ===== 
 .client-management {
   display: grid;
   grid-template-columns: minmax(400px, 1fr) minmax(600px, 2fr);
@@ -505,7 +505,7 @@ ul {
   }
 }
 
-/* Form Styles */
+/* Form Styles 
 .form-group {
   margin-bottom: 1rem;
 }
@@ -628,7 +628,7 @@ select {
   margin-top: 0.3rem;
 }
 
-/* Tab System */
+/* Tab System 
 .tab-container {
   margin: 1.5rem 0;
 }
@@ -668,7 +668,7 @@ select {
   display: block;
 }
 
-/* Address Sections */
+/* Address Sections 
 .address-section {
   margin-bottom: 1.5rem;
 }
@@ -704,7 +704,7 @@ select {
   padding: 0 1rem;
 }
 
-/* File Upload */
+/* File Upload 
 .file-upload-wrapper {
   margin-top: 0.5rem;
 }
@@ -728,7 +728,7 @@ select {
   color: white;
 }
 
-/* Form Footer */
+/* Form Footer 
 .form-footer {
   display: flex;
   gap: 1rem;
@@ -736,7 +736,7 @@ select {
   justify-content: center;
 }
 
-/* Client List Section */
+/* Client List Section 
 .search-bar-frame {
   padding: 1rem;
   background-color: white;
@@ -775,7 +775,7 @@ select {
   padding: 1rem;
   border-bottom: 1px solid var(--border-color);
   position: sticky;
-  top: 98px; /* Height of search bar + its padding */
+  top: 98px; /* Height of search bar + its padding 
   background-color: white;
   z-index: 9;
 }
@@ -994,7 +994,7 @@ select {
   font-weight: 500;
 }
 
-/* Modal */
+/* Modal 
 .modal {
   display: none;
   position: fixed;
@@ -1061,7 +1061,7 @@ select {
   border-top: 1px solid var(--border-color);
 }
 
-/* Toast Notification */
+/* Toast Notification 
 .toast {
   position: fixed;
   bottom: 20px;
@@ -1123,7 +1123,7 @@ select {
   background-color: var(--border-color);
 }
 
-/* Responsive Styles */
+/* Responsive Styles 
 @media (max-width: 1600px) {
   .content-wrapper {
     padding: 1.5rem;
@@ -1154,7 +1154,7 @@ select {
 
   .frame-left, .frame-right {
     height: auto;
-    max-height: 300px; /* Reduced from 600px to 300px */
+    max-height: 300px; /* Reduced from 600px to 300px 
   }
 }
 
@@ -1254,7 +1254,7 @@ select {
   }
 }
 
-/* Add these new utility classes */
+/* Add these new utility classes 
 .center-content {
   display: flex;
   flex-direction: column;
@@ -1264,7 +1264,7 @@ select {
 
 .container {
   width: 100%;
-  max-width: 1400px; /* Match this to dashboard/invoices if needed */
+  max-width: 1400px; /* Match this to dashboard/invoices if needed 
   margin: 0 auto;
   padding: 0 1rem;
 }
@@ -1343,3 +1343,4 @@ select {
   background-color: var(--primary-color);
   color: white;
 }
+*/
