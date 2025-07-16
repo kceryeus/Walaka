@@ -213,18 +213,6 @@
             background-color: rgba(0, 0, 0, 0.5);
             z-index: 1000;
             overflow-y: auto;
-        }
-
-        .terms-content {
-            background-color: var(--white);
-            margin: 5% auto;
-            padding: 2rem;
-            width: 90%;
-            max-width: 800px;
-            border-radius: 8px;
-            position: relative;
-            max-height: 80vh;
-            overflow-y: auto;
         }        .close-terms {
             position: absolute;
             right: 1.5rem;
@@ -322,11 +310,18 @@
                 </div>
                 <div class="form-group">
                     <label for="signupPassword">Password</label>
-                    <input type="password" id="signupPassword" required placeholder="Create a password">
+                    <input type="password" id="signupPassword" required placeholder="Create a password" autocomplete="new-password">
+                    <div id="password-strength-wrapper" style="display:none; margin-top: 0.3rem; margin-bottom: 0.2rem;">
+                        <div id="password-strength-meter" style="height: 7px; background: #e2e8f0; border-radius: 4px; overflow: hidden;">
+                            <div id="password-strength-bar" style="height: 100%; width: 0%; background: #ef4444; transition: width 0.3s, background 0.3s;"></div>
+                        </div>
+                        <div id="password-strength-text" style="font-size: 0.85rem; margin-top: 0.18rem; color: #64748b; min-height: 1.2em;"></div>
+                    </div>
                 </div>
                 <div class="form-group">
                     <label for="confirmPassword">Confirm Password</label>
-                    <input type="password" id="confirmPassword" required placeholder="Confirm your password">
+                    <input type="password" id="confirmPassword" required placeholder="Confirm your password" autocomplete="new-password">
+                    <div id="confirm-password-match" style="font-size: 0.85rem; margin-top: 0.25rem; min-height: 1.2em;"></div>
                 </div>
                 <p class="form-description" style="text-align: left; margin-bottom: 1rem;">
                     Após criar a conta, será automaticamente descarregado um ficheiro a submeter à autoridade tributária para autorização de documentos comerciais como facturas, notas de crédito, debito etc, para que sejam válidos fiscalmente.
@@ -356,6 +351,21 @@
                 throw new Error("Do not call supabase as a function! Use supabase.from('table') instead.");
             }
         });
+
+        // Helper for dynamic signup redirect
+        function getSignupRedirectUrl() {
+            const host = window.location.hostname;
+            if (host === 'localhost' || host === '127.0.0.1') {
+                return 'http://localhost:3000/login.html';
+            }
+            if (host.endsWith('github.io')) {
+                return 'https://kceryeus.github.io/Walaka/login.html';
+            }
+            if (host.endsWith('walakasoftware.com')) {
+                return 'https://walakasoftware.com/login.html';
+            }
+            return 'https://walakasoftware.com/login.html';
+        }
 
         // Log session and user on page load
         (async () => {
@@ -504,7 +514,8 @@
                         data: {
                             username: email.split('@')[0], // Use email prefix as default username
                             role: 'user'
-                        }
+                        },
+                        emailRedirectTo: getSignupRedirectUrl()
                     }
                 });
 
@@ -592,6 +603,85 @@
         window.handlePasswordReset = handlePasswordReset;
         window.toggleForms = toggleForms;
         window.toggleForgotPassword = toggleForgotPassword;
+
+        // Password strength meter logic
+        const passwordInput = document.getElementById('signupPassword');
+        const strengthWrapper = document.getElementById('password-strength-wrapper');
+        const strengthBar = document.getElementById('password-strength-bar');
+        const strengthText = document.getElementById('password-strength-text');
+        // Confirm password match logic
+        const confirmInput = document.getElementById('confirmPassword');
+        const confirmMatchDiv = document.getElementById('confirm-password-match');
+
+        function evaluatePasswordStrength(password) {
+            let score = 0;
+            if (password.length >= 8) score++;
+            if (/[a-z]/.test(password)) score++;
+            if (/[A-Z]/.test(password)) score++;
+            if (/[0-9]/.test(password)) score++;
+            if (/[^A-Za-z0-9]/.test(password)) score++;
+            return score;
+        }
+
+        function getStrengthLabel(score) {
+            switch (score) {
+                case 5: return {text: 'Strong', color: '#22c55e'};
+                case 4: return {text: 'Good', color: '#eab308'};
+                case 3: return {text: 'Medium', color: '#f59e42'};
+                case 2: return {text: 'Weak', color: '#ef4444'};
+                default: return {text: 'Very Weak', color: '#ef4444'};
+            }
+        }
+
+        function updateStrengthMeter(password) {
+            const score = evaluatePasswordStrength(password);
+            const percent = (score / 5) * 100;
+            const {text, color} = getStrengthLabel(score);
+            strengthBar.style.width = percent + '%';
+            strengthBar.style.background = color;
+            strengthText.textContent = password.length === 0 ? '' : text;
+            strengthText.style.color = color;
+        }
+
+        function toggleStrengthWrapper() {
+            if (document.activeElement === passwordInput || passwordInput.value.length > 0) {
+                strengthWrapper.style.display = 'block';
+            } else {
+                strengthWrapper.style.display = 'none';
+            }
+        }
+
+        passwordInput?.addEventListener('input', function(e) {
+            updateStrengthMeter(e.target.value);
+            toggleStrengthWrapper();
+        });
+        passwordInput?.addEventListener('focus', toggleStrengthWrapper);
+        passwordInput?.addEventListener('blur', toggleStrengthWrapper);
+        // Initial state
+        toggleStrengthWrapper();
+
+        // Confirm password live match feedback
+        function updateConfirmMatch() {
+            const password = passwordInput.value;
+            const confirm = confirmInput.value;
+            if (confirm.length === 0) {
+                confirmMatchDiv.textContent = '';
+                return;
+            }
+            if (confirm.length === password.length) {
+                if (password === confirm) {
+                    confirmMatchDiv.textContent = 'Passwords match';
+                    confirmMatchDiv.style.color = '#22c55e';
+                } else {
+                    confirmMatchDiv.textContent = 'Passwords do not match';
+                    confirmMatchDiv.style.color = '#ef4444';
+                }
+            } else {
+                confirmMatchDiv.textContent = '';
+            }
+        }
+        confirmInput?.addEventListener('input', updateConfirmMatch);
+        passwordInput?.addEventListener('input', updateConfirmMatch);
 
         console.log(
             document.getElementById('description'),

@@ -708,20 +708,21 @@ async function handleInvoiceSubmission(event) {
         }
 
         // --- Send notification email to the user after invoice creation ---
-        try {
-            // Get the current user (account owner)
-            const { data: { user } } = await window.supabase.auth.getUser();
-            if (user && user.email && typeof window.sendNotificationEmail === 'function') {
-                const subject = `Invoice Created: ${invoice.invoiceNumber}`;
-                const message = `A new invoice (${invoice.invoiceNumber}) has been created in your account. You can view it in your dashboard.`;
-                console.log('[USER NOTIFICATION EMAIL] Attempting to send notification email to user:', user.email, { subject, message });
-                await window.sendNotificationEmail(user.email, subject, message);
-            } else {
-                console.warn('[USER NOTIFICATION EMAIL] No user email found or sendNotificationEmail not available.', { user, sendNotificationEmailType: typeof window.sendNotificationEmail });
-            }
-        } catch (err) {
-            console.error('[USER NOTIFICATION EMAIL] Error sending notification email to user:', err);
-        }
+        // REMOVED: Duplicate notification email block. Email sending is now handled by the notification system only.
+        // try {
+        //     // Get the current user (account owner)
+        //     const { data: { user } } = await window.supabase.auth.getUser();
+        //     if (user && user.email && typeof window.sendNotificationEmail === 'function') {
+        //         const subject = `Invoice Created: ${invoice.invoiceNumber}`;
+        //         const message = `A new invoice (${invoice.invoiceNumber}) has been created in your account. You can view it in your dashboard.`;
+        //         console.log('[USER NOTIFICATION EMAIL] Attempting to send notification email to user:', user.email, { subject, message });
+        //         await window.sendNotificationEmail(user.email, subject, message);
+        //     } else {
+        //         console.warn('[USER NOTIFICATION EMAIL] No user email found or sendNotificationEmail not available.', { user, sendNotificationEmailType: typeof window.sendNotificationEmail });
+        //     }
+        // } catch (err) {
+        //     console.error('[USER NOTIFICATION EMAIL] Error sending notification email to user:', err);
+        // }
 
         showNotification('Invoice saved successfully!', 'success');
         window.modalManager.closeModal('invoiceModal');
