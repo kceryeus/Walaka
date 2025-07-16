@@ -281,7 +281,7 @@ async function previewInvoice(invoiceData) {
 }
 
 // Export functions for external use
-window.invoiceTemplateManager = {
+window.invoicetemplatemanager = {
     loadTemplate,
     generateInvoiceHTML,
     populateTemplate,

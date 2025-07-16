@@ -751,7 +751,7 @@ async function generateInvoiceHTML(invoiceId) {
         };
         
         // Get selected template
-        const selectedTemplate = await window.invoiceTemplateManager.getSelectedTemplate();
+        const selectedTemplate = await window.invoicetemplatemanager.getSelectedTemplate();
         const template = TEMPLATES[selectedTemplate] || TEMPLATES['classic'];
         
         // Fetch accent color if modern template
@@ -953,7 +953,7 @@ async function getInvoiceAccentColor() {
 }
 
 // Export functions for external use
-window.invoiceTemplateManager = {
+window.invoicetemplatemanager = {
     TEMPLATES,
     generateInvoiceHTML,
     populateTemplate,
@@ -995,7 +995,7 @@ window.invoiceTemplateManager = {
     getInvoiceAccentColor: getInvoiceAccentColor
 };
 // --- BEGIN: Uncomment legacy TemplateManager class (for compatibility) ---
-class TemplateManager {
+class templatemanager {
     constructor() {
         this.templates = new Map();
         this.defaultTemplate = `
@@ -1064,5 +1064,5 @@ class TemplateManager {
         });
     }
 }
-window.templateManager = new TemplateManager();
+window.templatemanager = new templatemanager();
 // --- END: Uncomment legacy TemplateManager class ---

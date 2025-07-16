@@ -48,7 +48,7 @@ document.addEventListener('DOMContentLoaded', function() {
             document.querySelector('.modal-overlay').style.display = 'block';
             
             // Preview invoice
-            await window.invoiceTemplateManager.previewInvoice(invoiceData);
+            await window.invoicetemplatemanager.previewInvoice(invoiceData);
         }
     }
     

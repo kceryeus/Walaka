@@ -124,11 +124,11 @@ async function previewInvoice(invoiceData) {
         }
         
         // Get selected template
-        let selectedTemplate = await window.invoiceTemplateManager.getSelectedTemplate();
-        let template = window.invoiceTemplateManager.TEMPLATES?.[selectedTemplate] || window.invoiceTemplateManager.defaultTemplate;
+        let selectedTemplate = await window.invoicetemplatemanager.getSelectedTemplate();
+        let template = window.invoicetemplatemanager.TEMPLATES?.[selectedTemplate] || window.invoicetemplatemanager.defaultTemplate;
         // Fallback to default if template is missing or incomplete
         if (!template || !template.layout || !template.styles) {
-            template = window.invoiceTemplateManager.defaultTemplate;
+            template = window.invoicetemplatemanager.defaultTemplate;
         }
         // Fetch accent color from invoice_settings if modern template
         let color = '#007ec7';
@@ -210,7 +210,7 @@ async function previewInvoice(invoiceData) {
             items: formattedData.items || [],
             currency: formattedData.currency || 'MZN'
         };
-        const populatedHtml = await window.invoiceTemplateManager.populateTemplate(html, safeData);
+        const populatedHtml = await window.invoicetemplatemanager.populateTemplate(html, safeData);
         
         // Clear and update the preview content
         previewContainer.innerHTML = populatedHtml;

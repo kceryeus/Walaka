@@ -78,7 +78,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   };
 
   // Add template manager object
-  window.invoiceTemplateManager = {
+  window.invoicetemplatemanager = {
     getSelectedTemplate: async function() {
         try {
             const { data: { session } } = await window.supabase.auth.getSession();
@@ -377,7 +377,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     invoiceNextNumberInput.value = invoiceSettings.nextNumber;
 
     // Get the selected template from Supabase
-    window.invoiceTemplateManager.getSelectedTemplate().then(template => {
+    window.invoicetemplatemanager.getSelectedTemplate().then(template => {
         invoiceTemplateInput.value = template;
         // Preview the selected template with the current color
         previewTemplate(template);
@@ -1666,7 +1666,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             const selectedTemplate = this.value;
             
             // Save to Supabase
-            window.invoiceTemplateManager.saveTemplateSelection(selectedTemplate);
+            window.invoicetemplatemanager.saveTemplateSelection(selectedTemplate);
             
             // Preview the template with the current color
             previewTemplate(selectedTemplate);
@@ -1770,7 +1770,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('invoice-color-value').textContent = '#007ec7';
     
     // Update template preview
-    window.invoiceTemplateManager.previewTemplate('classic');
+    window.invoicetemplatemanager.previewTemplate('classic');
     
     showToast('Settings reset to defaults', 'info');
   }
@@ -1780,8 +1780,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     const colorInput = document.getElementById('invoice-color');
     const color = colorInput ? colorInput.value : '#007ec7';
     console.log('[Settings] previewTemplate called with:', selectedTemplate, color);
-    if (window.invoiceTemplateManager && typeof window.invoiceTemplateManager.previewTemplate === 'function') {
-        window.invoiceTemplateManager.previewTemplate(selectedTemplate, color);
+    if (window.invoicetemplatemanager && typeof window.invoicetemplatemanager.previewTemplate === 'function') {
+        window.invoicetemplatemanager.previewTemplate(selectedTemplate, color);
     }
   }
 

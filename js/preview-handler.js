@@ -41,7 +41,7 @@ document.addEventListener('DOMContentLoaded', function() {
         // Show preview modal
         if (viewInvoiceModal) {
             // Preview invoice - this function now handles showing the modal
-            await window.invoiceTemplateManager.previewInvoice(invoiceData);
+            await window.invoicetemplatemanager.previewInvoice(invoiceData);
         }
     }
     

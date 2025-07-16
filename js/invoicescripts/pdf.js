@@ -363,8 +363,8 @@ async function generatePDF(invoiceData, options = {}) {
         console.log('Formatted data for PDF:', formattedData);
 
         // Get selected template
-        const selectedTemplate = await window.invoiceTemplateManager.getSelectedTemplate();
-        let template = window.invoiceTemplateManager.TEMPLATES[selectedTemplate] || window.invoiceTemplateManager.TEMPLATES['classic'];
+        const selectedTemplate = await window.invoicetemplatemanager.getSelectedTemplate();
+        let template = window.invoicetemplatemanager.TEMPLATES[selectedTemplate] || window.invoicetemplatemanager.TEMPLATES['classic'];
         // Fetch accent color from invoice_settings if modern template
         let color = '#007ec7';
         if (selectedTemplate === 'modern') {
@@ -410,7 +410,7 @@ async function generatePDF(invoiceData, options = {}) {
         `;
         
         // Populate template with data
-        let populatedHtml = await window.invoiceTemplateManager.populateTemplate(html, formattedData);
+        let populatedHtml = await window.invoicetemplatemanager.populateTemplate(html, formattedData);
 
         // --- Watermark injection for preview/proforma ---
         if (options.watermark) {
@@ -476,7 +476,7 @@ async function generatePDF(invoiceData, options = {}) {
 
         // Create PDF container using TemplateManager (single source of truth for structure)
         // This ensures the invoice is always centered and styled consistently for PDF output.
-        const pdfContainer = window.invoiceTemplateManager.createPDFContainer(populatedHtml);
+        const pdfContainer = window.invoicetemplatemanager.createPDFContainer(populatedHtml);
         document.body.appendChild(pdfContainer);
 
         // PDF Options
