@@ -480,11 +480,11 @@ class InvoiceForm {
                     if (productError) throw productError;
                 }
             }
-            showNotification('Invoice saved successfully', 'success');
+            // showNotification('Invoice saved successfully', 'success');
             // Create invoice notification
-            if (window.createNotification) {
-                await window.createNotification('invoice', 'Invoice Created Successfully', `Invoice ${invoice.invoiceNumber} has been created and is ready for sending to your client.`, 'invoices.html');
-            }
+            // if (window.createNotification) {
+            //     await window.createNotification('invoice', 'Invoice Created Successfully', `Invoice ${invoice.invoiceNumber} has been created and is ready for sending to your client.`, 'invoices.html');
+            // }
             // Update trial banner if ready, or wait for readiness
             function updateTrialBannerIfReady() {
                 if (window.TrialBanner && typeof window.TrialBanner.updateTrialBanner === 'function') {
@@ -706,12 +706,31 @@ async function handleInvoiceSubmission(event) {
         if (window.createNotification) {
             await window.createNotification('invoice', 'Invoice Created Successfully', `Invoice ${invoice.invoiceNumber} has been created and is ready for sending to your client.`, 'invoices.html');
         }
+
+        // --- Send notification email to the user after invoice creation ---
+        try {
+            // Get the current user (account owner)
+            const { data: { user } } = await window.supabase.auth.getUser();
+            if (user && user.email && typeof window.sendNotificationEmail === 'function') {
+                const subject = `Invoice Created: ${invoice.invoiceNumber}`;
+                const message = `A new invoice (${invoice.invoiceNumber}) has been created in your account. You can view it in your dashboard.`;
+                console.log('[USER NOTIFICATION EMAIL] Attempting to send notification email to user:', user.email, { subject, message });
+                await window.sendNotificationEmail(user.email, subject, message);
+            } else {
+                console.warn('[USER NOTIFICATION EMAIL] No user email found or sendNotificationEmail not available.', { user, sendNotificationEmailType: typeof window.sendNotificationEmail });
+            }
+        } catch (err) {
+            console.error('[USER NOTIFICATION EMAIL] Error sending notification email to user:', err);
+        }
+
         showNotification('Invoice saved successfully!', 'success');
         window.modalManager.closeModal('invoiceModal');
         // --- Refresh invoice table after invoice creation ---
-        if (window.invoiceTable && typeof window.invoiceTable.refreshTable === 'function') {
-            window.invoiceTable.refreshTable();
-        }
+        // Comment out all usages of window.invoiceForm.resetInvoiceForm()
+        // window.invoiceForm.resetInvoiceForm();
+        // Comment out all usages of window.invoiceTable.refreshTable()
+        // window.invoiceTable.refreshTable();
+        await window.refreshDashboardUI();
     } catch (error) {
         console.error('Error saving invoice:', error);
         showNotification(`Error saving invoice: ${error.message}`, 'error');

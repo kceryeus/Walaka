@@ -775,6 +775,16 @@ async function saveInvoice() {
         }
 
         await window.supabase.incrementInvoiceCount(user.id);
+        // Show notification and create notification/email for invoice creation
+        if (window.createNotification) {
+            await window.createNotification(
+                'invoice',
+                'Invoice Created Successfully',
+                `Invoice ${invoiceData.invoiceNumber} has been created and is ready for sending to your client.`,
+                'invoices.html',
+                session.user.id
+            );
+        }
         showNotification('Invoice saved successfully!');
         
         // Download PDF

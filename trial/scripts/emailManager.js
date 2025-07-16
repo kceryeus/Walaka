@@ -1,3 +1,4 @@
+// DEPRECATED - DELETE: Email logic moved to Node.js backend.
 /**
  * Initialize email functionality
  */

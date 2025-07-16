@@ -400,6 +400,7 @@
         }
     </style>
     <script src="assets/js/sidebar.js"></script>
+    <script src="js/sendNotificationEmail.js"></script>
 </head>
 <body>
     <div class="container">
@@ -752,6 +753,16 @@
                         // Subscription is overdue
                         nextBillingEl.innerHTML = `<span class="overdue-indicator">OVERDUE</span>${endDateStr}`;
                         nextBillingEl.classList.add('overdue');
+                        // Send notification and email for subscription expired
+                        if (window.createNotification) {
+                            await window.createNotification(
+                                'subscription_expired',
+                                'Subscription Expired',
+                                `Your subscription expired on ${endDateStr}. Please renew to restore access to our services.`,
+                                'profile.html',
+                                userId
+                            );
+                        }
                         console.log('Set overdue styling');
                     } else {
                         nextBillingEl.textContent = endDateStr;
@@ -1043,6 +1054,16 @@
                         .eq('id', latestId);
                     if (!error) {
                         alert('Subscription canceled.');
+                        // Send notification and email for cancellation
+                        if (window.createNotification) {
+                            await window.createNotification(
+                                'subscription_canceled',
+                                'Subscription Canceled',
+                                'Your subscription has been canceled. Please renew to restore access to our services.',
+                                'profile.html',
+                                userId
+                            );
+                        }
                         hideCancelModal();
                         fetchAndDisplaySubscription();
                     } else {

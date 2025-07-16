@@ -312,6 +312,7 @@
 
     <!-- Notification badge synchronization -->
     <script src="js/notification-badge.js"></script>
+    <script src="js/sendNotificationEmail.js"></script>
     
     <!-- JavaScript -->
     <script type="module">
@@ -323,6 +324,31 @@
             'https://qvmtozjvjflygbkjecyj.supabase.co',
             'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF2bXRvemp2amZseWdia2plY3lqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDYxMjc2MjMsImV4cCI6MjA2MTcwMzYyM30.DJMC1eM5_EouM1oc07JaoXsMX_bSLn2AVCozAcdfHmo'
         );
+
+        // =================== EMAIL LOGIC CONFIGURATION ===================
+        /**
+         * Email API endpoint selection logic:
+         * - If a <meta name="mail-api-endpoint"> tag is present, use its value.
+         * - If running on localhost, use http://localhost:3000/sendmail
+         * - If running on GitHub Pages (repo: Walaka), use https://walakasoftware.com/sendmail
+         * - If running on walakasoftware.com, use https://walakasoftware.com/sendmail
+         */
+        function getMailApiUrl() {
+            const meta = document.querySelector('meta[name="mail-api-endpoint"]');
+            if (meta && meta.content) return meta.content;
+            const host = window.location.hostname;
+            if (host === 'localhost' || host === '127.0.0.1') {
+                return 'http://localhost:3000/sendmail';
+            }
+            if (host.endsWith('github.io') || host === 'walaka.github.io') {
+                return 'https://walakasoftware.com/sendmail';
+            }
+            if (host.endsWith('walakasoftware.com')) {
+                return 'https://walakasoftware.com/sendmail';
+            }
+            // Default fallback
+            return 'https://walakasoftware.com/sendmail';
+        }
 
         // DOM Elements
         const notificationsList = document.getElementById('notifications-list');
@@ -444,7 +470,6 @@
             try {
                 // Create a unique identifier for this notification based on type and target date
                 const targetDateStr = targetDate.toISOString().split('T')[0]; // YYYY-MM-DD format
-                
                 // Check if notification already exists for this type and target date
                 const { data: existingNotifications, error: checkError } = await window.supabase
                     .from('notifications')
@@ -452,36 +477,20 @@
                     .eq('user_id', userId)
                     .eq('type', type)
                     .eq('title', title); // Also check title to be extra safe
-
                 if (checkError) {
                     console.error('Error checking existing notifications:', checkError);
                     return;
                 }
-
                 if (existingNotifications && existingNotifications.length > 0) {
                     console.log(`Notification of type "${type}" already exists, skipping...`);
                     return; // Notification already exists
                 }
-
                 console.log(`Creating new notification: ${type} - ${title}`);
-                
-                // Create new notification
-                const { error } = await window.supabase
-                    .from('notifications')
-                    .insert({
-                        user_id: userId,
-                        type: type,
-                        title: title,
-                        message: message,
-                        action_url: actionUrl,
-                        read: false
-                    });
-
-                if (error) {
-                    console.error('Error creating subscription notification:', error);
-                } else {
-                    console.log(`Successfully created notification: ${type}`);
+                // Use the global helper to create notification and send email
+                if (window.createNotification) {
+                    await window.createNotification(type, title, message, actionUrl, null); // userId is not needed for email
                 }
+                console.log(`Successfully created notification: ${type}`);
             } catch (error) {
                 console.error('Error creating subscription notification:', error);
             }
@@ -547,28 +556,18 @@
                     .eq('user_id', userId)
                     .eq('type', type)
                     .eq('title', title);
-
                 if (checkError) {
                     console.error('Error checking existing invoice notifications:', checkError);
                     return;
                 }
-
                 if (existing && existing.length > 0) {
                     // Already exists
                     return;
                 }
-
-                // Insert new notification
-                await window.supabase
-                    .from('notifications')
-                    .insert({
-                        user_id: userId,
-                        type: type,
-                        title: title,
-                        message: message,
-                        action_url: actionUrl,
-                        read: false
-                    });
+                // Use the global helper to create notification and send email
+                if (window.createNotification) {
+                    await window.createNotification(type, title, message, actionUrl, null); // userId is not needed for email
+                }
             } catch (error) {
                 console.error('Error creating invoice notification:', error);
             }

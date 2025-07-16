@@ -689,10 +689,10 @@ async function saveInvoice() {
         }
 
         // Create invoice notification
-        await createInvoiceNotification(session.user.id, insertedInvoice.invoiceNumber);
+        // await createInvoiceNotification(session.user.id, insertedInvoice.invoiceNumber);
 
         // Show success message
-        showNotification('Invoice saved successfully!');
+        // showNotification('Invoice saved successfully!');
         
         // Download PDF
         const downloadUrl = URL.createObjectURL(pdfBlob);
@@ -706,14 +706,14 @@ async function saveInvoice() {
 
         // Close modal and refresh list
         window.modalManager.closeModal('invoiceModal');
-        await refreshInvoiceList();
+        // await refreshInvoiceList();
 
         // Enable the submit button after processing
         if (submitButton) submitButton.disabled = false;
 
     } catch (error) {
         console.error('Error saving invoice:', error);
-        showNotification('Error saving invoice: ' + (error.message || 'Unknown error'));
+        // showNotification('Error saving invoice: ' + (error.message || 'Unknown error'));
 
         // Re-enable the submit button in case of error
         const submitButton = document.querySelector('#invoiceForm button[type="submit"]');
@@ -728,7 +728,7 @@ async function refreshInvoiceList() {
     try {
         // Use the invoice table module if available
         if (window.invoiceTable && typeof window.invoiceTable.refreshTable === 'function') {
-            await window.invoiceTable.refreshTable();
+            // await window.invoiceTable.refreshTable();
         } else {
             // Fallback to direct function call
             const currentPage = 1;
@@ -1017,7 +1017,7 @@ async function markInvoiceAsPaid(invoiceNumber) {
         showNotification('Invoice marked as paid');
 
         // Refresh invoice list and metrics
-        await refreshInvoiceList();
+        // await refreshInvoiceList();
 
     } catch (error) {
         console.error('Error marking invoice as paid:', error);
@@ -1065,7 +1065,7 @@ function getInvoiceData() {
 // Add fetchAndDisplayInvoices to global scope
 window.fetchAndDisplayInvoices = async function(page = 1, limit = 10, filters = {}) {
     if (window.invoiceTable && typeof window.invoiceTable.fetchAndDisplayInvoices === 'function') {
-        await window.invoiceTable.fetchAndDisplayInvoices(page, limit, filters);
+        // await window.invoiceTable.fetchAndDisplayInvoices(page, limit, filters);
         window.invoiceTable.setupSorting(); // Setup sorting after table is displayed
     } else {
         console.error('invoiceTable not found');
@@ -1083,7 +1083,7 @@ document.addEventListener('DOMContentLoaded', async function() {
 
         // Initialize invoice table
         if (typeof window.fetchAndDisplayInvoices === 'function' && window.invoiceTable) {
-            await window.fetchAndDisplayInvoices(1, 10, {});
+            // await window.fetchAndDisplayInvoices(1, 10, {});
             console.log('Invoice table initialized successfully');
         } else {
             console.error('Invoice table functions not found or invoiceTable not available');
@@ -1287,105 +1287,128 @@ document.addEventListener('DOMContentLoaded', async function() {
 // Insert the class-based InvoiceForm implementation
 
 // Create invoice notification
-async function createInvoiceNotification(userId, invoiceNumber) {
-    console.log('[InvoiceJS] createInvoiceNotification called with:', { userId, invoiceNumber });
-    try {
-        // Check if user has notification settings enabled for invoice notifications
-        console.log('[InvoiceJS] Checking notification settings for user:', userId);
-        const { data: notificationSettings, error: settingsError } = await window.supabase
-            .from('notification_settings')
-            .select('invoice_created')
-            .eq('user_id', userId)
-            .single();
+// async function createInvoiceNotification(userId, invoiceNumber) {
+//     console.log('[InvoiceJS] createInvoiceNotification called with:', { userId, invoiceNumber });
+//     try {
+//         // Check if user has notification settings enabled for invoice notifications
+//         console.log('[InvoiceJS] Checking notification settings for user:', userId);
+//         const { data: notificationSettings, error: settingsError } = await window.supabase
+//             .from('notification_settings')
+//             .select('invoice_created')
+//             .eq('user_id', userId)
+//             .single();
 
-        console.log('[InvoiceJS] Notification settings result:', { notificationSettings, settingsError });
+//         console.log('[InvoiceJS] Notification settings result:', { notificationSettings, settingsError });
 
-        // If no settings found or invoice notifications are disabled, don't create notification
-        if (settingsError || !notificationSettings || !notificationSettings.invoice_created) {
-            console.log('[InvoiceJS] Invoice notifications disabled or no settings found, skipping notification');
-            console.log('[InvoiceJS] Settings error:', settingsError);
-            console.log('[InvoiceJS] Notification settings:', notificationSettings);
+//         // If no settings found or invoice notifications are disabled, don't create notification
+//         if (settingsError || !notificationSettings || !notificationSettings.invoice_created) {
+//             console.log('[InvoiceJS] Invoice notifications disabled or no settings found, skipping notification');
+//             console.log('[InvoiceJS] Settings error:', settingsError);
+//             console.log('[InvoiceJS] Notification settings:', notificationSettings);
             
-            // If no settings exist, create default settings for the user
-            if (settingsError && settingsError.code === 'PGRST116') {
-                console.log('[InvoiceJS] No notification settings found, creating default settings...');
-                const { error: createError } = await window.supabase
-                    .from('notification_settings')
-                    .insert({
-                        user_id: userId,
-                        payment_received: true,
-                        invoice_created: true,
-                        invoice_due: true,
-                        invoice_overdue: true,
-                        product_low_stock: true,
-                        system_updates: true,
-                        client_activity: false,
-                        login_attempts: true
-                    });
+//             // If no settings exist, create default settings for the user
+//             if (settingsError && settingsError.code === 'PGRST116') {
+//                 console.log('[InvoiceJS] No notification settings found, creating default settings...');
+//                 const { error: createError } = await window.supabase
+//                     .from('notification_settings')
+//                     .insert({
+//                         user_id: userId,
+//                         payment_received: true,
+//                         invoice_created: true,
+//                         invoice_due: true,
+//                         invoice_overdue: true,
+//                         product_low_stock: true,
+//                         system_updates: true,
+//                         client_activity: false,
+//                         login_attempts: true
+//                     });
                 
-                if (createError) {
-                    console.error('[InvoiceJS] Error creating default notification settings:', createError);
-                    return;
-                } else {
-                    console.log('[InvoiceJS] Default notification settings created successfully');
-                    // Now proceed with creating the notification
-                }
-            } else {
-                return;
-            }
-        }
+//                 if (createError) {
+//                     console.error('[InvoiceJS] Error creating default notification settings:', createError);
+//                     return;
+//                 } else {
+//                     console.log('[InvoiceJS] Default notification settings created successfully');
+//                     // Now proceed with creating the notification
+//                 }
+//             } else {
+//                 return;
+//             }
+//         }
 
-        // For invoices, we'll create a notification every time since invoice creation is a unique event
-        console.log('[InvoiceJS] Creating new invoice notification...');
+//         // For invoices, we'll create a notification every time since invoice creation is a unique event
+//         console.log('[InvoiceJS] Creating new invoice notification...');
         
-        // Create invoice notification
-        console.log('[InvoiceJS] Creating invoice notification in database...');
-        const { error } = await window.supabase
-            .from('notifications')
-            .insert({
-                user_id: userId,
-                type: 'invoice',
-                title: 'Invoice Created Successfully',
-                message: `Invoice ${invoiceNumber} has been created and is ready for sending to your client.`,
-                action_url: 'invoices.html',
-                read: false
-            });
+//         // Create invoice notification
+//         console.log('[InvoiceJS] Creating invoice notification in database...');
+//         const { error } = await window.supabase
+//             .from('notifications')
+//             .insert({
+//                 user_id: userId,
+//                 type: 'invoice',
+//                 title: 'Invoice Created Successfully',
+//                 message: `Invoice ${invoiceNumber} has been created and is ready for sending to your client.`,
+//                 action_url: 'invoices.html',
+//                 read: false
+//             });
 
-        if (error) {
-            console.error('[InvoiceJS] Error creating invoice notification:', error);
-        } else {
-            console.log('[InvoiceJS] Invoice notification created successfully');
+//         if (error) {
+//             console.error('[InvoiceJS] Error creating invoice notification:', error);
+//         } else {
+//             console.log('[InvoiceJS] Invoice notification created successfully');
             
-            // Verify the notification was created by fetching it
-            const { data: verifyNotification, error: verifyError } = await window.supabase
-                .from('notifications')
-                .select('*')
-                .eq('user_id', userId)
-                .eq('type', 'invoice')
-                .order('created_at', { ascending: false })
-                .limit(1);
+//             // Verify the notification was created by fetching it
+//             const { data: verifyNotification, error: verifyError } = await window.supabase
+//                 .from('notifications')
+//                 .select('*')
+//                 .eq('user_id', userId)
+//                 .eq('type', 'invoice')
+//                 .order('created_at', { ascending: false })
+//                 .limit(1);
             
-            if (verifyError) {
-                console.error('[InvoiceJS] Error verifying notification creation:', verifyError);
-            } else {
-                console.log('[InvoiceJS] Notification verification successful:', verifyNotification);
-            }
+//             if (verifyError) {
+//                 console.error('[InvoiceJS] Error verifying notification creation:', verifyError);
+//             } else {
+//                 console.log('[InvoiceJS] Notification verification successful:', verifyNotification);
+//             }
             
-            // Dispatch event to notify other parts of the app about new notification
-            window.dispatchEvent(new CustomEvent('notificationCreated', {
-                detail: {
-                    type: 'invoice',
-                    title: 'Invoice Created Successfully',
-                    message: `Invoice ${invoiceNumber} has been created and is ready for sending to your client.`
-                }
-            }));
+//             // Dispatch event to notify other parts of the app about new notification
+//             window.dispatchEvent(new CustomEvent('notificationCreated', {
+//                 detail: {
+//                     type: 'invoice',
+//                     title: 'Invoice Created Successfully',
+//                     message: `Invoice ${invoiceNumber} has been created and is ready for sending to your client.`
+//                 }
+//             }));
             
-            // Update notification badge count
-            if (window.notificationBadgeManager) {
-                await window.notificationBadgeManager.refresh();
-            }
+//             // Update notification badge count
+//             if (window.notificationBadgeManager) {
+//                 await window.notificationBadgeManager.refresh();
+//             }
+//         }
+//     } catch (error) {
+//         console.error('[InvoiceJS] Error in createInvoiceNotification:', error);
+//     }
+// }
+
+window.refreshDashboardUI = async function() {
+    try {
+        if (window.invoiceTable && typeof window.invoiceTable.refreshTable === 'function') {
+            await window.invoiceTable.refreshTable();
+        }
+        if (typeof window.updateMetricsDisplay === 'function') {
+            await window.updateMetricsDisplay();
+        }
+        if (typeof window.updateCharts === 'function') {
+            await window.updateCharts();
+        }
+        if (window.notificationBadgeManager && typeof window.notificationBadgeManager.refresh === 'function') {
+            await window.notificationBadgeManager.refresh();
+        }
+        if (window.invoiceForm && typeof window.invoiceForm.resetInvoiceForm === 'function') {
+            await window.invoiceForm.resetInvoiceForm();
         }
     } catch (error) {
-        console.error('[InvoiceJS] Error in createInvoiceNotification:', error);
+        console.error('Error refreshing dashboard UI:', error);
+        showNotification('Error refreshing dashboard UI');
     }
-}
+};

@@ -1,3 +1,4 @@
+// DEPRECATED - DELETE: Email logic moved to Node.js backend.
 class EmailHandler {
     constructor() {
         this.modal = document.getElementById('emailInvoiceModal');
