@@ -262,6 +262,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 });
 
+// Listen for global notification creation events to refresh badge instantly
+window.addEventListener('notificationCreated', () => {
+    if (window.notificationBadgeManager && typeof window.notificationBadgeManager.refresh === 'function') {
+        window.notificationBadgeManager.refresh();
+    }
+});
+
 // Clean up on page unload
 window.addEventListener('beforeunload', () => {
     if (window.notificationBadgeManager) {

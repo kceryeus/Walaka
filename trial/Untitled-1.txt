@@ -1,8 +1,0 @@
-async function canCreateInvoice(userId: string): Promise<boolean> {
-    const user = await fetchUserData(userId); // Hypothetical fetch function
-    if (!user.trial_start_date) return true; // No trial = always allowed
-    const trialEnd = new Date(user.trial_start_date);
-    trialEnd.setDate(trialEnd.getDate() + 14);
-    const now = new Date();
-    return now <= trialEnd && (user.invoices_created || 0) < 5;
-}
