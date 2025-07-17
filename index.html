@@ -13,6 +13,10 @@
   <link rel="icon" type="image/png" href="assets/images/walaka-assistant.PNG">
 </head>
 <body>
+  <script type="module">
+    import { requireAuth } from './js/auth.js';
+    requireAuth();
+  </script>
   <!-- Header -->
   <header class="header" id="header">
     <div class="container">

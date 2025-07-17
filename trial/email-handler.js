@@ -1,5 +1,6 @@
 // DEPRECATED - DELETE: Email logic moved to Node.js backend.
-class EmailHandler {
+
+/*class EmailHandler {
     constructor() {
         this.modal = document.getElementById('emailInvoiceModal');
         if (!this.modal) {
@@ -168,3 +169,4 @@ document.addEventListener('DOMContentLoaded', () => {
         console.error('Email modal element not found');
     }
 });
+*/

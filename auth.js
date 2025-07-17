@@ -49,3 +49,18 @@ async function signOut() {
     }
 }
 
+// Centralized auth check for all protected pages
+export async function requireAuth() {
+    try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session || !session.user) {
+            window.location.href = '/login.html';
+            throw new Error('Not authenticated');
+        }
+        return session;
+    } catch (error) {
+        window.location.href = '/login.html';
+        throw error;
+    }
+}
+

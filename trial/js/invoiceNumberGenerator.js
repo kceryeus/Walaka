@@ -1,3 +1,4 @@
+/*
 class InvoiceNumberGenerator {
     constructor() {
         this.supabase = window.supabase;
@@ -51,3 +52,4 @@ class InvoiceNumberGenerator {
 }
 
 export default InvoiceNumberGenerator;
+*/

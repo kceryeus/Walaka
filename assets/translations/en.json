@@ -144,6 +144,7 @@
   "passwords_do_not_match": "Passwords do not match",
   "required_fields": "Required fields",
   "loading": "Loading...",
+  "logs": "System Logs",
   "invoicing": "Invoicing",
   "documents": "Documents",
   "credit_notes": "Credit Notes",

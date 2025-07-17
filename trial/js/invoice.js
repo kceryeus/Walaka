@@ -1,4 +1,4 @@
-// Invoice Management Module JavaScript
+/*/ Invoice Management Module JavaScript
 
 // Add module state tracking
 let invoiceModuleInitialized = false;
@@ -752,7 +752,7 @@ async function saveInvoice() {
         const { data: invoice, error: insertError } = await window.supabase
             .from('invoices')
             .insert([{
-                invoice_number: invoiceData.invoiceNumber,
+                invoiceNumber: invoiceData.invoiceNumber,
                 issue_date: issueDate.toISOString(),
                 due_date: dueDate.toISOString(),
                 client_id: invoiceData.client.id || null,
@@ -990,7 +990,7 @@ async function fetchInvoiceDetails(invoiceNumber) {
         const { data: invoice, error } = await window.supabase
             .from('invoices')
             .select('*, clients(*)')
-            .eq('invoice_number', invoiceNumber)
+            .eq('invoiceNumber', invoiceNumber)
             .single();
 
         if (error) throw error;
@@ -1080,7 +1080,7 @@ async function markInvoiceAsPaid(invoiceNumber) {
         const { error: updateError } = await window.supabase
             .from('invoices')
             .update({ status: 'paid', paid_date: new Date().toISOString() })
-            .eq('invoice_number', invoiceNumber);
+            .eq('invoiceNumber', invoiceNumber);
 
         if (updateError) throw updateError;
 
@@ -3178,3 +3178,4 @@ async function saveInvoice(invoiceData) {
 
 // ...rest of the code...
 
+*/

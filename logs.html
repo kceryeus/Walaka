@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>WALAKA - Logs do Sistema</title>
+    <link rel="stylesheet" href="components/sidebar.css">
+    <link rel="stylesheet" href="css/styles.css">
+    <style>
+        .logs-container { padding: 20px; }
+        .logs-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .logs-title { font-size: 2rem; font-weight: 700; }
+        .logs-filter { font-size: 1rem; }
+        .logs-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        .logs-table th, .logs-table td { border: 1px solid #eee; padding: 8px; }
+        .logs-table th { background: #f5f5f5; }
+        .logs-table tr:hover { background: #f0f7ff; }
+        .logs-empty { text-align: center; color: #888; margin-top: 40px; }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- Sidebar Menu -->
+        <div id="sidebar-container"></div>
+        <script>
+        // Carrega a sidebar dinamicamente
+        document.addEventListener('DOMContentLoaded', function() {
+            fetch('components/sidebar.html')
+                .then(response => response.text())
+                .then(html => {
+                    document.getElementById('sidebar-container').innerHTML = html;
+                    var script = document.createElement('script');
+                    script.src = 'components/sidebar-actions.js';
+                    document.body.appendChild(script);
+                })
+                .catch(err => {
+                    console.error('Failed to load sidebar:', err);
+                });
+        });
+        </script>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Top Bar -->
+            <div class="top-bar">
+                <button class="menu-toggle">
+                    <i class="fas fa-bars"></i>
+                </button>
+                <div class="user-menu" style="margin-left:auto;">
+                    <div class="user-profile" id="userProfile">
+                        <div class="avatar">
+                            <i class="fas fa-user"></i>
+                        </div>
+                        <span id="user-displayname">Loading...</span>
+                        <div class="dropdown-menu" id="userDropdown">
+                            <a href="profile.html">
+                                <i class="fas fa-user-circle"></i> My Profile
+                            </a>
+                            <a href="settings.html">
+                                <i class="fas fa-cog"></i> Settings
+                            </a>
+                            <a href="#" id="sign-out-btn">
+                                <i class="fas fa-sign-out-alt"></i> Logout
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="logs-container">
+                <div class="logs-header">
+                    <span class="logs-title">Logs do Sistema</span>
+                    <select id="actionFilter" class="logs-filter">
+                        <option value="">Todas as Ações</option>
+                        <option value="invoice_created">Factura criada</option>
+                        <option value="client_created">Cliente criado</option>
+                        <option value="product_created">Produto criado</option>
+                        <option value="export_csv">Exportação CSV</option>
+                        <option value="export_xml">Exportação XML</option>
+                        <!-- Adicione mais categorias conforme necessário -->
+                    </select>
+                </div>
+                <table class="logs-table" id="logsTable">
+                    <thead>
+                        <tr>
+                            <th>Data/Hora</th>
+                            <th>Usuário</th>
+                            <th>Ação</th>
+                            <th>Descrição</th>
+                            <th>Redflag</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Logs serão inseridos aqui via JS -->
+                    </tbody>
+                </table>
+                <div class="logs-empty" id="logsEmpty" style="display:none;">
+                    Nenhum log encontrado para o filtro selecionado.
+                </div>
+                <div style="margin-top:10px; color:#b71c1c; font-size:0.95em;">
+                    <b>Redflag:</b> indica logs marcados para investigação (possível bug, tentativa de fraude, etc).
+                </div>
+            </div>
+        </main>
+    </div>
+    <script type="module" src="js/logs.js"></script>
+    <script>
+    // Username display and dropdown logic (igual notifications.html)
+    document.addEventListener('DOMContentLoaded', async () => {
+        if (typeof window.supabase !== 'undefined') {
+            const { data: { session } } = await window.supabase.auth.getSession();
+            if (session && session.user) {
+                let displayName = session.user.email;
+                try {
+                    const { data: userRecord } = await window.supabase
+                        .from('users')
+                        .select('username')
+                        .eq('id', session.user.id)
+                        .maybeSingle();
+                    if (userRecord && userRecord.username) {
+                        displayName = userRecord.username;
+                    }
+                } catch (e) {}
+                const userSpan = document.getElementById('user-displayname');
+                if (userSpan) userSpan.textContent = displayName;
+            }
+        }
+        // Dropdown open/close logic
+        const userProfile = document.getElementById('userProfile');
+        const userDropdown = document.getElementById('userDropdown');
+        if (!userProfile || !userDropdown) return;
+        let dropdownTimeout;
+        function openDropdown() {
+            clearTimeout(dropdownTimeout);
+            userProfile.classList.add('open');
+        }
+        function closeDropdown() {
+            dropdownTimeout = setTimeout(() => {
+                userProfile.classList.remove('open');
+            }, 150);
+        }
+        userProfile.addEventListener('mouseenter', openDropdown);
+        userProfile.addEventListener('mouseleave', closeDropdown);
+        userDropdown.addEventListener('mouseenter', openDropdown);
+        userDropdown.addEventListener('mouseleave', closeDropdown);
+        // Click events for mobile
+        userProfile.addEventListener('click', (e) => {
+            e.stopPropagation();
+            if (window.innerWidth <= 768) {
+                userProfile.classList.toggle('open');
+            }
+        });
+        // Close dropdown when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!userProfile.contains(e.target)) {
+                userProfile.classList.remove('open');
+            }
+        });
+        // Handle window resize
+        window.addEventListener('resize', () => {
+            if (window.innerWidth > 768) {
+                userProfile.classList.remove('open');
+            }
+        });
+        // Sign out handler
+        document.getElementById('sign-out-btn')?.addEventListener('click', () => {
+            if (window.supabase) window.supabase.auth.signOut();
+        });
+    });
+    </script>
+</body>
+</html> 

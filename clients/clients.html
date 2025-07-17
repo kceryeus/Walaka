@@ -31,6 +31,12 @@
 </script>
 
 <body>
+  <script type="module">
+    import { requireAuth } from '../auth.js';
+    document.addEventListener('DOMContentLoaded', async () => {
+      try { await requireAuth(); } catch (e) {}
+    });
+  </script>
   <div id="sidebar-overlay" class="sidebar-overlay"></div>
   <div class="dashboard-container">
     <!-- Sidebar Menu -->

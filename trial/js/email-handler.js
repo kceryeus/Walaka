@@ -126,7 +126,7 @@ async function sendInvoiceEmail(invoiceNumber, emailAddress) {
         const { data: invoice } = await window.supabase
             .from('invoices')
             .select('pdf_url')
-            .eq('invoice_number', invoiceNumber)
+            .eq('invoiceNumber', invoiceNumber)
             .single();
 
         if (!invoice?.pdf_url) {

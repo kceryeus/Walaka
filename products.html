@@ -943,6 +943,12 @@ button:disabled:hover {
 
 </head>
 <body>
+  <script type="module">
+    import { requireAuth } from './auth.js';
+    document.addEventListener('DOMContentLoaded', async () => {
+      try { await requireAuth(); } catch (e) {}
+    });
+  </script>
   <div class="dashboard-container">
     <!-- Sidebar Menu -->
     <div id="sidebar-container"></div>
@@ -1598,7 +1604,6 @@ button:disabled:hover {
     // Initial fetch
     fetchProducts();
   </script>
-    <script src="js/auth.js"></script>
     <!-- Notification badge synchronization -->
     <script src="js/notification-badge.js"></script>
     <script src="services/languageManager.js"></script>

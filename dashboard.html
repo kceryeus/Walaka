@@ -941,6 +941,7 @@
 
     <!-- JavaScript -->
     <script type="module">
+        import { requireAuth } from './auth.js';
         // Use window.supabase directly (initialized by js/supabaseClient.js)
 
         // Log session and user on page load
@@ -968,6 +969,7 @@
 
         document.addEventListener('DOMContentLoaded', async () => {
             try {
+                await requireAuth();
                 const session = await waitForSession();
                 if (!session || !session.user) {
                     window.location.href = '/login.html';

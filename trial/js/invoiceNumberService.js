@@ -1,3 +1,4 @@
+/*
 import { createClient } from '@supabase/supabase-js';
 
 class InvoiceNumberService {
@@ -63,3 +64,4 @@ class InvoiceNumberService {
 }
 
 export default new InvoiceNumberService();
+*/

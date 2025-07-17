@@ -338,3 +338,7 @@
         margin-left 0.3s,
         padding-left 0.3s;
 }
+
+/* Hide admin-only sidebar links by default; shown by JS if user is admin */
+.admin-only { display: none; }
+.admin-only.admin-visible { display: flex; }
