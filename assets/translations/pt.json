@@ -583,5 +583,19 @@
     "use_this_product": "Usar Este Produto",
     "product_price_placeholder": "0.00",
     "vat_0": "0%",
-    "vat_16": "16%"
+    "vat_16": "16%",
+    "tax_authority_letter_title": "Carta para Autoridade Tributária",
+    "manual_editable_button": "Manual (Editável)",
+    "prepare_pdf_button": "Preparar PDF",
+    "generate_filled_letter": "Gerar Carta Preenchida",
+    "generate_pdf_button": "Gerar PDF",
+    "activity_label": "Atividade Principal:",
+    "nuit_label": "NUIT:",
+    "start_date_label": "Data de Início de Uso:",
+    "province_label": "Província:",
+    "day_label": "Dia:",
+    "month_label": "Mês:",
+    "year_label": "Ano:",
+    "responsible_name_label": "Nome do Responsável:",
+    "responsible_position_label": "Cargo do Responsável:"
 }

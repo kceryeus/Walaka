@@ -20,10 +20,142 @@
     <style>
       .help-section { background: #fff; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); padding: 32px; margin-bottom: 32px; }
       .help-section h2 { margin-top: 0; }
-      .download-btn { display: inline-block; background: var(--primary-color, #007ec7); color: #fff; padding: 12px 24px; border-radius: 6px; text-decoration: none; font-weight: 600; margin-bottom: 16px; transition: background 0.2s; }
-      .download-btn:hover { background: var(--primary-dark, #005fa3); }
+      .download-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        background: #0091ea;
+        color: #fff;
+        padding: 12px 24px;
+        border-radius: 8px;
+        text-decoration: none;
+        font-weight: 600;
+        font-size: 1.08em;
+        border: none;
+        transition: background 0.18s, color 0.18s, box-shadow 0.18s;
+        box-shadow: none;
+        cursor: pointer;
+      }
+      .download-btn:hover {
+        background: #0074b7;
+        color: #fff;
+      }
       .system-info-list { list-style: none; padding: 0; }
       .system-info-list li { margin-bottom: 8px; }
+      .styled-form label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: 500;
+      }
+      .styled-form input {
+        width: 100%;
+        padding: 8px 10px;
+        margin-top: 2px;
+        margin-bottom: 12px;
+        border: 1px solid #bbb;
+        border-radius: 5px;
+        font-size: 1em;
+        box-sizing: border-box;
+      }
+      .styled-form button {
+        margin-right: 10px;
+      }
+      .styled-form .form-actions {
+        margin-top: 10px;
+        display: flex;
+        gap: 10px;
+      }
+      .modal-overlay {
+        position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+        background: rgba(0,0,0,0.35); display: none; align-items: center; justify-content: center; z-index: 1000;
+      }
+      .modal-overlay.active { display: flex; }
+      .modal-content {
+        background: #fff; border-radius: 10px; box-shadow: 0 4px 32px rgba(0,0,0,0.18);
+        padding: 32px 24px; max-width: 420px; width: 95vw; position: relative;
+        animation: modalIn 0.2s;
+      }
+      @keyframes modalIn { from { transform: translateY(40px); opacity: 0; } to { transform: none; opacity: 1; } }
+      .modal-content .form-actions { justify-content: flex-end; }
+      .styled-form-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px 16px;
+      }
+      .styled-form-grid .full-width {
+        grid-column: 1 / 3;
+      }
+      @media (max-width: 600px) {
+        .styled-form-grid {
+          grid-template-columns: 1fr;
+        }
+        .styled-form-grid .full-width {
+          grid-column: 1 / 2;
+        }
+      }
+      .styled-form label {
+        margin-bottom: 2px;
+        font-size: 0.98em;
+      }
+      .styled-form input {
+        margin-bottom: 0;
+        font-size: 1em;
+        padding: 6px 8px;
+      }
+      .styled-form .form-actions {
+        margin-top: 8px;
+        gap: 8px;
+      }
+      .styled-form .form-actions .download-btn {
+        font-size: 0.98em;
+        padding: 8px 12px;
+        min-width: 110px;
+        border-radius: 5px;
+      }
+      .styled-form h4 {
+        margin-bottom: 8px;
+      }
+      .styled-form-grid {
+        gap: 8px 12px;
+      }
+      .modal-content {
+        padding: 20px 12px;
+        max-width: 400px;
+      }
+      @media (max-width: 600px) {
+        .modal-content { max-width: 98vw; padding: 10px 2vw; }
+      }
+      .styled-form .form-actions .download-btn {
+        font-size: 0.97em;
+        padding: 7px 18px;
+        min-width: 90px;
+        border-radius: 6px;
+        box-shadow: none;
+        border: 1px solid #bbb;
+        font-weight: 500;
+        transition: background 0.18s, color 0.18s, border 0.18s;
+        margin-bottom: 0;
+      }
+      .styled-form .form-actions .download-btn:not(:last-child) {
+        margin-right: 8px;
+      }
+      .styled-form .form-actions {
+        justify-content: flex-end;
+        gap: 0;
+      }
+      .styled-form .download-btn {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .styled-form .download-btn i {
+        font-size: 1em;
+      }
+      .styled-form .form-actions {
+        justify-content: center;
+        gap: 0;
+        margin-top: 8px;
+      }
     </style>
 </head>
 <body>
@@ -100,10 +232,48 @@
                 <h3><i class="fas fa-headset"></i> <span data-translate="contact_support">Contact & Support</span></h3>
                 <p>
                   <span data-translate="contact_assistance">For further assistance, please contact our support team:</span><br>
-                  <strong data-translate="email_label">Email:</strong> <a href="mailto:support@walaka.com">support@walaka.com</a><br>
-                  <strong data-translate="phone_label">Phone:</strong> <a href="tel:+258000000000">+258 00 000 0000</a>
+                  <strong data-translate="email_label">Email:</strong> <a href="mailto:support@walaka.com">info@walakasoftware.com</a><br>
+                  <strong data-translate="phone_label">Phone:</strong> <a href="tel:+258000000000">+258 84 678 4911</a>
                 </p>
             </div>
+            <div class="help-section">
+              <h3><i class="fas fa-file-signature"></i> <span data-translate="tax_authority_letter_title">Carta para Autoridade Tributária</span></h3>
+              <div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin-bottom: 16px;">
+                <a class="download-btn" href="assets/modelo_de_carta_permissão_de_uso_de_software_manual.docx" download>
+                  <i class="fas fa-file-word"></i> <span data-translate="manual_editable_button">Manual (Editável)</span>
+                </a>
+                <button id="prepararPdfBtn" class="download-btn" type="button"><i class="fas fa-file-pdf"></i> <span data-translate="prepare_pdf_button">Preparar PDF</span></button>
+              </div>
+            </div>
+
+<!-- Modal para o formulário -->
+<div id="cartaModal" class="modal-overlay">
+  <div class="modal-content">
+    <form id="cartaForm" class="styled-form styled-form-grid" style="margin:0;">
+      <h4 class="full-width" data-translate="generate_filled_letter">Gerar Carta Preenchida</h4>
+      <label class="full-width"><span data-translate="company_name_label">Nome da Empresa:</span> <input name="nome_sujeito_passivo" required></label>
+      <label class="full-width">
+        <span data-translate="activity_label">Atividade Principal:</span>
+        <input name="atividade_empresa" required maxlength="100" oninput="atividadeConstraint(this)" title="Máximo de 100 caracteres. Nenhuma palavra pode ter mais de 30 letras/números seguidos sem espaço.">
+      </label>
+      <label class="full-width">
+        <span data-translate="nuit_label">NUIT:</span>
+        <input name="nuit_sujeito_passivo" required pattern="\d{9}" maxlength="9" minlength="9" title="O NUIT deve conter exatamente 9 dígitos numéricos">
+      </label>
+      <label><span data-translate="start_date_label">Data de Início de Uso:</span> <input name="data_inicio_uso" type="date" required></label>
+      <label><span data-translate="province_label">Província:</span> <input name="provincia_emissao" required></label>
+      <label><span data-translate="day_label">Dia:</span> <input name="dia_emissao" type="number" min="1" max="31" required></label>
+      <label><span data-translate="month_label">Mês:</span> <input name="mes_emissao" required></label>
+      <label><span data-translate="year_label">Ano:</span> <input name="ano_emissao" type="number" min="2000" max="2100" required></label>
+      <label class="full-width"><span data-translate="responsible_name_label">Nome do Responsável:</span> <input name="nome_responsavel_legal" required></label>
+      <label class="full-width"><span data-translate="responsible_position_label">Cargo do Responsável:</span> <input name="cargo_responsavel_legal" required placeholder="Preencha o cargo"></label>
+      <div class="form-actions full-width">
+        <button type="submit" class="download-btn"><i class="fas fa-file-pdf"></i> <span data-translate="generate_pdf_button">Gerar PDF</span></button>
+        <button type="button" id="cancelarCartaBtn" class="download-btn" style="background:#eee; color:#222;"><i class="fas fa-times"></i> <span data-translate="cancel_button">Cancelar</span></button>
+      </div>
+    </form>
+  </div>
+</div>
         </main>
     </div>
     <script type="module" src="js/supabaseClient.js"></script>
@@ -121,5 +291,100 @@
       });
     </script>
     <script src="js/topbar-menu.js"></script>
-</body>
-</html> 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script>
+    const modal = document.getElementById('cartaModal');
+    const prepararBtn = document.getElementById('prepararPdfBtn');
+    const cancelarBtn = document.getElementById('cancelarCartaBtn');
+    const cartaForm = document.getElementById('cartaForm');
+
+    prepararBtn.addEventListener('click', async function() {
+      modal.classList.add('active');
+      // Preencher automaticamente os campos usando Supabase
+      if (!window.supabase) return;
+      try {
+        const { data: { session } } = await window.supabase.auth.getSession();
+        if (!session || !session.user) return;
+        const userId = session.user.id;
+        // Buscar apenas username do usuário (igual displayname.js)
+        let username = session.user.email;
+        try {
+          const { data: userRecord, error } = await window.supabase
+            .from('users')
+            .select('username')
+            .eq('id', userId)
+            .single();
+          if (userRecord && userRecord.username) {
+            username = userRecord.username;
+          }
+          // Buscar perfil da empresa
+          const { data: business } = await window.supabase
+            .from('business_profiles')
+            .select('company_name, tax_id, address')
+            .eq('user_id', userId)
+            .maybeSingle();
+          cartaForm.nome_sujeito_passivo.value = business?.company_name || '';
+          cartaForm.atividade_empresa.value = '';
+          cartaForm.nuit_sujeito_passivo.value = business?.tax_id || '';
+          cartaForm.data_inicio_uso.value = new Date().toISOString().slice(0,10);
+          cartaForm.provincia_emissao.value = '';
+          cartaForm.dia_emissao.value = new Date().getDate();
+          // Mês com inicial maiúscula
+          const mes = new Date().toLocaleString('pt-PT', { month: 'long' });
+          cartaForm.mes_emissao.value = mes.charAt(0).toUpperCase() + mes.slice(1);
+          cartaForm.ano_emissao.value = new Date().getFullYear();
+          cartaForm.nome_responsavel_legal.value = username || '';
+          cartaForm.cargo_responsavel_legal.value = '';
+        } catch (e) {
+          // fallback: deixa campos em branco
+        }
+      } catch (e) {
+        // Se der erro, deixa tudo em branco
+      }
+    });
+
+    cancelarBtn.addEventListener('click', function() {
+      modal.classList.remove('active');
+    });
+
+    cartaForm.addEventListener('submit', function(e) {
+      e.preventDefault();
+      const data = Object.fromEntries(new FormData(this).entries());
+      console.log('[Carta PDF] nome_responsavel_legal:', data.nome_responsavel_legal);
+      console.log('[Carta PDF] cargo_responsavel_legal:', data.cargo_responsavel_legal);
+      console.log('[Carta PDF] Todos os dados do formulário:', data);
+      const cartaHtml = `
+        <div style="font-family:Aptos, sans-serif; margin:0 auto; padding:0.5cm 2cm 2cm 2cm; line-height:1.5; font-size:12pt; color:#222; text-align:justify;">
+          <p style="margin-bottom: 14px; font-size:12pt; text-align:left;">A Sua Excelência o Diretor do __º Bairro Fiscal<br>
+          Autoridade Tributária de Moçambique</p><br>
+          <p style="margin-bottom: 12px;"><strong>ASSUNTO:</strong> Solicitação de Autorização para Utilização de Software de Faturação</p>
+          <p style="margin-bottom: 14px;"><strong>NOME DO SUJEITO PASSIVO:</strong> ${data.nome_sujeito_passivo}</p>
+          <p style="margin-bottom: 14px;"><strong>NUIT:</strong> ${data.nuit_sujeito_passivo}</p><br>
+          <p style="margin-bottom: 14px;">Prezado Senhor Director,</p>
+          <p style="margin-bottom: 14px;">${data.nome_sujeito_passivo}, empresa privada dedicada à ${data.atividade_empresa}, com o Número Único de Identificação Tributária (NUIT) ${data.nuit_sujeito_passivo}, vem por este meio, respeitosamente, solicitar a Vossa Excelência a autorização para a utilização do software de faturação Walaka Software.</p>
+          <p style="margin-bottom: 14px;">Este sistema, desenvolvido pela Walaka Software, Limitada, cumpre integralmente os requisitos estabelecidos pelo Despacho do Ministro das Finanças de 22 de Dezembro de 2011, publicado no Boletim da República nº 9, I Série, de 29 de Fevereiro de 2012.</p>
+          <p style="margin-bottom: 14px;">Pretendemos iniciar a utilização do Walaka Software a partir do dia ${data.data_inicio_uso.split('-').reverse().join('/')} , contribuindo para a eficiência e transparência dos nossos processos de faturação.</p>
+          <p style="margin-bottom: 14px;">Para o devido tratamento deste pedido, anexamos a esta carta a Memória Descritiva detalhada do Walaka Software e um exemplar de factura emitida pelo mesmo, conforme o exigido pelas normativas em vigor.</p>
+          <p style="margin-bottom: 14px;">Certo da Vossa melhor atenção, apresentamos os nossos melhores cumprimentos e pedimos deferimento.</p><br><br>
+          <p style="margin-bottom: 14px;">Atenciosamente,</p>
+          <p style="margin-bottom: 14px;">${data.provincia_emissao}, aos ${data.dia_emissao} de ${data.mes_emissao} de ${data.ano_emissao}.</p><br>
+          <div style="margin-top: 8px; margin-bottom: 8px; border-bottom: 1.5px solid #444; width: 33%; page-break-inside: avoid;"></div>
+          <div style="font-weight: bold; font-size: 1.1em; margin-bottom: 4px; text-align:left; page-break-inside: avoid;">${data.nome_responsavel_legal || '&nbsp;'}</div>
+          <div style="font-size: 1em; color: #444; text-align:left; page-break-inside: avoid;">${data.cargo_responsavel_legal || '&nbsp;'}</div>
+        </div>
+      `;
+      html2pdf().from(cartaHtml).set({margin:1, filename:'Carta_Autorizacao_Walaka.pdf', html2canvas:{scale:2}}).save();
+      modal.classList.remove('active');
+    });
+    </script>
+    <script>
+function atividadeConstraint(input) {
+  // Limita a 100 caracteres totais
+  if (input.value.length > 100) input.value = input.value.slice(0, 100);
+  // Corta qualquer palavra (letras/números) com mais de 30 caracteres seguidos
+  input.value = input.value.replace(/(\b[\w\d]{31,}\b)/g, function(match) {
+    return match.slice(0, 30);
+  });
+  input.setCustomValidity('');
+}
+</script>

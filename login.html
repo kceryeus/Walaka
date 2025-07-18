@@ -213,7 +213,20 @@
             background-color: rgba(0, 0, 0, 0.5);
             z-index: 1000;
             overflow-y: auto;
-        }        .close-terms {
+        }
+        .terms-popup:focus { outline: none; }
+        .terms-content {
+            background: #fff;
+            margin: 3% auto;
+            border-radius: 12px;
+            max-width: 600px;
+            padding: 2rem 2rem 1.5rem 2rem;
+            position: relative;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+        }
+        .close-terms {
             position: absolute;
             right: 1.5rem;
             top: 1.5rem;
@@ -233,31 +246,32 @@
             padding: 0;
             line-height: 1;
         }
-
         .close-terms:hover {
             background-color: rgba(0, 0, 0, 0.05);
             color: var(--text-color);
         }
-
         .checkbox-group {
             display: flex;
             align-items: flex-start;
             gap: 0.5rem;
         }
-
         .checkbox-group input[type="checkbox"] {
             width: auto;
             margin-top: 0.25rem;
         }
-
         .terms-link {
             color: var(--primary-color);
             text-decoration: underline;
             cursor: pointer;
         }
-
         .terms-link:hover {
             color: var(--secondary-color);
+        }
+        @media (max-width: 480px) {
+            .terms-content {
+                padding: 1rem 0.5rem 1rem 0.5rem;
+                max-width: 98vw;
+            }
         }
     </style>
 </head>
@@ -266,50 +280,50 @@
         <div class="profile-pic"></div>
         
         <div id="loginForm" class="form-container active">
-            <h2>Welcome Back</h2>
+            <h2 data-en="Welcome Back" data-pt="Bem-vindo de volta">Bem-vindo de volta</h2>
             <form onsubmit="return handleLogin(event)">
                 <div class="form-group">
-                    <label for="loginEmail">Email Address</label>
+                    <label for="loginEmail" data-en="Email Address" data-pt="Endereço de Email">Endereço de Email</label>
                     <input type="email" id="loginEmail" required placeholder="Enter your email">
                 </div>
                 <div class="form-group">
-                    <label for="loginPassword">Password</label>
+                    <label for="loginPassword" data-en="Password" data-pt="Palavra-passe">Palavra-passe</label>
                     <input type="password" id="loginPassword" required placeholder="Enter your password">
-                    <a href="#" class="forgot-password" onclick="toggleForgotPassword()">Forgot Password?</a>
+                    <a href="#" class="forgot-password" id="forgotPasswordLink" data-en="Forgot Password?" data-pt="Esqueceu a palavra-passe?">Esqueceu a palavra-passe?</a>
                 </div>
-                <button type="submit">Sign In</button>
+                <button type="submit" data-en="Sign In" data-pt="Entrar">Entrar</button>
                 <div id="error-message" style="color: red; display: none;"></div>
             </form>
             <div class="switch-form">
-                New here?<a href="#" onclick="toggleForms()">Create an account</a>
+                <span data-en="New here?" data-pt="Novo por aqui?">Novo por aqui?</span><a href="#" class="switch-to-signup" id="switchToSignup" data-en="Create an account" data-pt="Criar uma conta">Criar uma conta</a>
             </div>
         </div>
 
         <div id="forgotPasswordForm" class="form-container">
-            <h2>Reset Password</h2>
-            <p class="form-description">Enter your email address and we'll send you a link to reset your password.</p>
-            <form onsubmit="return handlePasswordReset(event)">
+            <h2 data-en="Reset Password" data-pt="Redefinir Palavra-passe">Redefinir Palavra-passe</h2>
+            <p class="form-description" data-en="Enter your email address and we'll send you a link to reset your password." data-pt="Insira o seu endereço de email e enviaremos um link para redefinir a sua palavra-passe.">Insira o seu endereço de email e enviaremos um link para redefinir a sua palavra-passe.</p>
+            <form id="forgotPasswordFormElement">
                 <div class="form-group">
-                    <label for="resetEmail">Email Address</label>
+                    <label for="resetEmail" data-en="Email Address" data-pt="Endereço de Email">Endereço de Email</label>
                     <input type="email" id="resetEmail" required placeholder="Enter your email">
                 </div>
-                <button type="submit">Send Reset Link</button>
+                <button type="submit" data-en="Send Reset Link" data-pt="Enviar Link de Redefinição">Enviar Link de Redefinição</button>
                 <div id="reset-message" class="message-box"></div>
             </form>
             <div class="switch-form">
-                Remember your password?<a href="#" onclick="toggleForgotPassword()">Back to login</a>
+                <span data-en="Remember your password?" data-pt="Lembrou-se da palavra-passe?">Lembrou-se da palavra-passe?</span><a href="#" class="switch-to-login" id="backToLogin" data-en="Back to login" data-pt="Voltar ao login">Voltar ao login</a>
             </div>
         </div>
 
         <div id="signupForm" class="form-container">
-            <h2>Join Us</h2>
+            <h2 data-en="Join Us" data-pt="Junte-se a nós">Junte-se a nós</h2>
             <form onsubmit="return handleSignup(event)">
                 <div class="form-group">
-                    <label for="signupEmail">Email Address</label>
+                    <label for="signupEmail" data-en="Email Address" data-pt="Endereço de Email">Endereço de Email</label>
                     <input type="email" id="signupEmail" required placeholder="Enter your email">
                 </div>
                 <div class="form-group">
-                    <label for="signupPassword">Password</label>
+                    <label for="signupPassword" data-en="Password" data-pt="Palavra-passe">Palavra-passe</label>
                     <input type="password" id="signupPassword" required placeholder="Create a password" autocomplete="new-password">
                     <div id="password-strength-wrapper" style="display:none; margin-top: 0.3rem; margin-bottom: 0.2rem;">
                         <div id="password-strength-meter" style="height: 7px; background: #e2e8f0; border-radius: 4px; overflow: hidden;">
@@ -319,22 +333,27 @@
                     </div>
                 </div>
                 <div class="form-group">
-                    <label for="confirmPassword">Confirm Password</label>
+                    <label for="confirmPassword" data-en="Confirm Password" data-pt="Confirmar Palavra-passe">Confirmar Palavra-passe</label>
                     <input type="password" id="confirmPassword" required placeholder="Confirm your password" autocomplete="new-password">
                     <div id="confirm-password-match" style="font-size: 0.85rem; margin-top: 0.25rem; min-height: 1.2em;"></div>
                 </div>
-                <p class="form-description" style="text-align: left; margin-bottom: 1rem;">
-                    Após criar a conta, será automaticamente descarregado um ficheiro a submeter à autoridade tributária para autorização de documentos comerciais como facturas, notas de crédito, debito etc, para que sejam válidos fiscalmente.
-                </p>
+                <p class="form-description" style="text-align: left; margin-bottom: 1rem;" data-en="After creating your account, a file will be automatically downloaded for submission to the tax authority for authorization of commercial documents such as invoices, credit notes, debit notes, etc., so that they are fiscally valid." data-pt="Após criar a conta, será automaticamente descarregado um ficheiro a submeter à autoridade tributária para autorização de documentos comerciais como facturas, notas de crédito, debito etc, para que sejam válidos fiscalmente.">Após criar a conta, será automaticamente descarregado um ficheiro a submeter à autoridade tributária para autorização de documentos comerciais como facturas, notas de crédito, debito etc, para que sejam válidos fiscalmente.</p>
                 <div class="form-group checkbox-group">
                     <input type="checkbox" id="terms" required>
-                    <label for="terms">Li e concordo com os <span class="terms-link" onclick="openTerms()">Termos & Condições</span> do WALAKA</label>
+                    <label for="terms">
+                        <span data-en="I have read and agree to the" data-pt="Li e concordo com os">Li e concordo com os</span>
+                        <span class="terms-link" onclick="openTerms()" data-en="Terms & Conditions" data-pt="Termos & Condições">Termos & Condições</span>
+                        <span data-en="of WALAKA" data-pt="do WALAKA">do WALAKA</span>
+                        (<a href="assets/terms/WALAKA_Termos_PT.pdf" target="_blank" rel="noopener">PT</a> | <a href="assets/terms/WALAKA_Terms_EN.pdf" target="_blank" rel="noopener">EN</a>)
+                    </label>
                 </div>
-                <button type="submit">Create Account</button>
+                <!-- Placeholder for Google reCAPTCHA integration -->
+                <div id="recaptcha-container" style="margin-bottom: 1rem;"></div>
+                <button type="submit" data-en="Create Account" data-pt="Criar Conta">Criar Conta</button>
                 <div id="signup-error-message" style="color: red; display: none;"></div>
             </form>
             <div class="switch-form">
-                Already have an account?<a href="#" onclick="toggleForms()">Sign in</a>
+                <span data-en="Already have an account?" data-pt="Já tem uma conta?">Já tem uma conta?</span><a href="#" class="switch-to-login" id="switchToLogin" data-en="Sign in" data-pt="Entrar">Entrar</a>
             </div>
         </div>
     </div>
@@ -418,7 +437,22 @@
                     password: password
                 });
 
-                if (error) throw error;
+                if (error) {
+                    // Portuguese error messages
+                    let msg = 'Ocorreu um erro ao iniciar sessão.';
+                    if (error.message && (error.message.toLowerCase().includes('invalid login credentials') || error.message.toLowerCase().includes('invalid email or password'))) {
+                        msg = 'Email ou palavra-passe incorretos.';
+                    } else if (error.message && error.message.toLowerCase().includes('user not found')) {
+                        msg = 'Utilizador não encontrado.';
+                    } else if (error.message && error.message.toLowerCase().includes('email not confirmed')) {
+                        msg = 'Por favor, confirme o seu email antes de iniciar sessão.';
+                    } else if (error.message) {
+                        msg = error.message;
+                    }
+                    errorDiv.textContent = msg;
+                    errorDiv.style.display = 'block';
+                    return;
+                }
                 console.log('Logged in:', data);
 
                 // Log session and user after login
@@ -436,7 +470,7 @@
                     .eq('id', userId)
                     .single();
                 if (checkUserError && checkUserError.code !== 'PGRST116') {
-                    throw new Error('Error checking user profile: ' + checkUserError.message);
+                    throw new Error('Erro ao verificar o perfil do utilizador: ' + checkUserError.message);
                 }
                 if (!existingUser) {
                     const { error: profileError } = await window.supabase
@@ -449,7 +483,7 @@
                             created_at: new Date().toISOString(),
                             updated_at: new Date().toISOString()
                         }]);
-                    if (profileError) throw new Error('Error creating user profile: ' + profileError.message);
+                    if (profileError) throw new Error('Erro ao criar perfil do utilizador: ' + profileError.message);
                 }
                 // --- End insert users ---
 
@@ -461,10 +495,10 @@
                     .single();
 
                 if (userError) {
-                    throw new Error('Could not determine onboarding status: ' + userError.message);
+                    throw new Error('Não foi possível determinar o estado de onboarding: ' + userError.message);
                 }
                 if (!userRecord || typeof userRecord.onboarding === 'undefined') {
-                    throw new Error('Onboarding status not set for this user.');
+                    throw new Error('O estado de onboarding não está definido para este utilizador.');
                 }
 
                 // Handle onboarding status: 'no', 'yes', or 'skip'
@@ -473,118 +507,61 @@
                 } else if (userRecord.onboarding === 'yes' || userRecord.onboarding === 'skip') {
                     window.location.href = 'dashboard.html';
                 } else {
-                    throw new Error('Invalid onboarding status: ' + userRecord.onboarding);
+                    throw new Error('Estado de onboarding inválido: ' + userRecord.onboarding);
                 }
             } catch (error) {
                 console.error('Error logging in:', error.message);
-                errorDiv.textContent = error.message || 'Login failed';
+                errorDiv.textContent = error.message || 'Ocorreu um erro ao iniciar sessão.';
                 errorDiv.style.display = 'block';
             }
         }
 
-        async function handleSignup(event) {
-            event.preventDefault();
-            const errorDiv = document.getElementById('signup-error-message');
-            errorDiv.style.display = 'none';
-            
-            const email = document.getElementById('signupEmail').value;
-            const password = document.getElementById('signupPassword').value;
-            const confirmPassword = document.getElementById('confirmPassword').value;
-            const terms = document.getElementById('terms').checked;
-            
-            if (!terms) {
-                errorDiv.textContent = 'Por favor, aceite os Termos & Condições';
-                errorDiv.style.display = 'block';
-                return;
-            }
-            
-            if (password !== confirmPassword) {
-                errorDiv.textContent = 'Passwords do not match';
-                errorDiv.style.display = 'block';
-                return;
-            }
-
-            try {
-                console.log('Attempting to sign up with:', email);
-                // 1. Create the user in Supabase Auth
-                const { data: { user }, error: signUpError } = await window.supabase.auth.signUp({
-                    email,
-                    password,
-                    options: {
-                        data: {
-                            username: email.split('@')[0], // Use email prefix as default username
-                            role: 'user'
-                        },
-                        emailRedirectTo: getSignupRedirectUrl()
+        // Improved openTerms and closeTerms with focus trap and Esc key
+        function trapFocus(element) {
+            const focusableEls = element.querySelectorAll('a, button, textarea, input, [tabindex]:not([tabindex="-1"])');
+            const firstFocusableEl = focusableEls[0];
+            const lastFocusableEl = focusableEls[focusableEls.length - 1];
+            function handleKey(e) {
+                if (e.key === 'Tab') {
+                    if (e.shiftKey) {
+                        if (document.activeElement === firstFocusableEl) {
+                            lastFocusableEl.focus();
+                            e.preventDefault();
+                        }
+                    } else {
+                        if (document.activeElement === lastFocusableEl) {
+                            firstFocusableEl.focus();
+                            e.preventDefault();
+                        }
                     }
-                });
-
-                if (signUpError) throw signUpError;
-
-                // Do NOT insert into users table here!
-
-                alert('Account created successfully! Please check your email to confirm.');
-                
-                // Trigger the download of the file
-                const pdfUrl = 'Memoria_Descritiva_WALAKA.pdf';
-                const link = document.createElement('a');
-                link.href = pdfUrl;
-                link.download = 'WALAKA_Documentacao_Fiscal.pdf';
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-                
-                // Redirect to login page instead of dashboard
-                window.location.href = "login.html";
-            } catch (error) {
-                console.error('Unexpected error:', error.message);
-                errorDiv.textContent = error.message || 'Signup failed';
-                errorDiv.style.display = 'block';
+                }
+                if (e.key === 'Escape') {
+                    closeTerms();
+                }
+            }
+            element.addEventListener('keydown', handleKey);
+            element._trapFocusHandler = handleKey;
+        }
+        function untrapFocus(element) {
+            if (element._trapFocusHandler) {
+                element.removeEventListener('keydown', element._trapFocusHandler);
+                delete element._trapFocusHandler;
             }
         }
-
-        // Update the handlePasswordReset function
-        async function handlePasswordReset(event) {
-            event.preventDefault();
-            const email = document.getElementById('resetEmail').value;
-            const messageDiv = document.getElementById('reset-message');
-            messageDiv.className = 'message-box';
-            messageDiv.style.display = 'none';
-
-            try {
-                // Dynamically construct the redirectTo URL for reset-password.html
-                const basePath = window.location.origin + window.location.pathname.replace(/\/[^\/]*$/, '');
-                const redirectTo = `${basePath}/reset-password.html`;
-                const { error } = await window.supabase.auth.resetPasswordForEmail(email, {
-                    redirectTo
-                });
-
-                if (error) throw error;
-
-                messageDiv.textContent = 'Password reset link has been sent to your email.';
-                messageDiv.className = 'message-box success';
-                messageDiv.style.display = 'block';
-                
-                document.getElementById('resetEmail').value = '';
-            } catch (error) {
-                console.error('Error:', error);
-                messageDiv.textContent = error.message || 'Failed to send reset link';
-                messageDiv.className = 'message-box error';
-                messageDiv.style.display = 'block';
-            }
-        }
-
-        // Add terms and conditions popup functions
         function openTerms() {
-            document.getElementById('termsPopup').style.display = 'block';
+            const popup = document.getElementById('termsPopup');
+            popup.style.display = 'block';
             document.body.style.overflow = 'hidden';
+            popup.setAttribute('tabindex', '-1');
+            popup.focus();
+            trapFocus(popup);
         }
-
         function closeTerms() {
-            document.getElementById('termsPopup').style.display = 'none';
+            const popup = document.getElementById('termsPopup');
+            popup.style.display = 'none';
             document.body.style.overflow = 'auto';
+            untrapFocus(popup);
         }
-
         // Close popup when clicking outside
         window.onclick = function(event) {
             const popup = document.getElementById('termsPopup');
@@ -592,8 +569,6 @@
                 closeTerms();
             }
         }
-
-        // Attach the functions to the global window object
         window.openTerms = openTerms;
         window.closeTerms = closeTerms;
 
@@ -601,8 +576,7 @@
         window.handleLogin = handleLogin;
         window.handleSignup = handleSignup;
         window.handlePasswordReset = handlePasswordReset;
-        window.toggleForms = toggleForms;
-        window.toggleForgotPassword = toggleForgotPassword;
+        // Remove window.toggleForms and window.toggleForgotPassword assignments
 
         // Password strength meter logic
         const passwordInput = document.getElementById('signupPassword');
@@ -683,6 +657,185 @@
         confirmInput?.addEventListener('input', updateConfirmMatch);
         passwordInput?.addEventListener('input', updateConfirmMatch);
 
+        // Highlight required action if T&C not accepted
+        async function handleSignup(event) {
+            event.preventDefault();
+            const errorDiv = document.getElementById('signup-error-message');
+            errorDiv.style.display = 'none';
+            const email = document.getElementById('signupEmail').value;
+            const password = document.getElementById('signupPassword').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            const terms = document.getElementById('terms').checked;
+            const checkboxGroup = document.querySelector('.checkbox-group');
+            if (!terms) {
+                errorDiv.textContent = 'Por favor, aceite os Termos & Condições';
+                errorDiv.style.display = 'block';
+                checkboxGroup.style.border = '1px solid #ef4444';
+                return;
+            } else {
+                checkboxGroup.style.border = 'none';
+            }
+            if (password !== confirmPassword) {
+                errorDiv.textContent = 'Passwords do not match';
+                errorDiv.style.display = 'block';
+                return;
+            }
+            try {
+                console.log('Attempting to sign up with:', email);
+                // 1. Create the user in Supabase Auth
+                const { data: { user }, error: signUpError } = await window.supabase.auth.signUp({
+                    email,
+                    password,
+                    options: {
+                        data: {
+                            username: email.split('@')[0], // Use email prefix as default username
+                            role: 'user'
+                        },
+                        emailRedirectTo: getSignupRedirectUrl()
+                    }
+                });
+                if (signUpError) throw signUpError;
+                // Remember acceptance in localStorage
+                localStorage.setItem('walaka_terms_accepted', '1');
+                // Show verification message instead of redirecting immediately
+                await showSignupSuccessMessage(email);
+            } catch (error) {
+                console.error('Unexpected error:', error.message);
+                errorDiv.textContent = error.message || 'Signup failed';
+                errorDiv.style.display = 'block';
+            }
+        }
+
+        // Show signup success message and allow user to go to login
+        async function showSignupSuccessMessage(email) {
+            // Hide all forms
+            document.getElementById('loginForm').classList.remove('active');
+            document.getElementById('signupForm').classList.remove('active');
+            document.getElementById('forgotPasswordForm').classList.remove('active');
+            // Remove any existing message box
+            let msgBox = document.getElementById('signup-success-message');
+            if (msgBox) msgBox.remove();
+            // Compose both language versions
+            const ptMsg = `Enviámos um email de verificação para <strong>${email}</strong>.<br>Por favor, verifique a sua caixa de entrada e siga as instruções para ativar a sua conta.`;
+            const enMsg = `We have sent a verification email to <strong>${email}</strong>.<br>Please check your inbox and follow the instructions to activate your account.`;
+            // Create the message box with both language versions
+            msgBox = document.createElement('div');
+            msgBox.id = 'signup-success-message';
+            msgBox.style.margin = '2rem auto';
+            msgBox.style.maxWidth = '400px';
+            msgBox.style.background = '#ecfdf5';
+            msgBox.style.color = '#047857';
+            msgBox.style.border = '1px solid #a7f3d0';
+            msgBox.style.borderRadius = '8px';
+            msgBox.style.padding = '2rem 1.5rem';
+            msgBox.style.textAlign = 'center';
+            msgBox.style.fontSize = '1.1rem';
+            msgBox.innerHTML = `
+                <h2 data-en="Account created successfully!" data-pt="Conta criada com sucesso!">Conta criada com sucesso!</h2>
+                <p data-en="${enMsg}" data-pt="${ptMsg}">${ptMsg}</p>
+                <button id="goToLoginBtn" style="margin-top:1.5rem;padding:0.7rem 2rem;background:#2563eb;color:#fff;border:none;border-radius:6px;font-size:1rem;cursor:pointer;" data-en="Go to Login" data-pt="Ir para Login">Ir para Login</button>
+            `;
+            document.querySelector('.container').appendChild(msgBox);
+            // Show only the correct language
+            const lang = localStorage.getItem('walaka-language') || localStorage.getItem('waLangPreference') || localStorage.getItem('preferredLanguage') || 'pt';
+            console.log('[signup-success] Detected language in localStorage:', {
+                'walaka-language': localStorage.getItem('walaka-language'),
+                'waLangPreference': localStorage.getItem('waLangPreference'),
+                'preferredLanguage': localStorage.getItem('preferredLanguage'),
+                'used': lang
+            });
+            document.querySelectorAll('#signup-success-message [data-en], #signup-success-message [data-pt]').forEach(el => {
+                if (el.hasAttribute(`data-${lang}`)) {
+                    if (el.tagName === 'P' || el.tagName === 'H2' || el.tagName === 'BUTTON') {
+                        el.innerHTML = el.getAttribute(`data-${lang}`);
+                    }
+                    el.style.display = '';
+                } else {
+                    el.style.display = 'none';
+                }
+            });
+            // Add event listener to go to login
+            document.getElementById('goToLoginBtn').onclick = function() {
+                msgBox.style.display = 'none';
+                document.getElementById('loginForm').classList.add('active');
+            };
+        }
+
+        async function handlePasswordReset(event) {
+            event.preventDefault();
+            const email = document.getElementById('resetEmail').value;
+            const resetMessage = document.getElementById('reset-message');
+            const errorDiv = document.getElementById('error-message'); // Keep this for login errors
+            errorDiv.style.display = 'none';
+            resetMessage.className = 'message-box';
+            resetMessage.style.display = 'none';
+
+            try {
+                const { error } = await window.supabase.auth.resetPasswordForEmail(email, {
+                    redirectTo: getSignupRedirectUrl() + '?type=password'
+                });
+
+                if (error) throw error;
+                console.log('Password reset email sent:', email);
+                resetMessage.textContent = 'Password reset link sent to your email address.';
+                resetMessage.className = 'message-box success';
+                resetMessage.style.display = 'block';
+            } catch (error) {
+                console.error('Error sending password reset email:', error.message);
+                errorDiv.textContent = error.message || 'Failed to send password reset link.';
+                errorDiv.style.display = 'block';
+            }
+        }
+
+        // On page load, check if T&C was accepted before and pre-check the box
+        document.addEventListener('DOMContentLoaded', function() {
+            // Always ensure T&C is unchecked on load
+            document.getElementById('terms').checked = false;
+            // Add event listeners for toggling forms
+            const forgotPasswordLink = document.getElementById('forgotPasswordLink');
+            const switchToSignup = document.getElementById('switchToSignup');
+            const switchToLogin = document.getElementById('switchToLogin');
+            const backToLogin = document.getElementById('backToLogin');
+            if (forgotPasswordLink) {
+                forgotPasswordLink.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    toggleForgotPassword();
+                });
+            }
+            if (switchToSignup) {
+                switchToSignup.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    toggleForms();
+                });
+            }
+            if (switchToLogin) {
+                switchToLogin.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    toggleForms();
+                });
+            }
+            if (backToLogin) {
+                backToLogin.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    toggleForgotPassword();
+                });
+            }
+            // --- Language switching logic for all data-en/data-pt elements ---
+            const lang = localStorage.getItem('walaka-language') || localStorage.getItem('waLangPreference') || localStorage.getItem('preferredLanguage') || 'pt';
+            document.querySelectorAll('[data-en], [data-pt]').forEach(el => {
+                if (el.hasAttribute(`data-${lang}`)) {
+                    if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') {
+                        el.placeholder = el.getAttribute(`data-${lang}`);
+                    } else {
+                        el.innerHTML = el.getAttribute(`data-${lang}`);
+                    }
+                    el.style.display = '';
+                } else {
+                    el.style.display = 'none';
+                }
+            });
+        });
+
         console.log(
             document.getElementById('description'),
             document.getElementById('price'),
@@ -694,57 +847,56 @@
     </script>
 
     <!-- Terms and Conditions Popup -->
-    <div id="termsPopup" class="terms-popup">
+    <div id="termsPopup" class="terms-popup" role="dialog" aria-modal="true" aria-labelledby="termsTitle" tabindex="-1">
         <div class="terms-content">
-            <button class="close-terms" onclick="closeTerms()">&times;</button>
-            <h2>Termos e Condições de Utilização – WALAKA</h2>
-            
+            <button class="close-terms" onclick="closeTerms()" aria-label="Close">&times;</button>
+            <h2 id="termsTitle" data-en="Terms and Conditions of Use – WALAKA" data-pt="Termos e Condições de Utilização – WALAKA">Termos e Condições de Utilização – WALAKA</h2>
+            <div style="font-size:0.95em; color:#64748b; margin-bottom:0.5em;">Version 1.0 – Last updated: 2024-05-01</div>
+            <!-- T&C content here (unchanged) -->
             <h3>1. Aceitação dos Termos</h3>
             <p>Ao aceder e utilizar a plataforma WALAKA, o utilizador concorda em cumprir e respeitar estes Termos e Condições, assim como todas as leis aplicáveis em Moçambique e no âmbito internacional. Se não concordar com algum destes termos, por favor, não utilize a plataforma.</p>
-
             <h3>2. Definições</h3>
             <p>Plataforma WALAKA: Aplicação, website, software e serviços oferecidos pela empresa WALAKA.</p>
             <p>Utilizador: Pessoa física ou jurídica que utiliza os serviços da plataforma WALAKA.</p>
             <p>Conteúdo: Informação, dados, textos, imagens, vídeos e quaisquer outros materiais disponibilizados na plataforma.</p>
-
             <h3>3. Requisitos para Utilização</h3>
             <p>O utilizador deve ter capacidade legal para contratar segundo a legislação do seu país.</p>
             <p>O acesso à plataforma pode exigir registo prévio e fornecimento de dados verdadeiros e atualizados.</p>
-
             <h3>4. Responsabilidades do Utilizador</h3>
             <p>Manter a confidencialidade dos seus dados de acesso (ex: username e password).</p>
             <p>Utilizar a plataforma apenas para fins legais e autorizados.</p>
             <p>Não divulgar ou partilhar conteúdos ilegais, ofensivos, difamatórios ou que violem direitos de terceiros.</p>
-
             <h3>5. Propriedade Intelectual</h3>
             <p>Todos os direitos de propriedade intelectual relacionados com a plataforma WALAKA e os seus conteúdos são reservados à empresa WALAKA.</p>
             <p>O utilizador não pode reproduzir, distribuir, modificar ou criar obras derivadas sem autorização expressa.</p>
-
             <h3>6. Política de Privacidade</h3>
             <p>Os dados pessoais recolhidos serão tratados de acordo com a legislação de proteção de dados aplicável em Moçambique e normas internacionais, visando a segurança, confidencialidade e privacidade.</p>
             <p>Para mais detalhes, consulte a nossa Política de Privacidade.</p>
-
             <h3>7. Limitação de Responsabilidade</h3>
             <p>A plataforma é fornecida "tal como está", sem garantias explícitas ou implícitas.</p>
             <p>WALAKA não será responsável por danos diretos, indiretos, incidentais ou consequentes decorrentes do uso ou incapacidade de uso da plataforma.</p>
             <p>O utilizador assume o risco pela utilização dos serviços.</p>
-
             <h3>8. Modificações</h3>
             <p>WALAKA reserva-se o direito de alterar estes Termos e Condições a qualquer momento, informando os utilizadores por meio da plataforma ou por e-mail.</p>
             <p>O uso continuado após as alterações implica aceitação dos novos termos.</p>
-
             <h3>9. Rescisão</h3>
             <p>A WALAKA pode suspender ou encerrar o acesso do utilizador à plataforma em caso de violação destes Termos e Condições ou por motivos legais.</p>
-
             <h3>10. Lei Aplicável e Jurisdição</h3>
             <p>Estes Termos serão regidos pela legislação vigente da República de Moçambique.</p>
             <p>Qualquer disputa será submetida aos tribunais competentes de Moçambique, salvo acordos em contrário.</p>
-
             <h3>11. Contactos</h3>
             <p>Para esclarecimentos ou questões relativas a estes Termos, por favor contacte:</p>
             <p>WALAKA<br>
             Email: suporte@walaka.com<br>
             Telefone: +258 XX XXX XXXX</p>
+            <div style="margin-top:2rem;">
+                <strong>Download:</strong>
+                <a href="assets/terms/WALAKA_Terms_EN.pdf" download>English PDF</a> |
+                <a href="assets/terms/WALAKA_Termos_PT.pdf" download>Português PDF</a>
+            </div>
+            <div style="margin-top:1rem; font-size:0.9em; color:#64748b;">
+                Version 1.0 – Last updated: 2024-05-01
+            </div>
         </div>
     </div>
 </body>

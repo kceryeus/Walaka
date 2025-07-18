@@ -773,6 +773,8 @@ document.getElementById('invoiceForm')?.addEventListener('submit', handleInvoice
         showNotification('Please enter/select a client name', 'error');
         return false;
       }
+      // Allow 'General Client' as valid
+      if (clientName === 'General Client') return true;
     }
     if (index === 1) {
       // Invoice details: require dates
@@ -1128,6 +1130,71 @@ document.addEventListener('DOMContentLoaded', function() {
     if (serieInput && !serieInput.value) serieInput.value = 'A';
 });
 
+// --- General Client Button Logic ---
+document.addEventListener('DOMContentLoaded', function() {
+    const generalClientBtn = document.getElementById('general-client-btn');
+    const clientInput = document.getElementById('client-list');
+    const clientEmail = document.getElementById('clientEmail');
+    const clientAddress = document.getElementById('clientAddress');
+    const clientTaxId = document.getElementById('clientTaxId');
+    // Group all client info fields for easy show/hide
+    const clientFields = [
+        clientInput?.closest('.form-group'),
+        clientEmail?.closest('.form-group'),
+        clientAddress?.closest('.form-group'),
+        clientTaxId?.closest('.form-group')
+    ].filter(Boolean);
+    // Helper to show/hide all client fields
+    function setClientFieldsVisible(visible) {
+        clientFields.forEach(f => f.style.display = visible ? '' : 'none');
+    }
+    // Helper to reset highlight
+    function setGeneralClientHighlight(active) {
+        if (generalClientBtn) {
+            if (active) {
+                generalClientBtn.classList.add('highlighted');
+            } else {
+                generalClientBtn.classList.remove('highlighted');
+            }
+        }
+    }
+    // When General Client is selected
+    if (generalClientBtn) {
+        generalClientBtn.addEventListener('click', function() {
+            // Hide all client fields
+            setClientFieldsVisible(false);
+            setGeneralClientHighlight(true);
+            // Set value for logic
+            clientInput.value = 'General Client';
+            // Set hidden values for data
+            clientEmail.value = '';
+            clientAddress.value = '';
+            clientTaxId.value = '';
+            // Mark on form for logic
+            clientInput.dataset.generalClient = 'true';
+        });
+    }
+    // If user edits client input, show fields again and remove highlight
+    if (clientInput) {
+        clientInput.addEventListener('input', function() {
+            if (clientInput.value !== 'General Client') {
+                setClientFieldsVisible(true);
+                setGeneralClientHighlight(false);
+                clientInput.dataset.generalClient = '';
+            }
+        });
+    }
+    // On form reset, always show fields and remove highlight
+    const form = document.getElementById('invoiceForm');
+    if (form) {
+        form.addEventListener('reset', function() {
+            setClientFieldsVisible(true);
+            setGeneralClientHighlight(false);
+            clientInput.dataset.generalClient = '';
+        });
+    }
+});
+
 // Patch: When a new item row is added, immediately trigger updateItemRow for that row
 const origAddInvoiceItem = window.invoiceItems && window.invoiceItems.addInvoiceItem;
 if (origAddInvoiceItem) {
@@ -1194,3 +1261,176 @@ if (invoiceModalCloseBtn) {
     console.log('[InvoiceForm] Modal stack after close:', window.modalManager.modalStack.map(m => m.id));
   });
 }
+
+// PATCH: Allow 'General Client' to pass validation and skip client_id lookup
+function validateStep(index) {
+    if (index === 0) {
+        const clientInput = document.getElementById('client-list');
+        const clientName = clientInput.value.trim();
+        if (clientInput.dataset.generalClient === 'true' || clientName === 'General Client') {
+            return true;
+        }
+        if (!clientName) {
+            showNotification('Please enter/select a client name', 'error');
+            return false;
+        }
+    }
+    if (index === 1) {
+        const issueDate = document.getElementById('issueDate').value;
+        const dueDate = document.getElementById('dueDate').value;
+        if (!issueDate || !dueDate) {
+            showNotification('Please select both issue and due dates', 'error');
+            return false;
+        }
+    }
+    if (index === 2) {
+        const itemRows = document.querySelectorAll('#itemsTable .item-row');
+        let valid = false;
+        itemRows.forEach(row => {
+            const desc = row.querySelector('.item-description').value.trim();
+            const qty = parseAmount(row.querySelector('.item-quantity').value);
+            if (desc && qty > 0) valid = true;
+        });
+        if (!valid) {
+            showNotification('Please add at least one valid item', 'error');
+            return false;
+        }
+    }
+    return true;
+}
+// PATCH: In collectInvoiceData, treat 'General Client' as a special case for required fields
+const ORIGINAL_collectInvoiceData = InvoiceForm.prototype.collectInvoiceData;
+InvoiceForm.prototype.collectInvoiceData = function() {
+    const data = ORIGINAL_collectInvoiceData.call(this);
+    const clientInput = document.getElementById('client-list');
+    if ((clientInput && clientInput.dataset.generalClient === 'true') || (data.client && data.client.name === 'General Client')) {
+        data.client.name = 'General Client';
+        data.client.email = '';
+        data.client.address = '';
+        data.client.taxId = '';
+    }
+    return data;
+};
+// PATCH: In saveInvoice, skip client_id lookup for 'General Client'
+const ORIGINAL_saveInvoice = InvoiceForm.prototype.saveInvoice;
+InvoiceForm.prototype.saveInvoice = async function() {
+    const invoiceData = this.collectInvoiceData();
+    const clientInput = document.getElementById('client-list');
+    if ((clientInput && clientInput.dataset.generalClient === 'true') || (invoiceData.client && invoiceData.client.name === 'General Client')) {
+        // Bypass client_id lookup and save with just the provided info
+        let userId = null;
+        try {
+            const session = await window.supabase.auth.getSession();
+            userId = session.data?.session?.user?.id;
+        } catch (e) {
+            console.error('Could not fetch user session:', e);
+        }
+        if (!userId) {
+            throw new Error('User not authenticated. Please log in.');
+        }
+        let environmentId = null;
+        if (window.environmentId) {
+            environmentId = window.environmentId;
+        }
+        const formattedData = {
+            invoiceNumber: invoiceData.invoiceNumber,
+            serie: invoiceData.serie,
+            issue_date: invoiceData.issueDate,
+            due_date: invoiceData.dueDate,
+            status: invoiceData.status || 'pending',
+            currency: invoiceData.currency || 'MZN',
+            client_id: null,
+            client_name: invoiceData.client.name,
+            customer_name: invoiceData.client.name,
+            subtotal: invoiceData.subtotal ?? null,
+            desconto: invoiceData.totalDiscount ?? null,
+            total_desconto: invoiceData.totalDiscount ?? null,
+            subtotal_sem_iva: invoiceData.subtotalAfterDiscount ?? null,
+            iva: invoiceData.totalVat ?? null,
+            vat_amount: invoiceData.totalVat ?? null,
+            valor_total_sem_imposto: invoiceData.subtotalAfterDiscount ?? null,
+            total_incluindo_imposto: invoiceData.total ?? null,
+            total_amount: invoiceData.total ?? null,
+            iva_percent: (() => {
+                const uniqueRates = Array.from(new Set(invoiceData.items.map(i => i.vatRate)));
+                if (uniqueRates.length === 1) return uniqueRates[0] * 100;
+                return null;
+            })(),
+            valor_imposto: invoiceData.totalVat ?? null,
+            payment_terms: invoiceData.paymentTerms || 'net30',
+            notes: invoiceData.notes || '',
+            currency_rate: this.currentRate || 1,
+            user_id: userId,
+            environment_id: environmentId ?? null,
+            pdf_url: null,
+        };
+        // Insert the invoice
+        const { data: invoice, error: invoiceError } = await window.supabase
+            .from('invoices')
+            .insert([formattedData])
+            .select()
+            .single();
+        if (invoiceError) throw invoiceError;
+        // PDF and product logic (copied from original)
+        let pdfUrl = null;
+        if (typeof window.generateAndUploadPDF === 'function') {
+            pdfUrl = await window.generateAndUploadPDF(invoiceData);
+        }
+        if (pdfUrl) {
+            await window.supabase
+                .from('invoices')
+                .update({ pdf_url: pdfUrl })
+                .eq('id', invoice.id);
+        }
+        if (typeof window.generatePDF === 'function') {
+            const pdfBlob = await window.generatePDF(invoiceData);
+            const pdfFileName = `Invoice-${invoiceData.invoiceNumber}.pdf`;
+            const downloadUrl = URL.createObjectURL(pdfBlob);
+            const link = document.createElement('a');
+            link.href = downloadUrl;
+            link.download = pdfFileName;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(downloadUrl);
+        }
+        for (const item of invoiceData.items) {
+            const { data: existingProduct } = await window.supabase
+                .from('products')
+                .select('id')
+                .eq('description', item.description)
+                .single();
+            if (!existingProduct) {
+                const { error: productError } = await window.supabase
+                    .from('products')
+                    .insert([{
+                        description: item.description,
+                        price: item.price,
+                        tax_code: 'VAT',
+                        tax_rate: item.vatRate * 100,
+                        industry: 'General'
+                    }]);
+                if (productError) throw productError;
+            }
+        }
+        function updateTrialBannerIfReady() {
+            if (window.TrialBanner && typeof window.TrialBanner.updateTrialBanner === 'function') {
+                window.TrialBanner.updateTrialBanner();
+            } else {
+                window.addEventListener('trialBannerReady', () => {
+                    window.TrialBanner.updateTrialBanner();
+                }, { once: true });
+            }
+        }
+        updateTrialBannerIfReady();
+        return invoice;
+    } else {
+        // Default behavior for normal clients
+        return await ORIGINAL_saveInvoice.call(this);
+    }
+};
+
+// Add highlight style for General Client button
+const style = document.createElement('style');
+style.innerHTML = `#general-client-btn.highlighted { background: #e0f7fa; border: 2px solid #00bcd4; color: #00796b; }`;
+document.head.appendChild(style);

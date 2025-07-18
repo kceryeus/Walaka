@@ -1,15 +1,28 @@
-// DEPRECATED - DELETE: Email logic moved to Node.js backend.
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { SmtpClient } from "https://deno.land/x/smtp/mod.ts";
+// Email sending function with attachment support using denomailer
+//
+// POST body (JSON):
+// {
+//   to: string | string[],
+//   subject: string,
+//   message: string,
+//   attachment?: {
+//     filename: string,
+//     content: string (base64),
+//     contentType?: string
+//   }
+// }
+// NOTE: Deno.env is only available in self-hosted Deno, not Deno Deploy.
+import { serve } from "https://deno.land/std@0.203.0/http/server.ts";
+import { SMTPClient } from "https://deno.land/x/denomailer@1.6.0/mod.ts";
 
 serve(async (req) => {
   if (req.method !== "POST") {
     return new Response(JSON.stringify({ error: "Method not allowed" }), { status: 405 });
   }
 
-  let to, subject, message;
+  let to, subject, message, attachment;
   try {
-    ({ to, subject, message } = await req.json());
+    ({ to, subject, message, attachment } = await req.json());
   } catch {
     return new Response(JSON.stringify({ error: "Invalid JSON body" }), { status: 400 });
   }
@@ -18,7 +31,7 @@ serve(async (req) => {
     return new Response(JSON.stringify({ error: "Missing required fields" }), { status: 400 });
   }
 
-  // Get env vars
+  // Get env vars (Deno.env only works in self-hosted Deno, not Deno Deploy)
   const SMTP_HOST = Deno.env.get("SMTP_HOSTNAME");
   const SMTP_PORT = Number(Deno.env.get("SMTP_PORT"));
   const SMTP_USER = Deno.env.get("SMTP_USERNAME");
@@ -29,34 +42,36 @@ serve(async (req) => {
     return new Response(JSON.stringify({ error: "SMTP environment variables not set" }), { status: 500 });
   }
 
-  const client = new SmtpClient();
+  const client = new SMTPClient({
+    connection: {
+      hostname: SMTP_HOST,
+      port: SMTP_PORT,
+      tls: SMTP_PORT === 465,
+      auth: {
+        username: SMTP_USER,
+        password: SMTP_PASS,
+      },
+    },
+  });
 
   try {
-    // Use TLS if port is 465, otherwise plain
-    if (SMTP_PORT === 465) {
-      await client.connectTLS({
-        hostname: SMTP_HOST,
-        port: SMTP_PORT,
-        username: SMTP_USER,
-        password: SMTP_PASS,
-      });
-    } else {
-      await client.connect({
-        hostname: SMTP_HOST,
-        port: SMTP_PORT,
-        username: SMTP_USER,
-        password: SMTP_PASS,
-      });
-    }
-
-    await client.send({
+    const mailOptions: any = {
       from: SENDER_EMAIL,
       to: Array.isArray(to) ? to : [to],
       subject,
       content: message,
       html: message,
-    });
-
+    };
+    if (attachment && attachment.filename && attachment.content) {
+      mailOptions.attachments = [
+        {
+          filename: attachment.filename,
+          content: Uint8Array.from(atob(attachment.content), c => c.charCodeAt(0)),
+          contentType: attachment.contentType || "application/pdf"
+        }
+      ];
+    }
+    await client.send(mailOptions);
     await client.close();
     return new Response(JSON.stringify({ success: true }), { status: 200 });
   } catch (err) {

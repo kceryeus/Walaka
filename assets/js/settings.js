@@ -1654,7 +1654,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         // Populate template options
         const templates = {
             'classic': 'Classic',
-            'modern': 'Modern'
+            'modern': 'Modern',
+            'standard': 'Standard',
+            'minimalist': 'Minimalist'
         };
         
         templateSelect.innerHTML = Object.entries(templates)

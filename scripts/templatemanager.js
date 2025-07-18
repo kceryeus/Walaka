@@ -240,7 +240,7 @@ const TEMPLATES = {
                     </div>
                     <div class="invoice-details">
                         <h2>FACTURA</h2>
-                        <p>Nº Fatura: <span id="invoice-number"></span></p>
+                        <p>Nº Fatura: <span id="invoice-number">{{invoiceNumber}}</span></p>
                         <p>Data de Emissão: <span id="issue-date"></span></p>
                         <p>Data de Vencimento: <span id="due-date"></span></p>
                         <p id="currency-field"></p> <!-- Moeda: MZN (Currency: MZN) -->
@@ -393,7 +393,7 @@ const TEMPLATES = {
                     </div>
                     <div class="invoice-details">
                         <h2>FACTURA</h2>
-                        <p>Nº Fatura: <span id="invoice-number"></span></p>
+                        <p>Nº Fatura: <span id="invoice-number">{{invoiceNumber}}</span></p>
                         <p>Data de Emissão: <span id="issue-date"></span></p>
                         <p>Data de Vencimento: <span id="due-date"></span></p>
                         <p id="currency-field"></p> <!-- Moeda: MZN (Currency: MZN) -->
@@ -415,6 +415,209 @@ const TEMPLATES = {
                 <div class="invoice-totals">
                 </div>
                 
+                <div class="notes">
+                    <h4>Observações:</h4>
+                    <p id="notes"></p>
+                </div>
+            </div>
+        `
+    },
+    'standard': {
+        name: 'Standard',
+        styles: `
+            .invoice-container {
+                max-width: 700px;
+                margin: 20px auto;
+                padding: 24px 24px 16px 24px;
+                font-family: 'Inter', sans-serif;
+                background: #fff;
+                color: #222;
+                border-radius: 8px;
+                box-shadow: 0 2px 12px rgba(0,0,0,0.07);
+                box-sizing: border-box;
+            }
+            .invoice-header {
+                display: flex;
+                justify-content: space-between;
+                align-items: flex-start;
+                border-bottom: 2px solid #eaeaea;
+                padding-bottom: 18px;
+                margin-bottom: 32px;
+            }
+            .company-logo {
+                max-width: 120px;
+                max-height: 60px;
+                margin-bottom: 8px;
+            }
+            .company-info {
+                flex: 1;
+            }
+            .invoice-details {
+                text-align: right;
+                min-width: 220px;
+            }
+            .client-info {
+                margin-bottom: 28px;
+                padding: 16px;
+                background: #f7f7f7;
+                border-radius: 5px;
+                font-size: 0.95em;
+            }
+            .invoice-items {
+                width: 100%;
+                border-collapse: collapse;
+                font-size: 0.93em;
+            }
+            .invoice-items th, .invoice-items td {
+                padding: 8px 6px;
+                border-bottom: 1px solid #eee;
+                word-break: break-word;
+            }
+            .invoice-items th {
+                background: #f0f0f0;
+                text-align: left;
+            }
+            .invoice-totals {
+                text-align: right;
+                margin-top: 28px;
+                font-size: 1em;
+            }
+            .grand-total {
+                font-weight: bold;
+                font-size: 1.08em;
+                border-top: 2px solid #eaeaea;
+                padding-top: 10px;
+            }
+            .notes {
+                margin-top: 32px;
+                padding: 16px;
+                background: #f7f7f7;
+                border-radius: 5px;
+            }
+        `,
+        layout: `
+            <div class="invoice-container">
+                <div class="invoice-header">
+                    <div class="company-info">
+                        <img id="company-logo" class="company-logo" style="display:none;"/>
+                        <h1 id="company-name">Nome da Empresa</h1>
+                        <p id="company-address">Endereço da Empresa</p>
+                        <p id="company-contact">Email: <span id="company-email"></span> | Telefone: <span id="company-phone"></span></p>
+                        <p>NUIT: <span id="company-nuit"></span></p>
+                    </div>
+                    <div class="invoice-details">
+                        <h2>FACTURA</h2>
+                        <p>Nº Fatura: <span id="invoice-number">{{invoiceNumber}}</span></p>
+                        <p>Data de Emissão: <span id="issue-date"></span></p>
+                        <p>Data de Vencimento: <span id="due-date"></span></p>
+                        <p id="currency-field"></p>
+                    </div>
+                </div>
+                <div class="client-info">
+                    <h3>Cliente:</h3>
+                    <p id="client-name">Nome do Cliente</p>
+                    <p id="client-address">Endereço do Cliente</p>
+                    <p>NUIT: <span id="client-nuit"></span></p>
+                    <p>Email: <span id="client-email"></span></p>
+                    <p>Contacto: <span id="client-contact"></span></p>
+                </div>
+                <div id="invoice-items-body"></div>
+                <div class="invoice-totals"></div>
+                <div class="notes">
+                    <h4>Observações:</h4>
+                    <p id="notes"></p>
+                </div>
+            </div>
+        `
+    },
+    'minimalist': {
+        name: 'Minimalist',
+        styles: `
+            .invoice-container {
+                max-width: 700px;
+                margin: 24px auto;
+                padding: 24px 18px 16px 18px;
+                font-family: 'Inter', sans-serif;
+                background: #fff;
+                color: #222;
+                border: 1px solid #eaeaea;
+                border-radius: 6px;
+                box-sizing: border-box;
+            }
+            .invoice-header {
+                display: flex;
+                justify-content: space-between;
+                align-items: flex-start;
+                border-bottom: 1px solid #eaeaea;
+                padding-bottom: 12px;
+                margin-bottom: 18px;
+            }
+            .company-info {
+                flex: 1;
+            }
+            .invoice-details {
+                text-align: right;
+                min-width: 200px;
+            }
+            .client-info {
+                margin-bottom: 0;
+                padding: 0;
+                background: none;
+                border-radius: 0;
+                font-size: 0.97em;
+            }
+            .invoice-items {
+                width: 100%;
+                border-collapse: collapse;
+                font-size: 0.95em;
+            }
+            .invoice-items th, .invoice-items td {
+                padding: 7px 5px;
+                border-bottom: 1px solid #eee;
+                word-break: break-word;
+            }
+            .invoice-items th {
+                background: #fafafa;
+                text-align: left;
+            }
+            .invoice-totals {
+                text-align: right;
+                margin-top: 18px;
+                font-size: 1em;
+            }
+            .grand-total {
+                font-weight: bold;
+                font-size: 1.05em;
+                border-top: 2px solid #eaeaea;
+                padding-top: 8px;
+            }
+            .notes {
+                margin-top: 18px;
+                padding: 10px;
+                background: #fafafa;
+                border-radius: 4px;
+            }
+        `,
+        layout: `
+            <div class="invoice-container">
+                <div class="invoice-header">
+                    <div class="company-info">
+                        <h1 id="company-name">Nome da Empresa</h1>
+                        <p id="company-address">Endereço da Empresa</p>
+                        <p id="company-contact">Email: <span id="company-email"></span> | Telefone: <span id="company-phone"></span></p>
+                        <p>NUIT: <span id="company-nuit"></span></p>
+                    </div>
+                    <div class="invoice-details">
+                        <h2>FACTURA</h2>
+                        <p>Nº Fatura: <span id="invoice-number">{{invoiceNumber}}</span></p>
+                        <p>Data de Emissão: <span id="issue-date"></span></p>
+                        <p>Data de Vencimento: <span id="due-date"></span></p>
+                        <p id="currency-field"></p>
+                    </div>
+                </div>
+                <div id="client-info-placeholder"></div>
+                <div id="invoice-items-body"></div>
+                <div class="invoice-totals"></div>
                 <div class="notes">
                     <h4>Observações:</h4>
                     <p id="notes"></p>
@@ -479,12 +682,32 @@ async function populateTemplate(templateContent, invoiceData) {
     setDataField(doc, 'company-nuit', invoiceData.company?.nuit || '');
     setDataField(doc, 'company-website', invoiceData.company?.website || '');
 
+    // --- LOGO HANDLING FOR STANDARD TEMPLATE ---
+    const isStandard = doc.querySelector('#company-logo') !== null;
+    if (isStandard) {
+        // Try to get logo from invoiceData or load from settings
+        let logoUrl = invoiceData.company?.logo;
+        if (!logoUrl) {
+            try {
+                logoUrl = await loadCompanyLogo();
+            } catch {}
+        }
+        const logoImg = doc.getElementById('company-logo');
+        if (logoImg) {
+            if (logoUrl) {
+                logoImg.src = logoUrl;
+                logoImg.style.display = 'block';
+            } else {
+                logoImg.style.display = 'none';
+            }
+        }
+    }
+
     // Invoice Details
     let displayInvoiceNumber = invoiceData.invoice?.displayNumber || null;
     if (!displayInvoiceNumber) {
         let serie = invoiceData.invoice?.serie || invoiceData.serie || '';
         let invoiceNumber = invoiceData.invoice?.number || invoiceData.invoice_number || 'Factura Rascunho';
-        // Avoid double serie/number if already combined
         if (serie && invoiceNumber && !(`${invoiceNumber}`.startsWith(`${serie}/`))) {
             displayInvoiceNumber = `${serie}/${invoiceNumber}`;
         } else {
@@ -494,16 +717,46 @@ async function populateTemplate(templateContent, invoiceData) {
     setDataField(doc, 'invoice-number', displayInvoiceNumber);
     setDataField(doc, 'issue-date', formatDate(invoiceData.invoice?.issueDate || invoiceData.issue_date));
     setDataField(doc, 'due-date', formatDate(invoiceData.invoice?.dueDate || invoiceData.due_date));
+    setDataField(doc, 'currency-field', `Moeda: ${invoiceData.currency || 'MZN'}`);
 
-    // Set currency field (Moeda: MZN)
-    setDataField(doc, 'currency-field', `Moeda: ${invoiceData.currency || 'MZN'}`); // Currency: MZN
-
-    // Client Information
-    setDataField(doc, 'client-name', invoiceData.client?.name || invoiceData.client_name || '');
-    setDataField(doc, 'client-address', invoiceData.client?.address || invoiceData.client_address || '');
-    setDataField(doc, 'client-nuit', invoiceData.client?.nuit || invoiceData.client_nuit || '');
-    setDataField(doc, 'client-email', invoiceData.client?.email || invoiceData.client_email || '');
-    setDataField(doc, 'client-contact', invoiceData.client?.phone || invoiceData.client_contact || '');
+    // --- CLIENT INFO HANDLING ---
+    const isMinimalist = doc.getElementById('client-info-placeholder') !== null;
+    if (isMinimalist) {
+        // Minimalist: only show client info if any client field is present, else show 'Consumidor Final'
+        const client = invoiceData.client || {};
+        const hasClient = !!(
+            client.name || client.address || client.nuit || client.email || client.contact || client.phone
+        );
+        const placeholder = doc.getElementById('client-info-placeholder');
+        if (placeholder) {
+            if (hasClient) {
+                placeholder.innerHTML = `
+                    <div class="client-info">
+                        <h3>Cliente:</h3>
+                        <p>${client.name || ''}</p>
+                        <p>${client.address || ''}</p>
+                        <p>NUIT: <span>${client.nuit || ''}</span></p>
+                        <p>Email: <span>${client.email || ''}</span></p>
+                        <p>Contacto: <span>${client.contact || client.phone || ''}</span></p>
+                    </div>
+                `;
+            } else {
+                placeholder.innerHTML = `
+                    <div class="client-info">
+                        <h3>Cliente:</h3>
+                        <p>Consumidor Final</p>
+                    </div>
+                `;
+            }
+        }
+    } else {
+        // All other templates: set client fields as before
+        setDataField(doc, 'client-name', invoiceData.client?.name || invoiceData.client_name || '');
+        setDataField(doc, 'client-address', invoiceData.client?.address || invoiceData.client_address || '');
+        setDataField(doc, 'client-nuit', invoiceData.client?.nuit || invoiceData.client_nuit || '');
+        setDataField(doc, 'client-email', invoiceData.client?.email || invoiceData.client_email || '');
+        setDataField(doc, 'client-contact', invoiceData.client?.phone || invoiceData.client_contact || '');
+    }
 
     // Calculate totals
     const subtotal = Number(invoiceData.subtotal || 0);
@@ -583,6 +836,7 @@ async function populateTemplate(templateContent, invoiceData) {
     // Populate Items (with VAT asterisk for exempt)
     const itemsContainer = doc.getElementById('invoice-items-body');
     // PDF PAGINATION: Split items into groups of 10, each group is a table with headers, with a page break after each except the last
+    let vatExemptionFootnote = '';
     if (itemsContainer && allItems && Array.isArray(allItems)) {
         let paginatedHtml = '';
         const itemsPerPage = 10;
@@ -612,15 +866,29 @@ async function populateTemplate(templateContent, invoiceData) {
                             if (type === 'percent' && value) discountDisplay = `${value} %`;
                             else if (type === 'fixed' && value) discountDisplay = `${value} MT`;
                             else if (type === 'none' || !value) discountDisplay = '—';
+
+                            // Mark VAT-exempt items with asterisk
+                            let isExempt = false;
+                            let vatValue = (item.vat_amount !== undefined ? item.vat_amount : (item.vat !== undefined ? item.vat : 0));
+                            let vatRate = (item.vat_rate !== undefined ? item.vat_rate : (item.vatRate !== undefined ? item.vatRate : null));
+                            // Accept both 0 and '0' as exempt
+                            if ((vatRate !== null && Number(vatRate) === 0) || Number(vatValue) === 0) {
+                                isExempt = true;
+                                hasExempt = true;
+                            }
+                            let description = item.description || '';
+                            if (isExempt && description && !description.trim().endsWith('*')) {
+                                description = description.trim() + ' *';
+                            }
                             return `
                                 <tr>
-                                    <td>${item.description || ''}</td>
+                                    <td>${description}</td>
                                     <td>${item.quantity || 1}</td>
                                     <td>${formatCurrency(item.unit_price ?? item.price ?? 0, invoiceData.currency).replace('MTn','MT')}</td>
                                     <td>${discountDisplay.replace('MTn','MT')}</td>
                                     <td>${formatCurrency(item.discounted_subtotal !== undefined ? item.discounted_subtotal : (item.discountedSubtotal !== undefined ? item.discountedSubtotal : ((item.quantity || 1) * (item.unit_price ?? item.price ?? 0))), invoiceData.currency).replace('MTn','MT')}</td>
-                                    <td>${formatCurrency(item.vat_amount !== undefined ? item.vat_amount : (item.vat !== undefined ? item.vat : 0), invoiceData.currency).replace('MTn','MT')}</td>
-                                    <td>${formatCurrency(item.total !== undefined ? item.total : (((item.discounted_subtotal !== undefined ? item.discounted_subtotal : (item.discountedSubtotal !== undefined ? item.discountedSubtotal : ((item.quantity || 1) * (item.unit_price ?? item.price ?? 0)))) + (item.vat_amount !== undefined ? item.vat_amount : (item.vat !== undefined ? item.vat : 0)))), invoiceData.currency).replace('MTn','MT')}</td>
+                                    <td>${formatCurrency(vatValue, invoiceData.currency).replace('MTn','MT')}</td>
+                                    <td>${formatCurrency(item.total !== undefined ? item.total : (((item.discounted_subtotal !== undefined ? item.discounted_subtotal : (item.discountedSubtotal !== undefined ? item.discountedSubtotal : ((item.quantity || 1) * (item.unit_price ?? item.price ?? 0)))) + vatValue)), invoiceData.currency).replace('MTn','MT')}</td>
                                 </tr>
                             `;
                         }).join('')}
@@ -632,7 +900,11 @@ async function populateTemplate(templateContent, invoiceData) {
                 paginatedHtml += `<div style="page-break-after: always;"></div>`;
             }
         }
-        itemsContainer.innerHTML = paginatedHtml;
+        // Add VAT exemption footnote if needed
+        if (hasExempt) {
+            vatExemptionFootnote = '<div style="font-size:0.75em;margin-top:4px;color:#444;">Os itens marcados com * estão isentos de IVA nos termos da legislação Moçambicana.</div>';
+        }
+        itemsContainer.innerHTML = paginatedHtml + vatExemptionFootnote;
         // Footer/page number removed as requested
     }
     // Totals section
@@ -670,9 +942,6 @@ async function populateTemplate(templateContent, invoiceData) {
 
     // Notes section with exemption reason
     let notes = invoiceData.notes || invoiceData.invoice?.notes || '';
-    if (hasExempt) {
-        notes += 'Items marked with * are VAT exempt for the following reason: [Legal VAT exemption]';
-    }
     setDataField(doc, 'notes', notes);
 
     return doc.documentElement.outerHTML;

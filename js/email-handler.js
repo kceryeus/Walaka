@@ -66,11 +66,14 @@ class EmailHandler {
     openEmailModal(invoice) {
         if (!this.modal) return;
 
-        // Pre-fill form fields
-        this.toField.value = invoice.client?.email || '';
-        this.subjectField.value = `Invoice #${invoice.number}`;
+        // Always set the current invoice number/id for submission
+        this.currentInvoice = invoice.invoiceNumber || invoice.number || null;
+
+        // Pre-fill form fields with safe fallbacks
+        this.toField.value = invoice.client?.email || invoice.client_email || '';
+        this.subjectField.value = `Invoice #${invoice.invoiceNumber || invoice.number || 'N/A'}`;
         this.messageField.value = this.getDefaultEmailMessage(invoice);
-        
+
         // Show modal
         this.modal.style.display = 'block';
         document.querySelector('.modal-overlay').style.display = 'block';
@@ -122,16 +125,25 @@ class EmailHandler {
     }
 
     getDefaultEmailMessage(invoice) {
-        return `Dear ${invoice.client?.name || 'Valued Customer'},
-
-Please find attached invoice #${invoice.number} for ${invoice.currency} ${invoice.total}.
-
-Payment is due by ${new Date(invoice.due_date).toLocaleDateString()}.
-
-If you have any questions, please don't hesitate to contact us.
-
-Best regards,
-[Your Company Name]`;
+        const clientName = invoice.client?.name || invoice.client?.customer_name || 'Valued Customer';
+        const invoiceNumber = invoice.invoiceNumber || invoice.number || 'N/A';
+        const currency = invoice.currency || 'MZN';
+        // Try all possible fields for total/amount
+        const total = invoice.total || invoice.total_amount || invoice.amount || invoice.invoice?.total || 'N/A';
+        // Try all possible fields for due date
+        let dueDate = invoice.dueDate || invoice.due_date || invoice.invoice?.dueDate || invoice.invoice?.due_date || '';
+        let dueDateFormatted = 'N/A';
+        if (dueDate) {
+            try {
+                // Accept both ISO and YYYY-MM-DD
+                const dateObj = typeof dueDate === 'string' && dueDate.length > 10
+                    ? new Date(dueDate)
+                    : new Date(dueDate + 'T00:00:00');
+                dueDateFormatted = !isNaN(dateObj.getTime()) ? dateObj.toLocaleDateString() : 'N/A';
+            } catch {}
+        }
+        const companyName = invoice.company?.name || invoice.company_name || '[Your Company Name]';
+        return `Dear ${clientName},\n\nPlease find attached invoice ${invoiceNumber} for ${currency} ${total}.\n\nPayment is due by ${dueDateFormatted}.\n\nIf you have any questions, please don't hesitate to contact us.\n\nBest regards,\n${companyName}`;
     }
 }
 
