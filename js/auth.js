@@ -11,14 +11,20 @@ export { supabase, supabaseUrl, supabaseKey };
 // Centralized auth check for all protected pages
 export async function requireAuth() {
     try {
+        const repoName = 'Walaka';
+        const isGitHubPages = window.location.hostname.includes('github.io');
+        const basePath = isGitHubPages ? `/${repoName}/` : '/';
         const { data: { session } } = await supabase.auth.getSession();
         if (!session || !session.user) {
-            window.location.href = '/login.html';
+            window.location.href = basePath + 'login.html';
             throw new Error('Not authenticated');
         }
         return session;
     } catch (error) {
-        window.location.href = '/login.html';
+        const repoName = 'Walaka';
+        const isGitHubPages = window.location.hostname.includes('github.io');
+        const basePath = isGitHubPages ? `/${repoName}/` : '/';
+        window.location.href = basePath + 'login.html';
         throw error;
     }
 }

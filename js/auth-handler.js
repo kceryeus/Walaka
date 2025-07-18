@@ -2,11 +2,11 @@ import { supabase } from './supabaseClient.js';
 
 // Simple auth state listener that handles all redirects
 supabase.auth.onAuthStateChange((event, session) => {
-    const currentPath = window.location.pathname;
-    const isLoginPage = currentPath.includes('login.html');
     const repoName = 'Walaka';
     const isGitHubPages = window.location.hostname.includes('github.io');
     const basePath = isGitHubPages ? `/${repoName}/` : '/';
+    const currentPath = window.location.pathname;
+    const isLoginPage = currentPath.includes('login.html');
 
     if (event === 'SIGNED_OUT' || !session) {
         if (!isLoginPage) {
