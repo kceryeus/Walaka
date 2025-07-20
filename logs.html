@@ -6,6 +6,7 @@
     <title>WALAKA - Logs do Sistema</title>
     <link rel="stylesheet" href="components/sidebar.css">
     <link rel="stylesheet" href="css/styles.css">
+    <script src="js/darkmode.js"></script>
     <style>
         .logs-container { padding: 20px; }
         .logs-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
@@ -16,6 +17,61 @@
         .logs-table th { background: #f5f5f5; }
         .logs-table tr:hover { background: #f0f7ff; }
         .logs-empty { text-align: center; color: #888; margin-top: 40px; }
+        /* --- DARK MODE REFINEMENTS --- */
+        [data-theme="dark"] body,
+        [data-theme="dark"] .dashboard-container,
+        [data-theme="dark"] .main-content,
+        [data-theme="dark"] .logs-container {
+            background: #181a20 !important;
+            color: #f3f4f6 !important;
+        }
+        [data-theme="dark"] .logs-header {
+            background: transparent;
+            color: #fff;
+        }
+        [data-theme="dark"] .logs-table {
+            background: #23262f;
+            color: #f3f4f6;
+        }
+        [data-theme="dark"] .logs-table th {
+            background: #23262f;
+            color: #b6c6d6;
+            border-color: #333;
+        }
+        [data-theme="dark"] .logs-table td {
+            background: #181a20;
+            color: #f3f4f6;
+            border-color: #333;
+        }
+        [data-theme="dark"] .logs-table tr:hover td {
+            background: #23262f;
+        }
+        [data-theme="dark"] .logs-empty {
+            color: #aaa;
+        }
+        [data-theme="dark"] select.logs-filter {
+            background: #23262f;
+            color: #f3f4f6;
+            border: 1px solid #333;
+        }
+        [data-theme="dark"] .logs-title {
+            color: #fff;
+        }
+        [data-theme="dark"] .logs-table th, [data-theme="dark"] .logs-table td {
+            border-color: #333;
+        }
+        [data-theme="dark"] .logs-table th {
+            font-weight: 700;
+        }
+        [data-theme="dark"] .logs-table td {
+            font-weight: 400;
+        }
+        [data-theme="dark"] .logs-container b {
+            color: #ff6b6b;
+        }
+        [data-theme="dark"] .logs-container {
+            box-shadow: 0 2px 8px rgba(0,0,0,0.18);
+        }
     </style>
 </head>
 <body>
@@ -32,6 +88,15 @@
                     var script = document.createElement('script');
                     script.src = 'components/sidebar-actions.js';
                     document.body.appendChild(script);
+                    // Dynamically load the sidebar-darkmode.js script after sidebar is injected
+                    var darkmodeScript = document.createElement('script');
+                    darkmodeScript.src = 'components/sidebar-darkmode.js';
+                    darkmodeScript.onload = function() {
+                        setTimeout(function() {
+                            if (window.initSidebarDarkModeIcon) window.initSidebarDarkModeIcon();
+                        }, 100);
+                    };
+                    document.body.appendChild(darkmodeScript);
                 })
                 .catch(err => {
                     console.error('Failed to load sidebar:', err);

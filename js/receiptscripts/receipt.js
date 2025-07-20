@@ -283,12 +283,6 @@ function displayReceipts(receipts) {
                 <button class="action-btn view-btn" onclick="viewReceipt('${receipt.receipt_id}')">
                     <i class="fas fa-eye"></i> View
                 </button>
-                <button class="action-btn edit-btn" onclick="editReceipt('${receipt.receipt_id}')">
-                    <i class="fas fa-edit"></i> Edit
-                </button>
-                <button class="action-btn delete-btn" onclick="deleteReceipt('${receipt.receipt_id}')">
-                    <i class="fas fa-trash"></i> Delete
-                </button>
             </td>
         `;
         tbody.appendChild(tr);

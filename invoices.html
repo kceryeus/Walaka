@@ -37,6 +37,32 @@
     <script src="js/invoicescripts/dateRangeFilter.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.3/html2pdf.bundle.min.js"></script>
     <script src="js/invoicescripts/export.js"></script>
+    <script src="js/darkmode.js"></script>
+    <style>
+    [data-theme="dark"] .modal-stepper .step-indicator {
+      background: #181a20 !important;
+      color: #aaa !important;
+      border: 1px solid #333 !important;
+      border-bottom: none !important;
+    }
+    [data-theme="dark"] .modal-stepper .step-indicator.active {
+      background: #2563eb !important;
+      color: #fff !important;
+      border-bottom: 2px solid #60a5fa !important;
+    }
+    [data-theme="dark"] .modal-stepper .step-indicator:not(.active) {
+      color: #aaa !important;
+    }
+    [data-theme="dark"] .modal-overlay {
+      background: rgba(0,0,0,0.7) !important;
+    }
+    [data-theme="dark"] h2[data-translate="invoice_management"] {
+      color: #fff;
+    }
+    [data-theme="dark"] .invoice-table-container .table-responsive {
+      background: #23262f !important;
+    }
+    </style>
 </head>
 
 <body>
@@ -74,6 +100,15 @@
                     var script = document.createElement('script');
                     script.src = `${basePath}components/sidebar-actions.js`;
                     document.body.appendChild(script);
+                    // Dynamically load the sidebar-darkmode.js script after sidebar is injected
+                    var darkmodeScript = document.createElement('script');
+                    darkmodeScript.src = `${basePath}components/sidebar-darkmode.js`;
+                    darkmodeScript.onload = function() {
+                        setTimeout(function() {
+                            if (window.initSidebarDarkModeIcon) window.initSidebarDarkModeIcon();
+                        }, 100);
+                    };
+                    document.body.appendChild(darkmodeScript);
                 })
                 .catch(err => {
                     console.error('Failed to load sidebar:', err);

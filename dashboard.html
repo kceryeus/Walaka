@@ -32,6 +32,7 @@
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="icon" type="image/png" href="assets/images/walaka-assistant.PNG">
+    <script src="js/darkmode.js"></script>
 </head>
 <body>
     <div class="dashboard-container">
@@ -49,6 +50,19 @@
                         var script = document.createElement('script');
                         script.src = `${basePath}components/sidebar-actions.js?ts=${Date.now()}`;
                         document.body.appendChild(script);
+                        // Attach dark mode icon logic after sidebar is loaded
+                        console.log('[DarkMode] About to load sidebar-darkmode.js');
+                        var darkmodeScript = document.createElement('script');
+                        darkmodeScript.src = 'components/sidebar-darkmode.js';
+                        darkmodeScript.onload = function() {
+                            setTimeout(function() {
+                                console.log('[DarkMode] setTimeout: window.initSidebarDarkModeIcon:', typeof window.initSidebarDarkModeIcon, window.initSidebarDarkModeIcon);
+                                console.log('[DarkMode] setTimeout: window.setTheme:', typeof window.setTheme, window.setTheme);
+                                if (window.initSidebarDarkModeIcon) window.initSidebarDarkModeIcon();
+                                else console.log('[DarkMode] window.initSidebarDarkModeIcon is not defined after sidebar-darkmode.js load');
+                            }, 100);
+                        };
+                        document.body.appendChild(darkmodeScript);
                     })
                     .catch(err => {
                         console.error('Failed to load sidebar:', err);

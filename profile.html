@@ -30,6 +30,7 @@
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="icon" type="image/png" href="assets/images/walaka-assistant.PNG">
+    <script src="js/darkmode.js"></script>
 </head>
     <style>
         :root {
@@ -398,6 +399,123 @@
             margin-top: 0.5em;
             min-width: 120px;
         }
+        /* --- DARK MODE REFINEMENTS --- */
+        [data-theme="dark"] body,
+        [data-theme="dark"] .container,
+        [data-theme="dark"] .main-content,
+        body[data-theme="dark"] .main-content,
+        html[data-theme="dark"] .main-content {
+            background: #181a20 !important;
+            color: #f3f4f6 !important;
+        }
+        [data-theme="dark"] .top-bar,
+        body[data-theme="dark"] .top-bar,
+        html[data-theme="dark"] .top-bar {
+            background: #23262f !important;
+            color: #f3f4f6 !important;
+            border-bottom: 1px solid #23262f;
+            transition: background 0.3s, color 0.3s;
+        }
+        [data-theme="dark"] .subscription-content {
+            background: #23262f !important;
+            color: #f3f4f6 !important;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.18);
+        }
+        [data-theme="dark"] .subscription-list li {
+            border-bottom: 1px solid #333;
+            color: #f3f4f6;
+        }
+        [data-theme="dark"] .subscription-list .label {
+            color: #b6c6d6;
+        }
+        [data-theme="dark"] .subscription-list .value {
+            color: #f3f4f6;
+        }
+        [data-theme="dark"] .filter-btn {
+            background: #23262f;
+            color: #60a5fa;
+            border: 1px solid #23262f;
+        }
+        [data-theme="dark"] .filter-btn.active {
+            background: #2563eb;
+            color: #fff;
+        }
+        [data-theme="dark"] .filter-btn.danger {
+            background: #ef4444;
+            color: #fff;
+        }
+        [data-theme="dark"] .plan-modal {
+            background: #23262f !important;
+            color: #f3f4f6 !important;
+            box-shadow: 0 2px 16px rgba(0,0,0,0.28);
+        }
+        [data-theme="dark"] .plan-modal h2 {
+            color: #60a5fa !important;
+        }
+        [data-theme="dark"] .billing-form input,
+        [data-theme="dark"] .billing-form select {
+            background: #181a20;
+            color: #f3f4f6;
+            border: 1px solid #333;
+        }
+        [data-theme="dark"] .billing-form label {
+            color: #b6c6d6;
+        }
+        [data-theme="dark"] .cancel-section .danger {
+            background: #ef4444;
+            color: #fff;
+        }
+        /* Scrollbar styling for dark mode */
+        [data-theme="dark"] ::-webkit-scrollbar {
+            width: 12px;
+            background: #181a20;
+        }
+        [data-theme="dark"] ::-webkit-scrollbar-thumb {
+            background: #23262f;
+            border-radius: 8px;
+            border: 2px solid #181a20;
+        }
+        [data-theme="dark"] ::-webkit-scrollbar-thumb:hover {
+            background: #2563eb;
+        }
+        [data-theme="dark"] ::-webkit-scrollbar-corner {
+            background: #181a20;
+        }
+        /* Firefox scrollbar */
+        [data-theme="dark"] {
+            scrollbar-color: #23262f #181a20;
+            scrollbar-width: thin;
+        }
+        /* --- DARK MODE REFINEMENTS FOR HISTORY TABLE --- */
+        [data-theme="dark"] .history-table {
+            background: #23262f;
+            color: #f3f4f6;
+        }
+        [data-theme="dark"] .history-table th {
+            background: #232b3a;
+            color: #60a5fa;
+            border-bottom: 1px solid #333;
+        }
+        [data-theme="dark"] .history-table td {
+            background: #23262f;
+            color: #f3f4f6;
+            border-bottom: 1px solid #333;
+        }
+        [data-theme="dark"] .history-table tr:hover td {
+            background: #283046;
+        }
+        [data-theme="dark"] .top-bar .dropdown-menu {
+            background: #23262f !important;
+            color: #fff !important;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.18);
+        }
+        [data-theme="dark"] .top-bar .dropdown-menu a {
+            color: #fff !important;
+        }
+        [data-theme="dark"] .top-bar .dropdown-menu a:hover {
+            background: #181a20 !important;
+            color: #60a5fa !important;
+        }
     </style>
     <script src="assets/js/sidebar.js"></script>
     <script src="js/sendNotificationEmail.js"></script>
@@ -418,6 +536,15 @@
                         var script = document.createElement('script');
                         script.src = `${basePath}components/sidebar-actions.js`;
                         document.body.appendChild(script);
+                        // Dynamically load the sidebar-darkmode.js script after sidebar is injected
+                        var darkmodeScript = document.createElement('script');
+                        darkmodeScript.src = `${basePath}components/sidebar-darkmode.js`;
+                        darkmodeScript.onload = function() {
+                            setTimeout(function() {
+                                if (window.initSidebarDarkModeIcon) window.initSidebarDarkModeIcon();
+                            }, 100);
+                        };
+                        document.body.appendChild(darkmodeScript);
                     })
                     .catch(err => {
                         console.error('Failed to load sidebar:', err);

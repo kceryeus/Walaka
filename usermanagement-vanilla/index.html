@@ -33,6 +33,85 @@
     </style>
 
     <link rel="icon" type="image/png" href="../assets/images/walaka-assistant.PNG">
+    <script src="../js/darkmode.js"></script>
+    <style>
+[data-theme="dark"] .text-gray-800,
+[data-theme="dark"] .text-gray-900,
+[data-theme="dark"] .text-gray-700,
+[data-theme="dark"] .text-gray-500 {
+  color: #fff !important;
+}
+[data-theme="dark"] .text-blue-800,
+[data-theme="dark"] .text-blue-900,
+[data-theme="dark"] .text-blue-700 {
+  color: #60a5fa !important;
+}
+[data-theme="dark"] .text-green-800,
+[data-theme="dark"] .text-green-900 {
+  color: #34d399 !important;
+}
+[data-theme="dark"] .bg-white,
+[data-theme="dark"] .bg-blue-50,
+[data-theme="dark"] .bg-green-50,
+[data-theme="dark"] .rounded-lg,
+[data-theme="dark"] .rounded-md,
+[data-theme="dark"] .shadow,
+[data-theme="dark"] .p-6,
+[data-theme="dark"] .p-4,
+[data-theme="dark"] .mb-4,
+[data-theme="dark"] .mt-1,
+[data-theme="dark"] .block,
+[data-theme="dark"] .w-full {
+  background: #23262f !important;
+  color: #fff !important;
+  border-color: #2a2d3a !important;
+}
+[data-theme="dark"] .modal,
+[data-theme="dark"] .modal-content,
+[data-theme="dark"] .modal-header,
+[data-theme="dark"] .modal-body,
+[data-theme="dark"] .modal-footer {
+  background: #23262f !important;
+  color: #fff !important;
+  border-color: #2a2d3a !important;
+}
+[data-theme="dark"] input,
+[data-theme="dark"] select,
+[data-theme="dark"] textarea {
+  background: #181a20 !important;
+  color: #fff !important;
+  border: 1px solid #2a2d3a !important;
+}
+[data-theme="dark"] .border-gray-300,
+[data-theme="dark"] .focus\:border-blue-500,
+[data-theme="dark"] .focus\:ring-blue-500 {
+  border-color: #2563eb !important;
+}
+[data-theme="dark"] .bg-blue-600,
+[data-theme="dark"] .hover\:bg-blue-700 {
+  background: #2563eb !important;
+  color: #fff !important;
+}
+[data-theme="dark"] .bg-green-50 {
+  background: #181a20 !important;
+  color: #34d399 !important;
+}
+[data-theme="dark"] .bg-gray-50 {
+  background: #23262f !important;
+}
+[data-theme="dark"] th.text-gray-500,
+[data-theme="dark"] th.text-xs,
+[data-theme="dark"] th.font-medium,
+[data-theme="dark"] th.uppercase {
+  color: #60a5fa !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.05em !important;
+}
+[data-theme="dark"] th,
+[data-theme="dark"] td {
+  border-color: #2a2d3a !important;
+}
+</style>
 </head>
 <body class="bg-gray-100">
     <div class="dashboard-container">
@@ -49,6 +128,15 @@
                     var script = document.createElement('script');
                     script.src = '../components/sidebar-actions.js';
                     document.body.appendChild(script);
+                    // Dynamically load the sidebar-darkmode.js script after sidebar is injected
+                    var darkmodeScript = document.createElement('script');
+                    darkmodeScript.src = '../components/sidebar-darkmode.js';
+                    darkmodeScript.onload = function() {
+                        setTimeout(function() {
+                            if (window.initSidebarDarkModeIcon) window.initSidebarDarkModeIcon();
+                        }, 100);
+                    };
+                    document.body.appendChild(darkmodeScript);
                 })
                 .catch(err => {
                     console.error('Failed to load sidebar:', err);

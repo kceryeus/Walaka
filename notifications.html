@@ -13,6 +13,7 @@
     <link rel="stylesheet" href="components/sidebar.css"> 
     <link rel="stylesheet" href="banks/static/assets/css/banks.css">
     <link rel="stylesheet" href="trial-banner.css"> 
+    <script src="js/darkmode.js"></script>
     <style>
         .notifications-container {
             padding: 20px;
@@ -175,6 +176,94 @@
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
+        /* --- DARK MODE REFINEMENTS --- */
+        [data-theme="dark"] body,
+        [data-theme="dark"] .dashboard-container,
+        [data-theme="dark"] .main-content,
+        [data-theme="dark"] .notifications-container {
+            background: #181a20 !important;
+            color: #f3f4f6 !important;
+        }
+        [data-theme="dark"] .top-bar,
+        [data-theme="dark"] .page-header {
+            background: #23262f !important;
+            color: #f3f4f6 !important;
+            border-bottom: 1px solid #23262f;
+        }
+        [data-theme="dark"] .notification-card {
+            background: #23262f !important;
+            color: #f3f4f6 !important;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.18);
+        }
+        [data-theme="dark"] .notification-card.unread {
+            background: #1e2533 !important;
+        }
+        [data-theme="dark"] .notification-title {
+            color: #60a5fa !important;
+        }
+        [data-theme="dark"] .notification-message {
+            color: #b6c6d6 !important;
+        }
+        [data-theme="dark"] .notification-header {
+            color: #f3f4f6 !important;
+        }
+        [data-theme="dark"] .notification-icon {
+            background: #181a20 !important;
+            color: #60a5fa !important;
+        }
+        [data-theme="dark"] .filter-button {
+            background: #23262f !important;
+            color: #b6c6d6 !important;
+            border: 2px solid #23262f !important;
+        }
+        [data-theme="dark"] .filter-button.active {
+            background: #2563eb !important;
+            color: #fff !important;
+            border-color: #2563eb !important;
+        }
+        [data-theme="dark"] .clear-all-btn {
+            background: #ef4444 !important;
+            color: #fff !important;
+        }
+        [data-theme="dark"] .clear-all-btn:hover {
+            background: #b91c1c !important;
+        }
+        [data-theme="dark"] .empty-notifications {
+            color: #aaa !important;
+        }
+        /* Scrollbar styling for dark mode */
+        [data-theme="dark"] ::-webkit-scrollbar {
+            width: 12px;
+            background: #181a20;
+        }
+        [data-theme="dark"] ::-webkit-scrollbar-thumb {
+            background: #23262f;
+            border-radius: 8px;
+            border: 2px solid #181a20;
+        }
+        [data-theme="dark"] ::-webkit-scrollbar-thumb:hover {
+            background: #2563eb;
+        }
+        [data-theme="dark"] ::-webkit-scrollbar-corner {
+            background: #181a20;
+        }
+        /* Firefox scrollbar */
+        [data-theme="dark"] {
+            scrollbar-color: #23262f #181a20;
+            scrollbar-width: thin;
+        }
+        [data-theme="dark"] .page-header h1 {
+            color: #fff !important;
+        }
+        [data-theme="dark"] #search-notifications {
+            background: #23262f !important;
+            color: #f3f4f6 !important;
+            border: 1px solid #333 !important;
+        }
+        [data-theme="dark"] #search-notifications::placeholder {
+            color: #b6c6d6 !important;
+            opacity: 1;
+        }
     </style>
 </head>
 <body>
@@ -192,6 +281,15 @@
                     var script = document.createElement('script');
                     script.src = 'components/sidebar-actions.js';
                     document.body.appendChild(script);
+                    // Dynamically load the sidebar-darkmode.js script after sidebar is injected
+                    var darkmodeScript = document.createElement('script');
+                    darkmodeScript.src = 'components/sidebar-darkmode.js';
+                    darkmodeScript.onload = function() {
+                        setTimeout(function() {
+                            if (window.initSidebarDarkModeIcon) window.initSidebarDarkModeIcon();
+                        }, 100);
+                    };
+                    document.body.appendChild(darkmodeScript);
                 })
                 .catch(err => {
                     console.error('Failed to load sidebar:', err);

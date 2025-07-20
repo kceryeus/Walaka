@@ -24,6 +24,7 @@
     <link rel="stylesheet" href="css/styles.css">
     <link rel="stylesheet" href="css/document-styles.css">
     <link rel="icon" type="image/png" href="assets/images/walaka-assistant.PNG">
+    <script src="js/darkmode.js"></script>
     <style>
     /* Modal compact refinements */
     #\31 createReceiptModal .document-modal-content {
@@ -100,6 +101,235 @@
         color: #d32f2f;
     }
     </style>
+    <style>
+[data-theme="dark"] body,
+[data-theme="dark"] .dashboard-container,
+[data-theme="dark"] .main-content,
+[data-theme="dark"] .page-header,
+[data-theme="dark"] .document-table-container,
+[data-theme="dark"] .table-header,
+[data-theme="dark"] .document-table,
+[data-theme="dark"] .document-table th,
+[data-theme="dark"] .document-table td {
+  background: #23262f !important;
+  color: #fff !important;
+  border-color: #2a2d3a !important;
+}
+[data-theme="dark"] .page-header h2,
+[data-theme="dark"] .page-header p,
+[data-theme="dark"] .table-header h3,
+[data-theme="dark"] label {
+  color: #60a5fa !important;
+}
+[data-theme="dark"] .btn,
+[data-theme="dark"] .primary-btn,
+[data-theme="dark"] .secondary-btn {
+  background: #2563eb !important;
+  color: #fff !important;
+  border-color: #2563eb !important;
+}
+[data-theme="dark"] .btn:hover,
+[data-theme="dark"] .primary-btn:hover,
+[data-theme="dark"] .secondary-btn:hover {
+  background: #1e40af !important;
+  color: #fff !important;
+}
+[data-theme="dark"] input,
+[data-theme="dark"] select,
+[data-theme="dark"] textarea {
+  background: #181a20 !important;
+  color: #fff !important;
+  border: 1px solid #2a2d3a !important;
+}
+[data-theme="dark"] .modal,
+[data-theme="dark"] .modal-content,
+[data-theme="dark"] .modal-header,
+[data-theme="dark"] .modal-body,
+[data-theme="dark"] .modal-footer {
+  background: #23262f !important;
+  color: #fff !important;
+  border-color: #2a2d3a !important;
+}
+[data-theme="dark"] .btn,
+[data-theme="dark"] .primary-btn,
+[data-theme="dark"] .secondary-btn,
+[data-theme="dark"] .action-btn,
+[data-theme="dark"] .table-header button,
+[data-theme="dark"] .document-table-container button,
+[data-theme="dark"] .document-table button {
+  background: #23262f !important;
+  color: #fff !important;
+  border: 1px solid #2563eb !important;
+  border-radius: 6px !important;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.08) !important;
+  transition: background 0.2s, color 0.2s, border 0.2s;
+}
+[data-theme="dark"] .btn:hover,
+[data-theme="dark"] .primary-btn:hover,
+[data-theme="dark"] .secondary-btn:hover,
+[data-theme="dark"] .action-btn:hover,
+[data-theme="dark"] .table-header button:hover,
+[data-theme="dark"] .document-table-container button:hover,
+[data-theme="dark"] .document-table button:hover {
+  background: #2563eb !important;
+  color: #fff !important;
+  border-color: #2563eb !important;
+}
+[data-theme="dark"] .btn-danger,
+[data-theme="dark"] .danger-btn {
+  background: #ef4444 !important;
+  color: #fff !important;
+  border: 1px solid #ef4444 !important;
+}
+[data-theme="dark"] .btn-danger:hover,
+[data-theme="dark"] .danger-btn:hover {
+  background: #b91c1c !important;
+  color: #fff !important;
+  border-color: #b91c1c !important;
+}
+[data-theme="dark"] .status.paid {
+  background: #22c55e !important;
+  color: #fff !important;
+  border: none !important;
+}
+[data-theme="dark"] .status-badge.status-paid {
+  background: #22c55e !important;
+  color: #fff !important;
+  border: none !important;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.10);
+}
+[data-theme="dark"] .table-responsive,
+[data-theme="dark"] .document-table-container .table-responsive {
+  background: #23262f !important;
+}
+[data-theme="dark"] ::-webkit-scrollbar {
+  background: #23262f !important;
+  height: 12px;
+}
+[data-theme="dark"] ::-webkit-scrollbar-thumb {
+  background: #444 !important;
+  border-radius: 6px;
+}
+[data-theme="dark"] ::-webkit-scrollbar-thumb:hover {
+  background: #2563eb !important;
+}
+[data-theme="dark"] ::-webkit-scrollbar-corner {
+  background: #23262f !important;
+}
+[data-theme="dark"] {
+  scrollbar-color: #444 #23262f;
+  scrollbar-width: thin;
+}
+[data-theme="dark"] .document-table tr:hover td,
+[data-theme="dark"] .document-table tr:hover th {
+  background: #283046 !important;
+}
+[data-theme="dark"] .document-table td:focus {
+  background: #283046 !important;
+}
+[data-theme="dark"] .document-modal,
+[data-theme="dark"] .document-modal-content,
+[data-theme="dark"] .document-modal-header,
+[data-theme="dark"] .document-modal-body,
+[data-theme="dark"] .document-modal-footer {
+  background: #23262f !important;
+  color: #fff !important;
+  border-color: #2a2d3a !important;
+}
+[data-theme="dark"] .document-modal-header h2 {
+  color: #60a5fa !important;
+}
+[data-theme="dark"] .document-modal-content table tr,
+[data-theme="dark"] .document-modal-content table td,
+[data-theme="dark"] .document-modal-content table th {
+  background: #23262f !important;
+  color: #fff !important;
+  border-color: #2a2d3a !important;
+}
+[data-theme="dark"] .document-modal-content table tr {
+  border-bottom: 1px solid #2a2d3a !important;
+}
+[data-theme="dark"] .document-modal-footer .btn,
+[data-theme="dark"] .document-modal-footer .primary-btn,
+[data-theme="dark"] .document-modal-footer .secondary-btn {
+  background: #23262f !important;
+  color: #fff !important;
+  border: 1px solid #2563eb !important;
+  border-radius: 6px !important;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.08) !important;
+  transition: background 0.2s, color 0.2s, border 0.2s;
+}
+[data-theme="dark"] .document-modal-footer .btn:hover,
+[data-theme="dark"] .document-modal-footer .primary-btn:hover,
+[data-theme="dark"] .document-modal-footer .secondary-btn:hover {
+  background: #2563eb !important;
+  color: #fff !important;
+  border-color: #2563eb !important;
+}
+[data-theme="dark"] .modal-overlay {
+  background: rgba(20, 24, 38, 0.65) !important;
+  backdrop-filter: blur(4px);
+}
+[data-theme="dark"] .document-modal,
+[data-theme="dark"] .document-modal-content {
+  background: #293042 !important;
+  color: #fff !important;
+  border-color: #2a2d3a !important;
+  box-shadow: 0 8px 32px 0 rgba(0,0,0,0.45) !important;
+}
+[data-theme="dark"] .document-modal-header,
+[data-theme="dark"] .document-modal-footer {
+  background: #23262f !important;
+}
+[data-theme="dark"] .document-modal-header h2,
+[data-theme="dark"] .document-modal-content h3,
+[data-theme="dark"] .document-modal-content label {
+  color: #60a5fa !important;
+}
+[data-theme="dark"] .document-modal-content input,
+[data-theme="dark"] .document-modal-content select,
+[data-theme="dark"] .document-modal-content textarea {
+  background: #232b3a !important;
+  color: #fff !important;
+  border: 1px solid #333 !important;
+}
+[data-theme="dark"] .document-modal-content input:disabled,
+[data-theme="dark"] .document-modal-content select:disabled {
+  background: #23262f !important;
+  color: #b6c6d6 !important;
+}
+[data-theme="dark"] .document-modal-content table tr,
+[data-theme="dark"] .document-modal-content table td,
+[data-theme="dark"] .document-modal-content table th {
+  background: #293042 !important;
+  color: #fff !important;
+  border-color: #2a2d3a !important;
+}
+[data-theme="dark"] .document-modal-content table tr {
+  border-bottom: 1px solid #2a2d3a !important;
+}
+[data-theme="dark"] .document-modal-footer .btn,
+[data-theme="dark"] .document-modal-footer .primary-btn,
+[data-theme="dark"] .document-modal-footer .secondary-btn {
+  background: #23262f !important;
+  color: #fff !important;
+  border: 1px solid #2563eb !important;
+  border-radius: 6px !important;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.08) !important;
+  transition: background 0.2s, color 0.2s, border 0.2s;
+}
+[data-theme="dark"] .document-modal-footer .btn:hover,
+[data-theme="dark"] .document-modal-footer .primary-btn:hover,
+[data-theme="dark"] .document-modal-footer .secondary-btn:hover {
+  background: #2563eb !important;
+  color: #fff !important;
+  border-color: #2563eb !important;
+}
+[data-theme="dark"] .detail-row .value,
+[data-theme="dark"] .detail-row .notes {
+  color: #fff !important;
+}
+</style>
 </head>
 
 <body>
@@ -117,6 +347,15 @@
                     var script = document.createElement('script');
                     script.src = 'components/sidebar-actions.js';
                     document.body.appendChild(script);
+                    // Dynamically load the sidebar-darkmode.js script after sidebar is injected
+                    var darkmodeScript = document.createElement('script');
+                    darkmodeScript.src = 'components/sidebar-darkmode.js';
+                    darkmodeScript.onload = function() {
+                        setTimeout(function() {
+                            if (window.initSidebarDarkModeIcon) window.initSidebarDarkModeIcon();
+                        }, 100);
+                    };
+                    document.body.appendChild(darkmodeScript);
                 })
                 .catch(err => {
                     console.error('Failed to load sidebar:', err);
@@ -350,7 +589,7 @@
                     // Abre o modal
                     document.getElementById('createReceiptModal').style.display = 'block';
                     var overlay = document.querySelector('.modal-overlay');
-                    if (overlay) overlay.style.display = 'block';
+                    if (overlay) { overlay.style.display = 'block'; console.log('[ModalOverlay] SHOW overlay'); }
                 }
                 // Limpa o localStorage
                 localStorage.removeItem('newReceiptData');
@@ -362,9 +601,22 @@
                 createBtn.addEventListener('click', function() {
                     document.getElementById('createReceiptModal').style.display = 'block';
                     var overlay = document.querySelector('.modal-overlay');
-                    if (overlay) overlay.style.display = 'block';
-                    populateBankAccountsDropdown();
+                    if (overlay) { overlay.style.display = 'block'; console.log('[ModalOverlay] SHOW overlay'); }
                 });
+            }
+
+            // Ensure overlay is shown for view modal as well
+            const viewModal = document.getElementById('viewReceiptModal');
+            if (viewModal) {
+                // Listen for any code that opens the view modal
+                const origShow = viewModal.style.display;
+                const observer = new MutationObserver(() => {
+                    if (viewModal.style.display === 'block') {
+                        var overlay = document.querySelector('.modal-overlay');
+                        if (overlay) overlay.style.display = 'block';
+                    }
+                });
+                observer.observe(viewModal, { attributes: true, attributeFilter: ['style'] });
             }
 
             // Ensure all .close-modal buttons have type="button"
@@ -377,7 +629,7 @@
                     const anyOpen = Array.from(document.querySelectorAll('.document-modal'))
                         .some(m => m.style.display === 'block');
                     const overlay = document.querySelector('.modal-overlay');
-                    if (overlay && !anyOpen) overlay.style.display = 'none';
+                    if (overlay && !anyOpen) { overlay.style.display = 'none'; console.log('[ModalOverlay] HIDE overlay'); }
                 });
             });
         });
@@ -464,6 +716,14 @@
     </script>
     <script src="components/user-restrictions.js"></script>
     <script src="js/sendNotificationEmail.js"></script>
+    <script>
+// Ensure dark mode is applied on page load if set in localStorage
+(function() {
+  var theme = localStorage.getItem('theme');
+  if (!theme) theme = 'light';
+  document.documentElement.setAttribute('data-theme', theme);
+})();
+</script>
 </body>
 
 </html>

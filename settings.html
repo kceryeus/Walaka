@@ -23,8 +23,76 @@
   <script src="js/hints/page-hints.js"></script>
   <script src="js/hints/walaka-hints.js"></script>
   <script src="js/auth.js"></script>
+  <script src="js/darkmode.js"></script>
 
   <link rel="icon" type="image/png" href="assets/images/walaka-assistant.PNG">
+
+  <style>
+[data-theme="dark"] body,
+[data-theme="dark"] .dashboard-container,
+[data-theme="dark"] .main-content,
+[data-theme="dark"] .settings-header,
+[data-theme="dark"] .settings-container,
+[data-theme="dark"] .settings-content,
+[data-theme="dark"] .settings-section,
+[data-theme="dark"] .form-group,
+[data-theme="dark"] .form-control {
+  background: #23262f !important;
+  color: #fff !important;
+}
+[data-theme="dark"] .settings-header h1,
+[data-theme="dark"] .settings-header p,
+[data-theme="dark"] .settings-section h2,
+[data-theme="dark"] .settings-section h3,
+[data-theme="dark"] label {
+  color: #60a5fa !important;
+}
+[data-theme="dark"] .settings-tabs,
+[data-theme="dark"] .settings-tabs li,
+[data-theme="dark"] .settings-tabs a {
+  background: #181a20 !important;
+  color: #fff !important;
+  border-color: #2a2d3a !important;
+}
+[data-theme="dark"] .settings-tabs a.active,
+[data-theme="dark"] .settings-tabs a:active {
+  background: #2563eb !important;
+  color: #fff !important;
+  border-bottom: 2px solid #60a5fa !important;
+}
+[data-theme="dark"] .btn,
+[data-theme="dark"] .primary-btn,
+[data-theme="dark"] .secondary-btn {
+  background: #2563eb !important;
+  color: #fff !important;
+  border-color: #2563eb !important;
+}
+[data-theme="dark"] .btn:hover,
+[data-theme="dark"] .primary-btn:hover,
+[data-theme="dark"] .secondary-btn:hover {
+  background: #1e40af !important;
+  color: #fff !important;
+}
+[data-theme="dark"] .form-actions {
+  background: #23262f !important;
+}
+[data-theme="dark"] input,
+[data-theme="dark"] select,
+[data-theme="dark"] textarea {
+  background: #181a20 !important;
+  color: #fff !important;
+  border: 1px solid #2a2d3a !important;
+}
+[data-theme="dark"] .modal,
+[data-theme="dark"] .modal-content,
+[data-theme="dark"] .modal-header,
+[data-theme="dark"] .modal-body,
+[data-theme="dark"] .modal-footer {
+  background: #23262f !important;
+  color: #fff !important;
+  border-color: #2a2d3a !important;
+}
+</style>
 
 </head>
 <body>
@@ -42,6 +110,15 @@
                 var script = document.createElement('script');
                 script.src = 'components/sidebar-actions.js';
                 document.body.appendChild(script);
+                // Dynamically load the sidebar-darkmode.js script after sidebar is injected
+                var darkmodeScript = document.createElement('script');
+                darkmodeScript.src = 'components/sidebar-darkmode.js';
+                darkmodeScript.onload = function() {
+                    setTimeout(function() {
+                        if (window.initSidebarDarkModeIcon) window.initSidebarDarkModeIcon();
+                    }, 100);
+                };
+                document.body.appendChild(darkmodeScript);
             })
             .catch(err => {
                 console.error('Failed to load sidebar:', err);

@@ -17,6 +17,7 @@
     </script>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap">
     <link rel="icon" type="image/png" href="assets/images/walaka-assistant.PNG">
+    <script src="js/darkmode.js"></script>
     <style>
       .help-section { background: #fff; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); padding: 32px; margin-bottom: 32px; }
       .help-section h2 { margin-top: 0; }
@@ -156,6 +157,82 @@
         gap: 0;
         margin-top: 8px;
       }
+      /* --- DARK MODE REFINEMENTS --- */
+      [data-theme="dark"] body,
+      [data-theme="dark"] .container,
+      [data-theme="dark"] .main-content {
+        background: #181a20 !important;
+        color: #f3f4f6 !important;
+      }
+      [data-theme="dark"] .top-bar {
+        background: #23262f !important;
+        color: #f3f4f6 !important;
+        border-bottom: 1px solid #23262f;
+      }
+      [data-theme="dark"] .help-section {
+        background: #23262f !important;
+        color: #f3f4f6 !important;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.18);
+      }
+      [data-theme="dark"] .help-section h2,
+      [data-theme="dark"] .help-section h3 {
+        color: #60a5fa !important;
+      }
+      [data-theme="dark"] .download-btn {
+        background: #2563eb;
+        color: #fff;
+      }
+      [data-theme="dark"] .download-btn:hover {
+        background: #1d4ed8;
+        color: #fff;
+      }
+      [data-theme="dark"] .system-info-list li {
+        color: #b6c6d6;
+      }
+      [data-theme="dark"] .modal-content {
+        background: #23262f !important;
+        color: #f3f4f6 !important;
+        box-shadow: 0 4px 32px rgba(0,0,0,0.28);
+      }
+      [data-theme="dark"] .styled-form input,
+      [data-theme="dark"] .styled-form select {
+        background: #181a20;
+        color: #f3f4f6;
+        border: 1px solid #333;
+      }
+      [data-theme="dark"] .styled-form label {
+        color: #b6c6d6;
+      }
+      [data-theme="dark"] .styled-form .download-btn {
+        background: #2563eb;
+        color: #fff;
+        border: 1px solid #2563eb;
+      }
+      [data-theme="dark"] .styled-form .download-btn:hover {
+        background: #1d4ed8;
+        color: #fff;
+      }
+      /* Scrollbar styling for dark mode */
+      [data-theme="dark"] ::-webkit-scrollbar {
+        width: 12px;
+        background: #181a20;
+      }
+      [data-theme="dark"] ::-webkit-scrollbar-thumb {
+        background: #23262f;
+        border-radius: 8px;
+        border: 2px solid #181a20;
+      }
+      [data-theme="dark"] ::-webkit-scrollbar-thumb:hover {
+        background: #2563eb;
+      }
+      [data-theme="dark"] ::-webkit-scrollbar-corner {
+        background: #181a20;
+      }
+      /* Firefox scrollbar */
+      [data-theme="dark"] {
+        scrollbar-color: #23262f #181a20;
+        scrollbar-width: thin;
+      }
     </style>
 </head>
 <body>
@@ -172,6 +249,15 @@
                         var script = document.createElement('script');
                         script.src = `${basePath}components/sidebar-actions.js`;
                         document.body.appendChild(script);
+                        // Dynamically load the sidebar-darkmode.js script after sidebar is injected
+                        var darkmodeScript = document.createElement('script');
+                        darkmodeScript.src = `${basePath}components/sidebar-darkmode.js`;
+                        darkmodeScript.onload = function() {
+                            setTimeout(function() {
+                                if (window.initSidebarDarkModeIcon) window.initSidebarDarkModeIcon();
+                            }, 100);
+                        };
+                        document.body.appendChild(darkmodeScript);
                     })
                     .catch(err => {
                         console.error('Failed to load sidebar:', err);
