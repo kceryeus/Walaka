@@ -18,7 +18,7 @@
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap">
 
   <script>
-      document.write(`<link rel="stylesheet" href="${basePath}trial/css/upgrade-modal.css">`);
+      document.write(`<link rel="stylesheet" href="${basePath}css/upgrade-modal.css">`);
       document.write(`<link rel="stylesheet" href="${basePath}components/trial-banner.css">`);
       document.write(`<link rel="stylesheet" href="${basePath}components/trial-restrictions.css">`);
       document.write(`<link rel="stylesheet" href="${basePath}components/sidebar.css">`);
@@ -941,8 +941,152 @@ button:disabled:hover {
 }
   </style>
 
+  <style>
+[data-theme="dark"] body,
+[data-theme="dark"] .dashboard-container,
+[data-theme="dark"] .main-container,
+[data-theme="dark"] .content-wrapper,
+[data-theme="dark"] .product-management,
+[data-theme="dark"] .frame,
+[data-theme="dark"] .frame-left,
+[data-theme="dark"] .frame-right,
+[data-theme="dark"] .product-list,
+[data-theme="dark"] .product-item,
+[data-theme="dark"] .modal-content,
+[data-theme="dark"] .top-bar,
+[data-theme="dark"] .page-header,
+[data-theme="dark"] .product-controls,
+[data-theme="dark"] .filter-group,
+[data-theme="dark"] .view-toggle,
+[data-theme="dark"] .pagination,
+[data-theme="dark"] .empty-state,
+[data-theme="dark"] .notification {
+  background: #181a20 !important;
+  color: #fff !important;
+}
+[data-theme="dark"] .frame,
+[data-theme="dark"] .frame-left,
+[data-theme="dark"] .frame-right,
+[data-theme="dark"] .product-item,
+[data-theme="dark"] .modal-content {
+  background: #23262f !important;
+  color: #fff !important;
+  border-color: #2a2d3a !important;
+}
+[data-theme="dark"] .product-title,
+[data-theme="dark"] .page-header h1,
+[data-theme="dark"] .modal-header h3 {
+  color: #60a5fa !important;
+}
+[data-theme="dark"] .form-group input,
+[data-theme="dark"] .form-group select,
+[data-theme="dark"] .form-group textarea {
+  background: #181a20 !important;
+  color: #fff !important;
+  border-color: #2a2d3a !important;
+}
+[data-theme="dark"] .btn-primary {
+  background: #2563eb !important;
+  color: #fff !important;
+}
+[data-theme="dark"] .btn-secondary {
+  background: #23262f !important;
+  color: #e5e7eb !important;
+  border: 1px solid #2a2d3a !important;
+}
+[data-theme="dark"] .btn-primary:hover {
+  background: #1e40af !important;
+}
+[data-theme="dark"] .btn-secondary:hover {
+  background: #181a20 !important;
+}
+[data-theme="dark"] .meta-item,
+[data-theme="dark"] .product-meta {
+  color: #60a5fa !important;
+}
+[data-theme="dark"] .product-actions .action-btn {
+  background: #23262f !important;
+  color: #fff !important;
+}
+[data-theme="dark"] .product-actions .action-btn:hover {
+  background: #181a20 !important;
+  color: #60a5fa !important;
+}
+[data-theme="dark"] .filter-group label,
+[data-theme="dark"] .view-toggle button,
+[data-theme="dark"] .pagination-btn {
+  color: #fff !important;
+}
+[data-theme="dark"] .search-input {
+  background: #23262f !important;
+  color: #fff !important;
+  border: 1px solid #2a2d3a !important;
+}
+[data-theme="dark"] .search-input::placeholder {
+  color: #aaa !important;
+}
+[data-theme="dark"] .view-toggle button {
+  background: #23262f !important;
+  color: #fff !important;
+  border: 1px solid #2a2d3a !important;
+  transition: background 0.2s, color 0.2s, border 0.2s;
+}
+[data-theme="dark"] .view-toggle button.active,
+[data-theme="dark"] .view-toggle button:hover {
+  background: #2563eb !important;
+  color: #fff !important;
+  border-color: #2563eb !important;
+}
+[data-theme="dark"] .secondary-btn,
+[data-theme="dark"] .pagination .secondary-btn {
+  background: #23262f !important;
+  color: #fff !important;
+  border: 1px solid #2a2d3a !important;
+}
+[data-theme="dark"] .secondary-btn:hover,
+[data-theme="dark"] .pagination .secondary-btn:hover {
+  background: #181a20 !important;
+  color: #60a5fa !important;
+  border-color: #2563eb !important;
+}
+[data-theme="dark"] .filter-select,
+[data-theme="dark"] select.filter-select {
+  background: #23262f !important;
+  color: #fff !important;
+  border: 1px solid #2a2d3a !important;
+}
+[data-theme="dark"] .filter-select option {
+  background: #23262f !important;
+  color: #aaa !important;
+}
+[data-theme="dark"] ::-webkit-scrollbar {
+  width: 12px;
+  background: #23262f;
+}
+[data-theme="dark"] ::-webkit-scrollbar-thumb {
+  background: #444;
+  border-radius: 6px;
+}
+[data-theme="dark"] ::-webkit-scrollbar-thumb:hover {
+  background: #2563eb;
+}
+[data-theme="dark"] ::-webkit-scrollbar-corner {
+  background: #23262f;
+}
+[data-theme="dark"] {
+  scrollbar-color: #444 #23262f;
+  scrollbar-width: thin;
+}
+</style>
+
 </head>
 <body>
+  <script type="module">
+    import { requireAuth } from './auth.js';
+    document.addEventListener('DOMContentLoaded', async () => {
+      try { await requireAuth(); } catch (e) {}
+    });
+  </script>
   <div class="dashboard-container">
     <!-- Sidebar Menu -->
     <div id="sidebar-container"></div>
@@ -957,6 +1101,15 @@ button:disabled:hover {
                 var script = document.createElement('script');
                 script.src = `${basePath}components/sidebar-actions.js`;
                 document.body.appendChild(script);
+                // Dynamically load the sidebar-darkmode.js script after sidebar is injected
+                var darkmodeScript = document.createElement('script');
+                darkmodeScript.src = `${basePath}components/sidebar-darkmode.js`;
+                darkmodeScript.onload = function() {
+                    setTimeout(function() {
+                        if (window.initSidebarDarkModeIcon) window.initSidebarDarkModeIcon();
+                    }, 100);
+                };
+                document.body.appendChild(darkmodeScript);
             })
             .catch(err => {
                 console.error('Failed to load sidebar:', err);
@@ -1598,7 +1751,6 @@ button:disabled:hover {
     // Initial fetch
     fetchProducts();
   </script>
-    <script src="js/auth.js"></script>
     <!-- Notification badge synchronization -->
     <script src="js/notification-badge.js"></script>
     <script src="services/languageManager.js"></script>
@@ -1615,5 +1767,7 @@ button:disabled:hover {
       });
     </script>
     <script src="components/user-restrictions.js"></script>
+    <script src="js/sendNotificationEmail.js"></script>
+    <script src="js/darkmode.js"></script>
 </body>
 </html>

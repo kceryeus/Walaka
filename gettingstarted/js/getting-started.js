@@ -247,7 +247,10 @@ function setupEventListeners() {
         option.addEventListener('click', () => {
             document.querySelectorAll('.template-option').forEach(opt => opt.classList.remove('selected'));
             option.classList.add('selected');
-            onboardingData.invoice.template = option.dataset.template;
+            // Only allow valid templates
+            const validTemplates = ['classic', 'modern', 'standard', 'minimalist'];
+            const selected = option.dataset.template;
+            onboardingData.invoice.template = validTemplates.includes(selected) ? selected : 'classic';
         });
     });
 
@@ -333,6 +336,10 @@ async function saveAndContinue(step) {
                 ...onboardingData.invoice,
                 ...Object.fromEntries(formData)
             };
+            // Only allow valid templates
+            if (!['classic', 'modern', 'standard', 'minimalist'].includes(onboardingData.invoice.template)) {
+                onboardingData.invoice.template = 'classic';
+            }
             break;
         case '3':
             // Only use valid columns for subscriptions table

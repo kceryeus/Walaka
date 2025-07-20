@@ -178,24 +178,17 @@ class NotificationBadgeManager {
                 console.error('No user session found');
                 return;
             }
-
-            const { error } = await window.supabase
-                .from('notifications')
-                .insert({
-                    user_id: session.user.id,
-                    type: 'system',
-                    title: 'Test Notification',
-                    message: 'This is a test notification to verify badge synchronization.',
-                    action_url: null,
-                    read: false
-                });
-
-            if (error) {
-                console.error('Error creating test notification:', error);
-            } else {
-                // console.log('Test notification created successfully');
-                await this.refresh();
+            // Use the global helper to create notification and send email
+            if (window.createNotification) {
+                await window.createNotification(
+                    'system',
+                    'Test Notification',
+                    'This is a test notification to verify badge synchronization.',
+                    null,
+                    session.user.id
+                );
             }
+            await this.refresh();
         } catch (error) {
             console.error('Error in createTestNotification:', error);
         }
@@ -266,6 +259,13 @@ document.addEventListener('DOMContentLoaded', async () => {
             clearInterval(checkSupabase);
             // console.log('Supabase not available after 10 seconds, notification badge will not be initialized');
         }, 10000);
+    }
+});
+
+// Listen for global notification creation events to refresh badge instantly
+window.addEventListener('notificationCreated', () => {
+    if (window.notificationBadgeManager && typeof window.notificationBadgeManager.refresh === 'function') {
+        window.notificationBadgeManager.refresh();
     }
 });
 

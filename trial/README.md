@@ -1,2 +1,0 @@
-# walakatests
-testes da walaka

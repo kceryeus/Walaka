@@ -790,62 +790,90 @@
     }
 }
 
-/* Dark Mode */
-@media (prefers-color-scheme: dark) {
-    .modal-content,
-    .invoice-table-container,
-    .metric-card,
-    .chart-card {
-        background-color: #ffffff;
-        color: #747474;
-    }
-    
-    .modal-header,
-    .modal-footer,
-    .form-section h3 {
-        border-color: #374151;
-    }
-    
-    .data-table th,
-    .data-table td,
-    .items-table th,
-    .items-table td {
-        border-color: #374151;
-    }
-    
-    .form-group input,
-    .form-group select,
-    .form-group textarea {
-        background-color: #d8e8ff;
-        border-color: #374151;
-        color: #f3f4f6;
-    }
-    
-    .items-table th {
-        background-color: #c5d6fc;
-    }
-    
-    .chart-period-btn {
-        background: #374151;
-        color: #f3f4f6;
-    }
-    
-    .chart-period-btn:hover {
-        background: #4b5563;
-    }
-    
-    .secondary-btn {
-        background-color: #374151;
-        color: #f3f4f6;
-    }
-    
-    .secondary-btn:hover {
-        background-color: #4b5563;
-    }
-    
-    .status-timeline::before {
-        background-color: #374151;
-    }
+/* --- Robust [data-theme="dark"] rules for modal and table dark mode --- */
+[data-theme="dark"] .modal-content,
+[data-theme="dark"] .modal-header,
+[data-theme="dark"] .modal-body,
+[data-theme="dark"] .modal-footer,
+[data-theme="dark"] .invoice-table-container,
+[data-theme="dark"] .items-table,
+[data-theme="dark"] .items-table th,
+[data-theme="dark"] .items-table td {
+  background: #23262f !important;
+  color: #fff !important;
+  border-color: #2a2d3a !important;
+}
+[data-theme="dark"] .modal-header h2,
+[data-theme="dark"] .modal-header h3,
+[data-theme="dark"] .modal-body h3,
+[data-theme="dark"] .modal-body h4,
+[data-theme="dark"] .items-table th {
+  color: #60a5fa !important;
+}
+[data-theme="dark"] .form-group label,
+[data-theme="dark"] .modal label {
+  color: #e5e7eb !important;
+}
+[data-theme="dark"] .form-group input,
+[data-theme="dark"] .form-group select,
+[data-theme="dark"] .form-group textarea {
+  background: #181a20 !important;
+  color: #fff !important;
+  border-color: #2a2d3a !important;
+}
+[data-theme="dark"] .form-group input:disabled,
+[data-theme="dark"] .form-group select:disabled,
+[data-theme="dark"] .form-group textarea:disabled {
+  background: #23262f !important;
+  color: #aaa !important;
+}
+[data-theme="dark"] .modal-stepper .step-indicator {
+  background: #181a20 !important;
+  color: #aaa !important;
+  border: 1px solid #333 !important;
+  border-bottom: none !important;
+}
+[data-theme="dark"] .modal-stepper .step-indicator.active {
+  background: #2563eb !important;
+  color: #fff !important;
+  border-bottom: 2px solid #60a5fa !important;
+}
+[data-theme="dark"] .modal-stepper .step-indicator:not(.active) {
+  color: #aaa !important;
+}
+[data-theme="dark"] .modal-overlay {
+  background: rgba(0,0,0,0.7) !important;
+}
+[data-theme="dark"] .btn,
+[data-theme="dark"] .btn-primary,
+[data-theme="dark"] .btn.secondary-btn {
+  background: #2563eb !important;
+  color: #fff !important;
+  border-color: #2563eb !important;
+}
+[data-theme="dark"] .btn:hover,
+[data-theme="dark"] .btn-primary:hover,
+[data-theme="dark"] .btn.secondary-btn:hover {
+  background: #1e40af !important;
+  color: #fff !important;
+}
+[data-theme="dark"] ::-webkit-scrollbar {
+  width: 12px;
+  background: #23262f;
+}
+[data-theme="dark"] ::-webkit-scrollbar-thumb {
+  background: #444;
+  border-radius: 6px;
+}
+[data-theme="dark"] ::-webkit-scrollbar-thumb:hover {
+  background: #2563eb;
+}
+[data-theme="dark"] ::-webkit-scrollbar-corner {
+  background: #23262f;
+}
+[data-theme="dark"] {
+  scrollbar-color: #444 #23262f;
+  scrollbar-width: thin;
 }
 
 /* Chart Card */
@@ -1318,4 +1346,112 @@
 /* Show only items on the current page */
 .item-row.visible {
     display: table-row;
+}
+
+[data-theme="dark"] .items-table-container {
+  background: #23262f !important;
+  border-radius: 8px !important;
+  box-shadow: none !important;
+}
+[data-theme="dark"] .items-table th,
+[data-theme="dark"] .items-table td {
+  background: #23262f !important;
+  color: #fff !important;
+  border-bottom: 1px solid #2a2d3a !important;
+}
+[data-theme="dark"] .items-table tr {
+  border-bottom: 1px solid #2a2d3a !important;
+}
+[data-theme="dark"] .items-table input,
+[data-theme="dark"] .items-table select,
+[data-theme="dark"] .items-table textarea {
+  background: #181a20 !important;
+  color: #fff !important;
+  border: 1px solid #2a2d3a !important;
+}
+[data-theme="dark"] .items-pagination,
+[data-theme="dark"] .review-section,
+[data-theme="dark"] .invoice-totals {
+  background: #181a20 !important;
+  color: #fff !important;
+  border-radius: 8px !important;
+  border: 1px solid #2a2d3a !important;
+}
+[data-theme="dark"] .pagination-controls .pagination-btn {
+  background: #23262f !important;
+  color: #fff !important;
+  border: 1px solid #2a2d3a !important;
+}
+[data-theme="dark"] .pagination-controls .pagination-btn.active {
+  background: #2563eb !important;
+  color: #fff !important;
+  border-color: #2563eb !important;
+}
+[data-theme="dark"] .pagination-controls .pagination-btn:disabled {
+  background: #23262f !important;
+  color: #555 !important;
+  opacity: 0.5;
+}
+
+[data-theme="dark"] .suggestion-box,
+[data-theme="dark"] .product-suggestions {
+  background: #23262f !important;
+  color: #fff !important;
+  border: 1px solid #2a2d3a !important;
+  box-shadow: 0 2px 8px #181a20 !important;
+}
+[data-theme="dark"] .suggestion-item,
+[data-theme="dark"] .product-suggestions .suggestion-item {
+  background: #23262f !important;
+  color: #fff !important;
+  border-bottom: 1px solid #2a2d3a !important;
+}
+[data-theme="dark"] .suggestion-item:hover,
+[data-theme="dark"] .product-suggestions .suggestion-item:hover {
+  background: #2563eb !important;
+  color: #fff !important;
+}
+[data-theme="dark"] .product-suggestions .suggestion-item .product-price {
+  color: #60a5fa !important;
+}
+[data-theme="dark"] .suggestion-item:last-child,
+[data-theme="dark"] .product-suggestions .suggestion-item:last-child {
+  border-bottom: none !important;
+}
+[data-theme="dark"] .invoice-preview-container {
+  background: #181a20 !important;
+}
+[data-theme="dark"] .a4-invoice,
+[data-theme="dark"] .invoice-a4 {
+  background: #fff !important;
+  color: #222 !important;
+  filter: none !important;
+}
+
+[data-theme="dark"] .table-filters label {
+  color: #e5e7eb !important;
+}
+[data-theme="dark"] .table-filters select,
+[data-theme="dark"] .table-filters input,
+[data-theme="dark"] .search-input {
+  background: #23262f !important;
+  color: #fff !important;
+  border: 1px solid #2a2d3a !important;
+}
+[data-theme="dark"] .table-filters button,
+[data-theme="dark"] .search-clear-btn {
+  background: #23262f !important;
+  color: #fff !important;
+  border: 1px solid #2563eb !important;
+  transition: background 0.2s, color 0.2s, border 0.2s;
+}
+[data-theme="dark"] .table-filters button:hover,
+[data-theme="dark"] .search-clear-btn:hover {
+  background: #2563eb !important;
+  color: #fff !important;
+  border-color: #2563eb !important;
+}
+[data-theme="dark"] .table-filters,
+[data-theme="dark"] .search-bar {
+  background: #23262f !important;
 }

@@ -283,12 +283,6 @@ function displayReceipts(receipts) {
                 <button class="action-btn view-btn" onclick="viewReceipt('${receipt.receipt_id}')">
                     <i class="fas fa-eye"></i> View
                 </button>
-                <button class="action-btn edit-btn" onclick="editReceipt('${receipt.receipt_id}')">
-                    <i class="fas fa-edit"></i> Edit
-                </button>
-                <button class="action-btn delete-btn" onclick="deleteReceipt('${receipt.receipt_id}')">
-                    <i class="fas fa-trash"></i> Delete
-                </button>
             </td>
         `;
         tbody.appendChild(tr);
@@ -518,6 +512,23 @@ async function createReceipt() {
         if (data && data.length > 0) {
             await downloadReceiptPdf(data[0].receipt_id);
         }
+        // --- Create notification and send email to user ---
+        try {
+            const { data: { user } } = await window.supabase.auth.getUser();
+            if (user) {
+                // Create notification (this will also send email via global helper)
+                await window.createNotification(
+                    'system',
+                    'Receipt Created',
+                    `A new receipt (${receiptData.receipt_number}) has been created in your account.`,
+                    'receipts.html',
+                    user.id
+                );
+                // Remove direct call to sendNotificationEmail; handled by createNotification
+            }
+        } catch (err) {
+            console.error('[RECEIPT EMAIL] Error sending receipt notification/email:', err);
+        }
     } catch (error) {
         showNotification('Error creating receipt', 'error');
         console.error(error);
@@ -540,6 +551,29 @@ async function markInvoiceAsPaidAndCreateReceipt(invoiceId, receiptData) {
             .insert([receiptData]);
         if (receiptError) throw receiptError;
         showNotification('Invoice marked as paid and receipt created!');
+        // --- Create notification and send email to user ---
+        try {
+            const { data: { user } } = await window.supabase.auth.getUser();
+            if (user) {
+                await window.createNotification(
+                    'system',
+                    'Receipt Created',
+                    `A new receipt (${receiptData.receipt_number}) has been created in your account.`,
+                    'receipts.html',
+                    user.id
+                );
+                if (typeof window.sendNotificationEmail === 'function' && user.email) {
+                    console.log('[RECEIPT EMAIL] Sending receipt creation email to user:', user.email);
+                    await window.sendNotificationEmail(
+                        user.email,
+                        'Receipt Created',
+                        `A new receipt (${receiptData.receipt_number}) has been created in your account. You can view it in your dashboard.`
+                    );
+                }
+            }
+        } catch (err) {
+            console.error('[RECEIPT EMAIL] Error sending receipt notification/email:', err);
+        }
     } catch (error) {
         showNotification('Error updating invoice or creating receipt', 'error');
         console.error(error);
@@ -792,9 +826,9 @@ async function downloadReceiptPdf(receiptId) {
             user_id = user?.id;
         } catch (e) {}
         let company = {
-            company_name: 'WALAKA',
+            company_name: 'WALAKA SOFTWARE, LDA.',
             address: 'Maputo, Mozambique',
-            email: 'info@walaka.co.mz',
+            email: 'info@walakasoftware.com',
             tax_id: 'N/A'
         };
         if (user_id) {

@@ -226,27 +226,15 @@ function capitalizePlanName(plan) {
 
 // Create payment notification
 async function createPaymentNotification(userId, paymentMethod, amount, plan) {
-    // console.log('[TrialBanner] createPaymentNotification called with:', { userId, paymentMethod, amount, plan });
     try {
         // Check if user has notification settings enabled for payment notifications
-        // console.log('[TrialBanner] Checking notification settings for user:', userId);
         const { data: notificationSettings, error: settingsError } = await supabase
             .from('notification_settings')
             .select('payment_received')
             .eq('user_id', userId)
             .single();
-
-        // console.log('[TrialBanner] Notification settings result:', { notificationSettings, settingsError });
-
-        // If no settings found or payment notifications are disabled, don't create notification
         if (settingsError || !notificationSettings || !notificationSettings.payment_received) {
-            // console.log('[TrialBanner] Payment notifications disabled or no settings found, skipping notification');
-            // console.log('[TrialBanner] Settings error:', settingsError);
-            // console.log('[TrialBanner] Notification settings:', notificationSettings);
-            
-            // If no settings exist, create default settings for the user
             if (settingsError && settingsError.code === 'PGRST116') {
-                // console.log('[TrialBanner] No notification settings found, creating default settings...');
                 const { error: createError } = await supabase
                     .from('notification_settings')
                     .insert({
@@ -260,68 +248,35 @@ async function createPaymentNotification(userId, paymentMethod, amount, plan) {
                         client_activity: false,
                         login_attempts: true
                     });
-                
                 if (createError) {
                     console.error('[TrialBanner] Error creating default notification settings:', createError);
                     return;
-                } else {
-                    // console.log('[TrialBanner] Default notification settings created successfully');
-                    // Now proceed with creating the notification
                 }
             } else {
                 return;
             }
         }
-
-        // For payments, we'll create a notification every time since payments are unique events
-        // console.log('[TrialBanner] Creating new payment notification...');
-
-                // Create payment notification
-        // console.log('[TrialBanner] Creating payment notification in database...');
-        const { error } = await supabase
-            .from('notifications')
-            .insert({
-                user_id: userId,
+        // Use the global helper to create notification and send email
+        if (window.createNotification) {
+            await window.createNotification(
+                'payment',
+                'Payment Received',
+                `Payment of ${amount} for ${plan} plan has been received via ${paymentMethod}. Your subscription is now active.`,
+                'profile.html',
+                userId
+            );
+        }
+        // Dispatch event to notify other parts of the app about new notification
+        window.dispatchEvent(new CustomEvent('notificationCreated', {
+            detail: {
                 type: 'payment',
                 title: 'Payment Received',
-                message: `Payment of ${amount} for ${plan} plan has been received via ${paymentMethod}. Your subscription is now active.`,
-                action_url: 'profile.html',
-                read: false
-            });
-
-        if (error) {
-            console.error('[TrialBanner] Error creating payment notification:', error);
-        } else {
-            // console.log('[TrialBanner] Payment notification created successfully');
-            
-            // Verify the notification was created by fetching it
-            const { data: verifyNotification, error: verifyError } = await supabase
-                .from('notifications')
-                .select('*')
-                .eq('user_id', userId)
-                .eq('type', 'payment')
-                .order('created_at', { ascending: false })
-                .limit(1);
-            
-            if (verifyError) {
-                console.error('[TrialBanner] Error verifying notification creation:', verifyError);
-            } else {
-                // console.log('[TrialBanner] Notification verification successful:', verifyNotification);
+                message: `Payment of ${amount} for ${plan} plan has been received via ${paymentMethod}. Your subscription is now active.`
             }
-            
-            // Dispatch event to notify other parts of the app about new notification
-            window.dispatchEvent(new CustomEvent('notificationCreated', {
-                detail: {
-                    type: 'payment',
-                    title: 'Payment Received',
-                    message: `Payment of ${amount} for ${plan} plan has been received via ${paymentMethod}. Your subscription is now active.`
-                }
-            }));
-            
-            // Update notification badge count
-            if (window.notificationBadgeManager) {
-                await window.notificationBadgeManager.refresh();
-            }
+        }));
+        // Update notification badge count
+        if (window.notificationBadgeManager) {
+            await window.notificationBadgeManager.refresh();
         }
     } catch (error) {
         console.error('[TrialBanner] Error in createPaymentNotification:', error);
@@ -330,54 +285,23 @@ async function createPaymentNotification(userId, paymentMethod, amount, plan) {
 // Create invoice notification
 async function createInvoiceNotification(userId, invoiceNumber) {
     try {
-        // Check if user has notification settings enabled for invoice notifications
         const { data: notificationSettings, error: settingsError } = await supabase
             .from('notification_settings')
             .select('invoice_created')
             .eq('user_id', userId)
             .single();
-
-        // If no settings found or invoice notifications are disabled, don't create notification
         if (settingsError || !notificationSettings || !notificationSettings.invoice_created) {
-            // console.log('[TrialBanner] Invoice notifications disabled or no settings found, skipping notification');
             return;
         }
-
-        // Check if notification already exists for this invoice
-        const { data: existingNotifications, error: checkError } = await supabase
-            .from('notifications')
-            .select('id')
-            .eq('user_id', userId)
-            .eq('type', 'invoice')
-            .eq('title', 'Invoice Created Successfully')
-            .gte('created_at', new Date().toISOString().split('T')[0] + 'T00:00:00');
-
-        if (checkError) {
-            console.error('[TrialBanner] Error checking existing invoice notifications:', checkError);
-            return;
-        }
-
-        if (existingNotifications && existingNotifications.length > 0) {
-            // console.log('[TrialBanner] Invoice notification already exists for today, skipping...');
-            return;
-        }
-
-        // Create invoice notification
-        const { error } = await supabase
-            .from('notifications')
-            .insert({
-                user_id: userId,
-                type: 'invoice',
-                title: 'Invoice Created Successfully',
-                message: `Invoice ${invoiceNumber || 'INV-001'} has been created and is ready for sending to your client.`,
-                action_url: 'invoices.html',
-                read: false
-            });
-
-        if (error) {
-            console.error('[TrialBanner] Error creating invoice notification:', error);
-        } else {
-            // console.log('[TrialBanner] Invoice notification created successfully');
+        // Use the global helper to create notification and send email
+        if (window.createNotification) {
+            await window.createNotification(
+                'invoice',
+                'Invoice Created Successfully',
+                `Invoice ${invoiceNumber || 'INV-001'} has been created and is ready for sending to your client.`,
+                'invoices.html',
+                userId
+            );
         }
     } catch (error) {
         console.error('[TrialBanner] Error in createInvoiceNotification:', error);
@@ -462,54 +386,59 @@ function showUpgradeModal(currentPlan) {
 // Global notification helper function
 window.createNotification = async function(type, title, message, actionUrl = null, userId = null) {
     try {
-        // Get current user if not provided
-        if (!userId) {
-            const { data: { session } } = await supabase.auth.getSession();
-            if (!session || !session.user) {
-                console.error('[NotificationHelper] No user session found');
-                return;
-            }
-            userId = session.user.id;
+        // Always get the current session user and their email
+        let userEmail = null;
+        let effectiveUserId = userId;
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session && session.user) {
+            effectiveUserId = session.user.id;
+            userEmail = session.user.email;
         }
-
+        if (!effectiveUserId) {
+            console.error('[NotificationHelper] No userId available for notification.');
+            return;
+        }
         // Check if user has notification settings enabled for this type
         const notificationTypeMap = {
             'invoice': 'invoice_created',
             'payment': 'payment_received',
             'system': 'system_updates',
-            'alert': 'invoice_overdue'
+            'alert': 'invoice_overdue',
+            'subscription_expired': 'system_updates',
+            'subscription_canceled': 'system_updates'
         };
-
         const settingKey = notificationTypeMap[type];
         if (settingKey) {
             const { data: notificationSettings, error: settingsError } = await supabase
                 .from('notification_settings')
                 .select(settingKey)
-                .eq('user_id', userId)
+                .eq('user_id', effectiveUserId)
                 .single();
-
             if (settingsError || !notificationSettings || !notificationSettings[settingKey]) {
-                // console.log(`[NotificationHelper] ${type} notifications disabled, skipping...`);
                 return;
             }
         }
-
         // Create notification
         const { error } = await supabase
             .from('notifications')
             .insert({
-                user_id: userId,
+                user_id: effectiveUserId,
                 type: type,
                 title: title,
                 message: message,
                 action_url: actionUrl,
                 read: false
             });
-
         if (error) {
             console.error('[NotificationHelper] Error creating notification:', error);
         } else {
-            // console.log(`[NotificationHelper] ${type} notification created successfully`);
+            // Send email after notification is created
+            if (typeof window.sendNotificationEmail === 'function' && userEmail) {
+                console.log('[NotificationHelper] Sending notification email to:', userEmail, { title, message });
+                window.sendNotificationEmail(userEmail, title, message);
+            } else {
+                console.warn('[NotificationHelper] No user email found or sendNotificationEmail not available.', { userEmail, sendNotificationEmailType: typeof window.sendNotificationEmail });
+            }
         }
     } catch (error) {
         console.error('[NotificationHelper] Error in createNotification:', error);
@@ -542,6 +471,70 @@ function showPaymentMethodModal(onSelect) {
     });
 }
 
+// --- Subscription Receipt Logic ---
+
+// 1. Get next incremental subscription receipt number (per year)
+async function getNextSubscriptionReceiptNumber() {
+    const year = new Date().getFullYear();
+    const { data, error } = await supabase
+        .from('subscription_receipts')
+        .select('receipt_number')
+        .ilike('receipt_number', `SUB-${year}-%`)
+        .order('receipt_number', { ascending: false })
+        .limit(1);
+    let nextNumber = 1;
+    if (data && data.length > 0) {
+        const last = data[0].receipt_number;
+        const match = last.match(/SUB-(\d{4})-(\d+)/);
+        if (match) {
+            nextNumber = parseInt(match[2], 10) + 1;
+        }
+    }
+    return `SUB-${year}-${String(nextNumber).padStart(5, '0')}`;
+}
+
+// 2. Upload PDF to Supabase Storage and return public URL
+async function uploadSubscriptionReceiptPDF(pdfBlob, receipt_number) {
+    const year = new Date().getFullYear();
+    const fileName = `${receipt_number}.pdf`;
+    const folder = `subscription-receipts/${year}`;
+    const bucket = 'receipts-pdfs';
+    const filePath = `${folder}/${fileName}`;
+    // Remove if already exists (overwrite)
+    await supabase.storage.from(bucket).remove([filePath]);
+    const { data: uploadData, error: uploadError } = await supabase.storage
+        .from(bucket)
+        .upload(filePath, pdfBlob, { contentType: 'application/pdf' });
+    if (uploadError) throw uploadError;
+    const { data: { publicUrl } } = supabase.storage.from(bucket).getPublicUrl(filePath);
+    return { publicUrl, bucket, folder, filePath };
+}
+
+// 3. Insert into subscription_receipts table
+async function insertSubscriptionReceipt({
+    receipt_number, user_id, subscription_id, subscription_history_id, amount, payment_method, plan, notes, pdf_url, pdf_bucket, pdf_folder
+}) {
+    const { error: insertError } = await supabase
+        .from('subscription_receipts')
+        .insert({
+            receipt_number,
+            user_id,
+            subscription_id,
+            subscription_history_id,
+            payment_date: new Date().toISOString(),
+            amount,
+            payment_method,
+            plan,
+            status: 'paid',
+            notes,
+            pdf_url,
+            pdf_bucket,
+            pdf_folder
+        });
+    if (insertError) throw insertError;
+}
+
+// --- Patch simulatePaymentAndSubscribe to store receipt ---
 async function simulatePaymentAndSubscribe(paymentMethod, parentModal, planKey = 'basic') {
     // Show loading spinner
     const loading = document.createElement('div');
@@ -557,7 +550,8 @@ async function simulatePaymentAndSubscribe(paymentMethod, parentModal, planKey =
         const endDate = new Date(now);
         endDate.setMonth(endDate.getMonth() + 1);
         const planConfig = PLAN_CONFIG[planKey] || PLAN_CONFIG.basic;
-        const { error } = await supabase.from('subscriptions').upsert([
+        // Upsert subscription
+        const { data: subData, error } = await supabase.from('subscriptions').upsert([
             {
                 user_id: userId,
                 plan: planKey,
@@ -571,19 +565,76 @@ async function simulatePaymentAndSubscribe(paymentMethod, parentModal, planKey =
                 days_remaining: 30,
                 max_users: planConfig.maxUsers
             }
-        ], { onConflict: ['user_id'] });
+        ], { onConflict: ['user_id'], returning: 'representation' });
         if (error) throw error;
+        // Get subscription_id
+        let subscription_id = null;
+        if (subData && subData.length > 0) {
+            subscription_id = subData[0].id;
+        } else {
+            // fallback: fetch latest
+            const { data: subFetch } = await supabase
+                .from('subscriptions')
+                .select('id')
+                .eq('user_id', userId)
+                .order('created_at', { ascending: false })
+                .limit(1);
+            if (subFetch && subFetch.length > 0) subscription_id = subFetch[0].id;
+        }
+        // Get latest subscription_history for this subscription
+        let subscription_history_id = null;
+        if (subscription_id) {
+            const { data: hist } = await supabase
+                .from('subscription_history')
+                .select('id')
+                .eq('subscription_id', subscription_id)
+                .order('created_at', { ascending: false })
+                .limit(1);
+            if (hist && hist.length > 0) subscription_history_id = hist[0].id;
+        }
         await createPaymentNotification(userId, paymentMethod, planConfig.price, planConfig.name.en);
         parentModal.remove();
         alert('Subscription successful! Welcome to ' + planConfig.name.en + ' plan.');
-        await generateSubscriptionInvoiceReceipt({
+        // --- Get next receipt number ---
+        const receipt_number = await getNextSubscriptionReceiptNumber();
+        // --- Generate PDF as Blob, passing receipt_number ---
+        const pdfBlob = await generateSubscriptionInvoiceReceipt({
             userId,
             plan: planConfig.name.en,
             price: planConfig.price,
             paymentMethod,
             startDate: now,
-            endDate: endDate
+            endDate: endDate,
+            asBlob: true,
+            receipt_number
         });
+        // --- Upload PDF ---
+        const { publicUrl, bucket, folder } = await uploadSubscriptionReceiptPDF(pdfBlob, receipt_number);
+        // --- Insert into DB ---
+        await insertSubscriptionReceipt({
+            receipt_number,
+            user_id: userId,
+            subscription_id,
+            subscription_history_id,
+            amount: planConfig.priceValue,
+            payment_method: paymentMethod,
+            plan: planConfig.name.en,
+            notes: null,
+            pdf_url: publicUrl,
+            pdf_bucket: bucket,
+            pdf_folder: folder
+        });
+        // --- Trigger download for user ---
+        const url = URL.createObjectURL(pdfBlob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${receipt_number}.pdf`;
+        document.body.appendChild(a);
+        a.click();
+        setTimeout(() => {
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }, 100);
         updateTrialBanner();
     } catch (err) {
         alert('Failed to subscribe: ' + (err.message || err));
@@ -591,7 +642,7 @@ async function simulatePaymentAndSubscribe(paymentMethod, parentModal, planKey =
 }
 
 // --- Generate Subscription Invoice-Receipt PDF ---
-async function generateSubscriptionInvoiceReceipt({ userId, plan, price, paymentMethod, startDate, endDate }) {
+async function generateSubscriptionInvoiceReceipt({ userId, plan, price, paymentMethod, startDate, endDate, asBlob, receipt_number }) {
     // Load jsPDF if not present
     if (!window.jspdf) {
         await new Promise((resolve, reject) => {
@@ -606,7 +657,7 @@ async function generateSubscriptionInvoiceReceipt({ userId, plan, price, payment
     const systemCompany = {
         company_name: 'Walaka Software, Lda',
         address: 'Av. Julius Nyerere, Maputo, Mozambique',
-        email: 'info@walaka.co.mz',
+        email: 'info@walakasoftware.com',
         tax_id: '401883155' // Example NUIT
     };
     // Fetch business profile for user info (for 'To:')
@@ -636,10 +687,6 @@ async function generateSubscriptionInvoiceReceipt({ userId, plan, price, payment
         const { data: { user } } = await supabase.auth.getUser();
         if (user?.email && client.email === '-') client.email = user.email;
     } catch (e) {}
-    // Generate unique invoice-receipt number
-    const dateStr = startDate.toISOString().slice(0,10).replace(/-/g, '');
-    const rand = Math.floor(Math.random()*9000+1000);
-    const invoiceNumber = `SUB-${dateStr}-${rand}`;
     // --- PDF Layout ---
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF({ unit: 'mm', format: 'a4' });
@@ -659,7 +706,7 @@ async function generateSubscriptionInvoiceReceipt({ userId, plan, price, payment
     doc.setFontSize(11);
     doc.setTextColor(text);
     doc.setFont('helvetica', 'normal');
-    doc.text(`Invoice-Receipt #: ${invoiceNumber}`, 14, 30);
+    doc.text(`Invoice-Receipt #: ${receipt_number || '-'}`, 14, 30);
     // From (system info)
     doc.setFont('helvetica', 'bold');
     doc.text('From:', 14, 40);
@@ -722,8 +769,13 @@ async function generateSubscriptionInvoiceReceipt({ userId, plan, price, payment
     doc.setFontSize(9);
     doc.setTextColor(lightText);
     doc.text('Generated by WALAKA', 105, 287, { align: 'center' });
-    // Download
-    doc.save(`${invoiceNumber}.pdf`);
+    if (asBlob) {
+        return doc.output('blob');
+    } else {
+        // Download
+        const invoiceNumber = receipt_number || 'SUB-XXXX-00000';
+        doc.save(`${invoiceNumber}.pdf`);
+    }
 }
 
 function setupUpgradeButton() {
@@ -807,6 +859,30 @@ window.TrialBanner = {
         } catch (error) {
             console.error('[TrialBanner] Error in checkNotifications:', error);
         }
+    },
+    // Display subscription receipts
+    displaySubscriptionReceipts: async function(userId, tableSelector = '#subscription-receipts-table') {
+        const { data, error } = await supabase
+            .from('subscription_receipts')
+            .select('*')
+            .eq('user_id', userId)
+            .order('payment_date', { descending: true });
+        if (error) return;
+        const tbody = document.querySelector(`${tableSelector} tbody`);
+        if (!tbody) return;
+        tbody.innerHTML = '';
+        data.forEach(r => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>${r.receipt_number}</td>
+                <td>${new Date(r.payment_date).toLocaleDateString()}</td>
+                <td>${r.plan}</td>
+                <td>${r.amount}</td>
+                <td>${r.payment_method}</td>
+                <td><a href="${r.pdf_url}" target="_blank">Download</a></td>
+            `;
+            tbody.appendChild(tr);
+        });
     }
 };
 

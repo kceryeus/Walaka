@@ -1,80 +1,59 @@
-// Authentication utilities
-// import { supabase } from './supabaseClient.js';
+import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
 
-const auth = {
-    // Check if user is authenticated
-    async checkAuth() {
-        try {
-            const { data: { session } } = await window.supabase.auth.getSession();
-            return !!session;
-        } catch (error) {
-            console.error('Error checking authentication:', error);
-            return false;
+// Replace these with your actual Supabase project URL and public anon key
+const supabaseUrl = 'https://qvmtozjvjflygbkjecyj.supabase.co';
+const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF2bXRvemp2amZseWdia2plY3lqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDYxMjc2MjMsImV4cCI6MjA2MTcwMzYyM30.DJMC1eM5_EouM1oc07JaoXsMX_bSLn2AVCozAcdfHmo';
+
+const supabase = createClient(supabaseUrl, supabaseKey);
+
+export { supabase, supabaseUrl, supabaseKey };
+
+// Centralized auth check for all protected pages
+export async function requireAuth() {
+    try {
+        const repoName = 'Walaka';
+        const isGitHubPages = window.location.hostname.includes('github.io');
+        const basePath = isGitHubPages ? `/${repoName}/` : '/';
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session || !session.user) {
+            window.location.href = basePath + 'login.html';
+            throw new Error('Not authenticated');
         }
-    },
+        return session;
+    } catch (error) {
+        const repoName = 'Walaka';
+        const isGitHubPages = window.location.hostname.includes('github.io');
+        const basePath = isGitHubPages ? `/${repoName}/` : '/';
+        window.location.href = basePath + 'login.html';
+        throw error;
+    }
+}
 
-    // Handle logout
-    async logout() {
-        try {
-            const { error } = await window.supabase.auth.signOut();
-            if (error) throw error;
+// Universal logout handler for all pages
+if (typeof window !== 'undefined') {
+  document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('a[href="#"], button.logout, .logout-btn').forEach(function(el) {
+      if (
+        el.textContent.trim().toLowerCase().includes('logout') ||
+        el.innerHTML.toLowerCase().includes('fa-sign-out-alt')
+      ) {
+        el.addEventListener('click', async function(e) {
+          e.preventDefault();
+          try {
+            if (window.supabase && window.supabase.auth) {
+              await window.supabase.auth.signOut();
+            }
+          } catch (err) {
+            console.error('Error signing out:', err);
+          } finally {
+            // Handle GitHub Pages subdirectory if needed
             const repoName = 'Walaka';
             const isGitHubPages = window.location.hostname.includes('github.io');
             const basePath = isGitHubPages ? `/${repoName}/` : '/';
             window.location.href = basePath + 'login.html';
-        } catch (error) {
-            console.error('Error signing out:', error);
-            alert('Failed to sign out. Please try again.');
-        }
-    },
-
-    // Protect page from unauthorized access
-    async protectPage() {
-        const isAuthenticated = await this.checkAuth();
-        if (!isAuthenticated) {
-            // window.location.href = '/login.html';
-            console.log('[auth.js] Would redirect to /login.html: not authenticated');
-            return false;
-        }
-        return true;
-    },
-
-    // Initialize auth listeners and protection
-    async init() {
-        // Check authentication status
-        await this.protectPage();
-
-        // Set up auth state change listener
-        window.supabase.auth.onAuthStateChange((event, session) => {
-            if (event === 'SIGNED_OUT' || !session) {
-                // window.location.href = '/login.html';
-                console.log(`[auth.js] Would redirect to /login.html: event = ${event}, session =`, session);
-            }
+          }
         });
-
-        // Set up logout handler if logout link exists
-        const logoutLink = document.querySelector('#userDropdown a[href="#"]:last-child');
-        if (logoutLink) {
-            logoutLink.addEventListener('click', (e) => {
-                e.preventDefault();
-                this.logout();
-            });
-        }
-    }
-};
-window.auth = auth;
-
-// Initialize auth when the page loads
-function waitForSupabaseClient(callback) {
-    if (window.supabase) {
-        callback();
-    } else {
-        setTimeout(() => waitForSupabaseClient(callback), 50);
-    }
-}
-
-document.addEventListener('DOMContentLoaded', () => {
-    waitForSupabaseClient(() => {
-        auth.init();
+      }
     });
-}); 
+  });
+} 

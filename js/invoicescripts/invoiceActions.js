@@ -58,7 +58,7 @@ class InvoiceActions {
             showNotification(`Invoice marked as ${newStatus} successfully`, 'success');
             
             // Refresh invoice list and metrics
-            await this.refreshInvoiceList();
+            // await this.refreshInvoiceList();
         } catch (error) {
             console.error('Error updating invoice status:', error);
             showNotification(error.message || 'Failed to update invoice status', 'error');
@@ -105,7 +105,7 @@ class InvoiceActions {
             window.showNotification('Invoice sent successfully');
 
             // Refresh invoice list and metrics
-            await this.refreshInvoiceList();
+            // await this.refreshInvoiceList();
 
             return true;
         } catch (error) {
@@ -137,7 +137,7 @@ class InvoiceActions {
             showNotification('Invoice deleted successfully', 'success');
 
             // Refresh invoice list and metrics
-            await this.refreshInvoiceList();
+            // await this.refreshInvoiceList();
 
             return true;
         } catch (error) {
@@ -185,7 +185,7 @@ class InvoiceActions {
             showNotification('Invoice duplicated successfully', 'success');
 
             // Refresh invoice list
-            await this.refreshInvoiceList();
+            // await this.refreshInvoiceList();
 
             return newInvoiceNumber;
         } catch (error) {
@@ -406,9 +406,9 @@ class InvoiceActions {
     }
 
     async refreshInvoiceList() {
-        if (window.invoiceTable && typeof window.invoiceTable.fetchAndDisplayInvoices === 'function') {
-            await window.invoiceTable.fetchAndDisplayInvoices(1, 10, {});
-        }
+        // if (window.invoiceTable && typeof window.invoiceTable.fetchAndDisplayInvoices === 'function') {
+        //     await window.invoiceTable.fetchAndDisplayInvoices(1, 10, {});
+        // }
     }
 
     // Add method to preview invoice details in a modal

@@ -1,4 +1,4 @@
-/*
+/* DEPRECATED - DELETE 
 // Template Manager for Invoice System
 const templateManager = {
     // Default template content
@@ -408,6 +408,6 @@ const templateManager = {
 };
 
 // Attach to window for global access
-window.invoiceTemplateManager = templateManager; 
+window.invoicetemplatemanager = templateManager; 
 
 */

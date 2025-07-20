@@ -315,13 +315,14 @@ async function generatePDF(invoiceData, options = {}) {
         const serie = invoiceData.serie || invoiceData.invoiceSerie || '';
         let invoiceNumber = invoiceData.invoiceNumber || invoiceData.invoice_number || '';
         if (!invoiceNumber) invoiceNumber = await getNextInvoiceNumber();
-        // Only combine if both are present and not already combined
+        // Always set displayInvoiceNumber (with series/letter) and pass as both invoiceNumber and invoice.displayNumber
         let displayInvoiceNumber = invoiceNumber;
         if (serie && invoiceNumber && !(`${invoiceNumber}`.startsWith(`${serie}/`))) {
             displayInvoiceNumber = `${serie}/${invoiceNumber}`;
         } else {
             displayInvoiceNumber = invoiceNumber || serie || 'Factura Rascunho';
         }
+        console.log('[PDF.js] displayInvoiceNumber before template:', displayInvoiceNumber, 'invoiceNumber:', invoiceNumber);
         const formattedData = {
             // Company info
             company: {
@@ -343,6 +344,7 @@ async function generatePDF(invoiceData, options = {}) {
                 status: invoiceData.status || 'draft',
                 projectName: invoiceData.projectName || ''
             },
+            invoiceNumber: displayInvoiceNumber, // <-- always pass displayInvoiceNumber for template
             subtotal,
             discountType,
             discountValue,
@@ -363,8 +365,8 @@ async function generatePDF(invoiceData, options = {}) {
         console.log('Formatted data for PDF:', formattedData);
 
         // Get selected template
-        const selectedTemplate = await window.invoiceTemplateManager.getSelectedTemplate();
-        let template = window.invoiceTemplateManager.TEMPLATES[selectedTemplate] || window.invoiceTemplateManager.TEMPLATES['classic'];
+        const selectedTemplate = await window.invoicetemplatemanager.getSelectedTemplate();
+        let template = window.invoicetemplatemanager.TEMPLATES[selectedTemplate] || window.invoicetemplatemanager.TEMPLATES['classic'];
         // Fetch accent color from invoice_settings if modern template
         let color = '#007ec7';
         if (selectedTemplate === 'modern') {
@@ -410,7 +412,7 @@ async function generatePDF(invoiceData, options = {}) {
         `;
         
         // Populate template with data
-        let populatedHtml = await window.invoiceTemplateManager.populateTemplate(html, formattedData);
+        let populatedHtml = await window.invoicetemplatemanager.populateTemplate(html, formattedData);
 
         // --- Watermark injection for preview/proforma ---
         if (options.watermark) {
@@ -476,7 +478,7 @@ async function generatePDF(invoiceData, options = {}) {
 
         // Create PDF container using TemplateManager (single source of truth for structure)
         // This ensures the invoice is always centered and styled consistently for PDF output.
-        const pdfContainer = window.invoiceTemplateManager.createPDFContainer(populatedHtml);
+        const pdfContainer = window.invoicetemplatemanager.createPDFContainer(populatedHtml);
         document.body.appendChild(pdfContainer);
 
         // PDF Options
@@ -509,7 +511,7 @@ async function generatePDF(invoiceData, options = {}) {
                 .outputPdf('blob');
             
             console.log('PDF generated successfully');
-            
+            console.log('[PDF.js] PDF download success for displayInvoiceNumber:', formattedData.invoice.displayNumber, 'invoiceNumber:', formattedData.invoice.number);
             // Cleanup
             document.body.removeChild(pdfContainer);
             
@@ -519,6 +521,7 @@ async function generatePDF(invoiceData, options = {}) {
             if (document.body.contains(pdfContainer)) {
                 document.body.removeChild(pdfContainer);
             }
+            console.error('[PDF.js] PDF download error for displayInvoiceNumber:', formattedData.invoice.displayNumber, 'invoiceNumber:', formattedData.invoice.number);
             throw error;
         }
     } catch (error) {

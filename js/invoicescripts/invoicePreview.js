@@ -84,6 +84,17 @@ async function previewInvoice(invoiceData) {
         // Get business profile
         const businessProfile = await getBusinessProfile();
         
+        // --- Invoice number with series/letter ---
+        const serie = invoiceData.serie || invoiceData.invoiceSerie || '';
+        let invoiceNumber = invoiceData.invoiceNumber || invoiceData.invoice_number || '';
+        if (!invoiceNumber) invoiceNumber = await getNextInvoiceNumber();
+        let displayInvoiceNumber = invoiceNumber;
+        if (serie && invoiceNumber && !(`${invoiceNumber}`.startsWith(`${serie}/`))) {
+            displayInvoiceNumber = `${serie}/${invoiceNumber}`;
+        } else {
+            displayInvoiceNumber = invoiceNumber || serie || 'Factura Rascunho';
+        }
+        console.log('[Preview] displayInvoiceNumber before template:', displayInvoiceNumber, 'invoiceNumber:', invoiceNumber);
         // Format the data for the template
         const formattedData = {
             company: {
@@ -97,7 +108,8 @@ async function previewInvoice(invoiceData) {
             },
             invoice: {
                 id: invoiceData.id || invoiceData.invoice_id,
-                number: invoiceData.invoiceNumber || await getNextInvoiceNumber(),
+                number: invoiceNumber,
+                displayNumber: displayInvoiceNumber,
                 issueDate: invoiceData.issueDate || invoiceData.issue_date || new Date().toISOString().split('T')[0],
                 dueDate: invoiceData.dueDate || invoiceData.due_date || new Date(Date.now() + 30*24*60*60*1000).toISOString().split('T')[0],
                 status: invoiceData.status || 'draft',
@@ -124,11 +136,11 @@ async function previewInvoice(invoiceData) {
         }
         
         // Get selected template
-        let selectedTemplate = await window.invoiceTemplateManager.getSelectedTemplate();
-        let template = window.invoiceTemplateManager.TEMPLATES?.[selectedTemplate] || window.invoiceTemplateManager.defaultTemplate;
+        let selectedTemplate = await window.invoicetemplatemanager.getSelectedTemplate();
+        let template = window.invoicetemplatemanager.TEMPLATES?.[selectedTemplate] || window.invoicetemplatemanager.defaultTemplate;
         // Fallback to default if template is missing or incomplete
         if (!template || !template.layout || !template.styles) {
-            template = window.invoiceTemplateManager.defaultTemplate;
+            template = window.invoicetemplatemanager.defaultTemplate;
         }
         // Fetch accent color from invoice_settings if modern template
         let color = '#007ec7';
@@ -172,45 +184,14 @@ async function previewInvoice(invoiceData) {
         
         // Populate template with data (ensure all fields are present)
         const safeData = {
-            company: {
-                name: formattedData.company?.name || 'Your Company Name',
-                address: formattedData.company?.address || 'Your Company Address',
-                email: formattedData.company?.email || 'info@yourcompany.com',
-                phone: formattedData.company?.phone || '+258 XX XXX XXXX',
-                nuit: formattedData.company?.nuit || '0',
-                logo: formattedData.company?.logo || '',
-                website: formattedData.company?.website || ''
-            },
+            ...formattedData,
             invoice: {
-                id: formattedData.invoice?.id || '',
-                number: formattedData.invoice?.number || '',
-                issueDate: formattedData.invoice?.issueDate || '',
-                dueDate: formattedData.invoice?.dueDate || '',
-                status: formattedData.invoice?.status || 'draft',
-                projectName: formattedData.invoice?.projectName || '',
-                subtotal: formattedData.invoice?.subtotal || 0,
-                vat: formattedData.invoice?.vat || 0,
-                total: formattedData.invoice?.total || 0,
-                discount: formattedData.invoice?.discount || 0,
-                notes: formattedData.invoice?.notes || '',
-                paymentTerms: formattedData.invoice?.paymentTerms || 'net30'
+                ...formattedData.invoice,
+                displayNumber: displayInvoiceNumber
             },
-            client: {
-                name: formattedData.client?.name || 'Client Name',
-                address: formattedData.client?.address || '',
-                nuit: formattedData.client?.nuit || 0,
-                email: formattedData.client?.email || '',
-                contact: formattedData.client?.contact || '',
-                phone: formattedData.client?.phone || '',
-                city: formattedData.client?.city || '',
-                postal_code: formattedData.client?.postal_code || '',
-                province: formattedData.client?.province || '',
-                country: formattedData.client?.country || ''
-            },
-            items: formattedData.items || [],
-            currency: formattedData.currency || 'MZN'
+            invoiceNumber: displayInvoiceNumber // for template compatibility
         };
-        const populatedHtml = await window.invoiceTemplateManager.populateTemplate(html, safeData);
+        const populatedHtml = await window.invoicetemplatemanager.populateTemplate(html, safeData);
         
         // Clear and update the preview content
         previewContainer.innerHTML = populatedHtml;
@@ -232,8 +213,8 @@ async function previewInvoice(invoiceData) {
         const invoiceStatusElement = document.getElementById('viewInvoiceStatus');
         
         if (invoiceNumberElement) {
-            invoiceNumberElement.textContent = formattedData.invoice.number;
-            console.log('Updated invoice number:', formattedData.invoice.number);
+            invoiceNumberElement.textContent = displayInvoiceNumber;
+            console.log('Updated invoice number:', displayInvoiceNumber);
         }
         
         if (invoiceStatusElement) {
@@ -266,6 +247,10 @@ async function previewInvoice(invoiceData) {
                         if (!currentInvoiceData || !currentInvoiceData.invoice?.number) {
                             throw new Error('No valid invoice data found');
                         }
+                        // Ensure correct invoice number is passed to PDF.js
+                        currentInvoiceData.invoiceNumber = currentInvoiceData.invoice?.displayNumber || currentInvoiceData.invoice?.number;
+                        currentInvoiceData.invoice_number = currentInvoiceData.invoice?.displayNumber || currentInvoiceData.invoice?.number;
+                        console.log('[Preview] Download PDF for displayInvoiceNumber:', currentInvoiceData.invoice.displayNumber, 'invoiceNumber:', currentInvoiceData.invoice.number);
                         showNotification('Generating PDF...', 'info');
                         // Pass watermark for preview
                         const pdfBlob = await window.generatePDF(currentInvoiceData, { watermark: 'DRAFT' });
@@ -276,9 +261,11 @@ async function previewInvoice(invoiceData) {
                         downloadLink.click();
                         document.body.removeChild(downloadLink);
                         showNotification('PDF downloaded successfully', 'success');
+                        console.log('[Preview] PDF download success for displayInvoiceNumber:', currentInvoiceData.invoice.displayNumber, 'invoiceNumber:', currentInvoiceData.invoice.number);
                     } catch (error) {
                         console.error('Error downloading PDF:', error);
                         showNotification('Error generating PDF: ' + error.message, 'error');
+                        console.error('[Preview] PDF download error');
                     } finally {
                         downloadPdfBtn.disabled = false;
                         downloadPdfBtn.innerHTML = '<i class="fas fa-download"></i> Download PDF';
@@ -300,7 +287,7 @@ async function previewInvoice(invoiceData) {
             const detailsHtml = `
                 <div class="detail-item">
                     <span class="label">Invoice Number:</span>
-                    <span class="value">${formattedData.invoice.number}</span>
+                    <span class="value">${displayInvoiceNumber}</span>
                 </div>
                 <div class="detail-item">
                     <span class="label">Issue Date:</span>
@@ -529,6 +516,78 @@ window.previewInvoice = previewInvoice;
 window.downloadInvoicePdf = downloadInvoicePdf;
 window.openEmailModal = openEmailModal;
 
+// --- EMAIL SENDING LOGIC FOR EMAIL MODAL ---
+document.addEventListener('DOMContentLoaded', function() {
+    const emailForm = document.getElementById('emailInvoiceForm');
+    if (emailForm) {
+        emailForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const loading = emailForm.querySelector('.loading-indicator');
+            if (loading) loading.style.display = '';
+            const to = document.getElementById('emailTo').value;
+            const subject = document.getElementById('emailSubject').value;
+            const message = document.getElementById('emailMessage').value;
+            const attachPdf = document.getElementById('emailAttachPdf').checked;
+            try {
+                let sendResult = false;
+                let body = { to, subject, message };
+                if (attachPdf) {
+                    // Get invoice data from preview
+                    const previewContainer = document.getElementById('invoicePreviewContent');
+                    let invoiceData = null;
+                    try {
+                        invoiceData = JSON.parse(previewContainer.dataset.currentInvoice || '{}');
+                    } catch {}
+                    if (!invoiceData) throw new Error('No invoice data available for PDF attachment');
+                    if (typeof window.generatePDF === 'function') {
+                        const pdfBlob = await window.generatePDF(invoiceData);
+                        // Convert PDF Blob to base64
+                        const pdfBase64 = await new Promise((resolve, reject) => {
+                            const reader = new FileReader();
+                            reader.onloadend = () => {
+                                const base64 = reader.result.split(',')[1];
+                                resolve(base64);
+                            };
+                            reader.onerror = reject;
+                            reader.readAsDataURL(pdfBlob);
+                        });
+                        body.attachment = {
+                            filename: `Invoice-${invoiceData.invoice?.number || invoiceData.invoiceNumber || 'invoice'}.pdf`,
+                            content: pdfBase64,
+                            contentType: 'application/pdf'
+                        };
+                    } else {
+                        throw new Error('PDF generation not available');
+                    }
+                }
+                // Send to backend (directly, not using sendNotificationEmail)
+                const apiUrl = window.getMailApiUrl ? window.getMailApiUrl() : '/sendmail';
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(body)
+                });
+                let data = {};
+                try { data = await response.json(); } catch {}
+                sendResult = response.ok && data.success;
+                if (sendResult) {
+                    window.showNotification('Email sent successfully!', 'success');
+                    // Close modal
+                    const emailModal = document.getElementById('emailInvoiceModal');
+                    if (emailModal) emailModal.classList.remove('active');
+                    document.body.classList.remove('modal-open');
+                } else {
+                    window.showNotification('Failed to send email. Please try again.', 'error');
+                }
+            } catch (err) {
+                window.showNotification('Error sending email: ' + (err.message || err), 'error');
+            } finally {
+                if (loading) loading.style.display = 'none';
+            }
+        });
+    }
+});
+
 // Provide a window.invoicePreview object for compatibility
 window.invoicePreview = {
     showPreview: previewInvoice,
@@ -546,6 +605,7 @@ window.invoicePreview = {
 };
 
 // Event listeners for preview and send buttons
+
 document.getElementById('previewInvoiceBtn')?.addEventListener('click', () => {
     window.modalManager.openModal('viewInvoiceModal');
 });
@@ -553,6 +613,15 @@ document.getElementById('previewInvoiceBtn')?.addEventListener('click', () => {
 document.getElementById('sendInvoiceBtn')?.addEventListener('click', function(e) {
     e.preventDefault();
     e.stopPropagation();
-    const viewModal = document.getElementById('viewInvoiceModal');
-    window.modalManager.openModal('emailInvoiceModal', viewModal);
+    // Get invoice data from preview
+    const previewContainer = document.getElementById('invoicePreviewContent');
+    let invoiceData = null;
+    try {
+        invoiceData = JSON.parse(previewContainer.dataset.currentInvoice || '{}');
+    } catch {}
+    if (invoiceData) {
+        openEmailModal(invoiceData);
+    } else {
+        window.showNotification('No invoice data available for email', 'error');
+    }
 });

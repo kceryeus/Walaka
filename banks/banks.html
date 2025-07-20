@@ -27,6 +27,64 @@
         document.write(`<link rel="stylesheet" href="${basePath}components/trial-restrictions.css">`);
     </script>
 
+    <style>
+[data-theme="dark"] body,
+[data-theme="dark"] .dashboard-container,
+[data-theme="dark"] .main-content,
+[data-theme="dark"] .page-header,
+[data-theme="dark"] .banks-container,
+[data-theme="dark"] .metrics-grid,
+[data-theme="dark"] .metric-card,
+[data-theme="dark"] .controls-container,
+[data-theme="dark"] .filters,
+[data-theme="dark"] .filter-group,
+[data-theme="dark"] .accounts-table,
+[data-theme="dark"] .accounts-table th,
+[data-theme="dark"] .accounts-table td {
+  background: #23262f !important;
+  color: #fff !important;
+  border-color: #2a2d3a !important;
+}
+[data-theme="dark"] .page-header h1,
+[data-theme="dark"] .page-header p,
+[data-theme="dark"] .metric-label,
+[data-theme="dark"] .filter-group label {
+  color: #60a5fa !important;
+}
+[data-theme="dark"] .metric-value {
+  color: #fff !important;
+}
+[data-theme="dark"] .btn,
+[data-theme="dark"] .primary-btn,
+[data-theme="dark"] .secondary-btn {
+  background: #2563eb !important;
+  color: #fff !important;
+  border-color: #2563eb !important;
+}
+[data-theme="dark"] .btn:hover,
+[data-theme="dark"] .primary-btn:hover,
+[data-theme="dark"] .secondary-btn:hover {
+  background: #1e40af !important;
+  color: #fff !important;
+}
+[data-theme="dark"] input,
+[data-theme="dark"] select,
+[data-theme="dark"] textarea {
+  background: #181a20 !important;
+  color: #fff !important;
+  border: 1px solid #2a2d3a !important;
+}
+[data-theme="dark"] .modal,
+[data-theme="dark"] .modal-content,
+[data-theme="dark"] .modal-header,
+[data-theme="dark"] .modal-body,
+[data-theme="dark"] .modal-footer {
+  background: #23262f !important;
+  color: #fff !important;
+  border-color: #2a2d3a !important;
+}
+</style>
+
 
     <!-- Initialize Supabase like other pages -->
     <script>
@@ -38,6 +96,8 @@
         window.supabase = supabase.createClient(supabaseUrl, supabaseKey);
         console.log('Supabase client initialized:', window.supabase);
     </script>
+    <script src="../js/sendNotificationEmail.js"></script>
+    <script src="../js/darkmode.js"></script>
 </head>
 <body>
     <div class="dashboard-container">
@@ -54,6 +114,15 @@
                     var script = document.createElement('script');
                     script.src = `${basePath}components/sidebar-actions.js`;
                     document.body.appendChild(script);
+                    // Dynamically load the sidebar-darkmode.js script after sidebar is injected
+                    var darkmodeScript = document.createElement('script');
+                    darkmodeScript.src = `${basePath}components/sidebar-darkmode.js`;
+                    darkmodeScript.onload = function() {
+                        setTimeout(function() {
+                            if (window.initSidebarDarkModeIcon) window.initSidebarDarkModeIcon();
+                        }, 100);
+                    };
+                    document.body.appendChild(darkmodeScript);
                 })
                 .catch(err => {
                     console.error('Failed to load sidebar:', err);

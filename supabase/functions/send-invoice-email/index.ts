@@ -1,3 +1,4 @@
+// DEPRECATED - DELETE: Email logic moved to Node.js backend.
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import { SmtpClient } from 'https://deno.land/x/smtp@v0.7.0/mod.ts'

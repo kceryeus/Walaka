@@ -12,23 +12,17 @@ class WalakaAssistant {
 
   // Função para chamada à API OpenRouter
   async callOpenRouter(messages) {
-    // Detect if running locally (localhost:3000 or 127.0.0.1:3000)
-    let url;
-    if (
-      window.location.hostname === "localhost" ||
-      window.location.hostname === "127.0.0.1"
-    ) {
-      url = "http://localhost:54321/functions/v1/walaka-assistant";
-    } else {
-      // For production, use relative path (works on walakasoftware.com and most static hosts)
-      url = "/functions/v1/walaka-assistant";
-    }
+    // Always use the full Supabase Edge Function URL for compatibility
+    const url = "https://qvmtozjvjflygbkjecyj.supabase.co/functions/v1/walaka-assistant";
+    // TODO: Replace with your actual Supabase anon key
+    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF2bXRvemp2amZseWdia2plY3lqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDYxMjc2MjMsImV4cCI6MjA2MTcwMzYyM30.DJMC1eM5_EouM1oc07JaoXsMX_bSLn2AVCozAcdfHmo";
 
     try {
       const response = await fetch(url, {
         method: "POST",
         headers: {
-          "Content-Type": "application/json"
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${SUPABASE_ANON_KEY}`
         },
         body: JSON.stringify({ messages })
       });

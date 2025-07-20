@@ -174,7 +174,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   };
 
   // Add template manager object
-  window.invoiceTemplateManager = {
+  window.invoicetemplatemanager = {
     getSelectedTemplate: function() {
       return localStorage.getItem('selectedInvoiceTemplate') || 'classic';
     },
@@ -400,11 +400,11 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       // Get the selected template from localStorage or use default
       // Prioritize value from invoiceSettings if it exists
-      const selectedTemplate = invoiceSettings.template || window.invoiceTemplateManager.getSelectedTemplate();
+      const selectedTemplate = invoiceSettings.template || window.invoicetemplatemanager.getSelectedTemplate();
       invoiceTemplateInput.value = selectedTemplate;
 
       // Preview the selected template
-      window.invoiceTemplateManager.previewTemplate(selectedTemplate);
+      window.invoicetemplatemanager.previewTemplate(selectedTemplate);
 
       invoiceColorInput.value = invoiceSettings.color;
       invoiceColorValue.textContent = invoiceSettings.color;
@@ -1267,10 +1267,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         console.log('Template changed to:', selectedTemplateValue);
         
         // Save to localStorage
-        window.invoiceTemplateManager.saveTemplateSelection(selectedTemplateValue);
+        window.invoicetemplatemanager.saveTemplateSelection(selectedTemplateValue);
         
         // Preview the template
-        window.invoiceTemplateManager.previewTemplate(selectedTemplateValue);
+        window.invoicetemplatemanager.previewTemplate(selectedTemplateValue);
         
         // Show success message
         showToast('success', 'Template Updated', `Invoice template changed to ${selectedTemplateValue}`);
@@ -1373,7 +1373,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('invoice-color-value').textContent = '#007ec7';
     
     // Update template preview
-    window.invoiceTemplateManager.previewTemplate('classic');
+    window.invoicetemplatemanager.previewTemplate('classic');
     
     showToast('Settings reset to defaults', 'info');
   }

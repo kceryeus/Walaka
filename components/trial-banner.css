@@ -3,7 +3,7 @@ Dedicated styling for the trial banner component.
 */
 
 .trial-banner {
-    background: linear-gradient(to right, #007ec7, #1e3aa1);
+    background: linear-gradient(to right, var(--primary-color), var(--primary-dark));
     border-radius: 8px;
     padding: 0 1.5rem;
     margin: 1rem 0;
@@ -15,6 +15,11 @@ Dedicated styling for the trial banner component.
     height: 48px;
     font-family: 'Inter', sans-serif;
     gap: 24px; /* Add gap for spacing between all items */
+}
+
+[data-theme="dark"] .trial-banner {
+    background: linear-gradient(to right, var(--primary-color), #181a20);
+    color: var(--text-primary);
 }
 
 .trial-info-group {

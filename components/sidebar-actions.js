@@ -8,8 +8,8 @@
 
     function updateSidebarLinks() {
         const basePath = getBasePath();
-        // The sidebar is inside #sidebar-container, but the main element has .sidebar class
-        const sidebar = document.querySelector('#sidebar-container .sidebar');
+        // The sidebar is now selected by class only
+        const sidebar = document.querySelector('.sidebar');
         if (!sidebar) return;
 
         const links = sidebar.querySelectorAll('a');
@@ -36,13 +36,42 @@
         }
     }
 
+    function showLogsMenuIfAdmin() {
+        const logsLink = document.getElementById('logs-link');
+        if (!logsLink) return;
+        if (window.supabase && window.supabase.auth) {
+            window.supabase.auth.getSession().then(({ data: { session } }) => {
+                console.log('[sidebar-actions.js] Session:', session);
+                if (!session || !session.user) {
+                    console.warn('[sidebar-actions.js] No session or user found.');
+                    logsLink.classList.remove('admin-visible');
+                    return;
+                }
+                window.supabase.from('users').select('role').eq('id', session.user.id).single().then(({ data: user, error }) => {
+                    console.log('[sidebar-actions.js] User lookup:', user, error);
+                    if (user && user.role === 'admin') {
+                        logsLink.classList.add('admin-visible');
+                        console.log('[sidebar-actions.js] Showing logs link for admin.');
+                    } else {
+                        logsLink.classList.remove('admin-visible');
+                        console.log('[sidebar-actions.js] Hiding logs link (not admin).');
+                    }
+                });
+            });
+        } else {
+            logsLink.classList.remove('admin-visible');
+            console.warn('[sidebar-actions.js] No supabase client found.');
+        }
+    }
+
     function initSidebarActions() {
         // Only target the sidebar in this component
-        const sidebar = document.querySelector('#sidebar-container .sidebar');
+        const sidebar = document.querySelector('.sidebar');
         if (!sidebar) return;
 
         updateSidebarLinks(); // Update links as soon as sidebar is present
         updateSidebarLogo(); // Set the logo src dynamically
+        showLogsMenuIfAdmin(); // Show logs link if admin
 
         // Find all nav headers with submenus (these are <h3> elements)
         const navHeaders = sidebar.querySelectorAll('.nav-header.has-submenu');

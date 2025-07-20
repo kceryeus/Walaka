@@ -856,3 +856,99 @@ body.sidebar-collapsed .main-content {
     max-height: 600px;
     overflow-y: auto;
 }
+
+[data-theme="dark"] .main-content {
+  background: #181a20;
+  color: #fff;
+}
+[data-theme="dark"] .card,
+[data-theme="dark"] .chart-card,
+[data-theme="dark"] .metric-card {
+  background: #23262f;
+  color: #fff;
+  border-color: #2a2d3a;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+}
+[data-theme="dark"] .action-card {
+  background: #23262f;
+  color: #fff;
+  border-color: #2a2d3a;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.18);
+}
+[data-theme="dark"] .action-card p,
+[data-theme="dark"] .metric-card .metric-label,
+[data-theme="dark"] .card .subtitle {
+  color: #60a5fa;
+}
+[data-theme="dark"] .data-table,
+[data-theme="dark"] .recent-transactions {
+  background: #23262f;
+  color: #fff;
+  border-color: #2a2d3a;
+}
+[data-theme="dark"] .data-table th,
+[data-theme="dark"] .data-table td {
+  background: #23262f;
+  color: #fff;
+  border-color: #2a2d3a;
+}
+[data-theme="dark"] .table th,
+[data-theme="dark"] .table td {
+  background: #23262f;
+  color: #fff;
+  border-color: #2a2d3a;
+}
+[data-theme="dark"] .top-bar {
+  background: #23262f;
+  color: #e5e7eb;
+  border-bottom: 1px solid #2a2d3a;
+}
+[data-theme="dark"] .chart-card,
+[data-theme="dark"] .chart-container {
+  background: #23262f !important;
+  color: #fff;
+}
+[data-theme="dark"] .modal {
+  background: #23262f;
+  color: #e5e7eb;
+  border-color: #2a2d3a;
+}
+[data-theme="dark"] .btn-primary {
+  background: #2563eb;
+  color: #fff;
+}
+[data-theme="dark"] .btn-primary:hover {
+  background: #1e40af;
+}
+[data-theme="dark"] .btn-secondary {
+  background: #23262f;
+  color: #e5e7eb;
+  border: 1px solid #2a2d3a;
+}
+[data-theme="dark"] .btn-secondary:hover {
+  background: #181a20;
+}
+[data-theme="dark"] .metric-value {
+  color: #fff;
+}
+[data-theme="dark"] td,
+[data-theme="dark"] .data-table td,
+[data-theme="dark"] .table td {
+  color: #fff;
+}
+[data-theme="dark"] .recent-transactions h3 span,
+[data-theme="dark"] .chart-card h3 span,
+[data-theme="dark"] .action-card h4 {
+  color: #60a5fa;
+}
+[data-theme="dark"] .btn.active,
+[data-theme="dark"] button.active {
+  background: #2563eb;
+  color: #fff;
+  border-color: #2563eb;
+}
+[data-theme="dark"] .btn.active:hover,
+[data-theme="dark"] button.active:hover {
+  background: #1e40af;
+  color: #fff;
+}

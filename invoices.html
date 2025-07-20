@@ -23,7 +23,7 @@
     
     <!-- Custom CSS -->
     <script>
-        document.write(`<link rel="stylesheet" href="${basePath}trial/css/upgrade-modal.css">`);
+        document.write(`<link rel="stylesheet" href="${basePath}css/upgrade-modal.css">`);
         document.write(`<link rel="stylesheet" href="${basePath}components/trial-banner.css">`);
         document.write(`<link rel="stylesheet" href="${basePath}components/trial-restrictions.css">`);
         document.write(`<link rel="stylesheet" href="${basePath}components/sidebar.css">`);
@@ -37,9 +37,55 @@
     <script src="js/invoicescripts/dateRangeFilter.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.3/html2pdf.bundle.min.js"></script>
     <script src="js/invoicescripts/export.js"></script>
+    <script src="js/darkmode.js"></script>
+    <style>
+    [data-theme="dark"] .modal-stepper .step-indicator {
+      background: #181a20 !important;
+      color: #aaa !important;
+      border: 1px solid #333 !important;
+      border-bottom: none !important;
+    }
+    [data-theme="dark"] .modal-stepper .step-indicator.active {
+      background: #2563eb !important;
+      color: #fff !important;
+      border-bottom: 2px solid #60a5fa !important;
+    }
+    [data-theme="dark"] .modal-stepper .step-indicator:not(.active) {
+      color: #aaa !important;
+    }
+    [data-theme="dark"] .modal-overlay {
+      background: rgba(0,0,0,0.7) !important;
+    }
+    [data-theme="dark"] h2[data-translate="invoice_management"] {
+      color: #fff;
+    }
+    [data-theme="dark"] .invoice-table-container .table-responsive {
+      background: #23262f !important;
+    }
+    </style>
 </head>
 
 <body>
+  <script>
+    // Synchronous Supabase session check (robust for v1/v2)
+    var key = 'sb-qvmtozjvjflygbkjecyj-auth-token';
+    var session = null;
+    try {
+      session = JSON.parse(localStorage.getItem(key));
+    } catch (e) {}
+    var user = null;
+    if (session) {
+      user = session.user || (session.currentSession && session.currentSession.user);
+    }
+    if (!user) {
+      window.location.href = '/login.html';
+      document.write('<style>body{display:none !important;}</style>');
+    }
+  </script>
+  <script type="module">
+    import { requireAuth } from './js/auth.js';
+    requireAuth();
+  </script>
     <div class="dashboard-container">
         <!-- Sidebar Menu -->
         <div id="sidebar-container"></div>
@@ -54,6 +100,15 @@
                     var script = document.createElement('script');
                     script.src = `${basePath}components/sidebar-actions.js`;
                     document.body.appendChild(script);
+                    // Dynamically load the sidebar-darkmode.js script after sidebar is injected
+                    var darkmodeScript = document.createElement('script');
+                    darkmodeScript.src = `${basePath}components/sidebar-darkmode.js`;
+                    darkmodeScript.onload = function() {
+                        setTimeout(function() {
+                            if (window.initSidebarDarkModeIcon) window.initSidebarDarkModeIcon();
+                        }, 100);
+                    };
+                    document.body.appendChild(darkmodeScript);
                 })
                 .catch(err => {
                     console.error('Failed to load sidebar:', err);
@@ -368,6 +423,10 @@
                                     <datalist id="client-options"></datalist>
                                     <button type="button" id="add-client-btn" class="btn secondary-btn" style="display:none;">
                                         <i class="fas fa-plus"></i> <span data-translate="new_client">New Client</span>
+                                    </button>
+                                    <!-- General Client Button -->
+                                    <button type="button" id="general-client-btn" class="btn secondary-btn" style="margin-left:8px;">
+                                        <i class="fas fa-user"></i> General Client
                                     </button>
                                 </div>
                             </div>
@@ -1728,5 +1787,26 @@ document.getElementById('useProductBtn').addEventListener('click', function() {
 </script>
 <!-- Add user-restrictions.js at the very end -->
 <script src="components/user-restrictions.js"></script>
+
+<!-- Add this script at the end of the body to log email sending attempts -->
+<script>
+(function() {
+  // Check if sendNotificationEmail is defined globally (from notifications.html or elsewhere)
+  const originalSendNotificationEmail = window.sendNotificationEmail;
+  window.sendNotificationEmail = async function(to, subject, message) {
+    console.log('[FRONTEND EMAIL LOG] Attempting to send email');
+    console.log('[FRONTEND EMAIL LOG] To:', to);
+    console.log('[FRONTEND EMAIL LOG] Subject:', subject);
+    console.log('[FRONTEND EMAIL LOG] Message:', message);
+    if (typeof originalSendNotificationEmail === 'function') {
+      return await originalSendNotificationEmail(to, subject, message);
+    } else {
+      console.warn('[FRONTEND EMAIL LOG] sendNotificationEmail function is not defined!');
+    }
+  };
+})();
+</script>
+
+<script src="js/sendNotificationEmail.js"></script>
 </body>
 </html>

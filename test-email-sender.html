@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Email Sender</title>
+    <style>
+        body { font-family: Arial, sans-serif; background: #f7f7f7; margin: 0; padding: 0; }
+        .container { max-width: 400px; margin: 40px auto; background: #fff; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); padding: 32px; }
+        h2 { text-align: center; margin-bottom: 24px; }
+        label { display: block; margin-bottom: 6px; font-weight: 500; }
+        input, textarea { width: 100%; padding: 8px; margin-bottom: 18px; border: 1px solid #ccc; border-radius: 4px; font-size: 1em; }
+        button { width: 100%; padding: 10px; background: #3498db; color: #fff; border: none; border-radius: 4px; font-size: 1.1em; cursor: pointer; }
+        button:disabled { background: #b3d3ea; }
+        .toast { display: none; position: fixed; top: 24px; left: 50%; transform: translateX(-50%); background: #333; color: #fff; padding: 12px 24px; border-radius: 4px; z-index: 9999; font-size: 1em; }
+        .toast.success { background: #27ae60; }
+        .toast.error { background: #e74c3c; }
+        .toast.info { background: #3498db; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Test Email Sender</h2>
+        <label for="receiver">Receiver Email</label>
+        <input type="email" id="receiver" placeholder="user@example.com" required>
+        <label for="subject">Subject</label>
+        <input type="text" id="subject" placeholder="Subject" required>
+        <label for="message">Message</label>
+        <textarea id="message" rows="6" placeholder="Type your message here..." required></textarea>
+        <button id="sendBtn">Send Email</button>
+    </div>
+    <div id="toast" class="toast"></div>
+    <script>
+    // --- Toast Notification ---
+    function showToast(message, type = 'info') {
+        const toast = document.getElementById('toast');
+        toast.textContent = message;
+        toast.className = `toast ${type}`;
+        toast.style.display = 'block';
+        setTimeout(() => { toast.style.display = 'none'; }, 3500);
+    }
+
+    // --- Email API Endpoint Logic (same as notifications.html) ---
+    function getMailApiUrl() {
+        const meta = document.querySelector('meta[name="mail-api-endpoint"]');
+        if (meta && meta.content) return meta.content;
+        const host = window.location.hostname;
+        if (host === 'localhost' || host === '127.0.0.1') {
+            return 'http://localhost:3000/sendmail';
+        }
+        if (host.endsWith('github.io') || host === 'walaka.github.io') {
+            return 'https://walakasoftware.com/sendmail';
+        }
+        if (host.endsWith('walakasoftware.com')) {
+            return 'https://walakasoftware.com/sendmail';
+        }
+        // Default fallback
+        return 'https://walakasoftware.com/sendmail';
+    }
+
+    // --- Email Sending Logic ---
+    async function sendTestEmail(to, subject, message) {
+        const from = 'no-reply@walakasoftware.com';
+        const apiUrl = getMailApiUrl();
+        showToast('Sending email...', 'info');
+        try {
+            const response = await fetch(apiUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ to, subject, message, from })
+            });
+            let data = {};
+            try { data = await response.json(); } catch {}
+            if (!response.ok || !data.success) {
+                showToast('Failed to send email: ' + (data.error || response.statusText), 'error');
+                return false;
+            }
+            showToast('Email sent successfully!', 'success');
+            return true;
+        } catch (err) {
+            showToast('Network error: ' + err.message, 'error');
+            return false;
+        }
+    }
+
+    // --- UI Event Handler ---
+    document.getElementById('sendBtn').addEventListener('click', async function() {
+        const to = document.getElementById('receiver').value.trim();
+        const subject = document.getElementById('subject').value.trim();
+        const message = document.getElementById('message').value.trim();
+        if (!to || !subject || !message) {
+            showToast('Please fill in all fields.', 'error');
+            return;
+        }
+        this.disabled = true;
+        await sendTestEmail(to, subject, message);
+        this.disabled = false;
+    });
+    </script>
+</body>
+</html> 

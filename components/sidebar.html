@@ -53,6 +53,10 @@
                     <i class="fas fa-user-cog"></i>
                     <span data-translate="user_management">Gestão de Utilizadores</span>
                 </a>
+                <a href="logs.html" class="nav-item">
+                    <i class="fas fa-clipboard-list"></i>
+                    <span data-translate="logs">Logs do Sistema</span>
+                </a>
                 <a href="help.html" class="nav-item">
                     <i class="fas fa-question-circle"></i>
                     <span data-translate="help">Ajuda</span>
@@ -60,34 +64,21 @@
             </div>
         </div>
     </div>
+    <div id="sidebar-darkmode-toggle-container" style="position: absolute; bottom: 10px; left: 0; width: 100%; display: flex; justify-content: center;">
+        <div id="darkmode-pill-toggle" class="darkmode-pill-toggle">
+            <button id="light-mode-btn" class="darkmode-btn" aria-label="Light mode">
+                <span id="light-mode-icon">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="5" fill="white"/><g stroke="white" stroke-width="2"><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></g></svg>
+                </span>
+            </button>
+            <button id="dark-mode-btn" class="darkmode-btn" aria-label="Dark mode">
+                <span id="dark-mode-icon">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M21 12.79A9 9 0 1111.21 3a7 7 0 109.79 9.79z" fill="white"/></svg>
+                </span>
+            </button>
+            <span id="darkmode-pill-highlight" class="darkmode-pill-highlight"></span>
+        </div>
+    </div>
 </nav>
 <script src="components/sidebar-actions.js"></script>
-<script>
-// Minimal sidebar toggle for mobile
-const sidebar = document.getElementById('sidebar');
-const toggleBtn = document.getElementById('sidebar-toggle');
-const overlay = document.getElementById('sidebar-overlay'); // Must exist in main HTML
-function openSidebar() {
-    sidebar.classList.add('active');
-    if (overlay) overlay.classList.add('active');
-    document.body.classList.add('sidebar-open');
-    document.body.style.overflow = 'hidden'; // Prevent background scroll
-}
-function closeSidebar() {
-    sidebar.classList.remove('active');
-    if (overlay) overlay.classList.remove('active');
-    document.body.classList.remove('sidebar-open');
-    document.body.style.overflow = '';
-}
-toggleBtn.addEventListener('click', function() {
-    if (sidebar.classList.contains('active')) {
-        closeSidebar();
-    } else {
-        openSidebar();
-    }
-});
-if (overlay) overlay.addEventListener('click', closeSidebar);
-window.addEventListener('keydown', function(e) {
-    if (e.key === 'Escape') closeSidebar();
-});
-</script>
+

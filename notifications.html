@@ -13,6 +13,7 @@
     <link rel="stylesheet" href="components/sidebar.css"> 
     <link rel="stylesheet" href="banks/static/assets/css/banks.css">
     <link rel="stylesheet" href="trial-banner.css"> 
+    <script src="js/darkmode.js"></script>
     <style>
         .notifications-container {
             padding: 20px;
@@ -175,6 +176,94 @@
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
+        /* --- DARK MODE REFINEMENTS --- */
+        [data-theme="dark"] body,
+        [data-theme="dark"] .dashboard-container,
+        [data-theme="dark"] .main-content,
+        [data-theme="dark"] .notifications-container {
+            background: #181a20 !important;
+            color: #f3f4f6 !important;
+        }
+        [data-theme="dark"] .top-bar,
+        [data-theme="dark"] .page-header {
+            background: #23262f !important;
+            color: #f3f4f6 !important;
+            border-bottom: 1px solid #23262f;
+        }
+        [data-theme="dark"] .notification-card {
+            background: #23262f !important;
+            color: #f3f4f6 !important;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.18);
+        }
+        [data-theme="dark"] .notification-card.unread {
+            background: #1e2533 !important;
+        }
+        [data-theme="dark"] .notification-title {
+            color: #60a5fa !important;
+        }
+        [data-theme="dark"] .notification-message {
+            color: #b6c6d6 !important;
+        }
+        [data-theme="dark"] .notification-header {
+            color: #f3f4f6 !important;
+        }
+        [data-theme="dark"] .notification-icon {
+            background: #181a20 !important;
+            color: #60a5fa !important;
+        }
+        [data-theme="dark"] .filter-button {
+            background: #23262f !important;
+            color: #b6c6d6 !important;
+            border: 2px solid #23262f !important;
+        }
+        [data-theme="dark"] .filter-button.active {
+            background: #2563eb !important;
+            color: #fff !important;
+            border-color: #2563eb !important;
+        }
+        [data-theme="dark"] .clear-all-btn {
+            background: #ef4444 !important;
+            color: #fff !important;
+        }
+        [data-theme="dark"] .clear-all-btn:hover {
+            background: #b91c1c !important;
+        }
+        [data-theme="dark"] .empty-notifications {
+            color: #aaa !important;
+        }
+        /* Scrollbar styling for dark mode */
+        [data-theme="dark"] ::-webkit-scrollbar {
+            width: 12px;
+            background: #181a20;
+        }
+        [data-theme="dark"] ::-webkit-scrollbar-thumb {
+            background: #23262f;
+            border-radius: 8px;
+            border: 2px solid #181a20;
+        }
+        [data-theme="dark"] ::-webkit-scrollbar-thumb:hover {
+            background: #2563eb;
+        }
+        [data-theme="dark"] ::-webkit-scrollbar-corner {
+            background: #181a20;
+        }
+        /* Firefox scrollbar */
+        [data-theme="dark"] {
+            scrollbar-color: #23262f #181a20;
+            scrollbar-width: thin;
+        }
+        [data-theme="dark"] .page-header h1 {
+            color: #fff !important;
+        }
+        [data-theme="dark"] #search-notifications {
+            background: #23262f !important;
+            color: #f3f4f6 !important;
+            border: 1px solid #333 !important;
+        }
+        [data-theme="dark"] #search-notifications::placeholder {
+            color: #b6c6d6 !important;
+            opacity: 1;
+        }
     </style>
 </head>
 <body>
@@ -192,6 +281,15 @@
                     var script = document.createElement('script');
                     script.src = 'components/sidebar-actions.js';
                     document.body.appendChild(script);
+                    // Dynamically load the sidebar-darkmode.js script after sidebar is injected
+                    var darkmodeScript = document.createElement('script');
+                    darkmodeScript.src = 'components/sidebar-darkmode.js';
+                    darkmodeScript.onload = function() {
+                        setTimeout(function() {
+                            if (window.initSidebarDarkModeIcon) window.initSidebarDarkModeIcon();
+                        }, 100);
+                    };
+                    document.body.appendChild(darkmodeScript);
                 })
                 .catch(err => {
                     console.error('Failed to load sidebar:', err);
@@ -312,6 +410,81 @@
 
     <!-- Notification badge synchronization -->
     <script src="js/notification-badge.js"></script>
+    <script src="js/sendNotificationEmail.js"></script>
+    
+    <!-- Global Notification Creator -->
+    <script>
+    window.createNotification = async function(type, title, message, actionUrl, userId = null) {
+        let uid = userId;
+        let userEmail = null;
+        if (!uid && window.supabase) {
+            const { data: { user } } = await window.supabase.auth.getUser();
+            if (user) {
+                uid = user.id;
+                userEmail = user.email;
+            }
+        }
+        // If userId is provided but not email, fetch email from users table
+        if (!userEmail && uid && window.supabase) {
+            const { data: userRecord } = await window.supabase
+                .from('users')
+                .select('email')
+                .eq('id', uid)
+                .maybeSingle();
+            if (userRecord && userRecord.email) {
+                userEmail = userRecord.email;
+            }
+        }
+        if (!uid) {
+            console.error('[DEBUG] No user ID for notification');
+            return;
+        }
+        // Insert notification into Supabase
+        const { error } = await window.supabase
+            .from('notifications')
+            .insert([{
+                user_id: uid,
+                type,
+                title,
+                message,
+                action_url: actionUrl,
+                read: false
+            }]);
+        if (error) {
+            console.error('[DEBUG] Error inserting notification:', error);
+        } else {
+            console.log('[DEBUG] Notification inserted into Supabase');
+        }
+
+        // Send email for expiry notifications
+        if (
+            (type === 'subscription_warning' || type === 'subscription_expired') &&
+            userEmail
+        ) {
+            try {
+                console.log('[DEBUG] Sending expiry notification email to:', userEmail);
+                await fetch(getMailApiUrl(), {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        to: userEmail,
+                        subject: title,
+                        message: message
+                    })
+                });
+                console.log('[DEBUG] Expiry notification email sent!');
+            } catch (e) {
+                console.error('[DEBUG] Error sending expiry notification email:', e);
+            }
+        }
+        // Refresh notification badge immediately after creating a notification
+        if (window.notificationBadgeManager && typeof window.notificationBadgeManager.refresh === 'function') {
+            window.notificationBadgeManager.refresh();
+        }
+        // Dispatch a global event so all pages can update their badge
+        window.dispatchEvent(new CustomEvent('notificationCreated'));
+    };
+    </script>
     
     <!-- JavaScript -->
     <script type="module">
@@ -323,6 +496,31 @@
             'https://qvmtozjvjflygbkjecyj.supabase.co',
             'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF2bXRvemp2amZseWdia2plY3lqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDYxMjc2MjMsImV4cCI6MjA2MTcwMzYyM30.DJMC1eM5_EouM1oc07JaoXsMX_bSLn2AVCozAcdfHmo'
         );
+
+        // =================== EMAIL LOGIC CONFIGURATION ===================
+        /**
+         * Email API endpoint selection logic:
+         * - If a <meta name="mail-api-endpoint"> tag is present, use its value.
+         * - If running on localhost, use http://localhost:3000/sendmail
+         * - If running on GitHub Pages (repo: Walaka), use https://walakasoftware.com/sendmail
+         * - If running on walakasoftware.com, use https://walakasoftware.com/sendmail
+         */
+        function getMailApiUrl() {
+            const meta = document.querySelector('meta[name="mail-api-endpoint"]');
+            if (meta && meta.content) return meta.content;
+            const host = window.location.hostname;
+            if (host === 'localhost' || host === '127.0.0.1') {
+                return 'http://localhost:3000/sendmail';
+            }
+            if (host.endsWith('github.io') || host === 'walaka.github.io') {
+                return 'https://walakasoftware.com/sendmail';
+            }
+            if (host.endsWith('walakasoftware.com')) {
+                return 'https://walakasoftware.com/sendmail';
+            }
+            // Default fallback
+            return 'https://walakasoftware.com/sendmail';
+        }
 
         // DOM Elements
         const notificationsList = document.getElementById('notifications-list');
@@ -378,6 +576,7 @@
         // Check and create subscription expiration notifications
         async function checkSubscriptionNotifications(userId) {
             try {
+                console.log('[DEBUG] Checking subscription notifications for user:', userId);
                 // Get user's subscription
                 const { data: subscriptions, error: subError } = await window.supabase
                     .from('subscriptions')
@@ -385,12 +584,21 @@
                     .eq('user_id', userId)
                     .order('end_date', { ascending: false });
 
-                if (subError || !subscriptions || subscriptions.length === 0) {
+                if (subError) {
+                    console.error('[DEBUG] Error fetching subscriptions:', subError);
+                    return;
+                }
+                if (!subscriptions || subscriptions.length === 0) {
+                    console.log('[DEBUG] No subscriptions found for user.');
                     return; // No subscription found
                 }
 
                 const subscription = subscriptions[0];
-                if (!subscription.end_date) return;
+                console.log('[DEBUG] Subscription record:', subscription);
+                if (!subscription.end_date) {
+                    console.log('[DEBUG] Subscription has no end_date.');
+                    return;
+                }
 
                 // Parse the subscription end date
                 const endDate = new Date(subscription.end_date);
@@ -403,14 +611,13 @@
                 // Calculate days until expiration
                 const daysUntilExpiration = Math.ceil((endDateMidnight - todayMidnight) / (1000 * 60 * 60 * 24));
 
-                console.log('=== NOTIFICATION DATE DEBUG ===');
-                console.log('End date:', endDate.toISOString());
-                console.log('Today:', today.toISOString());
-                console.log('Days until expiration:', daysUntilExpiration);
+                console.log('[DEBUG] End date:', endDate.toISOString());
+                console.log('[DEBUG] Today:', today.toISOString());
+                console.log('[DEBUG] Days until expiration:', daysUntilExpiration);
 
                 // Check if we need to create a 3-day warning notification
                 if (daysUntilExpiration === 3) {
-                    console.log('Checking for 3-day warning notification...');
+                    console.log('[DEBUG] Attempting to create 3-day warning notification...');
                     await createSubscriptionNotification(
                         userId,
                         'subscription_warning',
@@ -423,7 +630,7 @@
 
                 // Check if subscription has expired today
                 if (daysUntilExpiration === 0) {
-                    console.log('Checking for expired notification...');
+                    console.log('[DEBUG] Attempting to create expired notification...');
                     await createSubscriptionNotification(
                         userId,
                         'subscription_expired',
@@ -435,55 +642,41 @@
                 }
 
             } catch (error) {
-                console.error('Error checking subscription notifications:', error);
+                console.error('[DEBUG] Error checking subscription notifications:', error);
             }
         }
 
         // Create subscription notification
         async function createSubscriptionNotification(userId, type, title, message, actionUrl, targetDate) {
             try {
-                // Create a unique identifier for this notification based on type and target date
                 const targetDateStr = targetDate.toISOString().split('T')[0]; // YYYY-MM-DD format
-                
-                // Check if notification already exists for this type and target date
+                console.log(`[DEBUG] Checking for existing notifications: userId=${userId}, type=${type}, date=${targetDateStr}`);
+                // Check if notification already exists for this type and target date (ignore title)
                 const { data: existingNotifications, error: checkError } = await window.supabase
                     .from('notifications')
-                    .select('id')
+                    .select('id, created_at')
                     .eq('user_id', userId)
-                    .eq('type', type)
-                    .eq('title', title); // Also check title to be extra safe
-
+                    .eq('type', type);
                 if (checkError) {
-                    console.error('Error checking existing notifications:', checkError);
+                    console.error('[DEBUG] Error checking existing notifications:', checkError);
                     return;
                 }
-
-                if (existingNotifications && existingNotifications.length > 0) {
-                    console.log(`Notification of type "${type}" already exists, skipping...`);
-                    return; // Notification already exists
+                // Only skip if a notification of this type exists for this date
+                if (existingNotifications && existingNotifications.some(n => n.created_at && n.created_at.startsWith(targetDateStr))) {
+                    console.log(`[DEBUG] Notification of type "${type}" for date ${targetDateStr} already exists, skipping...`);
+                    return; // Notification already exists for this date
                 }
-
-                console.log(`Creating new notification: ${type} - ${title}`);
-                
-                // Create new notification
-                const { error } = await window.supabase
-                    .from('notifications')
-                    .insert({
-                        user_id: userId,
-                        type: type,
-                        title: title,
-                        message: message,
-                        action_url: actionUrl,
-                        read: false
-                    });
-
-                if (error) {
-                    console.error('Error creating subscription notification:', error);
+                console.log(`[DEBUG] Creating new notification: ${type} - ${title}`);
+                // Use the global helper to create notification and send email
+                if (typeof window.createNotification === 'function') {
+                    await window.createNotification(type, title, message, actionUrl, null); // userId is not needed for email
+                    console.log(`[DEBUG] Successfully created notification: ${type}`);
                 } else {
-                    console.log(`Successfully created notification: ${type}`);
+                    console.error('[DEBUG] window.createNotification is not defined! Notification not created.');
+                    showToast('Notification function not available', 'error');
                 }
             } catch (error) {
-                console.error('Error creating subscription notification:', error);
+                console.error('[DEBUG] Error creating subscription notification:', error);
             }
         }
 
@@ -547,28 +740,18 @@
                     .eq('user_id', userId)
                     .eq('type', type)
                     .eq('title', title);
-
                 if (checkError) {
                     console.error('Error checking existing invoice notifications:', checkError);
                     return;
                 }
-
                 if (existing && existing.length > 0) {
                     // Already exists
                     return;
                 }
-
-                // Insert new notification
-                await window.supabase
-                    .from('notifications')
-                    .insert({
-                        user_id: userId,
-                        type: type,
-                        title: title,
-                        message: message,
-                        action_url: actionUrl,
-                        read: false
-                    });
+                // Use the global helper to create notification and send email
+                if (window.createNotification) {
+                    await window.createNotification(type, title, message, actionUrl, null); // userId is not needed for email
+                }
             } catch (error) {
                 console.error('Error creating invoice notification:', error);
             }

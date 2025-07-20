@@ -16,7 +16,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script>
         // document.write(`<link rel="stylesheet" href="${basePath}vendors/style.css">`); // Removed due to MIME type error
-        document.write(`<link rel="stylesheet" href="${basePath}trial/css/upgrade-modal.css">`);
+        document.write(`<link rel="stylesheet" href="${basePath}css/upgrade-modal.css">`);
         document.write(`<link rel="stylesheet" href="${basePath}components/trial-banner.css">`);
         document.write(`<link rel="stylesheet" href="${basePath}components/trial-restrictions.css">`);
         document.write(`<link rel="stylesheet" href="${basePath}components/sidebar.css">`);
@@ -32,6 +32,7 @@
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="icon" type="image/png" href="assets/images/walaka-assistant.PNG">
+    <script src="js/darkmode.js"></script>
 </head>
 <body>
     <div class="dashboard-container">
@@ -49,6 +50,19 @@
                         var script = document.createElement('script');
                         script.src = `${basePath}components/sidebar-actions.js?ts=${Date.now()}`;
                         document.body.appendChild(script);
+                        // Attach dark mode icon logic after sidebar is loaded
+                        console.log('[DarkMode] About to load sidebar-darkmode.js');
+                        var darkmodeScript = document.createElement('script');
+                        darkmodeScript.src = 'components/sidebar-darkmode.js';
+                        darkmodeScript.onload = function() {
+                            setTimeout(function() {
+                                console.log('[DarkMode] setTimeout: window.initSidebarDarkModeIcon:', typeof window.initSidebarDarkModeIcon, window.initSidebarDarkModeIcon);
+                                console.log('[DarkMode] setTimeout: window.setTheme:', typeof window.setTheme, window.setTheme);
+                                if (window.initSidebarDarkModeIcon) window.initSidebarDarkModeIcon();
+                                else console.log('[DarkMode] window.initSidebarDarkModeIcon is not defined after sidebar-darkmode.js load');
+                            }, 100);
+                        };
+                        document.body.appendChild(darkmodeScript);
                     })
                     .catch(err => {
                         console.error('Failed to load sidebar:', err);
@@ -937,9 +951,11 @@
     <script src="js/invoicescripts/invoiceActions.js"></script>
     <!-- Notification badge synchronization -->
     <script src="js/notification-badge.js"></script>
+    <script src="js/sendNotificationEmail.js"></script>
 
     <!-- JavaScript -->
     <script type="module">
+        import { requireAuth } from './auth.js';
         // Use window.supabase directly (initialized by js/supabaseClient.js)
 
         // Log session and user on page load
@@ -967,6 +983,7 @@
 
         document.addEventListener('DOMContentLoaded', async () => {
             try {
+                await requireAuth();
                 const session = await waitForSession();
                 if (!session || !session.user) {
                     window.location.href = '/login.html';
