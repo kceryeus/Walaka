@@ -468,6 +468,14 @@ class InvoiceForm {
                     .single();
                 if (!existingProduct) {
                     // If product doesn't exist, create it
+                    let environment_id = null;
+                    if (window.getCurrentEnvironmentId) {
+                        try {
+                            environment_id = await window.getCurrentEnvironmentId();
+                        } catch (e) {
+                            console.error('Could not fetch environment_id:', e);
+                        }
+                    }
                     const { error: productError } = await window.supabase
                         .from('products')
                         .insert([{
@@ -475,7 +483,8 @@ class InvoiceForm {
                             price: item.price,
                             tax_code: 'VAT',
                             tax_rate: item.vatRate * 100, // Store as percent
-                            industry: 'General' // Default industry
+                            industry: 'General', // Default industry
+                            environment_id: environment_id
                         }]);
                     if (productError) throw productError;
                 }
@@ -1423,6 +1432,14 @@ InvoiceForm.prototype.saveInvoice = async function() {
                 .eq('description', item.description)
                 .single();
             if (!existingProduct) {
+                let environment_id = null;
+                if (window.getCurrentEnvironmentId) {
+                    try {
+                        environment_id = await window.getCurrentEnvironmentId();
+                    } catch (e) {
+                        console.error('Could not fetch environment_id:', e);
+                    }
+                }
                 const { error: productError } = await window.supabase
                     .from('products')
                     .insert([{
@@ -1430,7 +1447,8 @@ InvoiceForm.prototype.saveInvoice = async function() {
                         price: item.price,
                         tax_code: 'VAT',
                         tax_rate: item.vatRate * 100,
-                        industry: 'General'
+                        industry: 'General',
+                        environment_id: environment_id
                     }]);
                 if (productError) throw productError;
             }

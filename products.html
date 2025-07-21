@@ -1557,6 +1557,16 @@ button:disabled:hover {
                 return;
             }
 
+            // Fetch environment_id
+            let environment_id = null;
+            if (window.getCurrentEnvironmentId) {
+                try {
+                    environment_id = await window.getCurrentEnvironmentId();
+                } catch (e) {
+                    console.error('Could not fetch environment_id:', e);
+                }
+            }
+
             const formData = {
                 description: document.getElementById('description').value.trim(),
                 price: parseFloat(document.getElementById('price').value),
@@ -1565,7 +1575,8 @@ button:disabled:hover {
                 tax_rate: document.getElementById('vat').value === 'other' 
                     ? parseFloat(document.getElementById('other-vat').value) / 100 
                     : parseFloat(document.getElementById('vat').value),
-                user_id: session.user.id
+                user_id: session.user.id,
+                environment_id: environment_id
             };
 
             if (!formData.description || isNaN(formData.price) || !formData.tax_code || 
