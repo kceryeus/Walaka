@@ -481,7 +481,7 @@ class InvoiceForm {
                         .insert([{
                             description: item.description,
                             price: item.price,
-                            tax_code: 'VAT',
+                            tax_code: '101011',
                             tax_rate: item.vatRate * 100, // Store as percent
                             industry: 'General', // Default industry
                             environment_id: environment_id
@@ -1445,7 +1445,7 @@ InvoiceForm.prototype.saveInvoice = async function() {
                     .insert([{
                         description: item.description,
                         price: item.price,
-                        tax_code: 'VAT',
+                        tax_code: '101011',
                         tax_rate: item.vatRate * 100,
                         industry: 'General',
                         environment_id: environment_id
