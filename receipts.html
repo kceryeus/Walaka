@@ -54,6 +54,34 @@
         padding: 10px 10px 0 10px;
         margin-bottom: 8px;
     }
+    /* Add scrollable modal body for mobile */
+    @media (max-width: 600px) {
+      #\31 createReceiptModal .document-modal-content {
+        max-width: 98vw;
+        width: 98vw;
+        min-width: unset;
+        margin: 0;
+        padding: 0;
+        max-height: 90vh;
+        height: 90vh;
+        display: flex;
+        flex-direction: column;
+      }
+      #\31 createReceiptModal .document-modal-body {
+        flex: 1 1 auto;
+        min-height: 0;
+        overflow-y: auto;
+        padding: 10px 10px 0 10px;
+      }
+      #\31 createReceiptModal .document-modal-footer {
+        flex-shrink: 0;
+        position: sticky;
+        bottom: 0;
+        background: #fff;
+        z-index: 2;
+        border-top: 1px solid #eee;
+      }
+    }
     #\31 createReceiptModal .form-section h3 {
         font-size: 1.05rem;
         margin-bottom: 8px;

@@ -48,7 +48,6 @@ class InvoiceItems {
             const row = e.target.closest('.item-row');
             if (searchTerm.length < 2) {
                 this.hideProductSuggestions(row);
-                this.hideNewProductForm(row);
                 return;
             }
             this.handleProductSearch(searchTerm, row);
@@ -58,24 +57,22 @@ class InvoiceItems {
     handleClick(e) {
         // Only handle clicks outside product suggestions and new product form
         if (!e.target.closest('.item-description') && 
-            !e.target.closest('.product-suggestions') && 
-            !e.target.closest('.new-product-form')) {
+            !e.target.closest('.product-suggestions')) {
             const rows = document.querySelectorAll('.item-row');
             rows.forEach(row => {
                 this.hideProductSuggestions(row);
-                this.hideNewProductForm(row);
             });
         }
     }
 
     async handleProductSearch(searchTerm, row) {
         try {
-            // AI suggestion logic (debounced)
-            this.debouncedAISuggestion = this.debouncedAISuggestion || debounce(async (input, row) => {
-                const aiSuggestion = await getAISuggestionForProductDescription(input);
-                this.showAISuggestion(row, aiSuggestion);
-            }, 400);
-            this.debouncedAISuggestion(searchTerm, row);
+            // AI suggestion logic (debounced) - REMOVE
+            // this.debouncedAISuggestion = this.debouncedAISuggestion || debounce(async (input, row) => {
+            //     const aiSuggestion = await getAISuggestionForProductDescription(input);
+            //     this.showAISuggestion(row, aiSuggestion);
+            // }, 400);
+            // this.debouncedAISuggestion(searchTerm, row);
 
             const { data: products, error } = await window.supabase
                 .from('products')
@@ -85,10 +82,8 @@ class InvoiceItems {
             if (error) throw error;
             if (products && products.length > 0) {
                 this.showProductSuggestions(row, products);
-                this.hideNewProductForm(row);
             } else {
                 this.hideProductSuggestions(row);
-                this.showNewProductForm(row);
             }
         } catch (err) {
             console.error('Error searching products:', err);
@@ -105,14 +100,21 @@ class InvoiceItems {
             suggestionsBox.className = 'product-suggestions';
             row.querySelector('td:first-child').appendChild(suggestionsBox);
         }
-        suggestionsBox.innerHTML = products.map(product => `
-            <div class="suggestion-item" data-product='${JSON.stringify(product)}'>
-                <div>${product.description}</div>
-                <div class="suggestion-price">${this.formatCurrency(product.price)}</div>
-            </div>
-        `).join('');
+        let html = '';
+        if (products.length > 0) {
+            html += products.map(product => `
+                <div class="suggestion-item" data-product='${JSON.stringify(product)}'>
+                    <span>${product.description}</span>
+                    <span class="suggestion-price">${this.formatCurrency(product.price)}</span>
+                </div>
+            `).join('');
+        } else {
+            html += '<div class="no-suggestions">No products found.</div>';
+        }
+        suggestionsBox.innerHTML = html;
         suggestionsBox.style.top = (rect.height) + 'px';
         suggestionsBox.style.display = 'block';
+        // Add click handlers for suggestion items (not a button)
         suggestionsBox.querySelectorAll('.suggestion-item').forEach(item => {
             item.addEventListener('click', () => {
                 const product = JSON.parse(item.dataset.product);
@@ -120,32 +122,15 @@ class InvoiceItems {
                 this.hideProductSuggestions(row);
             });
         });
+        // Always update shimmer after showing suggestions
+        updateAddProductShimmer(input, products);
     }
 
-    showAISuggestion(row, suggestion) {
-        if (!suggestion) return;
-        let aiBox = row.querySelector('.ai-suggestion-box');
-        if (!aiBox) {
-            aiBox = document.createElement('div');
-            aiBox.className = 'ai-suggestion-box';
-            aiBox.style.background = '#f0f6ff';
-            aiBox.style.border = '1px solid #b3d1ff';
-            aiBox.style.padding = '6px 10px';
-            aiBox.style.marginBottom = '2px';
-            aiBox.style.cursor = 'pointer';
-            aiBox.style.fontStyle = 'italic';
-            row.querySelector('td:first-child').prepend(aiBox);
-        }
-        aiBox.textContent = 'Sugestão IA: ' + suggestion;
-        aiBox.style.display = 'block';
-        aiBox.onclick = () => {
-            const input = row.querySelector('.item-description');
-            if (input) input.value = suggestion;
-            aiBox.style.display = 'none';
-            // Optionally trigger input event for downstream logic
-            input.dispatchEvent(new Event('input', { bubbles: true }));
-        };
-    }
+    // --- REMOVE AI SUGGESTION LOGIC FOR ITEM DESCRIPTION ---
+    // Comment out the showAISuggestion method
+    // InvoiceItems.prototype.showAISuggestion = function(row, suggestion) { ... };
+    // Comment out the getAISuggestionForProductDescription function
+    // async function getAISuggestionForProductDescription(input) { ... }
 
     fillProductDetails(row, product) {
         if (!row || !product) return;
@@ -166,36 +151,9 @@ class InvoiceItems {
         }
     }
 
-    showNewProductForm(row) {
-        let newProductForm = row.querySelector('.new-product-form');
-        if (!newProductForm) {
-            newProductForm = document.createElement('div');
-            newProductForm.className = 'new-product-form';
-            newProductForm.innerHTML = `
-                <h4>Add New Product</h4>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>Price</label>
-                        <input type="number" class="new-product-price" step="0.01" min="0" required>
-                    </div>
-                    <div class="form-group">
-                        <label>VAT Rate</label>
-                        <select class="new-product-vat">
-                            <option value="0.16">16%</option>
-                            <option value="0.05">5%</option>
-                            <option value="0">Exempt</option>
-                        </select>
-                    </div>
-                    <button type="button" class="save-product-btn">Save Product</button>
-                </div>
-            `;
-            row.querySelector('td:first-child').appendChild(newProductForm);
-            newProductForm.querySelector('.save-product-btn').addEventListener('click', async () => {
-                await this.saveNewProduct(row);
-            });
-        }
-        newProductForm.style.display = 'block';
-    }
+    // Remove showNewProductForm and all inline new-product-form logic
+    // Remove any references to showNewProductForm, new-product-form, save-product-btn, etc.
+    // (No need to define showNewProductForm or saveNewProduct for inline use)
 
     hideProductSuggestions(row) {
         const suggestionsBox = row.querySelector('.product-suggestions');
@@ -204,12 +162,13 @@ class InvoiceItems {
         }
     }
 
-    hideNewProductForm(row) {
-        const newProductForm = row.querySelector('.new-product-form');
-        if (newProductForm) {
-            newProductForm.style.display = 'none';
-        }
-    }
+    // Remove hideNewProductForm
+    // hideNewProductForm(row) {
+    //     const newProductForm = row.querySelector('.new-product-form');
+    //     if (newProductForm) {
+    //         newProductForm.style.display = 'none';
+    //     }
+    // }
 
     formatCurrency(amount) {
         return new Intl.NumberFormat('pt-MZ', {
@@ -313,33 +272,37 @@ class InvoiceItems {
         }
     }
 
-    async saveNewProduct(row) {
-        try {
-            const form = row.querySelector('.new-product-form');
-            const description = row.querySelector('.item-description').value;
-            const price = parseFloat(form.querySelector('.new-product-price').value);
-            const vatRate = parseFloat(form.querySelector('.new-product-vat').value);
-            if (!description || isNaN(price)) {
-                throw new Error('Please fill in all required fields');
-            }
-            const { data: product, error } = await window.supabase
-                .from('products')
-                .insert([{
-                    description,
-                    price,
-                    tax_rate: vatRate
-                }])
-                .select()
-                .single();
-            if (error) throw error;
-            this.fillProductDetails(row, product);
-            this.hideNewProductForm(row);
-            showNotification('Product saved successfully', 'success');
-        } catch (error) {
-            console.error('Error saving product:', error);
-            showNotification('Error saving product: ' + error.message, 'error');
-        }
-    }
+    // Remove saveNewProduct
+    // async saveNewProduct(row) {
+    //     try {
+    //         const form = row.querySelector('.new-product-form');
+    //         const description = row.querySelector('.item-description').value;
+    //         const price = parseFloat(form.querySelector('.new-product-price').value);
+    //         const vatRate = parseFloat(form.querySelector('.new-product-vat').value);
+    //         if (!description || isNaN(price)) {
+    //             throw new Error('Please fill in all required fields');
+    //         }
+    //         const { data: product, error } = await window.supabase
+    //             .from('products')
+    //             .insert([{
+    //                 description,
+    //                 price,
+    //                 tax_rate: vatRate
+    //             }])
+    //             .select()
+    //             .single();
+    //         if (error) throw error;
+    //         // Optionally update a global cache here
+    //         this.fillProductDetails(row, product);
+    //         this.hideNewProductForm(row);
+    //         // Refresh suggestions and auto-select new product
+    //         this.showProductSuggestions(row, [product]);
+    //         showNotification('Product saved successfully', 'success');
+    //     } catch (error) {
+    //         console.error('Error saving product:', error);
+    //         showNotification('Error saving product: ' + error.message, 'error');
+    //     }
+    // }
 }
 
 // Export to window object
@@ -357,39 +320,122 @@ if (typeof window !== 'undefined') {
     }
 }
 
-// --- AI Suggestion Helper ---
-function debounce(fn, delay) {
-    let timer = null;
-    return function(...args) {
-        clearTimeout(timer);
-        timer = setTimeout(() => fn.apply(this, args), delay);
-    };
+// --- REMOVE AI SUGGESTION LOGIC FOR ITEM DESCRIPTION ---
+// Comment out the debouncedAISuggestion and showAISuggestion logic in handleProductSearch
+// handleProductSearch(searchTerm, row) {
+//     try {
+//         // AI suggestion logic (debounced) - REMOVE
+//         // this.debouncedAISuggestion = this.debouncedAISuggestion || debounce(async (input, row) => {
+//         //     const aiSuggestion = await getAISuggestionForProductDescription(input);
+//         //     this.showAISuggestion(row, aiSuggestion);
+//         // }, 400);
+//         // this.debouncedAISuggestion(searchTerm, row);
+
+//         window.supabase
+//             .from('products')
+//             .select('*')
+//             .ilike('description', `%${searchTerm}%`)
+//             .limit(5)
+//             .then(({ data: products, error }) => {
+//                 if (error) throw error;
+//                 if (products && products.length > 0) {
+//                     this.showProductSuggestions(row, products);
+//                     this.hideNewProductForm(row);
+//                 } else {
+//                     this.hideProductSuggestions(row);
+//                     this.showNewProductForm(row);
+//                 }
+//             });
+//     } catch (err) {
+//         console.error('Error searching products:', err);
+//         showNotification('Error searching products: ' + err.message, 'error');
+//     }
+// }
+// Comment out the showAISuggestion method
+// InvoiceItems.prototype.showAISuggestion = function(row, suggestion) { ... };
+// Comment out the getAISuggestionForProductDescription function
+// async function getAISuggestionForProductDescription(input) { ... }
+
+// Helper to update shimmer on Add Product button
+function updateAddProductShimmer(input, products) {
+    const addProductBtn = document.getElementById('addProductBtn');
+    if (!addProductBtn) return;
+    addProductBtn.style.marginLeft = '18px';
+    const inputValue = input.value.trim().toLowerCase();
+    const hasMatch = inputValue.length > 0 && products.some(p => p.description && p.description.toLowerCase().includes(inputValue));
+    if (inputValue.length > 0 && !hasMatch) {
+        addProductBtn.classList.add('shimmer-blue-add-product');
+        console.log('[AddProductShimmer] SHIMMER ON:', inputValue, '(no match)');
+    } else {
+        addProductBtn.classList.remove('shimmer-blue-add-product');
+        console.log('[AddProductShimmer] SHIMMER OFF:', inputValue, '(match or empty)');
+    }
 }
 
-async function getAISuggestionForProductDescription(input) {
-    if (!input || input.length < 2) return '';
-    try {
-        // Use the same endpoint as walaka-assistant.js
-        const url = "https://qvmtozjvjflygbkjecyj.supabase.co/functions/v1/walaka-assistant";
-        const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF2bXRvemp2amZseWdia2plY3lqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDYxMjc2MjMsImV4cCI6MjA2MTcwMzYyM30.DJMC1eM5_EouM1oc07JaoXsMX_bSLn2AVCozAcdfHmo";
-        const messages = [
-            { role: 'system', content: 'Você é um assistente de ERP. Sugira uma descrição de produto/serviço para uma linha de fatura, baseada no input parcial do utilizador. Seja breve e relevante para negócios em Moçambique.' },
-            { role: 'user', content: `Descrição parcial: ${input}` }
-        ];
-        const response = await fetch(url, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "Authorization": `Bearer ${SUPABASE_ANON_KEY}`
-            },
-            body: JSON.stringify({ messages })
-        });
-        const data = await response.json();
-        if (data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content) {
-            return data.choices[0].message.content.trim();
+// Simpler, reliable shimmer animation for Add Product button (pulse effect)
+if (typeof window !== 'undefined') {
+    const style = document.createElement('style');
+    style.innerHTML = `
+#addProductBtn.shimmer-blue-add-product {
+  position: relative;
+  border: 2px solid #3b82f6;
+  animation: shimmer-blue-pulse 2.5s cubic-bezier(0.4,0,0.2,1) infinite;
+  box-shadow: 0 0 0 0 #3b82f6;
+}
+@keyframes shimmer-blue-pulse {
+  0%   { box-shadow: 0 0 0 0 rgba(59,130,246,0.10); }
+  50%  { box-shadow: 0 0 0 4px rgba(59,130,246,0.13); }
+  100% { box-shadow: 0 0 0 0 rgba(59,130,246,0.10); }
+}
+#addProductBtn { margin-left: 18px !important; }
+`;
+    document.head.appendChild(style);
+}
+
+// Show suggestions on focus, even if input is empty
+if (typeof window !== 'undefined') {
+    document.addEventListener('focusin', function(e) {
+        if (e.target.classList && e.target.classList.contains('item-description')) {
+            const row = e.target.closest('.item-row');
+            // If input is empty, show all products (or a default set)
+            const searchTerm = e.target.value.trim();
+            if (searchTerm.length < 2) {
+                // Fetch all or default products
+                window.supabase
+                    .from('products')
+                    .select('*')
+                    .limit(10)
+                    .then(({ data: products, error }) => {
+                        if (!error && products) {
+                            if (window.invoiceItems && typeof window.invoiceItems.showProductSuggestions === 'function') {
+                                window.invoiceItems.showProductSuggestions(row, products);
+                            }
+                        }
+                    });
+            }
         }
-        return '';
-    } catch (e) {
-        return '';
-    }
+    });
+}
+
+// Also update shimmer on every input event
+if (typeof window !== 'undefined') {
+    document.addEventListener('input', function(e) {
+        if (e.target.classList && e.target.classList.contains('item-description')) {
+            const row = e.target.closest('.item-row');
+            // Use the latest products from the last suggestion fetch, or fetch all if needed
+            // For reliability, fetch products matching the input
+            const searchTerm = e.target.value.trim();
+            if (window.supabase) {
+                window.supabase
+                    .from('products')
+                    .select('*')
+                    .ilike('description', `%${searchTerm}%`)
+                    .then(({ data: products, error }) => {
+                        if (!error && products) {
+                            updateAddProductShimmer(e.target, products);
+                        }
+                    });
+            }
+        }
+    });
 }

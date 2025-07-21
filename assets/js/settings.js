@@ -835,6 +835,41 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
       );
     });
+
+    // Sync theme dropdown with current theme
+    if (themeSelectionInput) {
+      // Set dropdown to current theme on load
+      const currentTheme = document.documentElement.getAttribute('data-theme') || localStorage.getItem('theme') || 'light';
+      themeSelectionInput.value = currentTheme;
+
+      // When dropdown changes, update theme and save to Supabase
+      themeSelectionInput.addEventListener('change', async function() {
+        const newTheme = this.value;
+        if (window.setTheme) window.setTheme(newTheme);
+        // Save to Supabase appearance_settings
+        try {
+          const { data: { session } } = await window.supabase.auth.getSession();
+          if (session && session.user) {
+            await window.supabase
+              .from('appearance_settings')
+              .upsert({
+                user_id: session.user.id,
+                theme: newTheme,
+                updated_at: new Date().toISOString()
+              }, { onConflict: 'user_id' });
+          }
+        } catch (err) {
+          console.error('Failed to save theme to Supabase:', err);
+        }
+      });
+
+      // When theme changes elsewhere, update dropdown
+      window.addEventListener('themechange', (e) => {
+        if (themeSelectionInput.value !== e.detail.theme) {
+          themeSelectionInput.value = e.detail.theme;
+        }
+      });
+    }
   }
 
   // Invoice Settings
@@ -1948,7 +1983,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       if (error) throw error;
 
       if (invoiceData) {
-        document.getElementById('invoice-prefix').value = invoiceData.prefix || 'FAT-';
+        document.getElementById('invoice-prefix').value = invoiceData.prefix || 'INV-';
         document.getElementById('invoice-next-number').value = invoiceData.next_number || 1001;
         document.getElementById('invoice-template').value = invoiceData.template || 'classic';
         document.getElementById('invoice-color').value = invoiceData.color || '#007ec7';

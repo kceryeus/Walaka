@@ -888,25 +888,55 @@
     }
 
     .items-table thead {
-        display: none;
+        display: none !important;
+        visibility: hidden;
+        height: 0;
+        width: 0;
+        overflow: hidden;
+        position: absolute;
     }
-
     .items-table tr {
         display: block;
-        margin-bottom: 1rem;
+        margin-bottom: 1.2rem;
         border: 1px solid #ddd;
-        padding: 0.5rem;
+        border-radius: 10px;
+        background: #fff;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+        padding: 1rem 0.75rem;
+        position: relative;
     }
-
     .items-table td {
-        display: block;
-        text-align: left;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.5rem 0;
+        border: none;
+        position: relative;
+        border-bottom: 1px solid #f0f0f0;
     }
-
+    .items-table td:last-child {
+        border-bottom: none;
+    }
     .items-table td:before {
         content: attr(data-label);
-        font-weight: bold;
-        display: block;
+        font-weight: 600;
+        color: #555;
+        flex: 1 1 50%;
+        text-align: left;
+        padding-right: 1rem;
+        min-width: 120px;
+        max-width: 50%;
+        word-break: break-word;
+    }
+    .items-table td > *:not(:first-child) {
+        flex: 1 1 50%;
+        text-align: right;
+    }
+    .items-table input,
+    .items-table select {
+        max-width: 120px;
+        min-width: 60px;
+        font-size: 1em;
     }
 
     .items-table th,
@@ -1062,4 +1092,69 @@
 [data-theme="dark"] {
   scrollbar-color: #444 #23262f;
   scrollbar-width: thin;
+}
+
+/* Dark mode card view for items-table */
+[data-theme="dark"] .items-table tr {
+  background: #23262f !important;
+  border-color: #2a2d3a !important;
+  color: #fff !important;
+  box-shadow: 0 2px 8px rgba(96,165,250,0.10);
+}
+[data-theme="dark"] .items-table td:before {
+  color: #60a5fa !important;
+}
+[data-theme="dark"] .items-table td {
+  border-bottom: 1px solid #2a2d3a !important;
+}
+
+/* Mobile styles for invoice preview */
+@media (max-width: 600px) {
+  .invoice-preview-container {
+    padding: 8px !important;
+    font-size: 14px !important;
+  }
+  #invoicePreviewContent {
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+  .invoice-header, .company-info, .client-info, .invoice-info-box {
+    width: 100% !important;
+    box-sizing: border-box;
+    margin: 0 0 8px 0 !important;
+    padding: 8px !important;
+    font-size: 14px !important;
+  }
+  .invoice-info-box {
+    float: none !important;
+    display: block !important;
+    margin: 0 auto 8px auto !important;
+    width: 100% !important;
+    font-size: 13px !important;
+    text-align: left !important;
+  }
+  .company-info h1, .company-info h2, .company-info h3 {
+    font-size: 18px !important;
+    margin-bottom: 4px !important;
+  }
+  .client-info {
+    font-size: 13px !important;
+    padding: 8px !important;
+    margin-bottom: 8px !important;
+  }
+  /* Stack elements vertically */
+  .invoice-header, .company-info, .invoice-info-box, .client-info {
+    display: block !important;
+    float: none !important;
+    clear: both !important;
+  }
+  /* Reduce table font size if present */
+  .invoice-table, .invoice-items-table {
+    font-size: 12px !important;
+  }
+  /* Remove excessive borders/shadows if any */
+  .invoice-preview-container, #invoicePreviewContent {
+    box-shadow: none !important;
+    border-radius: 0 !important;
+  }
 }

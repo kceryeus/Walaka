@@ -115,34 +115,43 @@
 </head>
 <body class="bg-gray-100">
     <div class="dashboard-container">
-        <!-- Sidebar Menu -->
-        <div id="sidebar-container"></div>
-        <script>
-        // Dynamically load the sidebar from components/sidebar.html
-        document.addEventListener('DOMContentLoaded', function() {
-            fetch('../components/sidebar.html')
-                .then(response => response.text())
-                .then(html => {
-                    document.getElementById('sidebar-container').innerHTML = html;
-                    // Dynamically load the sidebar-actions.js script after sidebar is injected
-                    var script = document.createElement('script');
-                    script.src = '../components/sidebar-actions.js';
-                    document.body.appendChild(script);
-                    // Dynamically load the sidebar-darkmode.js script after sidebar is injected
-                    var darkmodeScript = document.createElement('script');
-                    darkmodeScript.src = '../components/sidebar-darkmode.js';
-                    darkmodeScript.onload = function() {
-                        setTimeout(function() {
-                            if (window.initSidebarDarkModeIcon) window.initSidebarDarkModeIcon();
-                        }, 100);
-                    };
-                    document.body.appendChild(darkmodeScript);
-                })
-                .catch(err => {
-                    console.error('Failed to load sidebar:', err);
-                });
-        });
-        </script>
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div id="sidebar-container"></div>
+            <script>
+            // Dynamically load the sidebar from components/sidebar.html
+            document.addEventListener('DOMContentLoaded', function() {
+                fetch('../components/sidebar.html')
+                    .then(response => response.text())
+                    .then(html => {
+                        const tempDiv = document.createElement('div');
+                        tempDiv.innerHTML = html;
+                        const navSidebar = tempDiv.querySelector('nav.sidebar');
+                        if (navSidebar) {
+                            document.getElementById('sidebar-container').innerHTML = navSidebar.innerHTML;
+                        } else {
+                            document.getElementById('sidebar-container').innerHTML = html; // fallback
+                        }
+                        var script = document.createElement('script');
+                        script.src = '../components/sidebar-actions.js';
+                        document.body.appendChild(script);
+                        var darkmodeScript = document.createElement('script');
+                        darkmodeScript.src = '../components/sidebar-darkmode.js';
+                        darkmodeScript.onload = function() {
+                            setTimeout(function() {
+                                if (window.initSidebarDarkModeIcon) window.initSidebarDarkModeIcon();
+                            }, 100);
+                        };
+                        document.body.appendChild(darkmodeScript);
+                    })
+                    .catch(err => {
+                        console.error('Failed to load sidebar:', err);
+                    });
+            });
+            </script>
+        </aside>
+        <!-- Sidebar overlay for mobile/tablet -->
+        <div class="sidebar-overlay"></div>
         
         <!-- Main Content -->
         <div class="main-content">
@@ -378,6 +387,40 @@
       });
     }
   });
+</script>
+<!-- Sidebar toggle logic for responsive (ensure this is last) -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const dashboardContainer = document.querySelector('.dashboard-container');
+  const menuToggle = document.querySelector('.menu-toggle');
+  const sidebarOverlay = document.querySelector('.sidebar-overlay');
+  // Toggle sidebar on menu button click
+  if (menuToggle) {
+    menuToggle.addEventListener('click', function() {
+      dashboardContainer.classList.toggle('sidebar-active');
+    });
+  }
+  // Close sidebar on overlay click
+  if (sidebarOverlay) {
+    sidebarOverlay.addEventListener('click', function() {
+      dashboardContainer.classList.remove('sidebar-active');
+    });
+  }
+  // Optional: close sidebar on ESC key
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+      dashboardContainer.classList.remove('sidebar-active');
+    }
+  });
+  // On resize, remove sidebar-active if desktop
+  function handleResize() {
+    if (window.innerWidth >= 992) {
+      dashboardContainer.classList.remove('sidebar-active');
+    }
+  }
+  window.addEventListener('resize', handleResize);
+  handleResize();
+});
 </script>
 </body>
 </html> 

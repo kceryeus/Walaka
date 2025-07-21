@@ -50,7 +50,7 @@
     z-index: 1000;
     overflow-y: auto;
     box-shadow: var(--box-shadow);
-    transition: background 0.3s, color 0.3s;
+    transition: transform 0.3s, background 0.3s, color 0.3s;
 }
 
 .sidebar .logo {
@@ -228,9 +228,9 @@
     }
     body.sidebar-open .main-content,
     body.sidebar-open .content-wrapper {
-        filter: blur(4px) brightness(0.9);
-        pointer-events: none;
-        user-select: none;
+        filter: none;
+        pointer-events: auto;
+        user-select: auto;
         transition: filter 0.3s;
     }
     .sidebar-overlay {
@@ -259,6 +259,27 @@
         margin-bottom: 8px;
         overflow: visible;
     } */
+}
+
+@media (max-width: 768px) {
+  .dashboard-container.sidebar-active .sidebar {
+    transform: translateX(0);
+    z-index: 1201;
+  }
+  .dashboard-container.sidebar-active .sidebar-overlay {
+    display: block;
+    opacity: 1;
+    pointer-events: auto;
+  }
+  /* Remove or reduce blur/brightness on main content when sidebar is open */
+  .dashboard-container.sidebar-active .main-content,
+  .dashboard-container.sidebar-active .content-wrapper {
+    /* Subtle effect or none */
+    filter: none;
+    pointer-events: auto;
+    user-select: auto;
+    transition: filter 0.3s;
+  }
 }
 
 /* Sidebar submenu expand/collapse - with smooth animation */
@@ -398,6 +419,22 @@
 }
 .darkmode-pill-toggle.dark .darkmode-pill-highlight {
     left: 32px;
+}
+
+#sidebar-darkmode-toggle-container {
+  position: absolute;
+  bottom: 10px; /* Restore original desktop position */
+  left: 0;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  z-index: 10;
+}
+
+@media (max-width: 768px) {
+  #sidebar-darkmode-toggle-container {
+    bottom: 80px !important; /* Move much higher on mobile and enforce */
+  }
 }
 
 [data-theme="dark"] .sidebar {

@@ -83,6 +83,8 @@
       </div>
     </div>
   </header>
+  <!-- Add sidebar overlay for mobile nav -->
+  <div class="sidebar-overlay"></div>
 
   <!-- Hero Section -->
   <section class="hero" id="hero">
@@ -911,6 +913,49 @@
     document.addEventListener('DOMContentLoaded', () => {
       logUserAction('page_visit', 'User visited page: index.html');
     });
+  </script>
+  <!-- Sidebar/mobile nav toggle logic for responsive (ensure this is last) -->
+  <script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const body = document.body;
+    const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+    const mobileNav = document.getElementById('mobile-nav');
+    const sidebarOverlay = document.querySelector('.sidebar-overlay');
+    // Open mobile nav
+    if (mobileMenuBtn) {
+      mobileMenuBtn.addEventListener('click', function() {
+        body.classList.add('sidebar-active');
+        if (mobileNav) mobileNav.classList.add('active');
+        if (sidebarOverlay) sidebarOverlay.style.display = 'block';
+      });
+    }
+    // Close on overlay click
+    if (sidebarOverlay) {
+      sidebarOverlay.addEventListener('click', function() {
+        body.classList.remove('sidebar-active');
+        if (mobileNav) mobileNav.classList.remove('active');
+        sidebarOverlay.style.display = 'none';
+      });
+    }
+    // Close on ESC key
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') {
+        body.classList.remove('sidebar-active');
+        if (mobileNav) mobileNav.classList.remove('active');
+        if (sidebarOverlay) sidebarOverlay.style.display = 'none';
+      }
+    });
+    // On resize, remove sidebar-active if desktop
+    function handleResize() {
+      if (window.innerWidth >= 992) {
+        body.classList.remove('sidebar-active');
+        if (mobileNav) mobileNav.classList.remove('active');
+        if (sidebarOverlay) sidebarOverlay.style.display = 'none';
+      }
+    }
+    window.addEventListener('resize', handleResize);
+    handleResize();
+  });
   </script>
 </body>
 </html>

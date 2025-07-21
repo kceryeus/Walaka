@@ -25,31 +25,53 @@ async function isAdmin() {
   return user && user.role === 'admin';
 }
 
-async function loadLogs(filter = '') {
-  await loadTranslations();
-  let query = supabase.from('logs').select('*, users(username)').order('timestamp', { ascending: false }).limit(100);
+// --- PAGINATION & DATE FILTER STATE ---
+let logsPage = 1;
+const logsPageSize = 15;
+let logsTotalPages = 1;
+let logsCurrentFilter = '';
+let logsCurrentStartDate = '';
+let logsCurrentEndDate = '';
+
+async function getLogsCount(filter = '', startDate = '', endDate = '') {
+  let query = supabase.from('logs').select('id', { count: 'exact', head: true });
   if (filter) query = query.eq('action_type', filter);
+  if (startDate) query = query.gte('timestamp', startDate + 'T00:00:00');
+  if (endDate) query = query.lte('timestamp', endDate + 'T23:59:59');
+  const { count } = await query;
+  return count || 0;
+}
+
+async function loadLogs(filter = '', page = 1, pageSize = 15, startDate = '', endDate = '') {
+  await loadTranslations();
+  // Count total logs for pagination
+  const totalLogs = await getLogsCount(filter, startDate, endDate);
+  logsTotalPages = Math.max(1, Math.ceil(totalLogs / pageSize));
+  logsPage = Math.max(1, Math.min(page, logsTotalPages));
+
+  let query = supabase.from('logs').select('*, users(username)').order('timestamp', { ascending: false }).range((logsPage-1)*pageSize, logsPage*pageSize-1);
+  if (filter) query = query.eq('action_type', filter);
+  if (startDate) query = query.gte('timestamp', startDate + 'T00:00:00');
+  if (endDate) query = query.lte('timestamp', endDate + 'T23:59:59');
   const { data: logs, error: logsError } = await query;
-  console.log('[logs.js] loadLogs:', { filter, logs, logsError });
   const tbody = document.querySelector('#logsTable tbody');
   const emptyDiv = document.getElementById('logsEmpty');
   tbody.innerHTML = '';
   if (!logs || logs.length === 0) {
     emptyDiv.style.display = 'block';
+    document.getElementById('logsPagination').style.display = 'none';
     return;
   }
   emptyDiv.style.display = 'none';
+  document.getElementById('logsPagination').style.display = 'flex';
   logs.forEach(log => {
     const tr = document.createElement('tr');
     if (log.redflag) tr.style.background = '#ffebee';
-    // Determine how to render the description
     let desc = '';
     const translatedType = t('log_action_' + log.action_type);
     if (!log.description) {
       desc = translatedType;
     } else {
-      // If description is a simple value (like a plan name or payment method), append it
-      // If description starts with 'Changed plan to: ', extract the value
       if (log.action_type === 'change_plan' && log.description.startsWith('Changed plan to: ')) {
         desc = `${translatedType}: ${log.description.replace('Changed plan to: ', '')}`;
       } else if (log.action_type === 'select_payment_method' && log.description.startsWith('Selected payment method: ')) {
@@ -65,7 +87,6 @@ async function loadLogs(filter = '') {
       } else if (log.action_type === 'cancel_subscription') {
         desc = translatedType;
       } else {
-        // If description is not a known pattern, show only the description
         desc = log.description;
       }
     }
@@ -78,16 +99,20 @@ async function loadLogs(filter = '') {
     `;
     tbody.appendChild(tr);
   });
-  // Adiciona listeners para os botões redflag
+  // Redflag listeners
   document.querySelectorAll('.redflag-btn').forEach(btn => {
     btn.addEventListener('click', async (e) => {
       const id = btn.getAttribute('data-id');
       const { data: log } = await supabase.from('logs').select('redflag').eq('id', id).single();
       const newFlag = !log.redflag;
       const { error } = await supabase.from('logs').update({ redflag: newFlag }).eq('id', id);
-      if (!error) loadLogs(document.getElementById('actionFilter').value);
+      if (!error) loadLogs(logsCurrentFilter, logsPage, logsPageSize, logsCurrentStartDate, logsCurrentEndDate);
     });
   });
+  // Update pagination info
+  document.getElementById('logsPageInfo').textContent = `Página ${logsPage} de ${logsTotalPages}`;
+  document.getElementById('logsPrevPage').disabled = logsPage <= 1;
+  document.getElementById('logsNextPage').disabled = logsPage >= logsTotalPages;
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
@@ -112,6 +137,37 @@ document.addEventListener('DOMContentLoaded', async () => {
     window.location.href = 'login.html';
     return;
   }
-  loadLogs();
-  document.getElementById('actionFilter').addEventListener('change', e => loadLogs(e.target.value));
+  // --- FILTERS & PAGINATION ---
+  function reloadLogs() {
+    loadLogs(logsCurrentFilter, logsPage, logsPageSize, logsCurrentStartDate, logsCurrentEndDate);
+  }
+  document.getElementById('actionFilter').addEventListener('change', e => {
+    logsCurrentFilter = e.target.value;
+    logsPage = 1;
+    reloadLogs();
+  });
+  document.getElementById('startDate').addEventListener('change', e => {
+    logsCurrentStartDate = e.target.value;
+    logsPage = 1;
+    reloadLogs();
+  });
+  document.getElementById('endDate').addEventListener('change', e => {
+    logsCurrentEndDate = e.target.value;
+    logsPage = 1;
+    reloadLogs();
+  });
+  document.getElementById('logsPrevPage').addEventListener('click', () => {
+    if (logsPage > 1) {
+      logsPage--;
+      reloadLogs();
+    }
+  });
+  document.getElementById('logsNextPage').addEventListener('click', () => {
+    if (logsPage < logsTotalPages) {
+      logsPage++;
+      reloadLogs();
+    }
+  });
+  // Initial load
+  reloadLogs();
 }); 

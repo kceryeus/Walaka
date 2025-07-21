@@ -155,6 +155,26 @@ function formatClientInfo(client) {
 }
 
 /**
+ * Fetch the logo_url from appearance_settings for the current user
+ * @returns {Promise<string>} The logo URL or empty string
+ */
+async function getAppearanceLogoUrl() {
+    try {
+        const { data: { session } } = await window.supabase.auth.getSession();
+        if (!session || !session.user) return '';
+        const { data: appearanceData, error } = await window.supabase
+            .from('appearance_settings')
+            .select('logo_url')
+            .eq('user_id', session.user.id)
+            .single();
+        if (error || !appearanceData) return '';
+        return appearanceData.logo_url || '';
+    } catch (e) {
+        return '';
+    }
+}
+
+/**
  * Generate PDF from invoice data
  * @param {Object} invoiceData - The invoice data
  * @returns {Promise<Blob>} - The generated PDF blob
@@ -311,6 +331,8 @@ async function generatePDF(invoiceData, options = {}) {
         const total = subtotalAfterDiscount + totalVat;
         // Get business profile
         const businessProfile = await getBusinessProfile();
+        // Get logo from appearance settings
+        const logoUrl = await getAppearanceLogoUrl();
         // Format the data for the template (flattened, not nested under 'invoice')
         const serie = invoiceData.serie || invoiceData.invoiceSerie || '';
         let invoiceNumber = invoiceData.invoiceNumber || invoiceData.invoice_number || '';
@@ -331,7 +353,7 @@ async function generatePDF(invoiceData, options = {}) {
                 email: businessProfile.email || 'info@yourcompany.com',
                 phone: window.companySettings?.phone || '+258 XX XXX XXXX',
                 nuit: businessProfile.tax_id || '0',
-                logo: businessProfile.logo || '',
+                logo: logoUrl, // Use logo from appearance_settings
                 website: businessProfile.website || ''
             },
             // Invoice details (flattened)

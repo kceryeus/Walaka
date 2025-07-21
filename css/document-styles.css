@@ -412,3 +412,71 @@
         flex-direction: column;
     }
 } 
+
+/* --- DARK MODE OVERRIDES FOR DOCUMENT CARDS & TABLES --- */
+[data-theme="dark"] .document-table-container {
+  background: #23262f !important;
+  color: #fff !important;
+  border-color: #2a2d3a !important;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.25) !important;
+}
+[data-theme="dark"] .table-header {
+  background: #23262f !important;
+  color: #fff !important;
+}
+[data-theme="dark"] .table-header h3 {
+  color: #60a5fa !important;
+}
+[data-theme="dark"] .search-box input,
+[data-theme="dark"] .filter-dropdown select {
+  background: #181a20 !important;
+  color: #fff !important;
+  border: 1px solid #2a2d3a !important;
+}
+[data-theme="dark"] .search-box i {
+  color: #60a5fa !important;
+}
+[data-theme="dark"] .document-table th,
+[data-theme="dark"] .document-table td {
+  background: #23262f !important;
+  color: #fff !important;
+  border-bottom: 1px solid #2a2d3a !important;
+}
+[data-theme="dark"] .document-table th {
+  color: #60a5fa !important;
+}
+[data-theme="dark"] .document-table tbody tr:hover {
+  background-color: #283046 !important;
+}
+[data-theme="dark"] .status-badge {
+  background: #181a20 !important;
+  color: #fff !important;
+}
+[data-theme="dark"] .status-draft {
+  background-color: #2a2d3a !important;
+  color: #a1a1aa !important;
+}
+[data-theme="dark"] .status-paid {
+  background-color: #14532d !important;
+  color: #22c55e !important;
+}
+[data-theme="dark"] .status-issued {
+  background-color: #1e40af !important;
+  color: #60a5fa !important;
+}
+[data-theme="dark"] .status-cancelled {
+  background-color: #7f1d1d !important;
+  color: #f87171 !important;
+}
+[data-theme="dark"] .action-btn {
+  background: #23262f !important;
+  color: #60a5fa !important;
+}
+[data-theme="dark"] .action-btn:hover {
+  background: #2563eb !important;
+  color: #fff !important;
+} 
+[data-theme="dark"] .page-header h2,
+[data-theme="dark"] .page-header .subtitle {
+  color: #fff !important;
+} 

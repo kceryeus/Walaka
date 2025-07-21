@@ -66,22 +66,7 @@
 </head>
 
 <body>
-  <script>
-    // Synchronous Supabase session check (robust for v1/v2)
-    var key = 'sb-qvmtozjvjflygbkjecyj-auth-token';
-    var session = null;
-    try {
-      session = JSON.parse(localStorage.getItem(key));
-    } catch (e) {}
-    var user = null;
-    if (session) {
-      user = session.user || (session.currentSession && session.currentSession.user);
-    }
-    if (!user) {
-      window.location.href = '/login.html';
-      document.write('<style>body{display:none !important;}</style>');
-    }
-  </script>
+  <!-- Removed synchronous localStorage session check. Use only dynamic Supabase session check below. -->
   <script type="module">
     import { requireAuth } from './js/auth.js';
     requireAuth();
@@ -1443,7 +1428,7 @@
 
 <script>
 // Quick Add Client Modal Logic
-let newlyCreatedClient = null;
+window.newlyCreatedClient = null;
 
 function showQuickAddClientModal() {
     const modal = document.getElementById('quickAddClientModal');
@@ -1460,6 +1445,7 @@ function hideQuickAddClientModal() {
 function showClientSuccessModal(clientData) {
     const modal = document.getElementById('clientSuccessModal');
     const previewDiv = document.getElementById('clientInfoPreview');
+    window.newlyCreatedClient = clientData;
     previewDiv.innerHTML = `
         <div class="client-info-grid">
             <div><strong>Name:</strong> ${clientData.customer_name}</div>
@@ -1471,6 +1457,7 @@ function showClientSuccessModal(clientData) {
         </div>
     `;
     modal.style.display = 'block';
+    console.log('[showClientSuccessModal] Set window.newlyCreatedClient:', window.newlyCreatedClient);
 }
 
 function hideClientSuccessModal() {
@@ -1478,60 +1465,19 @@ function hideClientSuccessModal() {
     modal.style.display = 'none';
 }
 
-async function saveQuickClient() {
-    const form = document.getElementById('quickClientForm');
-    if (!form.checkValidity()) {
-        form.reportValidity();
-        return;
-    }
-    try {
-        const formData = {
-            customer_name: document.getElementById('quick-company-name').value,
-            customer_tax_id: document.getElementById('quick-customer-tax-id').value,
-            contact: document.getElementById('quick-contact').value,
-            billing_address: document.getElementById('quick-billing-address').value,
-            street_name: document.getElementById('quick-street-name').value,
-            city: document.getElementById('quick-city').value,
-            province: document.getElementById('quick-province').value,
-            country: document.getElementById('quick-country').value,
-            telephone: document.getElementById('quick-telephone').value,
-            email: document.getElementById('quick-email').value,
-            status: 'active',
-            client_type: document.querySelector('input[name="quick-client-type"]:checked').value,
-            user_id: (await window.supabase.auth.getUser()).data.user?.id
-        };
-        if (formData.telephone) {
-            formData.telephone = parseInt(formData.telephone.replace(/\D/g, '')) || null;
-        }
-        const { data, error } = await window.supabase
-            .from('clients')
-            .insert([formData])
-            .select();
-        if (error) throw error;
-        newlyCreatedClient = data[0];
-        hideQuickAddClientModal();
-        showClientSuccessModal(newlyCreatedClient);
-        if (typeof window.fetchClients === 'function') {
-            await window.fetchClients();
-        }
-        const clientInput = document.getElementById('client-list');
-        if (clientInput && newlyCreatedClient) {
-            clientInput.value = newlyCreatedClient.customer_name;
-            clientInput.dispatchEvent(new Event('change', { bubbles: true }));
-        }
-    } catch (error) {
-        alert('Error saving client: ' + error.message);
-    }
-}
-
 function useNewlyCreatedClient() {
-    if (newlyCreatedClient) {
+    const client = window.newlyCreatedClient;
+    if (client) {
         hideClientSuccessModal();
-        const clientInput = document.getElementById('client-list');
-        if (clientInput) {
-            clientInput.value = newlyCreatedClient.customer_name;
-            clientInput.dispatchEvent(new Event('change', { bubbles: true }));
-        }
+        if (document.getElementById('client-list')) document.getElementById('client-list').value = client.customer_name;
+        if (document.getElementById('clientEmail')) document.getElementById('clientEmail').value = client.email || '';
+        if (document.getElementById('clientAddress')) document.getElementById('clientAddress').value = client.billing_address || '';
+        if (document.getElementById('clientTaxId')) document.getElementById('clientTaxId').value = client.customer_tax_id || '';
+        // Add more fields as needed
+        if (document.getElementById('client-list')) document.getElementById('client-list').dispatchEvent(new Event('change', { bubbles: true }));
+        console.log('[useNewlyCreatedClient] Populated invoice form fields with:', client);
+    } else {
+        console.warn('[useNewlyCreatedClient] No newlyCreatedClient found on window.');
     }
 }
 
@@ -1559,6 +1505,59 @@ window.addEventListener('DOMContentLoaded', function() {
         if (event.target === successModal) hideClientSuccessModal();
     });
 });
+
+async function saveQuickClient() {
+    const form = document.getElementById('quickClientForm');
+    if (!form.checkValidity()) {
+        form.reportValidity();
+        return;
+    }
+    try {
+        const { data: { session } } = await window.supabase.auth.getSession();
+        if (!session?.user) {
+            alert('Please login to continue');
+            return;
+        }
+        const formData = {
+            customer_name: document.getElementById('quick-company-name').value,
+            customer_tax_id: document.getElementById('quick-customer-tax-id').value,
+            contact: document.getElementById('quick-contact').value,
+            billing_address: document.getElementById('quick-billing-address').value,
+            street_name: document.getElementById('quick-street-name').value,
+            city: document.getElementById('quick-city').value,
+            province: document.getElementById('quick-province').value,
+            country: document.getElementById('quick-country').value,
+            telephone: document.getElementById('quick-telephone').value,
+            email: document.getElementById('quick-email').value,
+            status: 'active',
+            client_type: document.querySelector('input[name="quick-client-type"]:checked').value,
+            user_id: session.user.id
+        };
+        if (formData.telephone) {
+            formData.telephone = parseInt(formData.telephone.replace(/\D/g, '')) || null;
+        }
+        const { data, error } = await window.supabase
+            .from('clients')
+            .insert([formData])
+            .select();
+        if (error) throw error;
+        window.newlyCreatedClient = data[0];
+        hideQuickAddClientModal();
+        showClientSuccessModal(window.newlyCreatedClient);
+        if (typeof window.fetchClients === 'function') {
+            await window.fetchClients();
+        }
+        const clientInput = document.getElementById('client-list');
+        if (clientInput && window.newlyCreatedClient) {
+            clientInput.value = window.newlyCreatedClient.customer_name;
+            clientInput.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+        console.log('[saveQuickClient] Client saved and modal shown:', window.newlyCreatedClient);
+    } catch (error) {
+        console.error('Error saving client:', error);
+        alert('Error saving client: ' + error.message);
+    }
+}
 </script>
 
 <!-- 1. Add "+ Add Product" button to the items section of the invoice modal -->
@@ -1830,7 +1829,7 @@ document.getElementById('useProductBtn').addEventListener('click', function() {
 
 <!-- Sidebar toggle logic for responsive (ensure this is last) -->
 <script>
-document.addEventListener('DOMContentLoaded', function() {
+/*document.addEventListener('DOMContentLoaded', function() {
   const dashboardContainer = document.querySelector('.dashboard-container');
   const menuToggle = document.querySelector('.menu-toggle');
   const sidebarOverlay = document.querySelector('.sidebar-overlay');
@@ -1877,7 +1876,7 @@ document.addEventListener('DOMContentLoaded', function() {
   }
   window.addEventListener('resize', handleResize);
   handleResize();
-});
+});*/
 </script>
 </body>
 </html>

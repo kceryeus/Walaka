@@ -1374,56 +1374,5 @@ document.addEventListener('DOMContentLoaded', function() {
     logUserAction('page_visit', 'User visited page: dashboard.html');
   });
 </script>
-<!-- Sidebar toggle logic for responsive (ensure this is last) -->
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-  const dashboardContainer = document.querySelector('.dashboard-container');
-  const menuToggle = document.querySelector('.menu-toggle');
-  const sidebarOverlay = document.querySelector('.sidebar-overlay');
-  console.log('[SidebarToggle] DOMContentLoaded');
-  console.log('[SidebarToggle] dashboardContainer:', dashboardContainer);
-  console.log('[SidebarToggle] menuToggle:', menuToggle);
-  console.log('[SidebarToggle] sidebarOverlay:', sidebarOverlay);
-  // Open sidebar
-  if (menuToggle) {
-    menuToggle.addEventListener('click', function() {
-      console.log('[SidebarToggle] menuToggle clicked');
-      dashboardContainer.classList.add('sidebar-active');
-      console.log('[SidebarToggle] .sidebar-active added');
-    });
-  } else {
-    console.warn('[SidebarToggle] menuToggle not found');
-  }
-  // Close sidebar on overlay click
-  if (sidebarOverlay) {
-    sidebarOverlay.addEventListener('click', function() {
-      console.log('[SidebarToggle] sidebarOverlay clicked');
-      dashboardContainer.classList.remove('sidebar-active');
-      console.log('[SidebarToggle] .sidebar-active removed');
-    });
-  } else {
-    console.warn('[SidebarToggle] sidebarOverlay not found');
-  }
-  // Optional: close sidebar on ESC key
-  document.addEventListener('keydown', function(e) {
-    if (e.key === 'Escape') {
-      console.log('[SidebarToggle] Escape key pressed');
-      dashboardContainer.classList.remove('sidebar-active');
-      console.log('[SidebarToggle] .sidebar-active removed (ESC)');
-    }
-  });
-  // On resize, remove sidebar-active if desktop
-  function handleResize() {
-    if (window.innerWidth >= 992) {
-      if (dashboardContainer.classList.contains('sidebar-active')) {
-        console.log('[SidebarToggle] handleResize: Removing .sidebar-active (desktop)');
-        dashboardContainer.classList.remove('sidebar-active');
-      }
-    }
-  }
-  window.addEventListener('resize', handleResize);
-  handleResize();
-});
-</script>
 </body>
 </html>

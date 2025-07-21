@@ -486,31 +486,39 @@ function atividadeConstraint(input) {
 <!-- Sidebar toggle logic for responsive (ensure this is last) -->
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-  const mainContainer = document.querySelector('.container');
-  const menuToggle = document.querySelector('.menu-toggle');
+  const container = document.querySelector('.container');
+  let menuToggle = document.querySelector('.menu-toggle');
   const sidebarOverlay = document.querySelector('.sidebar-overlay');
-  // Open sidebar
+  // If menu-toggle doesn't exist, create it for legacy support
+  if (!menuToggle) {
+    menuToggle = document.createElement('button');
+    menuToggle.className = 'menu-toggle';
+    menuToggle.innerHTML = '<i class="fas fa-bars"></i>';
+    const topBar = document.querySelector('.top-bar');
+    if (topBar) topBar.prepend(menuToggle);
+  }
+  // Toggle sidebar on menu button click
   if (menuToggle) {
     menuToggle.addEventListener('click', function() {
-      mainContainer.classList.add('sidebar-active');
+      container.classList.toggle('sidebar-active');
     });
   }
   // Close sidebar on overlay click
   if (sidebarOverlay) {
     sidebarOverlay.addEventListener('click', function() {
-      mainContainer.classList.remove('sidebar-active');
+      container.classList.remove('sidebar-active');
     });
   }
   // Optional: close sidebar on ESC key
   document.addEventListener('keydown', function(e) {
     if (e.key === 'Escape') {
-      mainContainer.classList.remove('sidebar-active');
+      container.classList.remove('sidebar-active');
     }
   });
   // On resize, remove sidebar-active if desktop
   function handleResize() {
     if (window.innerWidth >= 992) {
-      mainContainer.classList.remove('sidebar-active');
+      container.classList.remove('sidebar-active');
     }
   }
   window.addEventListener('resize', handleResize);

@@ -422,82 +422,217 @@ const TEMPLATES = {
             </div>
         `
     },
+    /*
     'standard': {
         name: 'Standard',
         styles: `
             .invoice-container {
-                max-width: 700px;
-                margin: 20px auto;
-                padding: 24px 24px 16px 24px;
-                font-family: 'Inter', sans-serif;
+                max-width: 900px;
+                margin: 32px auto 0 auto;
                 background: #fff;
-                color: #222;
-                border-radius: 8px;
-                box-shadow: 0 2px 12px rgba(0,0,0,0.07);
+                color: #23272f;
+                font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
+                border-radius: 14px;
+                box-shadow: 0 2px 16px rgba(30,40,90,0.08);
                 box-sizing: border-box;
+                overflow: hidden;
             }
-            .invoice-header {
+            .invoice-header-row {
+                display: flex;
+                align-items: flex-start;
+                padding: 32px 36px 0 36px;
+                gap: 32px;
+            }
+            .company-logo {
+                max-width: 90px;
+                max-height: 60px;
+                margin-bottom: 8px;
+                border-radius: 7px;
+                background: #f6f8fa;
+                padding: 4px;
+                box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+            }
+            .company-info h1 {
+                font-size: 1.35em;
+                font-weight: 700;
+                margin: 0 0 4px 0;
+            }
+            .company-info p {
+                margin: 0;
+                font-size: 0.98em;
+                color: #6b7280;
+            }
+            .invoice-meta {
+                flex: 1;
+                text-align: right;
+                font-size: 0.98em;
+                margin-top: 6px;
+            }
+            .invoice-meta p {
+                margin: 0 0 4px 0;
+            }
+            .invoice-meta .meta-label {
+                color: #6b7280;
+                font-size: 0.92em;
+            }
+            .invoice-bill-row {
                 display: flex;
                 justify-content: space-between;
                 align-items: flex-start;
-                border-bottom: 2px solid #eaeaea;
-                padding-bottom: 18px;
-                margin-bottom: 32px;
+                padding: 0 36px 0 36px;
+                margin-top: 10px;
+                margin-bottom: 0;
             }
-            .company-logo {
-                max-width: 120px;
-                max-height: 60px;
-                margin-bottom: 8px;
-            }
-            .company-info {
+            .bill-to {
                 flex: 1;
+                font-size: 0.98em;
             }
-            .invoice-details {
-                text-align: right;
-                min-width: 220px;
-            }
-            .client-info {
-                margin-bottom: 28px;
-                padding: 16px;
-                background: #f7f7f7;
-                border-radius: 5px;
+            .bill-to .bill-label {
+                font-weight: 600;
+                letter-spacing: 0.5px;
+                color: #23272f;
+                margin-bottom: 2px;
                 font-size: 0.95em;
+            }
+            .bill-to p {
+                margin: 0;
+                color: #23272f;
+            }
+            .invoice-meta-block {
+                flex: 1;
+                text-align: right;
+                font-size: 0.98em;
+            }
+            .info-bar {
+                display: flex;
+                width: 100%;
+                margin: 24px 0 0 0;
+                border-radius: 0 0 8px 8px;
+                overflow: hidden;
+                font-size: 0.98em;
+                font-weight: 500;
+                background: #f8fafc;
+            }
+            .info-bar .info-box {
+                flex: 1;
+                padding: 12px 0 12px 0;
+                text-align: center;
+                background: #f8fafc;
+                color: #23272f;
+                border-right: 1px solid #e5e7eb;
+            }
+            .info-bar .info-box:last-child {
+                border-right: none;
+            }
+            .info-bar .info-label {
+                display: block;
+                font-size: 0.92em;
+                color: #6b7280;
+                margin-bottom: 1px;
+            }
+            .info-bar .info-value {
+                font-size: 1.08em;
+                font-weight: 600;
+            }
+            .info-bar .total-due {
+                background: #23272f;
+                color: #fff;
+                font-size: 1.12em;
+                font-weight: 700;
             }
             .invoice-items {
                 width: 100%;
                 border-collapse: collapse;
-                font-size: 0.93em;
+                margin: 18px 0 0 0;
+                font-size: 0.97em;
             }
             .invoice-items th, .invoice-items td {
                 padding: 8px 6px;
-                border-bottom: 1px solid #eee;
+                border-bottom: 1px solid #e5e7eb;
                 word-break: break-word;
             }
             .invoice-items th {
-                background: #f0f0f0;
+                background: #f6f8fa;
+                color: #23272f;
                 text-align: left;
+                font-weight: 600;
+                letter-spacing: 0.5px;
+                font-size: 0.97em;
             }
             .invoice-totals {
                 text-align: right;
-                margin-top: 28px;
+                margin: 18px 36px 0 0;
                 font-size: 1em;
+            }
+            .invoice-totals .totals-row {
+                margin: 0 0 2px 0;
+            }
+            .invoice-totals .totals-row.italic {
+                font-style: italic;
+                color: #6b7280;
+                font-size: 0.93em;
             }
             .grand-total {
                 font-weight: bold;
                 font-size: 1.08em;
-                border-top: 2px solid #eaeaea;
-                padding-top: 10px;
+                border-top: 2px solid #23272f;
+                padding-top: 8px;
+                color: #23272f;
+            }
+            .signature-row {
+                display: flex;
+                flex-direction: column;
+                align-items: flex-end;
+                margin: 32px 36px 0 0;
+                min-height: 40px;
+            }
+            .signature-label {
+                font-size: 0.98em;
+                font-weight: 600;
+                color: #23272f;
+                margin-bottom: 2px;
+            }
+            #issued-by-name {
+                font-size: 0.97em;
+                color: #23272f;
+                font-weight: 400;
+                margin-top: 2px;
             }
             .notes {
-                margin-top: 32px;
-                padding: 16px;
-                background: #f7f7f7;
-                border-radius: 5px;
+                margin: 18px 36px 0 36px;
+                padding: 10px 16px;
+                background: #f6f8fa;
+                border-radius: 7px;
+                color: #23272f;
+                font-size: 0.97em;
+            }
+            .footer-bar {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                background: #23272f;
+                color: #fff;
+                padding: 12px 36px;
+                font-size: 0.97em;
+                border-radius: 0 0 12px 12px;
+                position: fixed;
+                left: 0;
+                bottom: 0;
+                width: 100vw;
+                z-index: 100;
+            }
+            .footer-bar .footer-section {
+                display: flex;
+                align-items: center;
+                gap: 12px;
+            }
+            .footer-bar .footer-section i {
+                margin-right: 4px;
             }
         `,
         layout: `
             <div class="invoice-container">
-                <div class="invoice-header">
+                <div class="invoice-header-row">
                     <div class="company-info">
                         <img id="company-logo" class="company-logo" style="display:none;"/>
                         <h1 id="company-name">Nome da Empresa</h1>
@@ -505,27 +640,60 @@ const TEMPLATES = {
                         <p id="company-contact">Email: <span id="company-email"></span> | Telefone: <span id="company-phone"></span></p>
                         <p>NUIT: <span id="company-nuit"></span></p>
                     </div>
-                    <div class="invoice-details">
-                        <h2>FACTURA</h2>
-                        <p>Nº Fatura: <span id="invoice-number">{{invoiceNumber}}</span></p>
-                        <p>Data de Emissão: <span id="issue-date"></span></p>
-                        <p>Data de Vencimento: <span id="due-date"></span></p>
-                        <p id="currency-field"></p>
+                    <div class="invoice-meta">
+                        <p><span class="meta-label">Tax invoice</span></p>
                     </div>
                 </div>
-                <div class="client-info">
-                    <h3>Cliente:</h3>
-                    <p id="client-name">Nome do Cliente</p>
-                    <p id="client-address">Endereço do Cliente</p>
-                    <p>NUIT: <span id="client-nuit"></span></p>
-                    <p>Email: <span id="client-email"></span></p>
-                    <p>Contacto: <span id="client-contact"></span></p>
+                <div class="invoice-bill-row">
+                    <div class="bill-to">
+                        <div class="bill-label">BILL TO</div>
+                        <p id="client-name">Nome do Cliente</p>
+                        <p id="client-address">Endereço do Cliente</p>
+                    </div>
+                    <div class="invoice-meta-block">
+                        <p>Issue date: <span id="issue-date"></span></p>
+                        <p>Due date: <span id="due-date"></span></p>
+                        <p>Reference: <span id="invoice-number">{{invoiceNumber}}</span></p>
+                    </div>
+                </div>
+                <div class="info-bar">
+                    <div class="info-box">
+                        <span class="info-label">Invoice No.</span>
+                        <span class="info-value" id="invoice-number">{{invoiceNumber}}</span>
+                    </div>
+                    <div class="info-box">
+                        <span class="info-label">Issue date</span>
+                        <span class="info-value" id="issue-date"></span>
+                    </div>
+                    <div class="info-box">
+                        <span class="info-label">Due date</span>
+                        <span class="info-value" id="due-date"></span>
+                    </div>
+                    <div class="info-box total-due">
+                        <span class="info-label">Total due (<span id="currency-field"></span>)</span>
+                        <span class="info-value" id="grand-total"></span>
+                    </div>
                 </div>
                 <div id="invoice-items-body"></div>
                 <div class="invoice-totals"></div>
+                <div class="signature-row">
+                    <span class="signature-label">Issued by:</span>
+                    <span id="issued-by-name"></span>
+                </div>
                 <div class="notes">
                     <h4>Observações:</h4>
                     <p id="notes"></p>
+                </div>
+            </div>
+            <div class="footer-bar">
+                <div class="footer-section">
+                    <i class="fas fa-phone"></i> <span id="footer-phone">+258 XX XXX XXXX</span>
+                </div>
+                <div class="footer-section">
+                    <i class="fas fa-globe"></i> <span id="footer-website">www.yourbusiness.com</span>
+                </div>
+                <div class="footer-section">
+                    <i class="fas fa-envelope"></i> <span id="footer-email">info@yourbusiness.com</span>
                 </div>
             </div>
         `
@@ -535,67 +703,105 @@ const TEMPLATES = {
         styles: `
             .invoice-container {
                 max-width: 700px;
-                margin: 24px auto;
-                padding: 24px 18px 16px 18px;
-                font-family: 'Inter', sans-serif;
+                margin: 40px auto;
+                padding: 0;
+                font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
                 background: #fff;
-                color: #222;
-                border: 1px solid #eaeaea;
-                border-radius: 6px;
+                color: #23272f;
+                border-radius: 12px;
+                box-shadow: 0 2px 16px rgba(30,40,90,0.07);
                 box-sizing: border-box;
+                border: 1.5px solid #e5e7eb;
             }
             .invoice-header {
                 display: flex;
-                justify-content: space-between;
+                flex-direction: column;
                 align-items: flex-start;
-                border-bottom: 1px solid #eaeaea;
-                padding-bottom: 12px;
-                margin-bottom: 18px;
+                padding: 32px 32px 0 32px;
+                border-bottom: none;
+                background: none;
             }
             .company-info {
-                flex: 1;
+                margin-bottom: 12px;
+            }
+            .company-info h1 {
+                font-size: 2em;
+                font-weight: 700;
+                margin: 0 0 4px 0;
+            }
+            .company-info p {
+                margin: 0;
+                font-size: 1em;
+                color: #6b7280;
             }
             .invoice-details {
+                align-self: flex-end;
                 text-align: right;
-                min-width: 200px;
+                margin-top: -48px;
+                margin-bottom: 12px;
+                background: #f3f4f6;
+                padding: 12px 24px;
+                border-radius: 8px;
+                font-size: 1.05em;
+                box-shadow: 0 1px 4px rgba(30,40,90,0.04);
             }
-            .client-info {
-                margin-bottom: 0;
+            .invoice-details h2 {
+                margin: 0 0 8px 0;
+                font-size: 1.2em;
+                color: #23272f;
+                letter-spacing: 1px;
+            }
+            .client-info, #client-info-placeholder {
+                margin: 0 32px 0 32px;
+                margin-top: 24px;
                 padding: 0;
                 background: none;
                 border-radius: 0;
-                font-size: 0.97em;
+                font-size: 1em;
+                color: #23272f;
+            }
+            .client-info h3 {
+                margin-bottom: 4px;
+                font-size: 1.1em;
+                font-weight: 600;
             }
             .invoice-items {
                 width: 100%;
                 border-collapse: collapse;
-                font-size: 0.95em;
+                margin: 32px 0 0 0;
+                font-size: 1em;
             }
             .invoice-items th, .invoice-items td {
-                padding: 7px 5px;
-                border-bottom: 1px solid #eee;
+                padding: 10px 6px;
+                border-bottom: 1px solid #e5e7eb;
                 word-break: break-word;
             }
             .invoice-items th {
-                background: #fafafa;
+                background: #f3f4f6;
+                color: #23272f;
                 text-align: left;
+                font-weight: 500;
+                letter-spacing: 0.5px;
             }
             .invoice-totals {
                 text-align: right;
-                margin-top: 18px;
-                font-size: 1em;
+                margin: 32px 32px 0 0;
+                font-size: 1.08em;
             }
             .grand-total {
                 font-weight: bold;
-                font-size: 1.05em;
-                border-top: 2px solid #eaeaea;
-                padding-top: 8px;
+                font-size: 1.12em;
+                border-top: 2px solid #e5e7eb;
+                padding-top: 10px;
+                color: #23272f;
             }
             .notes {
-                margin-top: 18px;
-                padding: 10px;
-                background: #fafafa;
-                border-radius: 4px;
+                margin: 32px 32px 32px 32px;
+                padding: 12px 18px;
+                background: #f3f4f6;
+                border-radius: 6px;
+                color: #23272f;
+                font-size: 1em;
             }
         `,
         layout: `
@@ -625,6 +831,7 @@ const TEMPLATES = {
             </div>
         `
     }
+    */
 };
 
 /**

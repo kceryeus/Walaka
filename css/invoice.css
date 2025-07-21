@@ -1455,3 +1455,201 @@
 [data-theme="dark"] .search-bar {
   background: #23262f !important;
 }
+
+@media (max-width: 768px) {
+  #invoiceModal .items-table thead {
+    display: none !important;
+    visibility: hidden !important;
+    height: 0 !important;
+    width: 0 !important;
+    overflow: hidden !important;
+    position: absolute !important;
+  }
+  #invoiceModal .items-table tr {
+    background: #f8fafc !important;
+    border-radius: 18px !important;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.07) !important;
+    margin-bottom: 1rem !important;
+    padding: 0.7rem 2rem 1rem 2rem !important; /* much more horizontal padding */
+    transition: box-shadow 0.18s, transform 0.18s;
+    border: none !important;
+    min-width: 0 !important;
+    box-sizing: border-box !important;
+  }
+  #invoiceModal .items-table tr:active,
+  #invoiceModal .items-table tr:focus,
+  #invoiceModal .items-table tr:hover {
+    box-shadow: 0 6px 24px rgba(0,0,0,0.13) !important;
+    transform: translateY(-2px) scale(1.01);
+  }
+  #invoiceModal .items-table td {
+    display: block !important;
+    width: 100% !important;
+    padding: 0.3rem 0.8rem !important; /* more left/right padding */
+    border: none !important;
+    position: relative !important;
+    border-bottom: 1px solid #e5e7eb !important;
+    font-size: 0.9em !important;
+    margin-bottom: 0.15rem !important;
+    background: transparent !important;
+    min-width: 0 !important;
+    box-sizing: border-box !important;
+  }
+  #invoiceModal .items-table td:last-child {
+    border-bottom: none !important;
+  }
+  #invoiceModal .items-table td:before {
+    content: attr(data-label) !important;
+    display: block !important;
+    font-weight: 600 !important;
+    color: #555 !important;
+    font-size: 0.9em !important;
+    margin-bottom: 2px !important;
+    text-align: left !important;
+    padding-left: 2px !important;
+    padding-right: 2px !important;
+    min-width: 0 !important;
+    box-sizing: border-box !important;
+  }
+  #invoiceModal .items-table input,
+  #invoiceModal .items-table select {
+    font-size: 0.9em !important;
+    margin-bottom: 0.1rem !important;
+    padding: 0.35em 0.6em !important;
+    box-sizing: border-box !important;
+    min-width: 0 !important;
+  }
+  #invoiceModal .items-table .item-total,
+  #invoiceModal .items-table td:last-child .item-total {
+    font-weight: bold !important;
+    color: #2563eb !important;
+    font-size: 1.1em !important;
+    letter-spacing: 0.01em;
+  }
+  #invoiceModal .items-table .remove-item-btn {
+    margin-top: 0.7rem !important;
+    background: #fff0f0 !important;
+    border: 1px solid #fca5a5 !important;
+    color: #e55353 !important;
+    transition: background 0.18s, box-shadow 0.18s;
+    box-shadow: 0 1px 4px rgba(252,165,165,0.10);
+  }
+  #invoiceModal .items-table .remove-item-btn:hover {
+    background: #ffe4e6 !important;
+    color: #b91c1c !important;
+  }
+}
+
+@media (max-width: 768px) {
+  [data-theme="dark"] #invoiceModal .items-table tr {
+    background: #23262f !important;
+    border-color: #2a2d3a !important;
+    color: #fff !important;
+    box-shadow: 0 2px 8px rgba(96,165,250,0.10) !important;
+  }
+  [data-theme="dark"] #invoiceModal .items-table td:before {
+    color: #60a5fa !important;
+  }
+  [data-theme="dark"] #invoiceModal .items-table td {
+    border-bottom: 1px solid #2a2d3a !important;
+  }
+}
+
+@media (max-width: 768px) {
+  #invoiceModal .items-table td:before {
+    text-align: left !important;
+  }
+  #invoiceModal .items-table td:first-child,
+  #invoiceModal .items-table td:first-child input {
+    text-align: left !important;
+    justify-content: flex-start !important;
+  }
+}
+
+@media (max-width: 768px) {
+  #invoiceModal .items-table td {
+    display: block !important;
+    width: 100% !important;
+    padding: 0.4rem 0.2rem !important;
+    border: none !important;
+    position: relative !important;
+    border-bottom: 1px solid #f0f0f0 !important;
+    font-size: 0.8em !important;
+    margin-bottom: 0.2rem !important;
+  }
+  #invoiceModal .items-table td:last-child {
+    border-bottom: none !important;
+  }
+  #invoiceModal .items-table td:before {
+    content: attr(data-label) !important;
+    display: block !important;
+    font-weight: 600 !important;
+    color: #555 !important;
+    font-size: 0.8em !important;
+    margin-bottom: 2px !important;
+    text-align: left !important;
+    padding-right: 0 !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    word-break: break-word !important;
+  }
+  #invoiceModal .items-table input,
+  #invoiceModal .items-table select {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    font-size: 0.8em !important;
+    text-align: left !important;
+  }
+}
+
+/* Mobile styles for invoice preview */
+@media (max-width: 600px) {
+  .invoice-preview-container {
+    padding: 8px !important;
+    font-size: 14px !important;
+  }
+  #invoicePreviewContent {
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+  .invoice-header, .company-info, .client-info, .invoice-info-box {
+    width: 100% !important;
+    box-sizing: border-box;
+    margin: 0 0 8px 0 !important;
+    padding: 8px !important;
+    font-size: 14px !important;
+  }
+  .invoice-info-box {
+    float: none !important;
+    display: block !important;
+    margin: 0 auto 8px auto !important;
+    width: 100% !important;
+    font-size: 13px !important;
+    text-align: left !important;
+  }
+  .company-info h1, .company-info h2, .company-info h3 {
+    font-size: 18px !important;
+    margin-bottom: 4px !important;
+  }
+  .client-info {
+    font-size: 13px !important;
+    padding: 8px !important;
+    margin-bottom: 8px !important;
+  }
+  /* Stack elements vertically */
+  .invoice-header, .company-info, .invoice-info-box, .client-info {
+    display: block !important;
+    float: none !important;
+    clear: both !important;
+  }
+  /* Reduce table font size if present */
+  .invoice-table, .invoice-items-table {
+    font-size: 12px !important;
+  }
+  /* Remove excessive borders/shadows if any */
+  .invoice-preview-container, #invoicePreviewContent {
+    box-shadow: none !important;
+    border-radius: 0 !important;
+  }
+}

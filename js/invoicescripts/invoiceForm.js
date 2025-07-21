@@ -1195,7 +1195,26 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
-// Patch: When a new item row is added, immediately trigger updateItemRow for that row
+// Helper to set data-labels on items table rows for mobile card view
+function setItemRowDataLabels(row) {
+    const headers = [
+        "Description", "Quantity", "Unit Price", "Discount Type", "Discount", "Discounted Subtotal", "VAT Rate", "VAT", "Total", ""
+    ];
+    row.querySelectorAll('td').forEach((td, i) => {
+        td.setAttribute('data-label', headers[i]);
+    });
+}
+
+// Patch: Set data-labels for all item rows on DOMContentLoaded and after adding new rows
+function updateAllItemRowDataLabels() {
+    document.querySelectorAll('#itemsTable tbody tr').forEach(setItemRowDataLabels);
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    updateAllItemRowDataLabels();
+});
+
+// Patch: When a new item row is added, set data-labels
 const origAddInvoiceItem = window.invoiceItems && window.invoiceItems.addInvoiceItem;
 if (origAddInvoiceItem) {
   window.invoiceItems.addInvoiceItem = function() {
@@ -1203,6 +1222,9 @@ if (origAddInvoiceItem) {
     // Get the last row and trigger calculation
     const itemsTableBody = document.querySelector('#itemsTable tbody');
     const newRow = itemsTableBody && itemsTableBody.lastElementChild;
+    if (newRow) {
+      setItemRowDataLabels(newRow);
+    }
     if (newRow && typeof window.invoiceForm.updateItemRow === 'function') {
       // If discount type is 'none', always treat discount value as 0
       const discountType = newRow.querySelector('.item-discount-type')?.value;
@@ -1435,6 +1457,7 @@ const style = document.createElement('style');
 style.innerHTML = `#general-client-btn.highlighted { background: #e0f7fa; border: 2px solid #00bcd4; color: #00796b; }`;
 document.head.appendChild(style);
 
+/*
 document.addEventListener('DOMContentLoaded', function() {
     function getAISuggestionBtnText() {
         if (window.languageManager && typeof window.languageManager.getTranslation === 'function') {
@@ -1537,3 +1560,4 @@ async function getAISuggestionForInvoiceNote(context) {
         return '';
     }
 }
+*/

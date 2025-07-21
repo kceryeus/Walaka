@@ -20,12 +20,15 @@
     <link rel="stylesheet" href="css/styles.css">
     <link rel="stylesheet" href="css/document-styles.css">
     <link rel="icon" type="image/png" href="assets/images/walaka-assistant.PNG">
+    <!-- Dark Mode Script -->
+    <script src="js/darkmode.js"></script>
 </head>
 
 <body>
     <div class="dashboard-container">
         <!-- Sidebar Menu -->
         <div id="sidebar-container"></div>
+        <div class="sidebar-overlay"></div>
         <script>
         // Dynamically load the sidebar from components/sidebar.html
         document.addEventListener('DOMContentLoaded', function() {
@@ -37,6 +40,13 @@
                     var script = document.createElement('script');
                     script.src = 'components/sidebar-actions.js';
                     document.body.appendChild(script);
+                    // Load sidebar-darkmode.js and initialize pill
+                    var darkmodeScript = document.createElement('script');
+                    darkmodeScript.src = 'components/sidebar-darkmode.js';
+                    darkmodeScript.onload = function() {
+                        if (window.initSidebarDarkModeIcon) window.initSidebarDarkModeIcon();
+                    };
+                    document.body.appendChild(darkmodeScript);
                 })
                 .catch(err => {
                     console.error('Failed to load sidebar:', err);
@@ -255,5 +265,38 @@
         logUserAction('page_visit', 'User visited page: credit_notes.html');
       });
     </script>
+    <script>
+document.addEventListener('DOMContentLoaded', function() {
+  const dashboardContainer = document.querySelector('.dashboard-container');
+  const menuToggle = document.querySelector('.menu-toggle');
+  const sidebarOverlay = document.querySelector('.sidebar-overlay');
+  // Open sidebar
+  if (menuToggle) {
+    menuToggle.addEventListener('click', function() {
+      dashboardContainer.classList.add('sidebar-active');
+    });
+  }
+  // Close sidebar on overlay click
+  if (sidebarOverlay) {
+    sidebarOverlay.addEventListener('click', function() {
+      dashboardContainer.classList.remove('sidebar-active');
+    });
+  }
+  // Optional: close sidebar on ESC key
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+      dashboardContainer.classList.remove('sidebar-active');
+    }
+  });
+  // On resize, remove sidebar-active if desktop
+  function handleResize() {
+    if (window.innerWidth >= 992) {
+      dashboardContainer.classList.remove('sidebar-active');
+    }
+  }
+  window.addEventListener('resize', handleResize);
+  handleResize();
+});
+</script>
 </body>
 </html>
