@@ -42,27 +42,43 @@ class WalakaAssistant {
     const msg = userMessage.toLowerCase();
     // Criar Factura
     if (msg.includes('criar factura') || msg.includes('criar fatura') || msg.includes('nova factura') || msg.includes('nova fatura') || msg.includes('criar invoice')) {
-      return `Passo a Passo para Criar uma Factura no WALAKA ERP:\n\n1. Aceda ao Dashboard após iniciar sessão.\n2. No menu lateral esquerdo, clique em "Facturas" (ou "Invoices").\n3. Clique no botão azul "Criar Factura" (ou "Create Invoice") no topo da página.\n4. Preencha o formulário da factura (cliente, detalhes, itens, revisão).\n5. Clique em "Criar Factura" para guardar. Depois pode exportar para PDF ou enviar por email.\n\nSe precisar de ajuda em algum passo, diga qual!`;
+      return `Passo a Passo para Criar uma Factura no WALAKA ERP:\n\n1. Aceda ao Dashboard após iniciar sessão.\n2. No menu lateral esquerdo, clique em "Facturas".\n3. Clique no botão azul "Criar Factura" no topo da página.\n4. Preencha o formulário da factura:\n   - Selecione ou adicione um cliente\n   - Adicione os itens (produtos/serviços), quantidades e valores\n   - Defina as datas e condições de pagamento\n5. Revise os totais e detalhes.\n6. Clique em "Criar Factura" para guardar.\n7. Depois pode exportar para PDF ou enviar por email ao cliente.\n\nSe precisar de ajuda em algum campo específico, diga qual!`;
     }
     // Adicionar Cliente
     if (msg.includes('adicionar cliente') || msg.includes('novo cliente') || msg.includes('criar cliente')) {
-      return `Para adicionar um novo cliente:\n\n1. No menu lateral, clique em "Clientes".\n2. Clique no botão "Adicionar Cliente" (ou "Add Client").\n3. Preencha os dados do cliente (nome, NUIT, contacto, etc).\n4. Clique em "Guardar" para salvar o cliente.\n\nPode também adicionar um cliente diretamente ao criar uma factura, clicando em "Novo Cliente" no formulário.`;
+      return `Para adicionar um novo cliente:\n\n1. No menu lateral, clique em \"Clientes\".\n2. Clique no botão \"Adicionar Cliente\" (ou \"Add Client\").\n3. Preencha os dados do cliente (nome, NUIT, contacto, etc).\n4. Clique em \"Guardar\" para salvar o cliente.\n\nPode também adicionar um cliente diretamente ao criar uma factura, clicando em \"Novo Cliente\" no formulário.`;
     }
     // Exportar PDF
     if (msg.includes('exportar pdf') || msg.includes('baixar pdf') || msg.includes('download pdf')) {
-      return `Para exportar uma factura em PDF:\n\n1. Aceda ao menu "Facturas".\n2. Encontre a factura desejada na lista.\n3. Clique no botão de ações (ícone de olho ou três pontos) ao lado da factura.\n4. Selecione "Exportar PDF" ou "Download PDF".\n\nO ficheiro será baixado para o seu computador.`;
+      return `Para exportar uma factura em PDF:\n\n1. Aceda ao menu \"Facturas\".\n2. Encontre a factura desejada na lista.\n3. Clique no botão de ações (ícone de olho ou três pontos) ao lado da factura.\n4. Selecione \"Exportar PDF\" ou \"Download PDF\".\n\nO ficheiro será baixado para o seu computador.`;
     }
     // Enviar factura por email
     if ((msg.includes('enviar') && msg.includes('email') && msg.includes('factura')) || msg.includes('enviar fatura por email')) {
-      return `Para enviar uma factura por email:\n\n1. Aceda ao menu "Facturas".\n2. Encontre a factura que deseja enviar.\n3. Clique no botão de ações ao lado da factura.\n4. Selecione "Enviar por Email".\n5. Insira o email do cliente (se necessário) e confirme o envio.`;
+      return `Para enviar uma factura por email:\n\n1. Aceda ao menu \"Facturas\".\n2. Encontre a factura que deseja enviar.\n3. Clique no botão de ações ao lado da factura.\n4. Selecione \"Enviar por Email\".\n5. Insira o email do cliente (se necessário) e confirme o envio.`;
     }
     // Adicionar Produto
     if (msg.includes('adicionar produto') || msg.includes('novo produto') || msg.includes('criar produto')) {
-      return `Para adicionar um novo produto ou serviço:\n\n1. No menu lateral, clique em "Produtos".\n2. Clique em "Adicionar Produto".\n3. Preencha os dados (nome, preço, stock, etc).\n4. Clique em "Guardar".`;
+      return `Para adicionar um novo produto ou serviço:\n\n1. No menu lateral, clique em \"Produtos\".\n2. Clique em \"Adicionar Produto\".\n3. Preencha os dados (nome, preço, stock, etc).\n4. Clique em \"Guardar\".`;
     }
     // Gerar Relatório
     if (msg.includes('relatório financeiro') || msg.includes('gerar relatório') || msg.includes('exportar relatório')) {
-      return `Para gerar ou exportar um relatório financeiro:\n\n1. No menu lateral, clique em "Relatórios".\n2. Escolha o tipo de relatório desejado (receitas, despesas, clientes, etc).\n3. Use os filtros para ajustar o período ou categoria.\n4. Clique em "Exportar" para baixar o relatório em CSV ou PDF.`;
+      return `Para gerar ou exportar um relatório financeiro:\n\n1. No menu lateral, clique em \"Relatórios\".\n2. Escolha o tipo de relatório desejado (receitas, despesas, clientes, etc).\n3. Use os filtros para ajustar o período ou categoria.\n4. Clique em \"Exportar\" para baixar o relatório em CSV ou PDF.`;
+    }
+    // Onboarding/Primeiros Passos
+    if (msg.includes('primeiros passos') || msg.includes('onboarding') || msg.includes('como começar') || msg.includes('tutorial')) {
+      return `Bem-vindo ao WALAKA ERP! Para começar:\n1. Complete o seu perfil de empresa em Configurações.\n2. Adicione clientes e produtos.\n3. Emita a sua primeira factura.\n4. Consulte relatórios para acompanhar o seu negócio.\nSe precisar de um tutorial detalhado, aceda ao menu Ajuda.`;
+    }
+    // Configurar Impostos
+    if (msg.includes('configurar imposto') || msg.includes('iva') || msg.includes('ispc') || msg.includes('taxa') || msg.includes('imposto')) {
+      return `Para configurar impostos (IVA, ISPC, etc):\n1. Vá ao menu Configurações.\n2. Selecione \"Impostos\".\n3. Adicione ou edite as taxas conforme necessário.\n4. Salve as alterações.\nOs impostos serão aplicados automaticamente nas faturas.`;
+    }
+    // Adicionar Banco ou Carteira Móvel
+    if ((msg.includes('adicionar') || msg.includes('cadastrar')) && (msg.includes('banco') || msg.includes('conta bancária') || msg.includes('carteira móvel') || msg.includes('mpesa') || msg.includes('emola') || msg.includes('mkesh'))) {
+      return `Para adicionar uma conta bancária ou carteira móvel:\n1. Vá ao menu Bancos.\n2. Clique em \"Adicionar Conta\".\n3. Preencha os dados (nome do banco/carteira, número, titular, etc).\n4. Clique em \"Guardar\".`;
+    }
+    // Ajuda com erros ou problemas
+    if (msg.includes('erro') || msg.includes('problema') || msg.includes('não funciona') || msg.includes('bug')) {
+      return `Se encontrou um erro ou problema:\n1. Tente recarregar a página.\n2. Verifique a sua conexão à internet.\n3. Se o problema persistir, reporte pelo menu Ajuda ou envie um email para suporte@walakasoftware.com com detalhes do erro.`;
     }
     // FAQ fallback
     // Perguntas de dados em tempo real
@@ -73,6 +89,257 @@ class WalakaAssistant {
       if (msg.includes('quantidade')) return 'REALTIME_TOP_CLIENTS_QUANTITY';
       return 'REALTIME_TOP_CLIENTS_SALES';
     }
+    // Recurring Invoices
+    if (msg.includes('fatura recorrente') || msg.includes('recorrente') || msg.includes('recurring invoice')) {
+      return `Para criar uma fatura recorrente:\n1. Vá ao menu Facturas.\n2. Clique em "Nova Fatura" e selecione a opção de recorrência.\n3. Defina a frequência (mensal, semanal, etc).\n4. Preencha os dados e salve. O sistema irá gerar faturas automaticamente conforme o agendamento.`;
+    }
+    // Credit Notes
+    if (msg.includes('nota de crédito') || msg.includes('crédito') || msg.includes('credit note')) {
+      return `Para emitir uma nota de crédito:\n1. Acesse o menu Notas de Crédito.\n2. Clique em "Nova Nota de Crédito".\n3. Selecione a fatura a ser ajustada e preencha os detalhes.\n4. Salve e envie ao cliente se necessário.`;
+    }
+    // Debit Notes
+    if (msg.includes('nota de débito') || msg.includes('débito') || msg.includes('debit note')) {
+      return `Para emitir uma nota de débito:\n1. Acesse o menu Notas de Débito.\n2. Clique em "Nova Nota de Débito".\n3. Selecione o cliente e detalhe o motivo.\n4. Salve e envie ao cliente se necessário.`;
+    }
+    // Receipts
+    if (msg.includes('recibo') || msg.includes('receipt')) {
+      return `Para emitir um recibo:\n1. Vá ao menu Recibos.\n2. Clique em "Novo Recibo".\n3. Associe a fatura paga e preencha os dados.\n4. Salve e envie ao cliente.`;
+    }
+    // Expense Management
+    if (msg.includes('despesa') || msg.includes('gasto') || msg.includes('expense')) {
+      return `Para registrar uma despesa:\n1. Vá ao menu Despesas.\n2. Clique em "Nova Despesa".\n3. Preencha os detalhes (categoria, valor, fornecedor, etc).\n4. Salve para atualizar seus relatórios financeiros.`;
+    }
+    // User Management
+    if (msg.includes('gestão de utilizadores') || msg.includes('adicionar utilizador') || msg.includes('user management') || msg.includes('novo utilizador')) {
+      return `Para gerir utilizadores:\n1. Vá ao menu Configurações > Gestão de Utilizadores.\n2. Clique em "Adicionar Utilizador".\n3. Defina permissões e envie convite por email.\n4. Pode editar ou remover utilizadores a qualquer momento.`;
+    }
+    // Logs
+    if (msg.includes('logs do sistema') || msg.includes('log') || msg.includes('auditoria')) {
+      return `Para consultar logs do sistema:\n1. Vá ao menu Configurações > Logs do Sistema.\n2. Filtre por data, utilizador ou ação.\n3. Use para auditoria e rastreamento de atividades.`;
+    }
+    // Trial/Upgrade
+    if (msg.includes('trial') || msg.includes('teste') || msg.includes('limite de uso') || msg.includes('upgrade') || msg.includes('plano')) {
+      return `O WALAKA oferece um período de teste com limites de uso.\n- Para ver seu status, consulte a barra de trial no topo do dashboard.\n- Para fazer upgrade, clique em "Upgrade" e escolha o plano desejado.\n- Se atingir o limite, algumas funções serão bloqueadas até atualizar o plano.`;
+    }
+    // Subscription
+    if (msg.includes('assinatura') || msg.includes('subscrição') || msg.includes('renovar')) {
+      return `Para gerir sua assinatura:\n1. Vá ao menu Configurações > Plano/Assinatura.\n2. Veja detalhes do plano atual, renove ou altere o plano.\n3. Para cancelar, clique em "Cancelar Assinatura" e siga as instruções.`;
+    }
+    // Notifications
+    if (msg.includes('notificação') || msg.includes('alerta') || msg.includes('notification')) {
+      return `O sistema envia notificações para eventos importantes (faturas vencidas, novos clientes, etc).\n- Veja o ícone de sino no topo da página.\n- Clique para ver detalhes ou marcar como lidas.`;
+    }
+    // Language/Theme
+    if (msg.includes('idioma') || msg.includes('language') || msg.includes('tema') || msg.includes('theme') || msg.includes('escuro') || msg.includes('dark mode')) {
+      return `Para alterar idioma ou tema:\n1. Vá ao menu Configurações.\n2. Selecione "Idioma" para Português ou Inglês.\n3. Escolha o tema claro ou escuro conforme sua preferência.`;
+    }
+    // Integrations
+    if (msg.includes('integração') || msg.includes('api') || msg.includes('integrações')) {
+      return `O WALAKA está a desenvolver integrações com serviços externos (pagamentos, contabilidade, etc).\n- Consulte o menu Configurações > Integrações para novidades.\n- Para API, aguarde futuras atualizações.`;
+    }
+    // CSV/SAFT Export
+    if (msg.includes('exportar csv') || msg.includes('exportar saft') || msg.includes('saft') || msg.includes('csv')) {
+      return `Para exportar dados:\n1. Vá ao menu Relatórios ou Faturas.\n2. Clique em "Exportar CSV" ou "Exportar SAFT".\n3. O ficheiro será baixado para seu computador.`;
+    }
+    // Permissions
+    if (msg.includes('permissão') || msg.includes('acesso') || msg.includes('restrição')) {
+      return `Permissões de utilizador podem ser geridas em Configurações > Gestão de Utilizadores.\n- Defina quem pode criar, editar ou visualizar módulos.\n- Apenas administradores podem alterar permissões.`;
+    }
+    // Suppliers
+    if (msg.includes('fornecedor') || msg.includes('suppliers')) {
+      return `Para adicionar ou gerir fornecedores:\n1. Vá ao menu Produtos/Inventário > Fornecedores.\n2. Clique em "Adicionar Fornecedor".\n3. Preencha os dados e salve.`;
+    }
+    // Inventory
+    if (msg.includes('inventário') || msg.includes('stock') || msg.includes('armazém')) {
+      return `Para gerir inventário:\n1. Vá ao menu Produtos/Inventário.\n2. Veja o stock atual, movimente produtos e registre entradas/saídas.\n3. Use relatórios para acompanhar o inventário.`;
+    }
+    // Mobile Access
+    if (msg.includes('acesso móvel') || msg.includes('mobile') || msg.includes('app')) {
+      return `O WALAKA é totalmente responsivo e pode ser usado em telemóveis e tablets.\n- Basta aceder pelo navegador.\n- Em breve: notificações push e app dedicada.`;
+    }
+    // Help/Support
+    if (msg.includes('ajuda') || msg.includes('suporte') || msg.includes('documentação') || msg.includes('help')) {
+      return `Para ajuda ou suporte:\n1. Consulte o menu Ajuda para documentação e tutoriais.\n2. Baixe a Memoria Descritiva ou Termos.\n3. Para suporte humano, envie email para suporte@walakasoftware.com.`;
+    }
+    // Troubleshooting
+    if (msg.includes('não consigo') || msg.includes('não aparece') || msg.includes('não está funcionando') || msg.includes('não funciona') || msg.includes('problema')) {
+      return `Se está com dificuldades:\n- Recarregue a página e tente novamente.\n- Verifique sua conexão à internet.\n- Consulte o menu Ajuda ou contacte o suporte.`;
+    }
+    // Onboarding Wizard
+    if (msg.includes('wizard') || msg.includes('passo a passo') || msg.includes('configuração inicial')) {
+      return `O WALAKA possui um assistente de configuração inicial (onboarding wizard).\n- Siga os passos para configurar empresa, clientes, produtos e métodos de pagamento.\n- Pode acessar novamente pelo menu Ajuda.`;
+    }
+    // Trial Restrictions
+    if (msg.includes('restrição de trial') || msg.includes('trial bloqueado') || msg.includes('não consigo criar')) {
+      return `Se atingiu o limite do trial:\n- Algumas funções ficam bloqueadas.\n- Faça upgrade do plano para continuar usando todas as funcionalidades.`;
+    }
+    // System Capabilities & Navigation
+    if (msg.includes('o que o sistema faz') || msg.includes('o que posso fazer') || msg.includes('funcionalidades') || msg.includes('dashboard') || msg.includes('painel')) {
+      return `O WALAKA ERP permite:
+- Criar, editar e gerir facturas, notas de crédito, débito e recibos.
+- Adicionar e gerir clientes e produtos.
+- Aceder rapidamente a páginas pelo dashboard (Facturas, Clientes, Produtos, Bancos).
+- Consultar métricas de vendas, clientes ativos, receitas e despesas.
+- Gerir utilizadores e definir permissões/roles em "Gestão de Utilizadores".
+- Personalizar configurações, idioma, tema (claro/escuro) e notificações.
+- Exportar dados em PDF, CSV, SAFT.
+- Acompanhar logs do sistema e aceder à ajuda/documentação.`;
+    }
+    // Top Clients by Purchases
+    if ((msg.includes('cliente') && (msg.includes('mais compras') || msg.includes('mais comprou') || msg.includes('top cliente'))) || (msg.includes('maior cliente'))) {
+      return `O sistema calcula o cliente com mais compras analisando o total de vendas na tabela de facturas. Para ver o top clientes:
+1. Vá ao menu Relatórios ou Facturas.
+2. Use filtros de período (mês, semana, dia) conforme desejar.
+3. O cliente com maior valor total de facturas pagas é considerado o top cliente.
+Em breve, relatórios automáticos mostrarão este ranking.`;
+    }
+    // Top Bank/Cash Account by Incoming Money
+    if ((msg.includes('conta bancária') || msg.includes('banco') || msg.includes('caixa')) && (msg.includes('mais dinheiro') || msg.includes('mais entradas') || msg.includes('top conta'))) {
+      return `Para saber qual conta bancária ou caixa recebeu mais dinheiro:
+1. Consulte os relatórios financeiros.
+2. O sistema soma os pagamentos recebidos por cada conta (baseado nas facturas pagas).
+3. Veja o ranking no relatório de contas ou exporte para análise detalhada.`;
+    }
+    // Top Client by Paid/Pending/Overdue Invoices
+    if ((msg.includes('cliente') && (msg.includes('mais faturas pagas') || msg.includes('mais pagou'))) || (msg.includes('cliente') && (msg.includes('mais pendentes') || msg.includes('mais em atraso') || msg.includes('mais overdue')))) {
+      return `O sistema pode mostrar:
+- Cliente com mais faturas pagas: soma o número de facturas com status "paga" por cliente.
+- Cliente com mais pendentes/atrasadas: soma as facturas "pendente" ou "vencida".
+Use filtros na página de Facturas ou Relatórios para ver estes dados.`;
+    }
+    // Tax Totals (IVA, ISPC, etc)
+    if (msg.includes('quanto paguei de iva') || msg.includes('total de impostos') || msg.includes('quanto paguei de ispc') || msg.includes('impostos totais')) {
+      return `Para saber quanto pagou de IVA, ISPC ou outros impostos:
+1. Vá ao menu Relatórios.
+2. Use o filtro de impostos para ver o total cobrado em cada período.
+3. O sistema soma os valores das colunas de impostos nas facturas emitidas.`;
+    }
+    // How to turn dark mode on/off
+    if ((msg.includes('modo escuro') || msg.includes('dark mode')) && (msg.includes('ativar') || msg.includes('desativar') || msg.includes('ligar') || msg.includes('desligar') || msg.includes('como'))) {
+      return `Para ativar ou desativar o modo escuro:
+1. No menu lateral (sidebar), vá até o final e clique no botão de sol/lua.
+2. O sistema alterna entre modo claro e escuro instantaneamente.
+3. A preferência é guardada no seu navegador (ver código em sidebar.html, darkmode.js, sidebar-darkmode.js).`;
+    }
+    // Add/Edit/Delete Suppliers
+    if ((msg.includes('adicionar fornecedor') || msg.includes('novo fornecedor') || msg.includes('editar fornecedor') || msg.includes('apagar fornecedor') || msg.includes('remover fornecedor'))) {
+      return `Para adicionar, editar ou remover fornecedores:
+1. Vá ao menu Produtos/Inventário > Fornecedores.
+2. Clique em "Adicionar Fornecedor" para novo, ou use os botões de editar/apagar ao lado do fornecedor na lista.`;
+    }
+    // Manage Stock Movements
+    if (msg.includes('movimento de stock') || msg.includes('movimentar stock') || msg.includes('entrada de stock') || msg.includes('saída de stock')) {
+      return `Para registar movimentos de stock:
+1. Vá ao menu Produtos/Inventário.
+2. Clique em "Movimentar Stock".
+3. Escolha entrada ou saída, selecione o produto e preencha a quantidade.`;
+    }
+    // Reset Password
+    if (msg.includes('redefinir senha') || msg.includes('esqueci a senha') || msg.includes('reset password')) {
+      return `Para redefinir sua senha:
+1. Na tela de login, clique em "Esqueceu a senha?".
+2. Siga as instruções enviadas para o seu email.`;
+    }
+    // Upload/Change Company Logo
+    if (msg.includes('logo da empresa') || msg.includes('carregar logo') || msg.includes('alterar logo') || msg.includes('upload logo')) {
+      return `Para carregar ou alterar o logotipo da empresa:
+1. Vá ao menu Configurações > Perfil da Empresa.
+2. Clique em "Carregar Logo" e selecione a imagem desejada.
+3. Salve as alterações.`;
+    }
+    // Export/Import Data
+    if ((msg.includes('exportar dados') || msg.includes('importar dados') || msg.includes('importação') || msg.includes('exportação'))) {
+      return `Para exportar dados:
+1. Vá ao menu Relatórios ou Faturas.
+2. Clique em "Exportar CSV" ou "Exportar SAFT".
+Para importar dados, aguarde futuras atualizações do sistema.`;
+    }
+    // Set Up Notifications
+    if (msg.includes('configurar notificações') || msg.includes('ativar notificações') || msg.includes('notificações push')) {
+      return `Para configurar notificações:
+1. Vá ao menu Configurações > Notificações.
+2. Ative ou desative notificações conforme sua preferência.
+3. Notificações push para mobile estarão disponíveis em breve.`;
+    }
+    // Use Trial Features
+    if (msg.includes('usar trial') || msg.includes('funcionalidades do trial') || msg.includes('o que posso fazer no trial')) {
+      return `Durante o período de trial, pode usar quase todas as funcionalidades do WALAKA, com limites de número de faturas ou dias. Veja a barra de trial no dashboard para detalhes.`;
+    }
+    // Contact Support
+    if (msg.includes('contactar suporte') || msg.includes('falar com suporte') || msg.includes('contato suporte')) {
+      return `Para contactar o suporte:
+1. Use o menu Ajuda para enviar uma mensagem.
+2. Ou envie email para suporte@walakasoftware.com.`;
+    }
+    // Use Mobile Version
+    if (msg.includes('usar no telemóvel') || msg.includes('usar no celular') || msg.includes('mobile version') || msg.includes('app mobile')) {
+      return `O WALAKA pode ser usado em qualquer telemóvel ou tablet pelo navegador. Basta aceder ao site normalmente.`;
+    }
+    // Check Logs/Audit
+    if (msg.includes('ver logs') || msg.includes('auditoria') || msg.includes('atividades do sistema')) {
+      return `Para consultar logs e auditoria:
+1. Vá ao menu Configurações > Logs do Sistema.
+2. Filtre por data, utilizador ou ação para ver detalhes.`;
+    }
+    // Manage User Roles
+    if (msg.includes('definir roles') || msg.includes('permissões de utilizador') || msg.includes('user roles')) {
+      return `Para definir roles/permissões:
+1. Vá ao menu Gestão de Utilizadores.
+2. Edite o utilizador e selecione o role desejado (admin, operador, etc).`;
+    }
+    // Customize Invoice Templates
+    if (msg.includes('personalizar modelo de fatura') || msg.includes('customizar template de fatura') || msg.includes('invoice template')) {
+      return `Para personalizar modelos de fatura:
+1. Vá ao menu Configurações > Modelos de Fatura.
+2. Escolha um modelo e personalize cores, logotipo e campos.`;
+    }
+    // Filter/Search in Tables
+    if (msg.includes('filtrar') || msg.includes('buscar') || msg.includes('procurar') || msg.includes('search table')) {
+      return `Para filtrar ou buscar em tabelas:
+1. Use o campo de busca ou filtros disponíveis no topo das listas (clientes, produtos, faturas, etc).`;
+    }
+    // Check Subscription Status
+    if (msg.includes('status da assinatura') || msg.includes('meu plano') || msg.includes('assinatura atual')) {
+      return `Para ver o status da sua assinatura:
+1. Vá ao menu Configurações > Plano/Assinatura.
+2. Veja detalhes do plano atual, validade e limites.`;
+    }
+    // Update Company Info
+    if (msg.includes('atualizar dados da empresa') || msg.includes('editar empresa') || msg.includes('update company info')) {
+      return `Para atualizar dados da empresa:
+1. Vá ao menu Configurações > Perfil da Empresa.
+2. Edite os campos desejados e salve as alterações.`;
+    }
+    // Set Up Payment Methods
+    if (msg.includes('configurar métodos de pagamento') || msg.includes('adicionar método de pagamento') || msg.includes('payment method')) {
+      return `Para configurar métodos de pagamento:
+1. Vá ao menu Bancos.
+2. Adicione contas bancárias ou carteiras móveis.
+3. Escolha quais métodos exibir nas faturas.`;
+    }
+    // Use Onboarding Wizard
+    if (msg.includes('usar wizard') || msg.includes('assistente de configuração') || msg.includes('onboarding wizard')) {
+      return `O assistente de configuração inicial (onboarding wizard) guia você pelos passos essenciais para começar a usar o WALAKA. Pode ser acessado pelo menu Ajuda.`;
+    }
+    // Access Help/Documentation
+    if (msg.includes('acessar ajuda') || msg.includes('ver documentação') || msg.includes('help docs')) {
+      return `Para acessar a ajuda ou documentação:
+1. Use o menu Ajuda no sistema.
+2. Baixe a Memoria Descritiva ou consulte os tutoriais disponíveis.`;
+    }
+    // Check System Version
+    if (msg.includes('versão do sistema') || msg.includes('system version') || msg.includes('qual a versão')) {
+      return `Para ver a versão do sistema:
+1. Vá ao menu Ajuda > Informações do Sistema.
+2. Veja o campo "Versão" para detalhes.`;
+    }
+    // Handle Errors
+    if (msg.includes('erro') || msg.includes('problema') || msg.includes('bug') || msg.includes('não funciona')) {
+      return `Se encontrar um erro:
+1. Recarregue a página e tente novamente.
+2. Se persistir, reporte pelo menu Ajuda ou envie email para suporte@walakasoftware.com.`;
+    }
+    // General fallback
     return null;
   }
 
@@ -222,35 +489,26 @@ class WalakaAssistant {
     if (faq === 'REALTIME_TOP_CLIENTS_SALES') return this.sanitizeResponse(await this.getTopClientsBySales());
     if (faq === 'REALTIME_TOP_CLIENTS_QUANTITY') return this.sanitizeResponse(await this.getTopClientsByQuantity());
     if (faq) return this.sanitizeResponse(faq);
-    // Inject summary stats into context for general AI answers
-    const activeClients = await this.getActiveClientsSummary();
-    const productStats = await this.getProductStatsSummary();
-    const invoiceStats = await this.getInvoiceStatsSummary();
-    const userContext = `\n[Contexto do Utilizador]\nNome de utilizador: ${user.username || ''}\nEmail: ${user.email || ''}\nEmpresa: ${business.company_name || ''}\nNUIT: ${business.tax_id || ''}\nEndereço: ${business.address || ''}\nWebsite: ${business.website || ''}`;
-    const statsContext = `\n[Resumo do Sistema]\n${activeClients}\n${productStats}\n${invoiceStats}`;
+    // --- CONTEXTUAL AI PROMPT LOGIC ---
+    // Only inject user/system context if the user asks for summary, status, or account info
+    let systemPrompt = "Você é o WALAKA Assistant, um agente de suporte para o sistema WALAKA ERP. Responda apenas sobre funcionalidades do WALAKA ERP. Não responda perguntas fora do contexto do WALAKA ERP, mesmo que solicitado. Não forneça informações gerais, dicas de vida, ou respostas não relacionadas ao sistema WALAKA. Seja sempre objetivo, profissional e contextualizado ao sistema. Se não souber, peça para o utilizador consultar o suporte humano ou a documentação oficial.";
+    if (
+      msg.includes('resumo') || msg.includes('sumário') ||
+      msg.includes('como está minha conta') || msg.includes('estado da conta') ||
+      msg.includes('status') || msg.includes('minha empresa') ||
+      msg.includes('meu perfil') || msg.includes('meus dados')
+    ) {
+      const activeClients = await this.getActiveClientsSummary();
+      const productStats = await this.getProductStatsSummary();
+      const invoiceStats = await this.getInvoiceStatsSummary();
+      const userContext = `\n[Contexto do Utilizador]\nNome de utilizador: ${user.username || ''}\nEmail: ${user.email || ''}\nEmpresa: ${business.company_name || ''}\nNUIT: ${business.tax_id || ''}\nEndereço: ${business.address || ''}\nWebsite: ${business.website || ''}`;
+      const statsContext = `\n[Resumo do Sistema]\n${activeClients}\n${productStats}\n${invoiceStats}`;
+      systemPrompt += userContext + statsContext;
+    }
     const messages = [
-      { role: 'system', content: `
-        Você é o WALAKA Assistant, um agente inteligente para o sistema de ERP WALAKA, especializado em faturação, automação de processos e apoio ao cliente para empresas moçambicanas.
-        ${userContext}
-        ${statsContext}
-        Sobre o Sistema WALAKA ERP:
-        WALAKA ERP é uma plataforma de gestão empresarial para pequenas e médias empresas, com foco em Moçambique. As principais funcionalidades incluem:
-        - Facturação Inteligente: Criação, edição e gestão de faturas profissionais, recorrentes, exportação em PDF, envio por email, rastreamento de pagamentos, suporte multi-moeda e modelos personalizáveis.
-        - Gestão de Clientes: Cadastro, edição e pesquisa de clientes, histórico de transações, gestão de NUIT e dados de contacto.
-        - Produtos & Inventário: Cadastro de produtos/serviços, controle de stock, movimentos de inventário, fornecedores e preços.
-        - Bancos & Carteiras Móveis: Cadastro de contas bancárias e carteiras móveis (M-PESA, EMOLA, mKesh), seleção de método de pagamento para faturas, validação de números, e (futuro) integração direta para confirmação automática de pagamentos.
-        - Financeiro: Gestão de despesas, pagamentos, relatórios financeiros detalhados (receitas, despesas, por categoria/cliente/fornecedor), exportação de dados (CSV, SAFT).
-        - Impostos: Gestão de taxas de IVA, ISPC e outros impostos moçambicanos, aplicação automática nas faturas.
-        - Configurações de Conta: Preferências de idioma (Português/English), personalização visual, perfil da empresa, upload de logotipo.
-        - Notificações & Dicas: Notificações in-app, sistema de dicas e onboarding para novos utilizadores.
-        - Sistema de Teste/Trial: Limites de uso por dias ou número de faturas, feedback visual e prompts de upgrade.
-        - Acesso Móvel: Interface responsiva e amigável para dispositivos móveis, notificações push (em desenvolvimento).
-        Tipos de Utilizador: Freelancers, consultores, PME's, com casos de uso para faturação, gestão de clientes, inventário e finanças.
-        Segurança: Dados sensíveis são protegidos e recomenda-se encriptação no banco de dados. Apenas partes de números de conta são exibidas publicamente.
-        Funcionalidades em Desenvolvimento: Suite Comercial (gestão de encomendas, fornecedores, CRM), Contabilidade Pro (conformidade fiscal, previsão orçamental, multi-empresa), Suite Financeira (gestão de contas a pagar/receber, dashboards, auditoria), integrações diretas com pagamentos móveis.
-        Sempre responda em português de Moçambique, de forma clara, amigável e profissional. Se não souber a resposta, peça para o utilizador consultar o suporte humano ou a documentação oficial.
-      ` },
-      ...this.memory.map(m => ({ role: m.role, content: m.content }))
+      { role: 'system', content: systemPrompt },
+      ...this.memory.slice(-3).map(m => ({ role: m.role, content: m.content })),
+      { role: 'user', content: userMessage }
     ];
     const aiResponse = await this.callOpenRouter(messages);
     this.memory.push({ role: 'assistant', content: aiResponse });
@@ -488,7 +746,7 @@ window.walakaAssistant = new WalakaAssistant({
     for (let i = 0; i < fullText.length; i++) {
       span.innerHTML += fullText[i] === '\n' ? '<br>' : fullText[i];
       messagesDiv.scrollTop = messagesDiv.scrollHeight;
-      await new Promise(r => setTimeout(r, 8 + Math.random() * 21)); // 30% faster
+      await new Promise(r => setTimeout(r, 2 + Math.random() * 7)); // much faster typing
     }
   }
 

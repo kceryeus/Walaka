@@ -426,3 +426,12 @@
 [data-theme="dark"] .nav-item i {
     color: var(--sidebar-icon-dark);
 }
+
+/* Force sidebar text and icon color to white in light mode, overriding other CSS */
+html:not([data-theme="dark"]) .sidebar .nav-item,
+html:not([data-theme="dark"]) .sidebar .nav-item:visited {
+    color: var(--sidebar-text-light) !important;
+}
+html:not([data-theme="dark"]) .sidebar .nav-item i {
+    color: var(--sidebar-icon-light) !important;
+}

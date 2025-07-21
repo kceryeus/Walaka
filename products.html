@@ -1769,5 +1769,12 @@ button:disabled:hover {
     <script src="components/user-restrictions.js"></script>
     <script src="js/sendNotificationEmail.js"></script>
     <script src="js/darkmode.js"></script>
+  </script>
+  <script type="module">
+    import { logUserAction } from './js/logUserAction.js';
+    document.addEventListener('DOMContentLoaded', () => {
+      logUserAction('page_visit', 'User visited page: products.html');
+    });
+  </script>
 </body>
 </html>

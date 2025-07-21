@@ -36,17 +36,17 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     // Menu toggle functionality
-    const menuToggle = document.querySelector('.menu-toggle');
-    const sidebar = document.querySelector('.sidebar');
-    const mainContent = document.querySelector('.main-content');
-    
-    if (menuToggle && sidebar && mainContent) {
-        menuToggle.addEventListener('click', () => {
-            sidebar.classList.toggle('collapsed');
-            mainContent.classList.toggle('expanded');
-            document.body.classList.toggle('sidebar-collapsed');
-        });
-    }
+    // [REMOVED FOR DASHBOARD.HTML] - Sidebar toggle logic is now handled in dashboard.html to avoid conflicts with overlay and responsive logic.
+    // const menuToggle = document.querySelector('.menu-toggle');
+    // const sidebar = document.querySelector('.sidebar');
+    // const mainContent = document.querySelector('.main-content');
+    // if (menuToggle && sidebar && mainContent) {
+    //     menuToggle.addEventListener('click', () => {
+    //         sidebar.classList.toggle('collapsed');
+    //         mainContent.classList.toggle('expanded');
+    //         document.body.classList.toggle('sidebar-collapsed');
+    //     });
+    // }
 
     // Initialize notification bell
     const notificationBell = document.querySelector('.notification-bell');

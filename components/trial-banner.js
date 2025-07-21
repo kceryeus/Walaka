@@ -5,6 +5,10 @@ const supabaseUrl = 'https://qvmtozjvjflygbkjecyj.supabase.co';
 const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF2bXRvemp2amZseWdia2plY3lqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDYxMjc2MjMsImV4cCI6MjA2MTcwMzYyM30.DJMC1eM5_EouM1oc07JaoXsMX_bSLn2AVCozAcdfHmo';
 const supabase = createClient(supabaseUrl, supabaseKey);
 
+function logAction(type, desc, details) {
+  if (window.logUserAction) window.logUserAction(type, desc, details);
+}
+
 // Plan configuration
 const PLAN_CONFIG = {
     trial: {
@@ -368,14 +372,16 @@ function showUpgradeModal(currentPlan) {
         </div>
     `;
     document.body.appendChild(modal);
-    modal.querySelector('.close-modal').onclick = () => modal.remove();
-    modal.onclick = e => { if (e.target === modal) modal.remove(); };
+    modal.querySelector('.close-modal').onclick = () => { modal.remove(); logAction('close_upgrade_modal', 'Closed upgrade modal'); };
+    modal.onclick = e => { if (e.target === modal) { modal.remove(); logAction('close_upgrade_modal', 'Closed upgrade modal by overlay'); } };
     modal.querySelectorAll('.choose-plan-btn').forEach(btn => {
         btn.onclick = async (e) => {
             e.preventDefault();
             const planKey = btn.getAttribute('data-plan');
+            logAction('choose_plan', `Chose plan: ${planKey}`);
             if (planKey === 'basic' || planKey === 'standard') {
                 showPaymentMethodModal(async (paymentMethod) => {
+                    logAction('select_payment_method', `Selected payment method: ${paymentMethod}`, { plan: planKey });
                     await simulatePaymentAndSubscribe(paymentMethod, modal, planKey);
                 });
             }
@@ -636,6 +642,7 @@ async function simulatePaymentAndSubscribe(paymentMethod, parentModal, planKey =
             URL.revokeObjectURL(url);
         }, 100);
         updateTrialBanner();
+        logAction('complete_payment', `Completed payment for plan: ${planKey} via ${paymentMethod}`, { plan: planKey, paymentMethod });
     } catch (err) {
         alert('Failed to subscribe: ' + (err.message || err));
     }
@@ -782,7 +789,7 @@ function setupUpgradeButton() {
     const btn = document.getElementById('upgrade-btn');
     if (btn) {
         btn.addEventListener('click', async (e) => {
-            e.preventDefault();
+            logAction('click_upgrade_button', 'Clicked Upgrade button');
             // console.log('[TrialBanner] Upgrade button clicked. Showing upgrade modal.');
             // Always use the latest plan from global
             const currentPlan = window.currentPlanName || 'Trial';

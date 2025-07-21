@@ -1434,3 +1434,106 @@ InvoiceForm.prototype.saveInvoice = async function() {
 const style = document.createElement('style');
 style.innerHTML = `#general-client-btn.highlighted { background: #e0f7fa; border: 2px solid #00bcd4; color: #00796b; }`;
 document.head.appendChild(style);
+
+document.addEventListener('DOMContentLoaded', function() {
+    function getAISuggestionBtnText() {
+        if (window.languageManager && typeof window.languageManager.getTranslation === 'function') {
+            return window.languageManager.getTranslation('ai_suggestion_button') || (document.documentElement.lang === 'pt' ? 'Sugestão IA' : 'AI Suggestion');
+        }
+        return document.documentElement.lang === 'pt' ? 'Sugestão IA' : 'AI Suggestion';
+    }
+    function injectAINotesButton() {
+        const notesField = document.getElementById('notes');
+        if (notesField && !document.getElementById('ai-notes-suggestion-btn')) {
+            let wrapper = notesField.parentNode;
+            if (!wrapper.classList.contains('ai-notes-wrapper')) {
+                wrapper.style.position = 'relative';
+                wrapper.classList.add('ai-notes-wrapper');
+            }
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.id = 'ai-notes-suggestion-btn';
+            btn.title = getAISuggestionBtnText();
+            btn.innerHTML = `<span style="display:inline-flex;align-items:center;gap:6px;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 2v2m0 16v2m8-8h2M2 12H4m14.95-6.95l1.414 1.414M4.636 19.364l1.414-1.414M19.364 19.364l-1.414-1.414M4.636 4.636l1.414 1.414" stroke="#fbbf24" stroke-width="2" stroke-linecap="round"/><path d="M12 8a4 4 0 100 8 4 4 0 000-8z" fill="#fbbf24"/></svg><span class="ai-suggestion-btn-text">${getAISuggestionBtnText()}</span></span>`;
+            btn.style.position = 'absolute';
+            btn.style.top = '8px';
+            btn.style.right = '8px';
+            btn.style.height = '36px';
+            btn.style.background = '#fffbe8';
+            btn.style.border = '1px solid #ffe58f';
+            btn.style.borderRadius = '8px';
+            btn.style.boxShadow = '0 2px 8px rgba(251,191,36,0.07)';
+            btn.style.display = 'flex';
+            btn.style.alignItems = 'center';
+            btn.style.justifyContent = 'center';
+            btn.style.padding = '0 16px';
+            btn.style.zIndex = '10';
+            btn.style.transition = 'box-shadow 0.2s, background 0.2s';
+            btn.style.fontWeight = '500';
+            btn.style.fontSize = '1em';
+            btn.style.color = '#b45309';
+            btn.onmouseover = () => { btn.style.boxShadow = '0 4px 16px rgba(251,191,36,0.13)'; btn.style.background = '#fff3c4'; };
+            btn.onmouseout = () => { btn.style.boxShadow = '0 2px 8px rgba(251,191,36,0.07)'; btn.style.background = '#fffbe8'; };
+            btn.onfocus = btn.onmouseover;
+            btn.onblur = btn.onmouseout;
+            wrapper.appendChild(btn);
+            btn.onclick = async function() {
+                btn.disabled = true;
+                btn.querySelector('.ai-suggestion-btn-text').textContent = (document.documentElement.lang === 'pt' ? 'A gerar...' : 'Generating...');
+                try {
+                    const client = document.getElementById('client-list')?.value || '';
+                    const items = Array.from(document.querySelectorAll('#itemsTable tbody tr')).map(row => {
+                        const desc = row.querySelector('.item-description')?.value || '';
+                        const qty = row.querySelector('.item-quantity')?.value || '';
+                        const price = row.querySelector('.item-price')?.value || '';
+                        return `${desc} (Qtd: ${qty}, Preço: ${price})`;
+                    }).join('; ');
+                    const total = document.getElementById('reviewInvoiceTotal')?.textContent || '';
+                    const summary = `Cliente: ${client}\nItens: ${items}\nTotal: ${total}`;
+                    const aiNote = await getAISuggestionForInvoiceNote(summary);
+                    if (aiNote) notesField.value = aiNote;
+                } catch (e) {
+                    alert('Erro ao gerar sugestão IA: ' + (e.message || e));
+                }
+                btn.disabled = false;
+                btn.querySelector('.ai-suggestion-btn-text').textContent = getAISuggestionBtnText();
+            };
+            // Listen for language changes
+            if (window.languageManager && typeof window.languageManager.onLanguageChange === 'function') {
+                window.languageManager.onLanguageChange(() => {
+                    btn.title = getAISuggestionBtnText();
+                    btn.querySelector('.ai-suggestion-btn-text').textContent = getAISuggestionBtnText();
+                });
+            }
+        }
+    }
+    injectAINotesButton();
+    const observer = new MutationObserver(injectAINotesButton);
+    observer.observe(document.body, { childList: true, subtree: true });
+});
+
+async function getAISuggestionForInvoiceNote(context) {
+    try {
+        const url = "https://qvmtozjvjflygbkjecyj.supabase.co/functions/v1/walaka-assistant";
+        const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF2bXRvemp2amZseWdia2plY3lqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDYxMjc2MjMsImV4cCI6MjA2MTcwMzYyM30.DJMC1eM5_EouM1oc07JaoXsMX_bSLn2AVCozAcdfHmo";
+        const messages = [
+            { role: 'system', content: 'Você é um assistente de ERP. Gere uma sugestão de nota adicional para uma fatura, baseada no resumo do cliente, itens e total. Seja breve, profissional e relevante para negócios em Moçambique.' },
+            { role: 'user', content: `Resumo da fatura: ${context}` }
+        ];
+        const response = await fetch(url, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${SUPABASE_ANON_KEY}`
+            },
+            body: JSON.stringify({ messages })
+        });
+        const data = await response.json();
+        if (data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content) {
+            return data.choices[0].message.content.trim();
+        }
+        return '';
+    } catch (e) {
+        return '';
+    }
+}

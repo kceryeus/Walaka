@@ -249,5 +249,11 @@
         }
       });
     </script>
+    <script type="module">
+      import { logUserAction } from './js/logUserAction.js';
+      document.addEventListener('DOMContentLoaded', () => {
+        logUserAction('page_visit', 'User visited page: credit_notes.html');
+      });
+    </script>
 </body>
 </html>

@@ -474,6 +474,12 @@
       }
     });
   </script>
+  <script type="module">
+    import { logUserAction } from '../../js/logUserAction.js';
+    document.addEventListener('DOMContentLoaded', () => {
+      logUserAction('page_visit', 'User visited page: clients.html');
+    });
+  </script>
   <script src="../components/user-restrictions.js"></script>
   <script>
     const menuToggle = document.createElement('div');

@@ -70,6 +70,13 @@ class InvoiceItems {
 
     async handleProductSearch(searchTerm, row) {
         try {
+            // AI suggestion logic (debounced)
+            this.debouncedAISuggestion = this.debouncedAISuggestion || debounce(async (input, row) => {
+                const aiSuggestion = await getAISuggestionForProductDescription(input);
+                this.showAISuggestion(row, aiSuggestion);
+            }, 400);
+            this.debouncedAISuggestion(searchTerm, row);
+
             const { data: products, error } = await window.supabase
                 .from('products')
                 .select('*')
@@ -113,6 +120,31 @@ class InvoiceItems {
                 this.hideProductSuggestions(row);
             });
         });
+    }
+
+    showAISuggestion(row, suggestion) {
+        if (!suggestion) return;
+        let aiBox = row.querySelector('.ai-suggestion-box');
+        if (!aiBox) {
+            aiBox = document.createElement('div');
+            aiBox.className = 'ai-suggestion-box';
+            aiBox.style.background = '#f0f6ff';
+            aiBox.style.border = '1px solid #b3d1ff';
+            aiBox.style.padding = '6px 10px';
+            aiBox.style.marginBottom = '2px';
+            aiBox.style.cursor = 'pointer';
+            aiBox.style.fontStyle = 'italic';
+            row.querySelector('td:first-child').prepend(aiBox);
+        }
+        aiBox.textContent = 'Sugestão IA: ' + suggestion;
+        aiBox.style.display = 'block';
+        aiBox.onclick = () => {
+            const input = row.querySelector('.item-description');
+            if (input) input.value = suggestion;
+            aiBox.style.display = 'none';
+            // Optionally trigger input event for downstream logic
+            input.dispatchEvent(new Event('input', { bubbles: true }));
+        };
     }
 
     fillProductDetails(row, product) {
@@ -322,5 +354,42 @@ if (typeof window !== 'undefined') {
     } else {
         console.log('DOM already loaded, initializing InvoiceItems immediately');
         window.invoiceItems = new InvoiceItems();
+    }
+}
+
+// --- AI Suggestion Helper ---
+function debounce(fn, delay) {
+    let timer = null;
+    return function(...args) {
+        clearTimeout(timer);
+        timer = setTimeout(() => fn.apply(this, args), delay);
+    };
+}
+
+async function getAISuggestionForProductDescription(input) {
+    if (!input || input.length < 2) return '';
+    try {
+        // Use the same endpoint as walaka-assistant.js
+        const url = "https://qvmtozjvjflygbkjecyj.supabase.co/functions/v1/walaka-assistant";
+        const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF2bXRvemp2amZseWdia2plY3lqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDYxMjc2MjMsImV4cCI6MjA2MTcwMzYyM30.DJMC1eM5_EouM1oc07JaoXsMX_bSLn2AVCozAcdfHmo";
+        const messages = [
+            { role: 'system', content: 'Você é um assistente de ERP. Sugira uma descrição de produto/serviço para uma linha de fatura, baseada no input parcial do utilizador. Seja breve e relevante para negócios em Moçambique.' },
+            { role: 'user', content: `Descrição parcial: ${input}` }
+        ];
+        const response = await fetch(url, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${SUPABASE_ANON_KEY}`
+            },
+            body: JSON.stringify({ messages })
+        });
+        const data = await response.json();
+        if (data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content) {
+            return data.choices[0].message.content.trim();
+        }
+        return '';
+    } catch (e) {
+        return '';
     }
 }

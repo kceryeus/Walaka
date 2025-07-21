@@ -690,10 +690,10 @@
                         </div>
                     </div>
                     <div>
-                        <button class="filter-btn" id="upgrade-pay-btn" style="margin-right:1rem;">
+                        <button class="filter-btn" id="upgrade-pay-btn" style="margin-right:1rem;" data-log-action="upgrade_pay">
                             <i class="fas fa-arrow-up"></i> <span data-translate="upgrade_pay_button">Upgrade / Pay</span>
                         </button>
-                        <button class="filter-btn" id="downgrade-btn" data-translate="downgrade_plan_button">Downgrade Plan</button>
+                        <button class="filter-btn" id="downgrade-btn" data-translate="downgrade_plan_button" data-log-action="downgrade_plan">Downgrade Plan</button>
                     </div>
                 </div>
                 <!-- History Section -->
@@ -717,7 +717,7 @@
                 <div class="section cancel-section" id="section-cancel">
                     <h3 data-translate="cancel_subscription_header">Cancel Subscription</h3>
                     <p data-translate="cancel_subscription_warning">Are you sure you want to cancel your subscription? This action cannot be undone.</p>
-                    <button class="danger" id="cancel-subscription-btn"><i class="fas fa-trash"></i> <span data-translate="confirm_cancel_button">Confirm Cancel</span></button>
+                    <button class="danger" id="cancel-subscription-btn" data-log-action="cancel_subscription"><i class="fas fa-trash"></i> <span data-translate="confirm_cancel_button">Confirm Cancel</span></button>
                 </div>
                 <!-- Cancel Confirmation Modal -->
                 <div id="cancel-modal" class="modal" style="display:none;">
@@ -764,6 +764,10 @@
             };
             const lang = (localStorage.getItem('preferredLanguage') || 'pt');
             return planMap[plan] ? planMap[plan][lang] : capitalizePlanName(plan);
+        }
+
+        function logAction(type, desc, details) {
+          if (window.logUserAction) window.logUserAction(type, desc, details);
         }
 
         // Handle username display
@@ -1011,6 +1015,7 @@
                     if (modal) modal.remove();
                     fetchAndDisplaySubscription();
                     updatePlanSectionUI(newPlan);
+                    logAction('change_plan', `Changed plan to: ${newPlan}`);
                 } else {
                     alert((window.languageManager ? window.languageManager.translate('failed_to_update_settings') : 'Failed to change plan.'));
                     // Log error details for debugging
@@ -1125,6 +1130,7 @@
                     if (!error) {
                         alert('Subscription updated!');
                         fetchAndDisplaySubscription();
+                        logAction('save_billing', 'Saved billing info', { warningDate, billingDate, billingNumber, paymentMethod });
                     } else {
                         alert('Failed to update subscription.');
                     }
@@ -1193,6 +1199,7 @@
                         }
                         hideCancelModal();
                         fetchAndDisplaySubscription();
+                        logAction('cancel_subscription', 'Canceled subscription');
                     } else {
                         alert('Failed to cancel subscription.');
                     }
@@ -1245,6 +1252,13 @@
             const preferredLanguage = localStorage.getItem('preferredLanguage') || 'pt';
             await window.languageManager.setLanguage(preferredLanguage);
           }
+        });
+      </script>
+      <script type="module">
+        import { logUserAction } from './js/logUserAction.js';
+        window.logUserAction = logUserAction;
+        document.addEventListener('DOMContentLoaded', () => {
+          logUserAction('page_visit', 'User visited page: profile.html');
         });
       </script>
 </body>

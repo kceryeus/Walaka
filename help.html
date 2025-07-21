@@ -245,11 +245,18 @@
                 fetch(`${basePath}components/sidebar.html`)
                     .then(response => response.text())
                     .then(html => {
-                        document.getElementById('sidebar-container').innerHTML = html;
+                        // Extract only the inner content of <nav class="sidebar">
+                        const tempDiv = document.createElement('div');
+                        tempDiv.innerHTML = html;
+                        const navSidebar = tempDiv.querySelector('nav.sidebar');
+                        if (navSidebar) {
+                            document.getElementById('sidebar-container').innerHTML = navSidebar.innerHTML;
+                        } else {
+                            document.getElementById('sidebar-container').innerHTML = html; // fallback
+                        }
                         var script = document.createElement('script');
                         script.src = `${basePath}components/sidebar-actions.js`;
                         document.body.appendChild(script);
-                        // Dynamically load the sidebar-darkmode.js script after sidebar is injected
                         var darkmodeScript = document.createElement('script');
                         darkmodeScript.src = `${basePath}components/sidebar-darkmode.js`;
                         darkmodeScript.onload = function() {
@@ -265,6 +272,8 @@
             });
             </script>
         </aside>
+        <!-- Sidebar overlay for mobile/tablet -->
+        <div class="sidebar-overlay"></div>
         <main class="main-content">
             <!-- Top Bar -->
             <div class="top-bar">
@@ -440,7 +449,7 @@
       console.log('[Carta PDF] cargo_responsavel_legal:', data.cargo_responsavel_legal);
       console.log('[Carta PDF] Todos os dados do formulário:', data);
       const cartaHtml = `
-        <div style="font-family:Aptos, sans-serif; margin:0 auto; padding:0.5cm 2cm 2cm 2cm; line-height:1.5; font-size:12pt; color:#222; text-align:justify;">
+        <div style="font-family:Aptos, sans-serif; margin:0 auto; padding:2cm 2cm 2cm 2cm; line-height:1.5; font-size:12pt; color:#222; text-align:justify;">
           <p style="margin-bottom: 14px; font-size:12pt; text-align:left;">A Sua Excelência o Diretor do __º Bairro Fiscal<br>
           Autoridade Tributária de Moçambique</p><br>
           <p style="margin-bottom: 12px;"><strong>ASSUNTO:</strong> Solicitação de Autorização para Utilização de Software de Faturação</p>
@@ -473,4 +482,38 @@ function atividadeConstraint(input) {
   });
   input.setCustomValidity('');
 }
+</script>
+<!-- Sidebar toggle logic for responsive (ensure this is last) -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const mainContainer = document.querySelector('.container');
+  const menuToggle = document.querySelector('.menu-toggle');
+  const sidebarOverlay = document.querySelector('.sidebar-overlay');
+  // Open sidebar
+  if (menuToggle) {
+    menuToggle.addEventListener('click', function() {
+      mainContainer.classList.add('sidebar-active');
+    });
+  }
+  // Close sidebar on overlay click
+  if (sidebarOverlay) {
+    sidebarOverlay.addEventListener('click', function() {
+      mainContainer.classList.remove('sidebar-active');
+    });
+  }
+  // Optional: close sidebar on ESC key
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+      mainContainer.classList.remove('sidebar-active');
+    }
+  });
+  // On resize, remove sidebar-active if desktop
+  function handleResize() {
+    if (window.innerWidth >= 992) {
+      mainContainer.classList.remove('sidebar-active');
+    }
+  }
+  window.addEventListener('resize', handleResize);
+  handleResize();
+});
 </script>
