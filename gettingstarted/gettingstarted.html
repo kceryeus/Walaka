@@ -3,11 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WALAKA ERP - Getting Started</title>
+    <title>WALAKA Software - Getting Started</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
     <link rel="stylesheet" href="css/getting-started.css">
     <link rel="stylesheet" href="css/subscription-styles.css">
-    <!-- <script type="module" src="../js/auth.js"></script> -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+    <script type="module" src="../js/auth.js"></script> 
 </head>
 <body>
     <div class="language-toggle">
@@ -41,7 +42,7 @@
                     </div>
                     <div class="step-text">
                         <span data-lang="en">Invoice</span>
-                        <span data-lang="pt">Fatura</span>
+                        <span data-lang="pt">Factura</span>
                     </div>
                 </div>
                 
@@ -205,13 +206,13 @@
                         <h3 data-lang="en">2. Invoice Settings</h3>
                         <h3 data-lang="pt">2. Configurações de Fatura</h3>
                         <p data-lang="en">Customize how your invoices will look to your clients.</p>
-                        <p data-lang="pt">Personalize como suas faturas aparecerão para seus clientes.</p>
+                        <p data-lang="pt">Personalize como suas facturas aparecerão para seus clientes.</p>
                     </div>
                     
                     <form id="invoice-form" class="onboarding-form">
                         <div class="form-group">
                             <label data-lang="en">Invoice Template</label>
-                            <label data-lang="pt">Modelo de Fatura</label>
+                            <label data-lang="pt">Modelo de Factura</label>
                             
                             <div class="template-selection">
                                 <!-- <div class="template-option selected" data-template="standard">
@@ -226,7 +227,7 @@
                                 
                                 <div class="template-option" data-template="modern">
                                     <div class="template-preview">
-                                        <img src="images/template-modern.png" alt="Modern Template">
+                                        <img src="../assets/images/Template_Modern.png" alt="Modern Template">
                                     </div>
                                     <div class="template-name">
                                         <span data-lang="en">Modern</span>
@@ -236,7 +237,7 @@
                                 
                                 <div class="template-option" data-template="classic">
                                     <div class="template-preview">
-                                        <img src="images/template-classic.png" alt="Classic Template">
+                                        <img src="../assets/images/Template_Classic.png" alt="Classic Template">
                                     </div>
                                     <div class="template-name">
                                         <span data-lang="en">Classic</span>
@@ -317,7 +318,7 @@
                             <div class="form-help">
                                 <i class="fas fa-info-circle"></i>
                                 <span data-lang="en">These notes will appear at the bottom of each invoice.</span>
-                                <span data-lang="pt">Estas notas aparecerão na parte inferior de cada fatura.</span>
+                                <span data-lang="pt">Estas notas aparecerão na parte inferior de cada factura.</span>
                             </div>
                         </div>
                         
@@ -524,7 +525,7 @@
                                     </div>
                                     <div class="module-description">
                                         <p data-lang="en">Create and send professional invoices</p>
-                                        <p data-lang="pt">Crie e envie faturas profissionais</p>
+                                        <p data-lang="pt">Crie e envie facturas profissionais</p>
                                     </div>
                                     <div class="module-toggle">
                                         <input type="checkbox" id="module-invoicing" name="module-invoicing" checked disabled>

@@ -22,7 +22,13 @@ app.post('/sendmail', async (req, res) => {
   const { to, subject, message, attachment } = req.body;
   if (!to || !subject || !message) {
     console.log(`[MAIL] Missing required fields: to=${to}, subject=${subject}, message=${!!message}`);
-    return res.status(400).json({ success: false, error: 'Missing required fields.' });
+    return res.status(400).json({ 
+      success: false, 
+      error: {
+        pt: 'Campos obrigatórios em falta.',
+        en: 'Missing required fields.'
+      }
+    });
   }
 
   const SMTP_HOST = process.env.SMTP_HOSTNAME;
@@ -58,8 +64,8 @@ app.post('/sendmail', async (req, res) => {
       contentType: attachment.contentType || 'application/pdf',
     });
     // Add a note about the attachment in the email body
-    mailOptions.text += '\n\n---\nInvoice PDF is attached to this email.';
-    mailOptions.html += '<br><br><hr><p><strong>Invoice PDF is attached to this email.</strong></p>';
+    mailOptions.text += '\n\n---\nO PDF da factura está anexado a este email.\n---\nInvoice PDF is attached to this email.';
+    mailOptions.html += '<br><br><hr><p><strong>O PDF da factura está anexado a este email.</strong></p><p><strong>Invoice PDF is attached to this email.</strong></p>';
   }
 
   try {
@@ -68,7 +74,13 @@ app.post('/sendmail', async (req, res) => {
     res.json({ success: true });
   } catch (err) {
     console.error(`[MAIL] Failed to send email to: ${to} | subject: ${subject} | error: ${err.message}`);
-    res.status(500).json({ success: false, error: err.message });
+    res.status(500).json({ 
+      success: false, 
+      error: {
+        pt: `Falha ao enviar o email: ${err.message}`,
+        en: `Failed to send email: ${err.message}`
+      }
+    });
   }
 });
 

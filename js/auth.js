@@ -1,4 +1,8 @@
-// Remove any import/export statements. Use window.supabase if needed. Do not initialize Supabase here if already done elsewhere.
+// Initialize Supabase client
+window.supabase = supabase.createClient(
+    'https://qvmtozjvjflygbkjecyj.supabase.co',  // Replace with your Supabase project URL
+    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF2bXRvemp2amZseWdia2plY3lqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDYxMjc2MjMsImV4cCI6MjA2MTcwMzYyM30.DJMC1eM5_EouM1oc07JaoXsMX_bSLn2AVCozAcdfHmo'             // Replace with your Supabase anon key
+);
 
 // Centralized auth check for all protected pages
 window.requireAuth = async function requireAuth() {

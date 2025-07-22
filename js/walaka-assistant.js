@@ -41,7 +41,7 @@ class WalakaAssistant {
   getFAQResponse(userMessage) {
     const msg = userMessage.toLowerCase();
     // Criar Factura
-    if (msg.includes('criar factura') || msg.includes('criar fatura') || msg.includes('nova factura') || msg.includes('nova fatura') || msg.includes('criar invoice')) {
+    if (msg.includes('criar factura') || msg.includes('criar factura') || msg.includes('nova factura') || msg.includes('nova factura') || msg.includes('criar invoice')) {
       return `Passo a Passo para Criar uma Factura no WALAKA ERP:\n\n1. Aceda ao Dashboard após iniciar sessão.\n2. No menu lateral esquerdo, clique em "Facturas".\n3. Clique no botão azul "Criar Factura" no topo da página.\n4. Preencha o formulário da factura:\n   - Selecione ou adicione um cliente\n   - Adicione os itens (produtos/serviços), quantidades e valores\n   - Defina as datas e condições de pagamento\n5. Revise os totais e detalhes.\n6. Clique em "Criar Factura" para guardar.\n7. Depois pode exportar para PDF ou enviar por email ao cliente.\n\nSe precisar de ajuda em algum campo específico, diga qual!`;
     }
     // Adicionar Cliente
@@ -53,7 +53,7 @@ class WalakaAssistant {
       return `Para exportar uma factura em PDF:\n\n1. Aceda ao menu \"Facturas\".\n2. Encontre a factura desejada na lista.\n3. Clique no botão de ações (ícone de olho ou três pontos) ao lado da factura.\n4. Selecione \"Exportar PDF\" ou \"Download PDF\".\n\nO ficheiro será baixado para o seu computador.`;
     }
     // Enviar factura por email
-    if ((msg.includes('enviar') && msg.includes('email') && msg.includes('factura')) || msg.includes('enviar fatura por email')) {
+    if ((msg.includes('enviar') && msg.includes('email') && msg.includes('factura')) || msg.includes('enviar factura por email')) {
       return `Para enviar uma factura por email:\n\n1. Aceda ao menu \"Facturas\".\n2. Encontre a factura que deseja enviar.\n3. Clique no botão de ações ao lado da factura.\n4. Selecione \"Enviar por Email\".\n5. Insira o email do cliente (se necessário) e confirme o envio.`;
     }
     // Adicionar Produto
@@ -70,7 +70,7 @@ class WalakaAssistant {
     }
     // Configurar Impostos
     if (msg.includes('configurar imposto') || msg.includes('iva') || msg.includes('ispc') || msg.includes('taxa') || msg.includes('imposto')) {
-      return `Para configurar impostos (IVA, ISPC, etc):\n1. Vá ao menu Configurações.\n2. Selecione \"Impostos\".\n3. Adicione ou edite as taxas conforme necessário.\n4. Salve as alterações.\nOs impostos serão aplicados automaticamente nas faturas.`;
+      return `Para configurar impostos (IVA, ISPC, etc):\n1. Vá ao menu Configurações.\n2. Selecione \"Impostos\".\n3. Adicione ou edite as taxas conforme necessário.\n4. Salve as alterações.\nOs impostos serão aplicados automaticamente nas facturas.`;
     }
     // Adicionar Banco ou Carteira Móvel
     if ((msg.includes('adicionar') || msg.includes('cadastrar')) && (msg.includes('banco') || msg.includes('conta bancária') || msg.includes('carteira móvel') || msg.includes('mpesa') || msg.includes('emola') || msg.includes('mkesh'))) {
@@ -90,12 +90,12 @@ class WalakaAssistant {
       return 'REALTIME_TOP_CLIENTS_SALES';
     }
     // Recurring Invoices
-    if (msg.includes('fatura recorrente') || msg.includes('recorrente') || msg.includes('recurring invoice')) {
-      return `Para criar uma fatura recorrente:\n1. Vá ao menu Facturas.\n2. Clique em "Nova Fatura" e selecione a opção de recorrência.\n3. Defina a frequência (mensal, semanal, etc).\n4. Preencha os dados e salve. O sistema irá gerar faturas automaticamente conforme o agendamento.`;
+    if (msg.includes('factura recorrente') || msg.includes('recorrente') || msg.includes('recurring invoice')) {
+      return `Para criar uma factura recorrente:\n1. Vá ao menu Facturas.\n2. Clique em "Nova Fatura" e selecione a opção de recorrência.\n3. Defina a frequência (mensal, semanal, etc).\n4. Preencha os dados e salve. O sistema irá gerar facturas automaticamente conforme o agendamento.`;
     }
     // Credit Notes
     if (msg.includes('nota de crédito') || msg.includes('crédito') || msg.includes('credit note')) {
-      return `Para emitir uma nota de crédito:\n1. Acesse o menu Notas de Crédito.\n2. Clique em "Nova Nota de Crédito".\n3. Selecione a fatura a ser ajustada e preencha os detalhes.\n4. Salve e envie ao cliente se necessário.`;
+      return `Para emitir uma nota de crédito:\n1. Acesse o menu Notas de Crédito.\n2. Clique em "Nova Nota de Crédito".\n3. Selecione a factura a ser ajustada e preencha os detalhes.\n4. Salve e envie ao cliente se necessário.`;
     }
     // Debit Notes
     if (msg.includes('nota de débito') || msg.includes('débito') || msg.includes('debit note')) {
@@ -103,7 +103,7 @@ class WalakaAssistant {
     }
     // Receipts
     if (msg.includes('recibo') || msg.includes('receipt')) {
-      return `Para emitir um recibo:\n1. Vá ao menu Recibos.\n2. Clique em "Novo Recibo".\n3. Associe a fatura paga e preencha os dados.\n4. Salve e envie ao cliente.`;
+      return `Para emitir um recibo:\n1. Vá ao menu Recibos.\n2. Clique em "Novo Recibo".\n3. Associe a factura paga e preencha os dados.\n4. Salve e envie ao cliente.`;
     }
     // Expense Management
     if (msg.includes('despesa') || msg.includes('gasto') || msg.includes('expense')) {
@@ -127,7 +127,7 @@ class WalakaAssistant {
     }
     // Notifications
     if (msg.includes('notificação') || msg.includes('alerta') || msg.includes('notification')) {
-      return `O sistema envia notificações para eventos importantes (faturas vencidas, novos clientes, etc).\n- Veja o ícone de sino no topo da página.\n- Clique para ver detalhes ou marcar como lidas.`;
+      return `O sistema envia notificações para eventos importantes (facturas vencidas, novos clientes, etc).\n- Veja o ícone de sino no topo da página.\n- Clique para ver detalhes ou marcar como lidas.`;
     }
     // Language/Theme
     if (msg.includes('idioma') || msg.includes('language') || msg.includes('tema') || msg.includes('theme') || msg.includes('escuro') || msg.includes('dark mode')) {
@@ -201,9 +201,9 @@ Em breve, relatórios automáticos mostrarão este ranking.`;
 3. Veja o ranking no relatório de contas ou exporte para análise detalhada.`;
     }
     // Top Client by Paid/Pending/Overdue Invoices
-    if ((msg.includes('cliente') && (msg.includes('mais faturas pagas') || msg.includes('mais pagou'))) || (msg.includes('cliente') && (msg.includes('mais pendentes') || msg.includes('mais em atraso') || msg.includes('mais overdue')))) {
+    if ((msg.includes('cliente') && (msg.includes('mais facturas pagas') || msg.includes('mais pagou'))) || (msg.includes('cliente') && (msg.includes('mais pendentes') || msg.includes('mais em atraso') || msg.includes('mais overdue')))) {
       return `O sistema pode mostrar:
-- Cliente com mais faturas pagas: soma o número de facturas com status "paga" por cliente.
+- Cliente com mais facturas pagas: soma o número de facturas com status "paga" por cliente.
 - Cliente com mais pendentes/atrasadas: soma as facturas "pendente" ou "vencida".
 Use filtros na página de Facturas ou Relatórios para ver estes dados.`;
     }
@@ -263,7 +263,7 @@ Para importar dados, aguarde futuras atualizações do sistema.`;
     }
     // Use Trial Features
     if (msg.includes('usar trial') || msg.includes('funcionalidades do trial') || msg.includes('o que posso fazer no trial')) {
-      return `Durante o período de trial, pode usar quase todas as funcionalidades do WALAKA, com limites de número de faturas ou dias. Veja a barra de trial no dashboard para detalhes.`;
+      return `Durante o período de trial, pode usar quase todas as funcionalidades do WALAKA, com limites de número de facturas ou dias. Veja a barra de trial no dashboard para detalhes.`;
     }
     // Contact Support
     if (msg.includes('contactar suporte') || msg.includes('falar com suporte') || msg.includes('contato suporte')) {
@@ -288,15 +288,15 @@ Para importar dados, aguarde futuras atualizações do sistema.`;
 2. Edite o utilizador e selecione o role desejado (admin, operador, etc).`;
     }
     // Customize Invoice Templates
-    if (msg.includes('personalizar modelo de fatura') || msg.includes('customizar template de fatura') || msg.includes('invoice template')) {
-      return `Para personalizar modelos de fatura:
+    if (msg.includes('personalizar modelo de factura') || msg.includes('customizar template de factura') || msg.includes('invoice template')) {
+      return `Para personalizar modelos de factura:
 1. Vá ao menu Configurações > Modelos de Fatura.
 2. Escolha um modelo e personalize cores, logotipo e campos.`;
     }
     // Filter/Search in Tables
     if (msg.includes('filtrar') || msg.includes('buscar') || msg.includes('procurar') || msg.includes('search table')) {
       return `Para filtrar ou buscar em tabelas:
-1. Use o campo de busca ou filtros disponíveis no topo das listas (clientes, produtos, faturas, etc).`;
+1. Use o campo de busca ou filtros disponíveis no topo das listas (clientes, produtos, facturas, etc).`;
     }
     // Check Subscription Status
     if (msg.includes('status da assinatura') || msg.includes('meu plano') || msg.includes('assinatura atual')) {
@@ -315,7 +315,7 @@ Para importar dados, aguarde futuras atualizações do sistema.`;
       return `Para configurar métodos de pagamento:
 1. Vá ao menu Bancos.
 2. Adicione contas bancárias ou carteiras móveis.
-3. Escolha quais métodos exibir nas faturas.`;
+3. Escolha quais métodos exibir nas facturas.`;
     }
     // Use Onboarding Wizard
     if (msg.includes('usar wizard') || msg.includes('assistente de configuração') || msg.includes('onboarding wizard')) {
@@ -441,11 +441,11 @@ Para importar dados, aguarde futuras atualizações do sistema.`;
 
   async getInvoiceStatsSummary() {
     const invoices = await this.fetchAllInvoices();
-    if (invoices.length === 0) return 'Não existem faturas registradas.';
+    if (invoices.length === 0) return 'Não existem facturas registradas.';
     const paid = invoices.filter(i => i.status === 'paid').length;
     const pending = invoices.filter(i => i.status === 'pending').length;
     const overdue = invoices.filter(i => i.status === 'overdue').length;
-    return `Total de faturas: ${invoices.length}. Pagas: ${paid}, Pendentes: ${pending}, Vencidas: ${overdue}.`;
+    return `Total de facturas: ${invoices.length}. Pagas: ${paid}, Pendentes: ${pending}, Vencidas: ${overdue}.`;
   }
 
   // --- Enhanced handleMessage for Data Q&A ---
@@ -480,7 +480,7 @@ Para importar dados, aguarde futuras atualizações do sistema.`;
     if (msg.includes('produtos cadastrados') || (msg.includes('quantos produtos') && msg.includes('tenho'))) {
       return this.sanitizeResponse(await this.getProductStatsSummary());
     }
-    if (msg.includes('faturas registradas') || (msg.includes('quantas faturas') && msg.includes('tenho'))) {
+    if (msg.includes('facturas registradas') || (msg.includes('quantas facturas') && msg.includes('tenho'))) {
       return this.sanitizeResponse(await this.getInvoiceStatsSummary());
     }
     // Existing real-time and FAQ logic
@@ -554,9 +554,9 @@ Para importar dados, aguarde futuras atualizações do sistema.`;
         .in('status', ['paid', 'sent']);
       if (error) throw error;
       const total = (invoices || []).reduce((sum, inv) => sum + (parseFloat(inv.total_amount) || 0), 0);
-      return `O total faturado este mês é de ${total.toLocaleString('pt-MZ', { style: 'currency', currency: 'MZN' })}.`;
+      return `O total facturado este mês é de ${total.toLocaleString('pt-MZ', { style: 'currency', currency: 'MZN' })}.`;
     } catch (e) {
-      return 'Erro ao calcular o total faturado este mês.';
+      return 'Erro ao calcular o total facturado este mês.';
     }
   }
 
@@ -637,27 +637,27 @@ Para importar dados, aguarde futuras atualizações do sistema.`;
   }
 
   guideInvoiceCreation() {
-    return `Para emitir uma nova fatura no WALAKA, siga estes passos:\n1. Clique em "Nova Fatura".\n2. Preencha os campos obrigatórios:\n   - Cliente (selecione ou cadastre um novo)\n   - NUIT do cliente\n   - Data de emissão (não pode ser no futuro)\n   - Produtos/serviços (adicione itens, quantidades e valores)\n   - Impostos aplicáveis (IVA, ISPC, etc.)\n3. Revise o subtotal e o valor total.\n4. Clique em "Salvar" ou "Emitir".\nSe precisar de ajuda em algum campo específico, me informe!`;
+    return `Para emitir uma nova factura no WALAKA, siga estes passos:\n1. Clique em "Nova Fatura".\n2. Preencha os campos obrigatórios:\n   - Cliente (selecione ou cadastre um novo)\n   - NUIT do cliente\n   - Data de emissão (não pode ser no futuro)\n   - Produtos/serviços (adicione itens, quantidades e valores)\n   - Impostos aplicáveis (IVA, ISPC, etc.)\n3. Revise o subtotal e o valor total.\n4. Clique em "Salvar" ou "Emitir".\nSe precisar de ajuda em algum campo específico, me informe!`;
   }
 
   suggestProducts() {
     if (this.products.length === 0) {
-      return "Não encontrei produtos cadastrados no seu perfil. Cadastre produtos para agilizar a emissão de faturas.";
+      return "Não encontrei produtos cadastrados no seu perfil. Cadastre produtos para agilizar a emissão de facturas.";
     }
     const topProducts = this.products.slice(0, 3).map(p => `- ${p.nome}`).join('\n');
-    return `Sugestão de produtos/serviços mais usados:\n${topProducts}\nDeseja adicionar algum deles à nova fatura?`;
+    return `Sugestão de produtos/serviços mais usados:\n${topProducts}\nDeseja adicionar algum deles à nova factura?`;
   }
 
   suggestDiscounts() {
-    return `Você pode oferecer desconto para pagamento antecipado ou criar pacotes de fidelização para clientes frequentes.\nDeseja aplicar um desconto nesta fatura? Informe o percentual ou valor.`;
+    return `Você pode oferecer desconto para pagamento antecipado ou criar pacotes de fidelização para clientes frequentes.\nDeseja aplicar um desconto nesta factura? Informe o percentual ou valor.`;
   }
 
   generalSupport() {
-    return `Como posso ajudar? Exemplos:\n- Como exportar uma fatura em PDF\n- Como enviar fatura por email\n- Como cadastrar um novo cliente\n- Como configurar impostos\nSe sua dúvida for técnica ou não resolvida aqui, consulte a documentação oficial ou acione o suporte humano pelo menu "Ajuda".`;
+    return `Como posso ajudar? Exemplos:\n- Como exportar uma factura em PDF\n- Como enviar factura por email\n- Como cadastrar um novo cliente\n- Como configurar impostos\nSe sua dúvida for técnica ou não resolvida aqui, consulte a documentação oficial ou acione o suporte humano pelo menu "Ajuda".`;
   }
 
   suggestAutomations() {
-    return `Notei que você emite faturas recorrentes para alguns clientes. Deseja automatizar o envio dessas faturas todo mês?\nResponda "sim" para configurar uma automação, ou especifique o padrão desejado (ex: dia do mês, valor fixo, etc.).`;
+    return `Notei que você emite facturas recorrentes para alguns clientes. Deseja automatizar o envio dessas facturas todo mês?\nResponda "sim" para configurar uma automação, ou especifique o padrão desejado (ex: dia do mês, valor fixo, etc.).`;
   }
 
   fallback() {
@@ -768,5 +768,5 @@ window.walakaAssistant = new WalakaAssistant({
   };
 
   // Welcome message
-  setTimeout(() => addMessage('Olá! Eu sou o WALAKA Assistant. Como posso ajudar na sua faturação hoje?', 'bot'), 400);
+  setTimeout(() => addMessage('Olá! Eu sou o WALAKA Assistant. Como posso ajudar na sua facturação hoje?', 'bot'), 400);
 })();

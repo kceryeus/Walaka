@@ -602,7 +602,7 @@
     "log_action_change_plan": "Mudou de plano",
     "log_action_select_payment_method": "Selecionou método de pagamento",
     "log_action_complete_payment": "Pagamento concluído",
-    "log_action_save_billing": "Gravou informações de faturação",
+    "log_action_save_billing": "Gravou informações de facturação",
     "log_action_cancel_subscription": "Cancelou a assinatura",
     "log_action_choose_plan": "Escolheu o plano",
     "log_action_click_upgrade_button": "Clicou em atualizar plano",

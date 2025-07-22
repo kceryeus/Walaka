@@ -675,7 +675,7 @@
             try {
                 console.log('Mark as Paid chamado', invoiceNumber);
 
-                // Atualiza status da fatura
+                // Atualiza status da factura
                 const { error: updateError } = await window.supabase
                     .from('invoices')
                     .update({ status: 'paid', paid_date: new Date().toISOString() })
@@ -683,14 +683,14 @@
 
                 if (updateError) throw updateError;
 
-                // Busca os dados da fatura
+                // Busca os dados da factura
                 const { data: invoice, error: fetchError } = await window.supabase
                     .from('invoices')
                     .select('*')
                     .eq('invoiceNumber', invoiceNumber)
                     .single();
 
-                console.log('Dados da fatura:', invoice);
+                console.log('Dados da factura:', invoice);
 
                 if (fetchError) throw fetchError;
 
