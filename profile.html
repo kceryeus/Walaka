@@ -1,21 +1,16 @@
-@<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title data-translate="profile_page_title">Dashboard - Walaka</title>
-    
     <script>
-        // Set base path for assets to handle GitHub Pages sub-directory
         const repoName = 'Walaka';
         const isGitHubPages = window.location.hostname.includes('github.io');
         const basePath = isGitHubPages ? `/${repoName}/` : '/';
     </script>
-
-    <!-- Font Awesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script>
-        // Only load CSS files that exist
         document.write(`<link rel="stylesheet" href="${basePath}components/trial-banner.css">`);
         document.write(`<link rel="stylesheet" href="${basePath}components/trial-restrictions.css">`);
         document.write(`<link rel="stylesheet" href="${basePath}components/sidebar.css">`);
@@ -23,46 +18,37 @@
         document.write(`<link rel="stylesheet" href="${basePath}css/metrics.css">`);
         document.write(`<link rel="stylesheet" href="${basePath}css/hints.css">`);
     </script>
-    
-    <!-- Google Fonts - Inter -->
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap">
-    
-    <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="icon" type="image/png" href="assets/images/walaka-assistant.PNG">
     <script src="js/darkmode.js"></script>
-</head>
     <style>
-        :root {
-            --primary-color: #007ec7;
-            --secondary-color: #4f46e5;
-            --accent-color: #818cf8;
-            --background-color: #f8fafc;
-            --card-radius: 16px;
-            --transition-speed: 0.3s;
-        }
         body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-            background-color: var(--background-color);
+            background: #f8fafc;
             color: #1e293b;
-            min-height: 100vh;
             margin: 0;
         }
-        .container {
+        .dashboard-container {
             display: flex;
-            height: 100vh;
+            min-height: 100vh;
         }
+        .sidebar { flex-shrink: 0; }
+        .sidebar-overlay { display: none; }
         .main-content {
             flex: 1;
-            padding: 2rem;
+            padding: 0;
+            min-width: 0;
             display: flex;
             flex-direction: column;
-            align-items: center;
         }
         .top-bar {
             display: flex;
             align-items: center;
-            padding: 1rem;
+            padding: 1rem 2rem 1rem 1.5rem;
+            background: #fff;
+            border-bottom: 1px solid #e5e7eb;
+            min-height: 64px;
         }
         .menu-toggle {
             background: none;
@@ -75,6 +61,7 @@
             display: flex;
             align-items: center;
             gap: 1rem;
+            margin-left: auto;
         }
         .notification-bell {
             position: relative;
@@ -93,145 +80,56 @@
             display: flex;
             align-items: center;
             gap: 0.5rem;
+            position: relative;
         }
         .avatar {
             width: 32px;
             height: 32px;
             border-radius: 50%;
-            overflow: hidden;
-            background-color: #e5e7eb;
-        }
-        .avatar i {
-            font-size: 1.5rem;
-            color: #6b7280;
-        }
-        .dropdown-menu {
-            display: none;
-            flex-direction: column;
-        }
-        .dropdown-menu a {
-            padding: 0.5rem 1rem;
-            text-decoration: none;
-            color: #333;
-        }
-        .subscription-container {
-            max-width: 540px;
-            margin: 2rem auto;
-            background: #fff;
-            border-radius: var(--card-radius, 16px);
-            box-shadow: 0 2px 8px rgba(0,0,0,0.07);
-            padding: 2.5rem 2rem 2rem 2rem;
-        }
-        .subscription-header {
+            background: #e5e7eb;
             display: flex;
             align-items: center;
-            gap: 1rem;
-            margin-bottom: 2rem;
+            justify-content: center;
         }
-        .subscription-header i {
-            font-size: 2rem;
-            color: var(--primary-color);
+        .avatar i { font-size: 1.5rem; color: #6b7280; }
+        .dropdown-menu {
+            display: none;
+            position: absolute;
+            right: 0;
+            top: 120%;
+            background: #fff;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+            border-radius: 8px;
+            min-width: 160px;
+            z-index: 1000;
         }
-        .subscription-header h2 {
-            margin: 0;
-            font-size: 1.5rem;
-            font-weight: 700;
+        .user-profile.open .dropdown-menu { display: flex; flex-direction: column; }
+        .dropdown-menu a {
+            padding: 0.75rem 1.25rem;
+            text-decoration: none;
+            color: #333;
+            font-size: 1rem;
+            transition: background 0.15s;
         }
-        .subscription-section {
-            margin-bottom: 2rem;
-        }
-        .subscription-section label {
-            display: block;
-            font-weight: 500;
-            margin-bottom: 0.5rem;
-        }
-        .subscription-section input, .subscription-section select {
+        .dropdown-menu a:hover { background: #f5f5f5; }
+        .profile-card {
+            background: #fff;
+            border-radius: 18px;
+            box-shadow: 0 2px 16px rgba(0,0,0,0.08);
+            margin: 2rem auto 0 auto;
+            max-width: 700px;
             width: 100%;
-            padding: 0.7rem 1rem;
-            border: 1px solid #e2e8f0;
-            border-radius: 8px;
-            font-size: 1rem;
-            margin-bottom: 1rem;
+            padding: 2.5rem 2rem 2rem 2rem;
+            display: flex;
+            flex-direction: column;
         }
-        .subscription-section input[type="date"] {
-            padding-right: 0.5rem;
-        }
-        .subscription-section .current-plan {
-            font-size: 1.1rem;
-            font-weight: 600;
-            color: var(--primary-color);
-            margin-bottom: 1rem;
-        }
-        .subscription-actions {
+        .profile-tabs {
             display: flex;
             gap: 1rem;
-            justify-content: flex-end;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
         }
-        .subscription-actions button {
-            background: var(--primary-color);
-            color: #fff;
-            border: none;
-            border-radius: 8px;
-            padding: 0.7rem 1.5rem;
-            font-size: 1rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: background 0.2s;
-        }
-        .subscription-actions button:disabled {
-            background: #b6c6d6;
-            cursor: not-allowed;
-        }
-        .subscription-status {
-            margin-top: 1.5rem;
-            padding: 1rem;
-            background: #f1f5f9;
-            border-radius: 8px;
-            font-size: 1rem;
-        }
-        .subscription-status .active {
-            color: #22c55e;
-            font-weight: 700;
-        }
-        .subscription-status .expired {
-            color: #ef4444;
-            font-weight: 700;
-        }
-        .subscription-status .trial {
-            color: #f59e0b;
-            font-weight: 700;
-        }
-        .payment-method-placeholder {
-            background: #f8fafc;
-            border: 1px dashed #cbd5e1;
-            border-radius: 8px;
-            padding: 1rem;
-            text-align: center;
-            color: #64748b;
-            margin-top: 1rem;
-        }
-        @media (max-width: 900px) {
-            .subscription-container {
-                margin: 2rem 0.5rem;
-                padding: 1.5rem 0.5rem;
-            }
-        }
-        .page-title {
-            font-size: 1.5rem;
-            font-weight: 600;
-            margin-bottom: 0.25rem;
-        }
-        .subtitle {
-            color: #666;
-            font-size: 0.9rem;
-            margin-bottom: 1.5rem;
-        }
-        .subscription-filters {
-            display: flex;
-            gap: 1rem;
-            margin-bottom: 2.5rem;
-        }
-        .filter-btn {
+        .profile-tab {
             background: #f5f7fa;
             border: none;
             border-radius: 2rem;
@@ -242,40 +140,28 @@
             cursor: pointer;
             transition: background 0.2s, color 0.2s;
         }
-        .filter-btn.active {
+        .profile-tab.active {
             background: #2563eb;
             color: #fff;
         }
-        .filter-btn.danger {
+        .profile-tab.danger {
             background: #ef4444;
             color: #fff;
         }
-        .filter-btn:not(.active):hover {
-            background: #e0e7ef;
+        .profile-tab:not(.active):hover { background: #e0e7ef; }
+        .profile-section { display: none; }
+        .profile-section.active { display: block; }
+        .profile-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 0.25rem;
+            text-align: center;
         }
-        .subscription-content {
-            width: 100%;
-            max-width: 900px;
-            margin: 0 auto 2.5rem auto;
-            background: #fff;
-            border-radius: var(--card-radius, 16px);
-            box-shadow: 0 2px 12px rgba(0,0,0,0.09);
-            padding: 2.5rem 2.5rem 2rem 2.5rem;
-            min-height: 320px;
-            transition: box-shadow 0.2s, max-width 0.2s;
-        }
-        @media (min-width: 1200px) {
-            .subscription-content {
-                max-width: 1000px;
-                padding: 3rem 3rem 2.5rem 3rem;
-            }
-        }
-        @media (max-width: 900px) {
-            .subscription-content {
-                margin: 2rem 0.5rem;
-                padding: 1.5rem 0.5rem;
-                max-width: 100vw;
-            }
+        .profile-subtitle {
+            color: #666;
+            font-size: 0.95rem;
+            margin-bottom: 2rem;
+            text-align: center;
         }
         .subscription-list {
             list-style: none;
@@ -290,36 +176,11 @@
             border-bottom: 1px solid #e5e7eb;
             font-size: 1.08rem;
         }
-        .subscription-list li:last-child {
-            border-bottom: none;
-        }
-        .subscription-list .label {
-            color: #64748b;
-            font-weight: 500;
-        }
-        .subscription-list .value {
-            font-weight: 600;
-            color: #1e293b;
-        }
-        .subscription-list .value.overdue {
-            color: #dc2626;
-        }
-        .overdue-indicator {
-            color: #dc2626;
-            font-weight: 700;
-            margin-right: 0.5rem;
-        }
-        .section {
-            display: none;
-            animation: fadeIn 0.3s;
-        }
-        .section.active {
-            display: block;
-        }
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
+        .subscription-list li:last-child { border-bottom: none; }
+        .subscription-list .label { color: #64748b; font-weight: 500; }
+        .subscription-list .value { font-weight: 600; color: #1e293b; }
+        .subscription-list .value.overdue { color: #dc2626; }
+        .overdue-indicator { color: #dc2626; font-weight: 700; margin-right: 0.5rem; }
         .billing-form input, .billing-form select {
             width: 100%;
             padding: 0.7rem 1rem;
@@ -328,11 +189,7 @@
             font-size: 1rem;
             margin-bottom: 1rem;
         }
-        .billing-form label {
-            font-weight: 500;
-            margin-bottom: 0.3rem;
-            display: block;
-        }
+        .billing-form label { font-weight: 500; margin-bottom: 0.3rem; display: block; }
         .billing-form .form-actions {
             display: flex;
             gap: 1rem;
@@ -342,6 +199,9 @@
             width: 100%;
             border-collapse: collapse;
             margin-top: 1rem;
+            background: #fff;
+            border-radius: 12px;
+            overflow: hidden;
         }
         .history-table th, .history-table td {
             padding: 0.7rem 1rem;
@@ -369,174 +229,78 @@
             cursor: pointer;
             transition: background 0.2s;
         }
-        .cancel-section .danger:hover {
-            background: #dc2626;
-        }
-        .plan-modal-overlay {
-            position: fixed;
-            top: 0; left: 0; width: 100vw; height: 100vh;
-            background: rgba(0,0,0,0.25);
-            z-index: 10000;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        .plan-modal {
+        .cancel-section .danger:hover { background: #dc2626; }
+        /* Modal styles */
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.25); z-index: 10000; align-items: center; justify-content: center; }
+        .modal.show { display: flex; }
+        .modal-content {
             background: #fff;
-            border-radius: 12px;
-            box-shadow: 0 2px 16px rgba(0,0,0,0.15);
-            padding: 2em 2em 1.5em 2em;
-            min-width: 320px;
-            max-width: 95vw;
-            text-align: center;
+            border-radius: 16px;
+            box-shadow: 0 2px 16px rgba(0,0,0,0.12);
+            padding: 2rem 1.5rem 1.5rem 1.5rem;
+            max-width: 400px;
+            width: 95vw;
         }
-        .plan-modal h2 {
-            margin-top: 0;
-            font-size: 1.3em;
-            margin-bottom: 1em;
+        .modal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; }
+        .modal-header h2 { font-size: 1.3rem; font-weight: 700; margin: 0; }
+        .close-modal { background: none; border: none; font-size: 1.5rem; color: #888; cursor: pointer; margin-left: 1rem; }
+        .modal-body { font-size: 1.05rem; color: #222; margin-bottom: 0.5rem; }
+        .modal-footer { display: flex; gap: 1rem; justify-content: flex-end; margin-top: 1.5rem; }
+        .modal-footer button { min-width: 120px; font-size: 1rem; padding: 0.7rem 1.2rem; border-radius: 1.5rem; }
+        @media (max-width: 700px) {
+            .profile-card { max-width: 98vw; padding: 1.2rem 0.5rem; }
+            .modal-content { max-width: 98vw; padding: 1.2rem 0.5rem; }
         }
-        .plan-modal .filter-btn {
-            margin-top: 0.5em;
-            min-width: 120px;
+        @media (max-width: 600px) {
+            .main-content { padding: 0.5rem 0.25rem !important; align-items: stretch !important; }
+            .profile-card { margin: 1rem 0.1rem 0 0.1rem; padding: 1.2rem 0.5rem; }
+            .profile-tabs { flex-direction: column; gap: 0.5rem; margin-bottom: 1.2rem; align-items: stretch; }
+            .profile-tab { width: 100%; font-size: 1.05rem; padding: 0.9rem 0.5rem; border-radius: 1.5rem; max-width: 95vw; margin-left: auto; margin-right: auto; }
+            .profile-title { font-size: 1.15rem; }
+            .profile-subtitle { font-size: 0.95rem; }
+            .modal-content { max-width: 95vw !important; margin: 0 auto; }
+            .modal-footer { flex-direction: column; gap: 0.75rem; align-items: stretch; }
+            .modal-footer button { width: 100%; font-size: 1.1rem; padding: 0.9rem 0.5rem; border-radius: 1.5rem; }
         }
-        /* --- DARK MODE REFINEMENTS --- */
-        [data-theme="dark"] body,
-        [data-theme="dark"] .container,
-        [data-theme="dark"] .main-content,
-        body[data-theme="dark"] .main-content,
-        html[data-theme="dark"] .main-content {
-            background: #181a20 !important;
-            color: #f3f4f6 !important;
+        [data-theme="dark"] body, [data-theme="dark"] .dashboard-container, [data-theme="dark"] .main-content, body[data-theme="dark"] .main-content, html[data-theme="dark"] .main-content {
+            background: #181a20 !important; color: #f3f4f6 !important;
         }
-        [data-theme="dark"] .top-bar,
-        body[data-theme="dark"] .top-bar,
-        html[data-theme="dark"] .top-bar {
-            background: #23262f !important;
-            color: #f3f4f6 !important;
-            border-bottom: 1px solid #23262f;
-            transition: background 0.3s, color 0.3s;
+        [data-theme="dark"] .top-bar, body[data-theme="dark"] .top-bar, html[data-theme="dark"] .top-bar {
+            background: #23262f !important; color: #f3f4f6 !important; border-bottom: 1px solid #23262f; transition: background 0.3s, color 0.3s;
         }
-        [data-theme="dark"] .subscription-content {
-            background: #23262f !important;
-            color: #f3f4f6 !important;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.18);
+        [data-theme="dark"] .profile-card, [data-theme="dark"] .modal-content {
+            background: #23262f !important; color: #f3f4f6 !important; box-shadow: 0 2px 8px rgba(0,0,0,0.18);
         }
-        [data-theme="dark"] .subscription-list li {
-            border-bottom: 1px solid #333;
-            color: #f3f4f6;
-        }
-        [data-theme="dark"] .subscription-list .label {
-            color: #b6c6d6;
-        }
-        [data-theme="dark"] .subscription-list .value {
-            color: #f3f4f6;
-        }
-        [data-theme="dark"] .filter-btn {
-            background: #23262f;
-            color: #60a5fa;
-            border: 1px solid #23262f;
-        }
-        [data-theme="dark"] .filter-btn.active {
-            background: #2563eb;
-            color: #fff;
-        }
-        [data-theme="dark"] .filter-btn.danger {
-            background: #ef4444;
-            color: #fff;
-        }
-        [data-theme="dark"] .plan-modal {
-            background: #23262f !important;
-            color: #f3f4f6 !important;
-            box-shadow: 0 2px 16px rgba(0,0,0,0.28);
-        }
-        [data-theme="dark"] .plan-modal h2 {
-            color: #60a5fa !important;
-        }
-        [data-theme="dark"] .billing-form input,
-        [data-theme="dark"] .billing-form select {
-            background: #181a20;
-            color: #f3f4f6;
-            border: 1px solid #333;
-        }
-        [data-theme="dark"] .billing-form label {
-            color: #b6c6d6;
-        }
-        [data-theme="dark"] .cancel-section .danger {
-            background: #ef4444;
-            color: #fff;
-        }
-        /* Scrollbar styling for dark mode */
-        [data-theme="dark"] ::-webkit-scrollbar {
-            width: 12px;
-            background: #181a20;
-        }
-        [data-theme="dark"] ::-webkit-scrollbar-thumb {
-            background: #23262f;
-            border-radius: 8px;
-            border: 2px solid #181a20;
-        }
-        [data-theme="dark"] ::-webkit-scrollbar-thumb:hover {
-            background: #2563eb;
-        }
-        [data-theme="dark"] ::-webkit-scrollbar-corner {
-            background: #181a20;
-        }
-        /* Firefox scrollbar */
-        [data-theme="dark"] {
-            scrollbar-color: #23262f #181a20;
-            scrollbar-width: thin;
-        }
-        /* --- DARK MODE REFINEMENTS FOR HISTORY TABLE --- */
-        [data-theme="dark"] .history-table {
-            background: #23262f;
-            color: #f3f4f6;
-        }
-        [data-theme="dark"] .history-table th {
-            background: #232b3a;
-            color: #60a5fa;
-            border-bottom: 1px solid #333;
-        }
-        [data-theme="dark"] .history-table td {
-            background: #23262f;
-            color: #f3f4f6;
-            border-bottom: 1px solid #333;
-        }
-        [data-theme="dark"] .history-table tr:hover td {
-            background: #283046;
-        }
-        [data-theme="dark"] .top-bar .dropdown-menu {
-            background: #23262f !important;
-            color: #fff !important;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.18);
-        }
-        [data-theme="dark"] .top-bar .dropdown-menu a {
-            color: #fff !important;
-        }
-        [data-theme="dark"] .top-bar .dropdown-menu a:hover {
-            background: #181a20 !important;
-            color: #60a5fa !important;
-        }
+        [data-theme="dark"] .profile-tab { background: #23262f; color: #60a5fa; border: 1px solid #23262f; }
+        [data-theme="dark"] .profile-tab.active { background: #2563eb; color: #fff; }
+        [data-theme="dark"] .profile-tab.danger { background: #ef4444; color: #fff; }
+        [data-theme="dark"] .history-table { background: #23262f; color: #f3f4f6; }
+        [data-theme="dark"] .history-table th { background: #232b3a; color: #60a5fa; border-bottom: 1px solid #333; }
+        [data-theme="dark"] .history-table td { background: #23262f; color: #f3f4f6; border-bottom: 1px solid #333; }
+        [data-theme="dark"] .history-table tr:hover td { background: #283046; }
     </style>
-    <script src="assets/js/sidebar.js"></script>
-    <script src="js/sendNotificationEmail.js"></script>
 </head>
 <body>
-    <div class="container">
+    <div class="dashboard-container">
         <!-- Sidebar -->
         <aside class="sidebar">
             <div id="sidebar-container"></div>
             <script>
-            // Dynamically load the sidebar from components/sidebar.html
             document.addEventListener('DOMContentLoaded', function() {
                 fetch(`${basePath}components/sidebar.html`)
                     .then(response => response.text())
                     .then(html => {
-                        document.getElementById('sidebar-container').innerHTML = html;
-                        // Dynamically load the sidebar-actions.js script after sidebar is injected
+                        const tempDiv = document.createElement('div');
+                        tempDiv.innerHTML = html;
+                        const navSidebar = tempDiv.querySelector('nav.sidebar');
+                        if (navSidebar) {
+                            document.getElementById('sidebar-container').innerHTML = navSidebar.innerHTML;
+                        } else {
+                            document.getElementById('sidebar-container').innerHTML = html;
+                        }
                         var script = document.createElement('script');
                         script.src = `${basePath}components/sidebar-actions.js`;
                         document.body.appendChild(script);
-                        // Dynamically load the sidebar-darkmode.js script after sidebar is injected
                         var darkmodeScript = document.createElement('script');
                         darkmodeScript.src = `${basePath}components/sidebar-darkmode.js`;
                         darkmodeScript.onload = function() {
@@ -552,98 +316,38 @@
             });
             </script>
         </aside>
+        <div class="sidebar-overlay"></div>
         <main class="main-content">
-            <!-- Top Bar -->
             <div class="top-bar">
-                <button class="menu-toggle">
-                    <i class="fas fa-bars"></i>
-                </button>
-                
-                <div class="user-menu" style="margin-left:auto;">
+                <button class="menu-toggle"><i class="fas fa-bars"></i></button>
+                <div class="user-menu">
                     <a href="notifications.html" class="notification-bell">
                         <i class="fas fa-bell"></i>
                         <span class="badge">0</span>
                     </a>
-                    
                     <div class="user-profile" id="userProfile">
-                        <div class="avatar">
-                            <i class="fas fa-user"></i>
-                        </div>
+                        <div class="avatar"><i class="fas fa-user"></i></div>
                         <span id="user-displayname">Loading...</span>
                         <div class="dropdown-menu" id="userDropdown">
-                            <a href="#">
-                                <i class="fas fa-user-circle"></i> My Profile
-                            </a>
-                            <a href="settings.html">
-                                <i class="fas fa-cog"></i> Settings
-                            </a>
-                            <a href="#">
-                                <i class="fas fa-sign-out-alt"></i> Logout
-                            </a>
+                            <a href="#"><i class="fas fa-user-circle"></i> My Profile</a>
+                            <a href="settings.html"><i class="fas fa-cog"></i> Settings</a>
+                            <a href="#"><i class="fas fa-sign-out-alt"></i> Logout</a>
                         </div>
                     </div>
                 </div>
             </div>
-            
-            <!-- Add this after top bar section -->
             <div id="trial-banner-container"></div>
-            <script>
-            // Supabase will be initialized in the module script below
-            // Username display and dropdown logic (from js/displayname.js)
-            document.addEventListener('DOMContentLoaded', async () => {
-                // Username display - will be handled in the module script
-                // Dropdown open/close logic
-                const userProfile = document.getElementById('userProfile');
-                const userDropdown = document.getElementById('userDropdown');
-                if (!userProfile || !userDropdown) return;
-                let dropdownTimeout;
-                function openDropdown() {
-                    clearTimeout(dropdownTimeout);
-                    userProfile.classList.add('open');
-                }
-                function closeDropdown() {
-                    dropdownTimeout = setTimeout(() => {
-                        userProfile.classList.remove('open');
-                    }, 150);
-                }
-                userProfile.addEventListener('mouseenter', openDropdown);
-                userProfile.addEventListener('mouseleave', closeDropdown);
-                userDropdown.addEventListener('mouseenter', openDropdown);
-                userDropdown.addEventListener('mouseleave', closeDropdown);
-                // Click events for mobile
-                userProfile.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    if (window.innerWidth <= 768) {
-                        userProfile.classList.toggle('open');
-                    }
-                });
-                // Close dropdown when clicking outside
-                document.addEventListener('click', (e) => {
-                    if (!userProfile.contains(e.target)) {
-                        userProfile.classList.remove('open');
-                    }
-                });
-                // Handle window resize
-                window.addEventListener('resize', () => {
-                    if (window.innerWidth > 768) {
-                        userProfile.classList.remove('open');
-                    }
-                });
-            });
-            </script>
-            <!-- Page Title and Filters -->
-            <h1 class="page-title" data-translate="subscription_management_header">Subscription Management</h1>
-            <p class="subtitle" data-translate="subscription_management_subtitle">View and manage your subscription, billing, and plan details.</p>
-            <div class="subscription-filters">
-                <button class="filter-btn active" data-section="overview" data-translate="overview_tab">Overview</button>
-                <button class="filter-btn" data-section="billing" data-translate="billing_tab">Billing</button>
-                <button class="filter-btn" data-section="plan" data-translate="plan_tab">Plan</button>
-                <button class="filter-btn" data-section="history" data-translate="history_tab">History</button>
-                <button class="filter-btn danger" data-section="cancel"><i class="fas fa-trash"></i> <span data-translate="cancel_subscription_button">Cancel Subscription</span></button>
-            </div>
-            <div class="subscription-content">
-                <!-- Overview Section -->
-                <div class="section active" id="section-overview">
+            <div class="profile-card">
+                <div class="profile-title" data-translate="subscription_management_header">Subscription Management</div>
+                <div class="profile-subtitle" data-translate="subscription_management_subtitle">View and manage your subscription, billing, and plan details.</div>
+                <div class="profile-tabs">
+                    <button class="profile-tab active" data-section="overview" data-translate="overview_tab">Overview</button>
+                    <button class="profile-tab" data-section="billing" data-translate="billing_tab">Billing</button>
+                    <button class="profile-tab" data-section="plan" data-translate="plan_tab">Plan</button>
+                    <button class="profile-tab" data-section="history" data-translate="history_tab">History</button>
+                    <button class="profile-tab danger" data-section="cancel"><i class="fas fa-trash"></i> <span data-translate="cancel_subscription_button">Cancel Subscription</span></button>
+                </div>
+                <div class="profile-section active" id="section-overview">
                     <ul class="subscription-list">
                         <li><span class="label" data-translate="current_plan_label">Current Plan</span><span class="value" id="overview-current-plan">-</span></li>
                         <li><span class="label" data-translate="status_label">Status</span><span class="value" id="overview-status">-</span></li>
@@ -654,8 +358,7 @@
                         <li><span class="label" data-translate="payment_method_label">Payment Method</span><span class="value" id="overview-payment-method">-</span></li>
                     </ul>
                 </div>
-                <!-- Billing Section -->
-                <div class="section" id="section-billing">
+                <div class="profile-section" id="section-billing">
                     <form class="billing-form" id="billing-form">
                         <label for="billing-date" data-translate="preferred_billing_date_label">Preferred Billing Date</label>
                         <input type="date" id="billing-date" name="billing-date" />
@@ -672,12 +375,11 @@
                             <option value="card" data-translate="card_option">Credit/Debit Card</option>
                         </select>
                         <div class="form-actions">
-                            <button type="submit" class="filter-btn active" data-translate="save_changes_button">Save Changes</button>
+                            <button type="submit" class="profile-tab active" data-translate="save_changes_button">Save Changes</button>
                         </div>
                     </form>
                 </div>
-                <!-- Plan Section -->
-                <div class="section" id="section-plan">
+                <div class="profile-section" id="section-plan">
                     <div style="margin-bottom:1.5rem; display:flex; align-items:center; gap:2em; flex-wrap:wrap;">
                         <div style="display:flex; align-items:center; gap:0.5em;">
                             <strong data-translate="current_plan_label_strong">Current Plan:</strong>
@@ -690,14 +392,13 @@
                         </div>
                     </div>
                     <div>
-                        <button class="filter-btn" id="upgrade-pay-btn" style="margin-right:1rem;">
+                        <button class="profile-tab" id="upgrade-pay-btn" style="margin-right:1rem;" data-log-action="upgrade_pay">
                             <i class="fas fa-arrow-up"></i> <span data-translate="upgrade_pay_button">Upgrade / Pay</span>
                         </button>
-                        <button class="filter-btn" id="downgrade-btn" data-translate="downgrade_plan_button">Downgrade Plan</button>
+                        <button class="profile-tab" id="downgrade-btn" data-translate="downgrade_plan_button" data-log-action="downgrade_plan">Downgrade Plan</button>
                     </div>
                 </div>
-                <!-- History Section -->
-                <div class="section" id="section-history">
+                <div class="profile-section" id="section-history">
                     <table class="history-table">
                         <thead>
                             <tr>
@@ -713,15 +414,13 @@
                         </tbody>
                     </table>
                 </div>
-                <!-- Cancel Section -->
-                <div class="section cancel-section" id="section-cancel">
+                <div class="profile-section cancel-section" id="section-cancel">
                     <h3 data-translate="cancel_subscription_header">Cancel Subscription</h3>
                     <p data-translate="cancel_subscription_warning">Are you sure you want to cancel your subscription? This action cannot be undone.</p>
-                    <button class="danger" id="cancel-subscription-btn"><i class="fas fa-trash"></i> <span data-translate="confirm_cancel_button">Confirm Cancel</span></button>
+                    <button class="danger" id="cancel-subscription-btn" data-log-action="cancel_subscription"><i class="fas fa-trash"></i> <span data-translate="confirm_cancel_button">Confirm Cancel</span></button>
                 </div>
-                <!-- Cancel Confirmation Modal -->
-                <div id="cancel-modal" class="modal" style="display:none;">
-                    <div class="modal-content" style="max-width:400px;">
+                <div id="cancel-modal" class="modal">
+                    <div class="modal-content">
                         <div class="modal-header">
                             <h2 data-translate="confirm_cancellation_modal_title">Confirm Cancellation</h2>
                             <button class="close-modal" id="close-cancel-modal">&times;</button>
@@ -730,8 +429,8 @@
                             <p data-translate="cancel_subscription_warning">Are you sure you want to cancel your subscription? This action cannot be undone.</p>
                         </div>
                         <div class="modal-footer">
-                            <button class="secondary-btn" id="cancel-modal-no" data-translate="no_button">No</button>
-                            <button class="danger" id="cancel-modal-yes" data-translate="yes_cancel_button">Yes, Cancel</button>
+                            <button class="profile-tab" id="cancel-modal-no" data-translate="no_button">No</button>
+                            <button class="profile-tab danger" id="cancel-modal-yes" data-translate="yes_cancel_button">Yes, Cancel</button>
                         </div>
                     </div>
                 </div>
@@ -739,15 +438,12 @@
         </main>
     </div>
     <script src="services/languageManager.js"></script>
-    <!-- Notification badge synchronization -->
     <script src="js/notification-badge.js"></script>
     <script type="module">
         import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.0.0/+esm';
         const supabaseUrl = 'https://qvmtozjvjflygbkjecyj.supabase.co';
         const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF2bXRvemp2amZseWdia2plY3lqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDYxMjc2MjMsImV4cCI6MjA2MTcwMzYyM30.DJMC1eM5_EouM1oc07JaoXsMX_bSLn2AVCozAcdfHmo';
         const supabase = createClient(supabaseUrl, supabaseKey);
-
-        // Make supabase available globally
         window.supabase = supabase;
 
         function capitalizePlanName(plan) {
@@ -764,6 +460,10 @@
             };
             const lang = (localStorage.getItem('preferredLanguage') || 'pt');
             return planMap[plan] ? planMap[plan][lang] : capitalizePlanName(plan);
+        }
+
+        function logAction(type, desc, details) {
+          if (window.logUserAction) window.logUserAction(type, desc, details);
         }
 
         // Handle username display
@@ -951,12 +651,12 @@
                   <div style="margin-bottom:1em;">
                     <strong>${plan.name}</strong> (${plan.price})<br>
                     <span>${plan.features}</span><br>
-                    <button class="select-plan-btn filter-btn" data-plan="${plan.key}" ${plan.key === currentPlanKey ? 'disabled' : ''}>
+                    <button class="select-plan-btn profile-tab" data-plan="${plan.key}" ${plan.key === currentPlanKey ? 'disabled' : ''}>
                       ${t('select_' + plan.key + '_button')}
                     </button>
                   </div>
                 `).join('')}
-                <button class="cancel-plan-modal filter-btn danger" style="margin-top:1em;">${t('cancel_button')}</button>
+                <button class="cancel-plan-modal profile-tab danger" style="margin-top:1em;">${t('cancel_button')}</button>
               </div>
             `;
             Object.assign(modal.style, {position:'fixed',top:0,left:0,width:'100vw',height:'100vh',background:'rgba(0,0,0,0.25)',zIndex:10000,display:'flex',alignItems:'center',justifyContent:'center'});
@@ -1011,6 +711,7 @@
                     if (modal) modal.remove();
                     fetchAndDisplaySubscription();
                     updatePlanSectionUI(newPlan);
+                    logAction('change_plan', `Changed plan to: ${newPlan}`);
                 } else {
                     alert((window.languageManager ? window.languageManager.translate('failed_to_update_settings') : 'Failed to change plan.'));
                     // Log error details for debugging
@@ -1125,6 +826,7 @@
                     if (!error) {
                         alert('Subscription updated!');
                         fetchAndDisplaySubscription();
+                        logAction('save_billing', 'Saved billing info', { warningDate, billingDate, billingNumber, paymentMethod });
                     } else {
                         alert('Failed to update subscription.');
                     }
@@ -1132,8 +834,8 @@
             }
 
             // Tab switching logic for filter buttons
-            const filterBtns = document.querySelectorAll('.filter-btn');
-            const sections = document.querySelectorAll('.section');
+            const filterBtns = document.querySelectorAll('.profile-tab');
+            const sections = document.querySelectorAll('.profile-section');
             filterBtns.forEach(btn => {
                 btn.addEventListener('click', function() {
                     filterBtns.forEach(b => b.classList.remove('active'));
@@ -1154,10 +856,10 @@
             const cancelModalYes = document.getElementById('cancel-modal-yes');
 
             function showCancelModal() {
-                cancelModal.style.display = 'flex';
+                cancelModal.classList.add('show');
             }
             function hideCancelModal() {
-                cancelModal.style.display = 'none';
+                cancelModal.classList.remove('show');
             }
             if (cancelBtn) cancelBtn.addEventListener('click', showCancelModal);
             if (closeCancelModal) closeCancelModal.addEventListener('click', hideCancelModal);
@@ -1193,6 +895,7 @@
                         }
                         hideCancelModal();
                         fetchAndDisplaySubscription();
+                        logAction('cancel_subscription', 'Canceled subscription');
                     } else {
                         alert('Failed to cancel subscription.');
                     }
@@ -1229,13 +932,13 @@
                 showPlanChangeModal(planText === 'basic' || planText === 'standard' ? planText : 'standard');
             };
             // Fetch and display history when the history tab is clicked
-            const historyFilterBtn = document.querySelector('.filter-btn[data-section="history"]');
+            const historyFilterBtn = document.querySelector('.profile-tab[data-section="history"]');
             if (historyFilterBtn) {
                 historyFilterBtn.addEventListener('click', fetchAndDisplaySubscriptionHistory);
             }
         });
     </script>
-     <script>
+    <script>
         // Initialize the language manager with the correct base path
         window.languageManager = new LanguageManager('./');
   
@@ -1247,5 +950,60 @@
           }
         });
       </script>
+      <script type="module">
+        import { logUserAction } from './js/logUserAction.js';
+        window.logUserAction = logUserAction;
+        document.addEventListener('DOMContentLoaded', () => {
+          logUserAction('page_visit', 'User visited page: profile.html');
+        });
+      </script>
+      <script src="js/topbar-menu.js"></script>
+      <script>
+document.addEventListener('DOMContentLoaded', function() {
+  const userProfile = document.getElementById('userProfile');
+  const userDropdown = document.getElementById('userDropdown');
+  if (!userProfile || !userDropdown) return;
+
+  let dropdownHover = false;
+
+  // Desktop: open on hover (profile or dropdown)
+  function openDropdown() {
+    if (window.innerWidth > 768) userProfile.classList.add('open');
+  }
+  function closeDropdown() {
+    if (window.innerWidth > 768 && !dropdownHover) userProfile.classList.remove('open');
+  }
+  userProfile.addEventListener('mouseenter', openDropdown);
+  userProfile.addEventListener('mouseleave', () => setTimeout(closeDropdown, 50));
+  userDropdown.addEventListener('mouseenter', function() {
+    dropdownHover = true;
+    if (window.innerWidth > 768) userProfile.classList.add('open');
+  });
+  userDropdown.addEventListener('mouseleave', function() {
+    dropdownHover = false;
+    setTimeout(closeDropdown, 50);
+  });
+
+  // Mobile: open/close on click
+  userProfile.addEventListener('click', (e) => {
+    if (window.innerWidth <= 768) {
+      e.stopPropagation();
+      userProfile.classList.toggle('open');
+    }
+  });
+
+  // Close dropdown when clicking outside (mobile)
+  document.addEventListener('click', (e) => {
+    if (window.innerWidth <= 768 && !userProfile.contains(e.target)) {
+      userProfile.classList.remove('open');
+    }
+  });
+
+  // Close dropdown on resize if switching between desktop/mobile
+  window.addEventListener('resize', () => {
+    if (window.innerWidth > 768) userProfile.classList.remove('open');
+  });
+});
+</script>
 </body>
 </html>

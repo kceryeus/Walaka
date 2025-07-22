@@ -474,48 +474,53 @@
       }
     });
   </script>
+  <script type="module">
+    import { logUserAction } from '../../js/logUserAction.js';
+    document.addEventListener('DOMContentLoaded', () => {
+      logUserAction('page_visit', 'User visited page: clients.html');
+    });
+  </script>
   <script src="../components/user-restrictions.js"></script>
   <script>
-    const menuToggle = document.createElement('div');
-    menuToggle.className = 'menu-toggle';
-    menuToggle.innerHTML = '<i class="fas fa-bars"></i>';
-    document.querySelector('.top-bar').prepend(menuToggle);
-
-    menuToggle.addEventListener('click', () => {
-      document.querySelector('.sidebar').classList.toggle('active');
-    });
-
-    window.addEventListener('load', () => {
-      document.body.classList.add('loaded');
-    });
-
-            // Dropdown open/close logic for user menu
-        const userProfile = document.getElementById('userProfile');
-        const userDropdown = document.getElementById('userDropdown');
-
-        let dropdownTimeout;
-
-        function openDropdown() {
-            clearTimeout(dropdownTimeout);
-            userProfile.classList.add('open');
-        }
-        function closeDropdown() {
-            dropdownTimeout = setTimeout(() => {
-                userProfile.classList.remove('open');
-            }, 150);
-        }
-
-        userProfile.addEventListener('mouseenter', openDropdown);
-        userProfile.addEventListener('mouseleave', closeDropdown);
-        userDropdown.addEventListener('mouseenter', openDropdown);
-        userDropdown.addEventListener('mouseleave', closeDropdown);
-
-        // Optional: close on click outside
-        document.addEventListener('click', function(e) {
-            if (!userProfile.contains(e.target)) {
-                userProfile.classList.remove('open');
-            }
+    document.addEventListener('DOMContentLoaded', function() {
+      const dashboardContainer = document.querySelector('.dashboard-container');
+      let menuToggle = document.querySelector('.menu-toggle');
+      const sidebarOverlay = document.querySelector('.sidebar-overlay');
+      // If menu-toggle doesn't exist, create it for legacy support
+      if (!menuToggle) {
+        menuToggle = document.createElement('button');
+        menuToggle.className = 'menu-toggle';
+        menuToggle.innerHTML = '<i class="fas fa-bars"></i>';
+        const topBar = document.querySelector('.top-bar');
+        if (topBar) topBar.prepend(menuToggle);
+      }
+      // Toggle sidebar on menu button click
+      if (menuToggle) {
+        menuToggle.addEventListener('click', function() {
+          dashboardContainer.classList.toggle('sidebar-active');
         });
+      }
+      // Close sidebar on overlay click
+      if (sidebarOverlay) {
+        sidebarOverlay.addEventListener('click', function() {
+          dashboardContainer.classList.remove('sidebar-active');
+        });
+      }
+      // Optional: close sidebar on ESC key
+      document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+          dashboardContainer.classList.remove('sidebar-active');
+        }
+      });
+      // On resize, remove sidebar-active if desktop
+      function handleResize() {
+        if (window.innerWidth >= 992) {
+          dashboardContainer.classList.remove('sidebar-active');
+        }
+      }
+      window.addEventListener('resize', handleResize);
+      handleResize();
+    });
   </script>
 </body>
 </html>

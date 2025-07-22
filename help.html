@@ -245,11 +245,18 @@
                 fetch(`${basePath}components/sidebar.html`)
                     .then(response => response.text())
                     .then(html => {
-                        document.getElementById('sidebar-container').innerHTML = html;
+                        // Extract only the inner content of <nav class="sidebar">
+                        const tempDiv = document.createElement('div');
+                        tempDiv.innerHTML = html;
+                        const navSidebar = tempDiv.querySelector('nav.sidebar');
+                        if (navSidebar) {
+                            document.getElementById('sidebar-container').innerHTML = navSidebar.innerHTML;
+                        } else {
+                            document.getElementById('sidebar-container').innerHTML = html; // fallback
+                        }
                         var script = document.createElement('script');
                         script.src = `${basePath}components/sidebar-actions.js`;
                         document.body.appendChild(script);
-                        // Dynamically load the sidebar-darkmode.js script after sidebar is injected
                         var darkmodeScript = document.createElement('script');
                         darkmodeScript.src = `${basePath}components/sidebar-darkmode.js`;
                         darkmodeScript.onload = function() {
@@ -265,6 +272,8 @@
             });
             </script>
         </aside>
+        <!-- Sidebar overlay for mobile/tablet -->
+        <div class="sidebar-overlay"></div>
         <main class="main-content">
             <!-- Top Bar -->
             <div class="top-bar">
@@ -440,16 +449,16 @@
       console.log('[Carta PDF] cargo_responsavel_legal:', data.cargo_responsavel_legal);
       console.log('[Carta PDF] Todos os dados do formulário:', data);
       const cartaHtml = `
-        <div style="font-family:Aptos, sans-serif; margin:0 auto; padding:0.5cm 2cm 2cm 2cm; line-height:1.5; font-size:12pt; color:#222; text-align:justify;">
+        <div style="font-family:Aptos, sans-serif; margin:0 auto; padding:2cm 2cm 2cm 2cm; line-height:1.5; font-size:12pt; color:#222; text-align:justify;">
           <p style="margin-bottom: 14px; font-size:12pt; text-align:left;">A Sua Excelência o Diretor do __º Bairro Fiscal<br>
           Autoridade Tributária de Moçambique</p><br>
           <p style="margin-bottom: 12px;"><strong>ASSUNTO:</strong> Solicitação de Autorização para Utilização de Software de Faturação</p>
           <p style="margin-bottom: 14px;"><strong>NOME DO SUJEITO PASSIVO:</strong> ${data.nome_sujeito_passivo}</p>
           <p style="margin-bottom: 14px;"><strong>NUIT:</strong> ${data.nuit_sujeito_passivo}</p><br>
           <p style="margin-bottom: 14px;">Prezado Senhor Director,</p>
-          <p style="margin-bottom: 14px;">${data.nome_sujeito_passivo}, empresa privada dedicada à ${data.atividade_empresa}, com o Número Único de Identificação Tributária (NUIT) ${data.nuit_sujeito_passivo}, vem por este meio, respeitosamente, solicitar a Vossa Excelência a autorização para a utilização do software de faturação Walaka Software.</p>
+          <p style="margin-bottom: 14px;">${data.nome_sujeito_passivo}, empresa privada dedicada à ${data.atividade_empresa}, com o Número Único de Identificação Tributária (NUIT) ${data.nuit_sujeito_passivo}, vem por este meio, respeitosamente, solicitar a Vossa Excelência a autorização para a utilização do software de facturação Walaka Software.</p>
           <p style="margin-bottom: 14px;">Este sistema, desenvolvido pela Walaka Software, Limitada, cumpre integralmente os requisitos estabelecidos pelo Despacho do Ministro das Finanças de 22 de Dezembro de 2011, publicado no Boletim da República nº 9, I Série, de 29 de Fevereiro de 2012.</p>
-          <p style="margin-bottom: 14px;">Pretendemos iniciar a utilização do Walaka Software a partir do dia ${data.data_inicio_uso.split('-').reverse().join('/')} , contribuindo para a eficiência e transparência dos nossos processos de faturação.</p>
+          <p style="margin-bottom: 14px;">Pretendemos iniciar a utilização do Walaka Software a partir do dia ${data.data_inicio_uso.split('-').reverse().join('/')} , contribuindo para a eficiência e transparência dos nossos processos de facturação.</p>
           <p style="margin-bottom: 14px;">Para o devido tratamento deste pedido, anexamos a esta carta a Memória Descritiva detalhada do Walaka Software e um exemplar de factura emitida pelo mesmo, conforme o exigido pelas normativas em vigor.</p>
           <p style="margin-bottom: 14px;">Certo da Vossa melhor atenção, apresentamos os nossos melhores cumprimentos e pedimos deferimento.</p><br><br>
           <p style="margin-bottom: 14px;">Atenciosamente,</p>
@@ -473,4 +482,46 @@ function atividadeConstraint(input) {
   });
   input.setCustomValidity('');
 }
+</script>
+<!-- Sidebar toggle logic for responsive (ensure this is last) -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const container = document.querySelector('.container');
+  let menuToggle = document.querySelector('.menu-toggle');
+  const sidebarOverlay = document.querySelector('.sidebar-overlay');
+  // If menu-toggle doesn't exist, create it for legacy support
+  if (!menuToggle) {
+    menuToggle = document.createElement('button');
+    menuToggle.className = 'menu-toggle';
+    menuToggle.innerHTML = '<i class="fas fa-bars"></i>';
+    const topBar = document.querySelector('.top-bar');
+    if (topBar) topBar.prepend(menuToggle);
+  }
+  // Toggle sidebar on menu button click
+  if (menuToggle) {
+    menuToggle.addEventListener('click', function() {
+      container.classList.toggle('sidebar-active');
+    });
+  }
+  // Close sidebar on overlay click
+  if (sidebarOverlay) {
+    sidebarOverlay.addEventListener('click', function() {
+      container.classList.remove('sidebar-active');
+    });
+  }
+  // Optional: close sidebar on ESC key
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+      container.classList.remove('sidebar-active');
+    }
+  });
+  // On resize, remove sidebar-active if desktop
+  function handleResize() {
+    if (window.innerWidth >= 992) {
+      container.classList.remove('sidebar-active');
+    }
+  }
+  window.addEventListener('resize', handleResize);
+  handleResize();
+});
 </script>

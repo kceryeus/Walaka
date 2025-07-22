@@ -48,7 +48,7 @@ const pageHintsConfig = {
         },
         'productName': {
             title: 'Nome do Produto',
-            description: 'Digite o nome do produto ou serviço a ser faturado.'
+            description: 'Digite o nome do produto ou serviço a ser facturado.'
         },
         'productQuantity': {
             title: 'Quantidade',
@@ -60,7 +60,7 @@ const pageHintsConfig = {
         },
         'saveProductBtn': {
             title: 'Salvar Produto',
-            description: 'Salve os detalhes do produto na fatura. Você pode editar depois.'
+            description: 'Salve os detalhes do produto na factura. Você pode editar depois.'
         },
         'creditNotesTab': {
             title: 'Notas de Crédito',
@@ -76,15 +76,15 @@ const pageHintsConfig = {
         },
         'invoice-number': {
             title: 'Número da Fatura',
-            description: 'Número sequencial único para cada fatura. O sistema gera automaticamente, mas pode ser personalizado.'
+            description: 'Número sequencial único para cada factura. O sistema gera automaticamente, mas pode ser personalizado.'
         },
         'client-select': {
             title: 'Seleção de Cliente',
-            description: 'Escolha o cliente para a fatura. Se o cliente não existir, você pode adicionar um novo clicando em "Novo Cliente".'
+            description: 'Escolha o cliente para a factura. Se o cliente não existir, você pode adicionar um novo clicando em "Novo Cliente".'
         },
         'invoice-date': {
             title: 'Data da Fatura',
-            description: 'Data de emissão da fatura. Importante para controle fiscal e financeiro.'
+            description: 'Data de emissão da factura. Importante para controle fiscal e financeiro.'
         },
         'due-date': {
             title: 'Data de Vencimento',
@@ -92,7 +92,7 @@ const pageHintsConfig = {
         },
         'product-select': {
             title: 'Seleção de Produto',
-            description: 'Adicione produtos ou serviços à fatura. Você pode ajustar quantidades e preços conforme necessário.'
+            description: 'Adicione produtos ou serviços à factura. Você pode ajustar quantidades e preços conforme necessário.'
         },
         'payment-terms': {
             title: 'Termos de Pagamento',
@@ -108,7 +108,7 @@ const pageHintsConfig = {
         },
         'exportCsv': {
             title: 'Exportar CSV',
-            description: 'Exporte dados das faturas em formato CSV para análise em Excel ou outros programas. Escolha os campos a serem incluídos.'
+            description: 'Exporte dados das facturas em formato CSV para análise em Excel ou outros programas. Escolha os campos a serem incluídos.'
         },
         'exportPeriod': {
             title: 'Período de Exportação',
@@ -116,7 +116,7 @@ const pageHintsConfig = {
         },
         'exportOptions': {
             title: 'Opções de Exportação',
-            description: 'Escolha entre exportar todas as faturas ou apenas as selecionadas. Configure filtros adicionais se necessário.'
+            description: 'Escolha entre exportar todas as facturas ou apenas as selecionadas. Configure filtros adicionais se necessário.'
         },
         'revenueDistribution': {
             title: 'Distribuição de Receitas',
@@ -132,7 +132,7 @@ const pageHintsConfig = {
         },
         'revenueByClient': {
             title: 'Receitas por Cliente',
-            description: 'Análise detalhada das receitas por cliente. Identifique os principais contribuintes para o faturamento.'
+            description: 'Análise detalhada das receitas por cliente. Identifique os principais contribuintes para o facturamento.'
         },
         'revenueByProduct': {
             title: 'Receitas por Produto',
@@ -176,11 +176,11 @@ const pageHintsConfig = {
         },
         'invoiceStatusChart': {
             title: 'Status das Faturas',
-            description: 'Distribuição das faturas por status: Pagas, Pendentes ou Vencidas. Clique nas legendas para filtrar.'
+            description: 'Distribuição das facturas por status: Pagas, Pendentes ou Vencidas. Clique nas legendas para filtrar.'
         },
         'invoiceStats': {
             title: 'Estatísticas de Faturas',
-            description: 'Métricas principais: total de faturas, pagas, pendentes e vencidas. Atualizado em tempo real.'
+            description: 'Métricas principais: total de facturas, pagas, pendentes e vencidas. Atualizado em tempo real.'
         },
         'topClients': {
             title: 'Principais Clientes',
@@ -188,11 +188,11 @@ const pageHintsConfig = {
         },
         'quickActions': {
             title: 'Ações Rápidas',
-            description: 'Acesse rapidamente tarefas comuns: criar fatura, adicionar cliente, adicionar produto ou exportar relatório.'
+            description: 'Acesse rapidamente tarefas comuns: criar factura, adicionar cliente, adicionar produto ou exportar relatório.'
         },
         'newInvoiceCard': {
             title: 'Nova Fatura',
-            description: 'Inicie o processo de criação de uma nova fatura. Escolha entre fatura normal ou recibo.'
+            description: 'Inicie o processo de criação de uma nova factura. Escolha entre factura normal ou recibo.'
         },
         'addClientCard': {
             title: 'Adicionar Cliente',
@@ -208,11 +208,11 @@ const pageHintsConfig = {
         },
         'recentInvoicesTable': {
             title: 'Faturas Recentes',
-            description: 'Lista das faturas mais recentes. Filtre por Status, Período ou Valor para encontrar faturas específicas.'
+            description: 'Lista das facturas mais recentes. Filtre por Status, Período ou Valor para encontrar facturas específicas.'
         },
         'statusFilter': {
             title: 'Filtro por Status',
-            description: 'Filtre faturas por status: Todas, Pagas, Pendentes, Vencidas ou Canceladas.'
+            description: 'Filtre facturas por status: Todas, Pagas, Pendentes, Vencidas ou Canceladas.'
         },
         'dateRangeFilter': {
             title: 'Filtro por Data',
@@ -220,7 +220,7 @@ const pageHintsConfig = {
         },
         'amountFilter': {
             title: 'Filtro por Valor',
-            description: 'Filtre faturas por faixa de valor. Defina valores mínimo e máximo.'
+            description: 'Filtre facturas por faixa de valor. Defina valores mínimo e máximo.'
         },
         'languageToggle': {
             title: 'Alterar Idioma',
@@ -228,7 +228,7 @@ const pageHintsConfig = {
         },
         'revenue-metric': {
             title: 'Receitas',
-            description: 'Mostra o total de receitas do período selecionado. Inclui todas as faturas pagas e recebimentos confirmados.'
+            description: 'Mostra o total de receitas do período selecionado. Inclui todas as facturas pagas e recebimentos confirmados.'
         },
         'expenses-metric': {
             title: 'Despesas',
@@ -280,7 +280,7 @@ const pageHintsConfig = {
         },
         'billing-address': {
             title: 'Endereço de Faturação',
-            description: 'Endereço completo para envio de faturas. Inclua rua, número e complemento.'
+            description: 'Endereço completo para envio de facturas. Inclua rua, número e complemento.'
         },
         'street-name': {
             title: 'Rua',
@@ -308,7 +308,7 @@ const pageHintsConfig = {
         },
         'ship-to-address': {
             title: 'Endereço de Entrega',
-            description: 'Endereço alternativo para entrega de mercadorias, se diferente do endereço de faturação.'
+            description: 'Endereço alternativo para entrega de mercadorias, se diferente do endereço de facturação.'
         },
         'building-number': {
             title: 'Número do Prédio',
@@ -424,7 +424,7 @@ const pageHintsConfig = {
         },
         'notifications': {
             title: 'Notificações',
-            description: 'Veja alertas sobre faturas vencidas, estoque baixo e outras notificações importantes.'
+            description: 'Veja alertas sobre facturas vencidas, estoque baixo e outras notificações importantes.'
         }
     }
 };
@@ -472,7 +472,7 @@ class PageHints {
                 {
                     id: 'revenue-metric',
                     title: 'Receitas',
-                    description: 'Mostra o total de receitas do período selecionado. Inclui todas as faturas pagas e recebimentos confirmados.'
+                    description: 'Mostra o total de receitas do período selecionado. Inclui todas as facturas pagas e recebimentos confirmados.'
                 },
                 {
                     id: 'expenses-metric',
@@ -504,17 +504,17 @@ class PageHints {
                 {
                     id: 'invoice-number',
                     title: 'Número da Fatura',
-                    description: 'Número sequencial único para cada fatura. O sistema gera automaticamente, mas pode ser personalizado.'
+                    description: 'Número sequencial único para cada factura. O sistema gera automaticamente, mas pode ser personalizado.'
                 },
                 {
                     id: 'client-select',
                     title: 'Seleção de Cliente',
-                    description: 'Escolha o cliente para a fatura. Se o cliente não existir, você pode adicionar um novo clicando em "Novo Cliente".'
+                    description: 'Escolha o cliente para a factura. Se o cliente não existir, você pode adicionar um novo clicando em "Novo Cliente".'
                 },
                 {
                     id: 'invoice-date',
                     title: 'Data da Fatura',
-                    description: 'Data de emissão da fatura. Importante para controle fiscal e financeiro.'
+                    description: 'Data de emissão da factura. Importante para controle fiscal e financeiro.'
                 },
                 {
                     id: 'due-date',
@@ -524,7 +524,7 @@ class PageHints {
                 {
                     id: 'product-select',
                     title: 'Seleção de Produto',
-                    description: 'Adicione produtos ou serviços à fatura. Você pode ajustar quantidades e preços conforme necessário.'
+                    description: 'Adicione produtos ou serviços à factura. Você pode ajustar quantidades e preços conforme necessário.'
                 },
                 {
                     id: 'payment-terms',
@@ -546,7 +546,7 @@ class PageHints {
                 {
                     id: 'client-email',
                     title: 'Email',
-                    description: 'Email principal para comunicação. Importante para envio de faturas e notificações.'
+                    description: 'Email principal para comunicação. Importante para envio de facturas e notificações.'
                 },
                 {
                     id: 'client-phone',
@@ -556,12 +556,12 @@ class PageHints {
                 {
                     id: 'client-address',
                     title: 'Endereço',
-                    description: 'Endereço completo para correspondência e faturamento. Inclua CEP e país quando relevante.'
+                    description: 'Endereço completo para correspondência e facturamento. Inclua CEP e país quando relevante.'
                 },
                 {
                     id: 'client-tax-id',
                     title: 'NIF/NIPC',
-                    description: 'Número de identificação fiscal do cliente. Necessário para faturação e relatórios fiscais.'
+                    description: 'Número de identificação fiscal do cliente. Necessário para facturação e relatórios fiscais.'
                 },
                 {
                     id: 'client-category',

@@ -54,6 +54,34 @@
         padding: 10px 10px 0 10px;
         margin-bottom: 8px;
     }
+    /* Add scrollable modal body for mobile */
+    @media (max-width: 600px) {
+      #\31 createReceiptModal .document-modal-content {
+        max-width: 98vw;
+        width: 98vw;
+        min-width: unset;
+        margin: 0;
+        padding: 0;
+        max-height: 90vh;
+        height: 90vh;
+        display: flex;
+        flex-direction: column;
+      }
+      #\31 createReceiptModal .document-modal-body {
+        flex: 1 1 auto;
+        min-height: 0;
+        overflow-y: auto;
+        padding: 10px 10px 0 10px;
+      }
+      #\31 createReceiptModal .document-modal-footer {
+        flex-shrink: 0;
+        position: sticky;
+        bottom: 0;
+        background: #fff;
+        z-index: 2;
+        border-top: 1px solid #eee;
+      }
+    }
     #\31 createReceiptModal .form-section h3 {
         font-size: 1.05rem;
         margin-bottom: 8px;
@@ -334,34 +362,43 @@
 
 <body>
     <div class="dashboard-container">
-        <!-- Sidebar Menu -->
-        <div id="sidebar-container"></div>
-        <script>
-        // Dynamically load the sidebar from components/sidebar.html
-        document.addEventListener('DOMContentLoaded', function() {
-            fetch('components/sidebar.html')
-                .then(response => response.text())
-                .then(html => {
-                    document.getElementById('sidebar-container').innerHTML = html;
-                    // Dynamically load the sidebar-actions.js script after sidebar is injected
-                    var script = document.createElement('script');
-                    script.src = 'components/sidebar-actions.js';
-                    document.body.appendChild(script);
-                    // Dynamically load the sidebar-darkmode.js script after sidebar is injected
-                    var darkmodeScript = document.createElement('script');
-                    darkmodeScript.src = 'components/sidebar-darkmode.js';
-                    darkmodeScript.onload = function() {
-                        setTimeout(function() {
-                            if (window.initSidebarDarkModeIcon) window.initSidebarDarkModeIcon();
-                        }, 100);
-                    };
-                    document.body.appendChild(darkmodeScript);
-                })
-                .catch(err => {
-                    console.error('Failed to load sidebar:', err);
-                });
-        });
-        </script>
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div id="sidebar-container"></div>
+            <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                fetch('components/sidebar.html')
+                    .then(response => response.text())
+                    .then(html => {
+                        // Extract only the inner content of <nav class="sidebar">
+                        const tempDiv = document.createElement('div');
+                        tempDiv.innerHTML = html;
+                        const navSidebar = tempDiv.querySelector('nav.sidebar');
+                        if (navSidebar) {
+                            document.getElementById('sidebar-container').innerHTML = navSidebar.innerHTML;
+                        } else {
+                            document.getElementById('sidebar-container').innerHTML = html; // fallback
+                        }
+                        var script = document.createElement('script');
+                        script.src = 'components/sidebar-actions.js';
+                        document.body.appendChild(script);
+                        var darkmodeScript = document.createElement('script');
+                        darkmodeScript.src = 'components/sidebar-darkmode.js';
+                        darkmodeScript.onload = function() {
+                            setTimeout(function() {
+                                if (window.initSidebarDarkModeIcon) window.initSidebarDarkModeIcon();
+                            }, 100);
+                        };
+                        document.body.appendChild(darkmodeScript);
+                    })
+                    .catch(err => {
+                        console.error('Failed to load sidebar:', err);
+                    });
+            });
+            </script>
+        </aside>
+        <!-- Sidebar overlay for mobile/tablet -->
+        <div class="sidebar-overlay"></div>
 
         <div class="main-content">
             <div class="top-bar">
@@ -638,7 +675,7 @@
             try {
                 console.log('Mark as Paid chamado', invoiceNumber);
 
-                // Atualiza status da fatura
+                // Atualiza status da factura
                 const { error: updateError } = await window.supabase
                     .from('invoices')
                     .update({ status: 'paid', paid_date: new Date().toISOString() })
@@ -646,14 +683,14 @@
 
                 if (updateError) throw updateError;
 
-                // Busca os dados da fatura
+                // Busca os dados da factura
                 const { data: invoice, error: fetchError } = await window.supabase
                     .from('invoices')
                     .select('*')
                     .eq('invoiceNumber', invoiceNumber)
                     .single();
 
-                console.log('Dados da fatura:', invoice);
+                console.log('Dados da factura:', invoice);
 
                 if (fetchError) throw fetchError;
 
@@ -723,6 +760,46 @@
   if (!theme) theme = 'light';
   document.documentElement.setAttribute('data-theme', theme);
 })();
+</script>
+<script type="module">
+  import { logUserAction } from './js/logUserAction.js';
+  document.addEventListener('DOMContentLoaded', () => {
+    logUserAction('page_visit', 'User visited page: receipts.html');
+  });
+</script>
+<!-- Sidebar toggle logic for responsive (ensure this is last) -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const dashboardContainer = document.querySelector('.dashboard-container');
+  const menuToggle = document.querySelector('.menu-toggle');
+  const sidebarOverlay = document.querySelector('.sidebar-overlay');
+  // Open sidebar
+  if (menuToggle) {
+    menuToggle.addEventListener('click', function() {
+      dashboardContainer.classList.add('sidebar-active');
+    });
+  }
+  // Close sidebar on overlay click
+  if (sidebarOverlay) {
+    sidebarOverlay.addEventListener('click', function() {
+      dashboardContainer.classList.remove('sidebar-active');
+    });
+  }
+  // Optional: close sidebar on ESC key
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+      dashboardContainer.classList.remove('sidebar-active');
+    }
+  });
+  // On resize, remove sidebar-active if desktop
+  function handleResize() {
+    if (window.innerWidth >= 992) {
+      dashboardContainer.classList.remove('sidebar-active');
+    }
+  }
+  window.addEventListener('resize', handleResize);
+  handleResize();
+});
 </script>
 </body>
 

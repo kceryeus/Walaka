@@ -74,9 +74,9 @@ function updateEmailTemplate() {
         
         const messageTemplate = `Prezado(a) ${clientName},
 
-Segue em anexo a fatura #${invoiceNumber} no valor de ${totalAmount} com vencimento em ${dueDate}.
+Segue em anexo a factura #${invoiceNumber} no valor de ${totalAmount} com vencimento em ${dueDate}.
 
-Por favor, utilize as informações de pagamento incluídas na fatura para efetuar o pagamento.
+Por favor, utilize as informações de pagamento incluídas na factura para efetuar o pagamento.
 
 Atenciosamente,
 ${companyName}`;
@@ -214,7 +214,7 @@ async function sendInvoiceEmail(invoiceData, emailSettings) {
     // This would connect to a real email sending service like SendGrid
     // For now we'll simulate the process
     
-    showLoading('Enviando email da fatura...');
+    showLoading('Enviando email da factura...');
     
     return new Promise((resolve) => {
         setTimeout(() => {

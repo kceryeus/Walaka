@@ -5,8 +5,6 @@
 
 console.log('[Onboarding] getting-started.js loaded');
 
-import { supabase } from '../../auth.js';
-
 // Initialize onboarding data
 let onboardingData = {
     organization: {
@@ -31,6 +29,7 @@ const PLAN_CONFIG = {
 // Check if user needs onboarding
 document.addEventListener('DOMContentLoaded', async function() {
     // Check authentication first
+    const supabase = window.supabase;
     const { data: { session }, error } = await supabase.auth.getSession();
     if (error || !session) {
         window.location.href = '../login.html';
@@ -259,7 +258,7 @@ function setupEventListeners() {
         option.addEventListener('click', () => {
             document.querySelectorAll('.color-option').forEach(opt => opt.classList.remove('selected'));
             option.classList.add('selected');
-            onboardingData.invoice.color = option.dataset.color;
+            onboardingData.invoice.color = option.dataset.color; // Always store hex value
         });
     });
 
@@ -309,6 +308,7 @@ async function saveAndContinue(step) {
         console.error('[Onboarding] saveAndContinue called with invalid step:', step);
         return;
     }
+    const supabase = window.supabase;
     const form = document.getElementById(getFormId(step));
     const formData = new FormData(form);
     // Get userId at the start so it's available for all steps
@@ -332,13 +332,48 @@ async function saveAndContinue(step) {
             console.log('[Onboarding] onboardingData.organization:', onboardingData.organization);
             break;
         case '2':
+            // Ensure color is set to a hex value
+            let selectedColor = onboardingData.invoice.color;
+            if (!selectedColor) {
+                const firstColorOption = document.querySelector('.color-option');
+                selectedColor = firstColorOption ? firstColorOption.dataset.color : '#3498db';
+            }
             onboardingData.invoice = {
-                ...onboardingData.invoice,
-                ...Object.fromEntries(formData)
+                prefix: formData.get('invoice-prefix') || 'INV-',
+                next_number: parseInt(formData.get('invoice-next-number')) || 1001,
+                template: onboardingData.invoice.template || 'classic',
+                color: selectedColor,
+                currency: formData.get('default-currency') || 'MZN',
+                tax_rate: parseFloat(formData.get('default-tax-rate')) || 17,
+                payment_terms: formData.get('payment-terms') || 'net-30',
+                notes: formData.get('invoice-notes') || ''
             };
             // Only allow valid templates
-            if (!['classic', 'modern', 'standard', 'minimalist'].includes(onboardingData.invoice.template)) {
+            if (!['classic', 'modern'].includes(onboardingData.invoice.template)) {
                 onboardingData.invoice.template = 'classic';
+            }
+            // Save invoice settings to DB using the same structure as settings.js
+            const { data: existingSettings } = await supabase
+                .from('invoice_settings')
+                .select('id,created_at')
+                .eq('user_id', userId)
+                .single();
+            const invoiceSettingsPayload = {
+                user_id: userId,
+                ...onboardingData.invoice,
+                updated_at: new Date().toISOString()
+            };
+            if (existingSettings) {
+                invoiceSettingsPayload.created_at = existingSettings.created_at;
+                await supabase
+                    .from('invoice_settings')
+                    .update(invoiceSettingsPayload)
+                    .eq('user_id', userId);
+            } else {
+                invoiceSettingsPayload.created_at = new Date().toISOString();
+                await supabase
+                    .from('invoice_settings')
+                    .insert([invoiceSettingsPayload]);
             }
             break;
         case '3':
@@ -396,26 +431,7 @@ async function saveAndContinue(step) {
 
             if (businessError) throw businessError;
         } else if (step === '2') {
-            // Save invoice settings (only use valid columns)
-            const invoiceData = {
-                user_id: userId,
-                prefix: onboardingData.invoice.prefix,
-                next_number: onboardingData.invoice.next_number,
-                template: onboardingData.invoice.template,
-                color: onboardingData.invoice.color,
-                currency: onboardingData.invoice.currency,
-                tax_rate: onboardingData.invoice.tax_rate,
-                payment_terms: onboardingData.invoice.payment_terms,
-                notes: onboardingData.invoice.notes,
-                created_at: new Date().toISOString(),
-                updated_at: new Date().toISOString()
-            };
-            // Remove undefined fields
-            Object.keys(invoiceData).forEach(key => invoiceData[key] === undefined && delete invoiceData[key]);
-            const { error: invoiceError } = await supabase
-                .from('invoice_settings')
-                .upsert(invoiceData);
-            if (invoiceError) throw invoiceError;
+            // Save invoice settings (already handled above)
         } else if (step === '3') {
             // Save subscription (already handled above)
         } else if (step === '4') {
@@ -439,6 +455,7 @@ async function saveAndContinue(step) {
 // Complete setup
 async function completeSetup() {
     try {
+        const supabase = window.supabase;
         const { data: { session } } = await supabase.auth.getSession();
         const userId = session.user.id;
 
@@ -508,6 +525,7 @@ function isValidStep(step) {
 
 // --- CAE Industry Fetch & Populate ---
 async function fetchAndPopulateIndustries() {
+    const supabase = window.supabase;
     const industrySelect = document.getElementById('org-industry');
     if (!industrySelect) return;
     try {
@@ -538,6 +556,7 @@ async function fetchAndPopulateIndustries() {
 
 // Add NUIT validation for organization (business) - must be 9 digits and start with 4
 function validateOrganizationNUIT(value) {
+    const supabase = window.supabase;
     const cleanNUIT = (value || '').replace(/\D/g, '');
     if (!cleanNUIT) {
         return { isValid: false, message: 'NUIT is required' };

@@ -314,12 +314,12 @@ function initEventListeners() {
     document.getElementById('email-invoice').addEventListener('click', function() {
         const invoiceData = collectInvoiceData();
         if (!invoiceData.client.email) {
-            alert('Por favor, adicione um email de cliente válido antes de enviar a fatura.');
+            alert('Por favor, adicione um email de cliente válido antes de enviar a factura.');
             return;
         }
         
         // Confirm before sending
-        if (confirm(`Deseja enviar esta fatura por email para ${invoiceData.client.email}?`)) {
+        if (confirm(`Deseja enviar esta factura por email para ${invoiceData.client.email}?`)) {
             sendInvoiceEmail(invoiceData, invoiceData.invoice.email);
         }
     });
@@ -733,7 +733,7 @@ function processPayment(invoiceData) {
         setTimeout(() => {
             hideLoading();
             document.body.removeChild(modal);
-            alert(`Pagamento para a fatura #${invoiceNumber} processado com sucesso!`);
+            alert(`Pagamento para a factura #${invoiceNumber} processado com sucesso!`);
             
             // Optionally mark the invoice as paid
             // markInvoiceAsPaid(invoiceNumber);

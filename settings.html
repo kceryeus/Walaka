@@ -97,45 +97,43 @@
 </head>
 <body>
   <div class="dashboard-container">
-    <!-- Sidebar Menu -->
-    <div id="sidebar-container"></div>
-    <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // Load sidebar
-        fetch('components/sidebar.html')
-            .then(response => response.text())
-            .then(html => {
-                document.getElementById('sidebar-container').innerHTML = html;
-                // Load sidebar actions
-                var script = document.createElement('script');
-                script.src = 'components/sidebar-actions.js';
-                document.body.appendChild(script);
-                // Dynamically load the sidebar-darkmode.js script after sidebar is injected
-                var darkmodeScript = document.createElement('script');
-                darkmodeScript.src = 'components/sidebar-darkmode.js';
-                darkmodeScript.onload = function() {
-                    setTimeout(function() {
-                        if (window.initSidebarDarkModeIcon) window.initSidebarDarkModeIcon();
-                    }, 100);
-                };
-                document.body.appendChild(darkmodeScript);
-            })
-            .catch(err => {
-                console.error('Failed to load sidebar:', err);
-            });
-
-        // Listen for language change in the settings page
-        var langSelect = document.getElementById('user-language');
-        if (langSelect) {
-            langSelect.addEventListener('change', function(e) {
-                var lang = e.target.value;
-                if (window.languageManager) {
-                    window.languageManager.setLanguage(lang);
-                }
-            });
-        }
-    });
-    </script>
+    <!-- Sidebar as direct child of dashboard-container -->
+    <aside class="sidebar">
+      <div id="sidebar-container"></div>
+      <script>
+      document.addEventListener('DOMContentLoaded', function() {
+          fetch('components/sidebar.html')
+              .then(response => response.text())
+              .then(html => {
+                  // Extract only the inner content of <nav class="sidebar">
+                  const tempDiv = document.createElement('div');
+                  tempDiv.innerHTML = html;
+                  const navSidebar = tempDiv.querySelector('nav.sidebar');
+                  if (navSidebar) {
+                      document.getElementById('sidebar-container').innerHTML = navSidebar.innerHTML;
+                  } else {
+                      document.getElementById('sidebar-container').innerHTML = html; // fallback
+                  }
+                  var script = document.createElement('script');
+                  script.src = 'components/sidebar-actions.js';
+                  document.body.appendChild(script);
+                  var darkmodeScript = document.createElement('script');
+                  darkmodeScript.src = 'components/sidebar-darkmode.js';
+                  darkmodeScript.onload = function() {
+                      setTimeout(function() {
+                          if (window.initSidebarDarkModeIcon) window.initSidebarDarkModeIcon();
+                      }, 100);
+                  };
+                  document.body.appendChild(darkmodeScript);
+              })
+              .catch(err => {
+                  console.error('Failed to load sidebar:', err);
+              });
+      });
+      </script>
+    </aside>
+    <!-- Sidebar overlay for mobile/tablet -->
+    <div class="sidebar-overlay"></div>
 
     <script type="module">
       import { requireAuth } from './js/auth.js';
@@ -398,15 +396,13 @@
                     <select id="invoice-template" name="invoice-template">
                       <option value="classic" data-translate="classic_template">Classic Template</option>
                       <option value="modern" data-translate="modern_template">Modern Template</option>
-                      <option value="standard" data-translate="standard_template">Standard Template</option>
-                      <option value="minimalist" data-translate="minimalist_template">Minimalist Template</option>
                     </select>
-                    <div class="template-preview">
+                    <!--<div class="template-preview">
                       <h4 data-translate="template_preview">Template Preview</h4>
                       <div id="template-preview-container" class="preview-container">
-                        <!-- Template preview will be loaded here -->
+                         Template preview will be loaded here 
                       </div>
-                    </div>
+                    </div>-->
                   </div>
 
                   <div class="form-control">
@@ -794,5 +790,45 @@
   <script src="assets/js/settings.js"></script>
   <script src="components/user-restrictions.js"></script>
   
+  <script type="module">
+    import { logUserAction } from './js/logUserAction.js';
+    document.addEventListener('DOMContentLoaded', () => {
+      logUserAction('page_visit', 'User visited page: settings.html');
+    });
+  </script>
 </body>
+<!-- Sidebar toggle logic for responsive (ensure this is last) -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const dashboardContainer = document.querySelector('.dashboard-container');
+  const menuToggle = document.querySelector('.menu-toggle');
+  const sidebarOverlay = document.querySelector('.sidebar-overlay');
+  // Toggle sidebar on menu button click
+  if (menuToggle) {
+    menuToggle.addEventListener('click', function() {
+      dashboardContainer.classList.toggle('sidebar-active');
+    });
+  }
+  // Close sidebar on overlay click
+  if (sidebarOverlay) {
+    sidebarOverlay.addEventListener('click', function() {
+      dashboardContainer.classList.remove('sidebar-active');
+    });
+  }
+  // Optional: close sidebar on ESC key
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+      dashboardContainer.classList.remove('sidebar-active');
+    }
+  });
+  // On resize, remove sidebar-active if desktop
+  function handleResize() {
+    if (window.innerWidth >= 992) {
+      dashboardContainer.classList.remove('sidebar-active');
+    }
+  }
+  window.addEventListener('resize', handleResize);
+  handleResize();
+});
+</script>
 </html>

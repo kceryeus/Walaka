@@ -45,7 +45,15 @@
                 fetch(`${basePath}components/sidebar.html`)
                     .then(response => response.text())
                     .then(html => {
-                        document.getElementById('sidebar-container').innerHTML = html;
+                        // Extract only the inner content of <nav class="sidebar">
+                        const tempDiv = document.createElement('div');
+                        tempDiv.innerHTML = html;
+                        const navSidebar = tempDiv.querySelector('nav.sidebar');
+                        if (navSidebar) {
+                            document.getElementById('sidebar-container').innerHTML = navSidebar.innerHTML;
+                        } else {
+                            document.getElementById('sidebar-container').innerHTML = html; // fallback
+                        }
                         // Dynamically load the sidebar-actions.js script after sidebar is injected
                         var script = document.createElement('script');
                         script.src = `${basePath}components/sidebar-actions.js?ts=${Date.now()}`;
@@ -70,6 +78,8 @@
             });
             </script>
         </aside>
+        <!-- Sidebar overlay for mobile/tablet -->
+        <div class="sidebar-overlay"></div>
         <main class="main-content">
             <!-- Top Bar -->
             <div class="top-bar">
@@ -956,6 +966,7 @@
     <!-- JavaScript -->
     <script type="module">
         import { requireAuth } from './auth.js';
+        import { logUserAction } from './js/logUserAction.js';
         // Use window.supabase directly (initialized by js/supabaseClient.js)
 
         // Log session and user on page load
@@ -1355,6 +1366,13 @@ document.addEventListener('DOMContentLoaded', function() {
   // Try again after a short delay in case scripts are async
   setTimeout(tryInitInvoiceActions, 200);
 });
+</script>
+<script type="module">
+  import { logUserAction } from './js/logUserAction.js';
+  window.logUserAction = logUserAction;
+  document.addEventListener('DOMContentLoaded', () => {
+    logUserAction('page_visit', 'User visited page: dashboard.html');
+  });
 </script>
 </body>
 </html>

@@ -83,6 +83,56 @@
   color: #fff !important;
   border-color: #2a2d3a !important;
 }
+@media (max-width: 600px) {
+  .top-bar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    z-index: 1000;
+    height: 56px;
+    background: #fff;
+    border-bottom: 1px solid #e5e7eb;
+    display: flex;
+    align-items: center;
+    padding: 0 12px;
+  }
+  .main-content {
+    padding-top: 56px;
+  }
+  [data-theme="dark"] .top-bar {
+    background: #23262f !important;
+    border-bottom: 1px solid #23262f;
+  }
+}
+.top-bar .menu-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  font-size: 1.6rem;
+  background: none;
+  border: none;
+  border-radius: 8px;
+  margin-right: 12px;
+  margin-left: 0;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.top-bar .menu-toggle:focus,
+.top-bar .menu-toggle:hover {
+  background: #f0f4fa;
+}
+@media (max-width: 600px) {
+  .top-bar .menu-toggle {
+    margin-right: 16px;
+    margin-left: 0;
+    width: 44px;
+    height: 44px;
+    font-size: 2rem;
+  }
+}
 </style>
 
 
@@ -492,6 +542,41 @@
         </main>
     </div>
 
+    <!-- Add sidebar overlay after sidebar -->
+    <div class="sidebar-overlay"></div>
+    <script>
+document.addEventListener('DOMContentLoaded', function() {
+  const dashboardContainer = document.querySelector('.dashboard-container');
+  const menuToggle = document.querySelector('.menu-toggle');
+  const sidebarOverlay = document.querySelector('.sidebar-overlay');
+  // Toggle sidebar on menu button click
+  if (menuToggle) {
+    menuToggle.addEventListener('click', function() {
+      dashboardContainer.classList.toggle('sidebar-active');
+    });
+  }
+  // Close sidebar on overlay click
+  if (sidebarOverlay) {
+    sidebarOverlay.addEventListener('click', function() {
+      dashboardContainer.classList.remove('sidebar-active');
+    });
+  }
+  // Optional: close sidebar on ESC key
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+      dashboardContainer.classList.remove('sidebar-active');
+    }
+  });
+  // On resize, remove sidebar-active if desktop
+  function handleResize() {
+    if (window.innerWidth >= 992) {
+      dashboardContainer.classList.remove('sidebar-active');
+    }
+  }
+  window.addEventListener('resize', handleResize);
+  handleResize();
+});
+</script>
     <!-- Ensure environment-utils is loaded first -->
     <script src="../js/environment-utils.js"></script>
     <!-- Then Supabase client -->

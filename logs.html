@@ -6,6 +6,7 @@
     <title>WALAKA - Logs do Sistema</title>
     <link rel="stylesheet" href="components/sidebar.css">
     <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="js/darkmode.js"></script>
     <style>
         .logs-container { padding: 20px; }
@@ -72,37 +73,168 @@
         [data-theme="dark"] .logs-container {
             box-shadow: 0 2px 8px rgba(0,0,0,0.18);
         }
+        .logs-filters-bar {
+            display: flex;
+            gap: 16px;
+            align-items: center;
+            background: #fff;
+            padding: 16px 20px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+            margin-bottom: 18px;
+            flex-wrap: wrap;
+        }
+        .logs-filters-bar label {
+            font-weight: 500;
+            color: #333;
+        }
+        .logs-filter.modern-input {
+            border: 1px solid #d0d7de;
+            border-radius: 8px;
+            padding: 7px 12px;
+            font-size: 1rem;
+            background: #f8fafc;
+            transition: border 0.2s, box-shadow 0.2s;
+            outline: none;
+        }
+        .logs-filter.modern-input:focus {
+            border: 1.5px solid #1976d2;
+            box-shadow: 0 0 0 2px #1976d220;
+            background: #fff;
+        }
+        .logs-filter.modern-input {
+            min-width: 120px;
+        }
+        #actionFilter.modern-input {
+            min-width: 160px;
+        }
+        .logs-table {
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.07);
+            background: #fff;
+        }
+        .logs-table th, .logs-table td {
+            padding: 12px 14px;
+            font-size: 1rem;
+        }
+        .logs-table th {
+            background: #f3f6fa;
+            color: #222;
+            font-weight: 600;
+            border-bottom: 2px solid #e0e6ed;
+        }
+        .logs-table tr:nth-child(even) td {
+            background: #f8fafc;
+        }
+        .logs-table tr:hover td {
+            background: #e3f0ff;
+            transition: background 0.2s;
+        }
+        .logs-table td {
+            border-bottom: 1px solid #f0f0f0;
+        }
+        #logsPagination {
+            margin-top: 18px;
+        }
+        .logs-pagination-btn {
+            border: none;
+            background: #1976d2;
+            color: #fff;
+            border-radius: 6px;
+            padding: 6px 18px;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background 0.18s;
+        }
+        .logs-pagination-btn:disabled {
+            background: #b0b8c1;
+            cursor: not-allowed;
+        }
+        .logs-pagination-btn:not(:disabled):hover {
+            background: #1256a3;
+        }
+        #logsPageInfo {
+            font-weight: 500;
+            color: #1976d2;
+            font-size: 1.05rem;
+        }
+        [data-theme="dark"] .logs-filters-bar {
+            background: #23262f;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.18);
+        }
+        [data-theme="dark"] .logs-filter.modern-input {
+            background: #181a20;
+            color: #f3f4f6;
+            border: 1px solid #333;
+        }
+        [data-theme="dark"] .logs-table {
+            background: #23262f;
+            color: #f3f4f6;
+        }
+        [data-theme="dark"] .logs-table th {
+            background: #23262f;
+            color: #b6c6d6;
+            border-bottom: 2px solid #333;
+        }
+        [data-theme="dark"] .logs-table tr:nth-child(even) td {
+            background: #181a20;
+        }
+        [data-theme="dark"] .logs-table tr:hover td {
+            background: #23262f;
+        }
+        [data-theme="dark"] .logs-pagination-btn {
+            background: #1976d2;
+            color: #fff;
+        }
+        [data-theme="dark"] .logs-pagination-btn:disabled {
+            background: #444a57;
+        }
+        [data-theme="dark"] #logsPageInfo {
+            color: #90caf9;
+        }
     </style>
 </head>
 <body>
     <div class="dashboard-container">
-        <!-- Sidebar Menu -->
-        <div id="sidebar-container"></div>
-        <script>
-        // Carrega a sidebar dinamicamente
-        document.addEventListener('DOMContentLoaded', function() {
-            fetch('components/sidebar.html')
-                .then(response => response.text())
-                .then(html => {
-                    document.getElementById('sidebar-container').innerHTML = html;
-                    var script = document.createElement('script');
-                    script.src = 'components/sidebar-actions.js';
-                    document.body.appendChild(script);
-                    // Dynamically load the sidebar-darkmode.js script after sidebar is injected
-                    var darkmodeScript = document.createElement('script');
-                    darkmodeScript.src = 'components/sidebar-darkmode.js';
-                    darkmodeScript.onload = function() {
-                        setTimeout(function() {
-                            if (window.initSidebarDarkModeIcon) window.initSidebarDarkModeIcon();
-                        }, 100);
-                    };
-                    document.body.appendChild(darkmodeScript);
-                })
-                .catch(err => {
-                    console.error('Failed to load sidebar:', err);
-                });
-        });
-        </script>
+        <!-- Sidebar as direct child of dashboard-container -->
+        <aside class="sidebar">
+            <div id="sidebar-container"></div>
+            <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                fetch('components/sidebar.html')
+                    .then(response => response.text())
+                    .then(html => {
+                        // Extract only the inner content of <nav class="sidebar">
+                        const tempDiv = document.createElement('div');
+                        tempDiv.innerHTML = html;
+                        const navSidebar = tempDiv.querySelector('nav.sidebar');
+                        if (navSidebar) {
+                            document.getElementById('sidebar-container').innerHTML = navSidebar.innerHTML;
+                        } else {
+                            document.getElementById('sidebar-container').innerHTML = html; // fallback
+                        }
+                        var script = document.createElement('script');
+                        script.src = 'components/sidebar-actions.js';
+                        document.body.appendChild(script);
+                        var darkmodeScript = document.createElement('script');
+                        darkmodeScript.src = 'components/sidebar-darkmode.js';
+                        darkmodeScript.onload = function() {
+                            setTimeout(function() {
+                                if (window.initSidebarDarkModeIcon) window.initSidebarDarkModeIcon();
+                            }, 100);
+                        };
+                        document.body.appendChild(darkmodeScript);
+                    })
+                    .catch(err => {
+                        console.error('Failed to load sidebar:', err);
+                    });
+            });
+            </script>
+        </aside>
+        <!-- Sidebar overlay for mobile/tablet -->
+        <div class="sidebar-overlay"></div>
 
         <!-- Main Content -->
         <main class="main-content">
@@ -134,7 +266,13 @@
             <div class="logs-container">
                 <div class="logs-header">
                     <span class="logs-title">Logs do Sistema</span>
-                    <select id="actionFilter" class="logs-filter">
+                </div>
+                <div class="logs-filters-bar">
+                    <label for="startDate">De:</label>
+                    <input type="date" id="startDate" class="logs-filter modern-input">
+                    <label for="endDate">Até:</label>
+                    <input type="date" id="endDate" class="logs-filter modern-input">
+                    <select id="actionFilter" class="logs-filter modern-input">
                         <option value="">Todas as Ações</option>
                         <option value="invoice_created">Factura criada</option>
                         <option value="client_created">Cliente criado</option>
@@ -160,6 +298,11 @@
                 </table>
                 <div class="logs-empty" id="logsEmpty" style="display:none;">
                     Nenhum log encontrado para o filtro selecionado.
+                </div>
+                <div id="logsPagination" style="display:flex;justify-content:center;align-items:center;gap:10px;margin-top:15px;">
+                    <button id="logsPrevPage" class="logs-pagination-btn" style="padding:4px 12px;">Anterior</button>
+                    <span id="logsPageInfo">Página 1</span>
+                    <button id="logsNextPage" class="logs-pagination-btn" style="padding:4px 12px;">Próxima</button>
                 </div>
                 <div style="margin-top:10px; color:#b71c1c; font-size:0.95em;">
                     <b>Redflag:</b> indica logs marcados para investigação (possível bug, tentativa de fraude, etc).
@@ -230,6 +373,40 @@
         document.getElementById('sign-out-btn')?.addEventListener('click', () => {
             if (window.supabase) window.supabase.auth.signOut();
         });
+    });
+    </script>
+    <!-- Sidebar toggle logic for responsive (ensure this is last) -->
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      const dashboardContainer = document.querySelector('.dashboard-container');
+      const menuToggle = document.querySelector('.menu-toggle');
+      const sidebarOverlay = document.querySelector('.sidebar-overlay');
+      // Toggle sidebar on menu button click
+      if (menuToggle) {
+        menuToggle.addEventListener('click', function() {
+          dashboardContainer.classList.toggle('sidebar-active');
+        });
+      }
+      // Close sidebar on overlay click
+      if (sidebarOverlay) {
+        sidebarOverlay.addEventListener('click', function() {
+          dashboardContainer.classList.remove('sidebar-active');
+        });
+      }
+      // Optional: close sidebar on ESC key
+      document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+          dashboardContainer.classList.remove('sidebar-active');
+        }
+      });
+      // On resize, remove sidebar-active if desktop
+      function handleResize() {
+        if (window.innerWidth >= 992) {
+          dashboardContainer.classList.remove('sidebar-active');
+        }
+      }
+      window.addEventListener('resize', handleResize);
+      handleResize();
     });
     </script>
 </body>

@@ -158,6 +158,43 @@ document.addEventListener('DOMContentLoaded', async () => {
     const style = document.createElement('style');
     style.innerHTML = `.highlight-receipt { background: #fffbe6 !important; transition: background 1s; }`;
     document.head.appendChild(style);
+
+    // Ensure populateBankAccountsDropdown is defined (if not, define it)
+    if (typeof window.populateBankAccountsDropdown !== 'function') {
+        window.populateBankAccountsDropdown = async function() {
+            const user = await supabase.auth.getUser();
+            if (!user || !user.data || !user.data.user) return;
+            const { data: accounts, error } = await supabase
+                .from('bank_accounts')
+                .select('id, account_type, bank_name, operator_name, account_holder, account_number, currency')
+                .eq('user_id', user.data.user.id);
+            const dropdown = document.getElementById('bankAccount');
+            if (!dropdown) return;
+            dropdown.innerHTML = '<option value="">Select Account</option>';
+            if (accounts && accounts.length) {
+                accounts.forEach(acc => {
+                    let name = '';
+                    if (acc.account_type === 'bank') name = acc.bank_name;
+                    else if (acc.account_type === 'wallet') name = acc.operator_name;
+                    else if (acc.account_type === 'cash') name = acc.account_holder;
+                    const label = `${name} (${acc.account_number}) [${acc.currency}]`;
+                    const option = document.createElement('option');
+                    option.value = acc.id;
+                    option.textContent = label;
+                    dropdown.appendChild(option);
+                });
+            } else {
+                dropdown.innerHTML = '<option value="">No accounts found</option>';
+            }
+        };
+    }
+
+    // Also call populateBankAccountsDropdown in createReceiptBtn click handler (for robustness)
+    if (createReceiptBtn) {
+        createReceiptBtn.addEventListener('click', async () => {
+            await window.populateBankAccountsDropdown();
+        });
+    }
 });
 
 function setupEventListeners() {

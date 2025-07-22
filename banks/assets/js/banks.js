@@ -225,13 +225,19 @@ function updateAccountsUI() {
  * Update the table view with the current accounts
  */
 function updateTableView() {
-    // Update table header to include Balance column
+    // Update table header to include Balance column and expand column
     const tableHeader = document.querySelector('.accounts-table thead tr');
     if (tableHeader && !tableHeader.querySelector('.balance-col')) {
         const balanceTh = document.createElement('th');
         balanceTh.className = 'balance-col';
         balanceTh.textContent = 'Balance';
         tableHeader.insertBefore(balanceTh, tableHeader.children[5]); // Before Actions
+    }
+    if (tableHeader && !tableHeader.querySelector('.expand-col')) {
+        const expandTh = document.createElement('th');
+        expandTh.className = 'expand-col';
+        expandTh.textContent = '';
+        tableHeader.insertBefore(expandTh, tableHeader.children[0]); // First column
     }
     tableBody.innerHTML = '';
     
@@ -251,7 +257,13 @@ function updateTableView() {
         balanceCell = `${account._computed_balance != null ? account._computed_balance.toFixed(2) : '0.00'}`;
         // Create row as DOM element
         const row = document.createElement('tr');
+        row.classList.add('account-row');
         row.innerHTML = `
+            <td class="expand-col">
+                <button class="expand-btn" title="Show Statement" data-id="${account.id}">
+                    <i class="fas fa-chevron-down"></i>
+                </button>
+            </td>
             <td class="type-col">${typeLabel}</td>
             <td class="name-col">${name}</td>
             <td class="holder-col">${account.account_holder}</td>
@@ -281,6 +293,49 @@ function updateTableView() {
         });
         row.querySelector('.star-btn').addEventListener('click', () => {
             setAsPrimary(account.id);
+        });
+        // Expand/collapse logic
+        row.querySelector('.expand-btn').addEventListener('click', function() {
+            const alreadyOpen = row.classList.contains('expanded');
+            // Collapse any open statement rows
+            document.querySelectorAll('.account-row.expanded').forEach(r => {
+                r.classList.remove('expanded');
+                if (r.nextSibling && r.nextSibling.classList && r.nextSibling.classList.contains('statement-row')) {
+                    r.parentNode.removeChild(r.nextSibling);
+                }
+            });
+            if (alreadyOpen) return; // Just collapsed
+            row.classList.add('expanded');
+            // Insert statement row
+            const statementRow = document.createElement('tr');
+            statementRow.className = 'statement-row';
+            statementRow.innerHTML = `<td colspan="8">
+                <div class="statement-section" data-account-id="${account.id}">
+                    <div class="statement-controls">
+                        <label>From: <input type="date" class="statement-date-from"></label>
+                        <label>To: <input type="date" class="statement-date-to"></label>
+                        <button class="statement-export-btn"><i class="fas fa-file-export"></i> Export</button>
+                    </div>
+                    <div class="statement-table-container">
+                        <div class="statement-loading">Loading...</div>
+                        <table class="statement-table" style="display:none;">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Type</th>
+                                    <th>Amount</th>
+                                    <th>Notes</th>
+                                    <th>Invoice/Receipt</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+            </td>`;
+            row.parentNode.insertBefore(statementRow, row.nextSibling);
+            // Fetch and render statement
+            loadAndRenderStatement(account.id, statementRow);
         });
         tableBody.appendChild(row);
     });
@@ -977,4 +1032,79 @@ async function fetchAccountBalances(accountIds) {
         balanceMap[row.bank_account_id] = parseFloat(row.balance) || 0;
     });
     return balanceMap;
+}
+
+// Fetch and render statement for an account
+async function loadAndRenderStatement(accountId, statementRow) {
+    const section = statementRow.querySelector('.statement-section');
+    const fromInput = section.querySelector('.statement-date-from');
+    const toInput = section.querySelector('.statement-date-to');
+    const exportBtn = section.querySelector('.statement-export-btn');
+    const loadingDiv = section.querySelector('.statement-loading');
+    const table = section.querySelector('.statement-table');
+    const tbody = table.querySelector('tbody');
+    // Set default date range: last 30 days
+    const today = new Date();
+    const prior = new Date();
+    prior.setDate(today.getDate() - 30);
+    fromInput.value = prior.toISOString().slice(0,10);
+    toInput.value = today.toISOString().slice(0,10);
+    async function fetchAndRender() {
+        loadingDiv.style.display = 'block';
+        table.style.display = 'none';
+        tbody.innerHTML = '';
+        // Fetch transactions from Supabase
+        const { data, error } = await window.supabase
+            .from('bank_account_transactions')
+            .select('*')
+            .eq('bank_account_id', accountId)
+            .gte('created_at', fromInput.value + 'T00:00:00Z')
+            .lte('created_at', toInput.value + 'T23:59:59Z')
+            .order('created_at', { ascending: false });
+        if (error) {
+            loadingDiv.textContent = 'Error loading statement.';
+            return;
+        }
+        if (!data || data.length === 0) {
+            loadingDiv.textContent = 'No transactions found for this period.';
+            return;
+        }
+        loadingDiv.style.display = 'none';
+        table.style.display = 'table';
+        data.forEach(tx => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>${new Date(tx.created_at).toLocaleDateString()}</td>
+                <td>${tx.transaction_type}</td>
+                <td>${parseFloat(tx.amount).toFixed(2)}</td>
+                <td>${tx.notes || ''}</td>
+                <td>${tx.invoice_id ? 'Invoice: ' + tx.invoice_id : (tx.receipt_id ? 'Receipt: ' + tx.receipt_id : '')}</td>
+            `;
+            tbody.appendChild(tr);
+        });
+    }
+    fromInput.addEventListener('change', fetchAndRender);
+    toInput.addEventListener('change', fetchAndRender);
+    exportBtn.addEventListener('click', function() {
+        exportStatementTableToCSV(table, accountId, fromInput.value, toInput.value);
+    });
+    await fetchAndRender();
+}
+
+// Export statement table to CSV
+function exportStatementTableToCSV(table, accountId, from, to) {
+    let csv = 'Date,Type,Amount,Notes,Invoice/Receipt\n';
+    Array.from(table.querySelectorAll('tbody tr')).forEach(tr => {
+        const cells = Array.from(tr.children).map(td => '"' + td.textContent.replace(/"/g, '""') + '"');
+        csv += cells.join(',') + '\n';
+    });
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `statement_${accountId}_${from}_to_${to}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
 }

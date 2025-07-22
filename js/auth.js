@@ -1,20 +1,16 @@
-import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
-
-// Replace these with your actual Supabase project URL and public anon key
-const supabaseUrl = 'https://qvmtozjvjflygbkjecyj.supabase.co';
-const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF2bXRvemp2amZseWdia2plY3lqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDYxMjc2MjMsImV4cCI6MjA2MTcwMzYyM30.DJMC1eM5_EouM1oc07JaoXsMX_bSLn2AVCozAcdfHmo';
-
-const supabase = createClient(supabaseUrl, supabaseKey);
-
-export { supabase, supabaseUrl, supabaseKey };
+// Initialize Supabase client
+window.supabase = supabase.createClient(
+    'https://qvmtozjvjflygbkjecyj.supabase.co',  // Replace with your Supabase project URL
+    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF2bXRvemp2amZseWdia2plY3lqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDYxMjc2MjMsImV4cCI6MjA2MTcwMzYyM30.DJMC1eM5_EouM1oc07JaoXsMX_bSLn2AVCozAcdfHmo'             // Replace with your Supabase anon key
+);
 
 // Centralized auth check for all protected pages
-export async function requireAuth() {
+window.requireAuth = async function requireAuth() {
     try {
         const repoName = 'Walaka';
         const isGitHubPages = window.location.hostname.includes('github.io');
         const basePath = isGitHubPages ? `/${repoName}/` : '/';
-        const { data: { session } } = await supabase.auth.getSession();
+        const { data: { session } } = await window.supabase.auth.getSession();
         if (!session || !session.user) {
             window.location.href = basePath + 'login.html';
             throw new Error('Not authenticated');
@@ -45,13 +41,8 @@ if (typeof window !== 'undefined') {
             }
           } catch (err) {
             console.error('Error signing out:', err);
-          } finally {
-            // Handle GitHub Pages subdirectory if needed
-            const repoName = 'Walaka';
-            const isGitHubPages = window.location.hostname.includes('github.io');
-            const basePath = isGitHubPages ? `/${repoName}/` : '/';
-            window.location.href = basePath + 'login.html';
           }
+          // No manual redirect here; let onAuthStateChange handle it.
         });
       }
     });

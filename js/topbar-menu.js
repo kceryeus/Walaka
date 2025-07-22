@@ -15,11 +15,16 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Mobile menu toggle
     const menuToggle = document.querySelector('.menu-toggle');
+    const dashboardContainer = document.querySelector('.dashboard-container');
     const sidebar = document.querySelector('.sidebar');
     
-    if (menuToggle && sidebar) {
+    if (menuToggle) {
         menuToggle.addEventListener('click', () => {
-            sidebar.classList.toggle('active');
+            if (dashboardContainer) {
+                dashboardContainer.classList.toggle('sidebar-active');
+            } else if (sidebar) {
+                sidebar.classList.toggle('active');
+            }
         });
     }
 

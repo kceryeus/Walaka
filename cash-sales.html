@@ -396,5 +396,11 @@
 
         window.supabase = supabase;
     </script>
+    <script type="module">
+      import { logUserAction } from './js/logUserAction.js';
+      document.addEventListener('DOMContentLoaded', () => {
+        logUserAction('page_visit', 'User visited page: cash-sales.html');
+      });
+    </script>
 </body>
 </html> 

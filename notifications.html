@@ -264,40 +264,144 @@
             color: #b6c6d6 !important;
             opacity: 1;
         }
+        /* Make top-bar fixed on mobile */
+        @media (max-width: 600px) {
+          .top-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            z-index: 1000;
+            height: 56px;
+            background: #fff;
+            border-bottom: 1px solid #e5e7eb;
+            display: flex;
+            align-items: center;
+            padding: 0 12px;
+          }
+          .main-content {
+            padding-top: 56px;
+          }
+          [data-theme="dark"] .top-bar {
+            background: #23262f !important;
+            border-bottom: 1px solid #23262f;
+          }
+        }
+        /* Style the menu toggle button for top-bar */
+        .top-bar .menu-toggle {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          width: 40px;
+          height: 40px;
+          font-size: 1.6rem;
+          background: none;
+          border: none;
+          border-radius: 8px;
+          margin-right: 12px;
+          margin-left: 0;
+          cursor: pointer;
+          transition: background 0.15s;
+        }
+        .top-bar .menu-toggle:focus,
+        .top-bar .menu-toggle:hover {
+          background: #f0f4fa;
+        }
+        @media (max-width: 600px) {
+          .top-bar .menu-toggle {
+            margin-right: 16px;
+            margin-left: 0;
+            width: 44px;
+            height: 44px;
+            font-size: 2rem;
+          }
+        }
+        /* --- MOBILE IMPROVEMENTS FOR NOTIFICATIONS PAGE --- */
+        @media (max-width: 600px) {
+          .notification-filters {
+            flex-wrap: wrap;
+            gap: 8px;
+            justify-content: flex-start;
+            overflow-x: visible;
+          }
+          .filter-button, .clear-all-btn {
+            min-width: 44%;
+            max-width: 48%;
+            flex: 1 1 44%;
+            margin: 0 0 8px 0;
+            font-size: 0.95rem;
+            box-sizing: border-box;
+            white-space: normal;
+          }
+          .clear-all-btn {
+            min-width: 44%;
+            max-width: 48%;
+            flex: 1 1 44%;
+            margin: 0 0 8px 0;
+          }
+          .notification-card {
+            padding: 12px 10px;
+            font-size: 0.9rem;
+            margin-bottom: 10px;
+            border-radius: 6px;
+          }
+          .notification-title, .notification-message, .notification-time {
+            font-size: 0.95em;
+          }
+          .notification-header {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 2px;
+          }
+          .notification-actions {
+            gap: 8px;
+            flex-wrap: wrap;
+          }
+        }
     </style>
 </head>
 <body>
     <div class="dashboard-container">
-        <!-- Sidebar Menu -->
-        <div id="sidebar-container"></div>
-        <script>
-        // Dynamically load the sidebar from components/sidebar.html
-        document.addEventListener('DOMContentLoaded', function() {
-            fetch('components/sidebar.html')
-                .then(response => response.text())
-                .then(html => {
-                    document.getElementById('sidebar-container').innerHTML = html;
-                    // Dynamically load the sidebar-actions.js script after sidebar is injected
-                    var script = document.createElement('script');
-                    script.src = 'components/sidebar-actions.js';
-                    document.body.appendChild(script);
-                    // Dynamically load the sidebar-darkmode.js script after sidebar is injected
-                    var darkmodeScript = document.createElement('script');
-                    darkmodeScript.src = 'components/sidebar-darkmode.js';
-                    darkmodeScript.onload = function() {
-                        setTimeout(function() {
-                            if (window.initSidebarDarkModeIcon) window.initSidebarDarkModeIcon();
-                        }, 100);
-                    };
-                    document.body.appendChild(darkmodeScript);
-                })
-                .catch(err => {
-                    console.error('Failed to load sidebar:', err);
-                });
-        });
-        </script>
-
-        <!-- Main Content -->
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div id="sidebar-container"></div>
+            <script>
+            // Dynamically load the sidebar from components/sidebar.html
+            document.addEventListener('DOMContentLoaded', function() {
+                fetch('components/sidebar.html')
+                    .then(response => response.text())
+                    .then(html => {
+                        // Extract only the inner content of <nav class="sidebar">
+                        const tempDiv = document.createElement('div');
+                        tempDiv.innerHTML = html;
+                        const navSidebar = tempDiv.querySelector('nav.sidebar');
+                        if (navSidebar) {
+                            document.getElementById('sidebar-container').innerHTML = navSidebar.innerHTML;
+                        } else {
+                            document.getElementById('sidebar-container').innerHTML = html; // fallback
+                        }
+                        // Dynamically load the sidebar-actions.js script after sidebar is injected
+                        var script = document.createElement('script');
+                        script.src = 'components/sidebar-actions.js';
+                        document.body.appendChild(script);
+                        // Dynamically load the sidebar-darkmode.js script after sidebar is injected
+                        var darkmodeScript = document.createElement('script');
+                        darkmodeScript.src = 'components/sidebar-darkmode.js';
+                        darkmodeScript.onload = function() {
+                            setTimeout(function() {
+                                if (window.initSidebarDarkModeIcon) window.initSidebarDarkModeIcon();
+                            }, 100);
+                        };
+                        document.body.appendChild(darkmodeScript);
+                    })
+                    .catch(err => {
+                        console.error('Failed to load sidebar:', err);
+                    });
+            });
+            </script>
+        </aside>
+        <!-- Sidebar overlay for mobile/tablet -->
+        <div class="sidebar-overlay"></div>
         <main class="main-content">
             <!-- Top Bar -->
             <div class="top-bar">
@@ -1142,6 +1246,40 @@
         // Make functions available globally
         window.markAsRead = markAsRead;
         window.deleteNotification = deleteNotification;
+    </script>
+    <!-- Sidebar toggle logic for responsive (ensure this is last) -->
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      const dashboardContainer = document.querySelector('.dashboard-container');
+      const menuToggle = document.querySelector('.menu-toggle');
+      const sidebarOverlay = document.querySelector('.sidebar-overlay');
+      // Toggle sidebar on menu button click
+      if (menuToggle) {
+        menuToggle.addEventListener('click', function() {
+          dashboardContainer.classList.toggle('sidebar-active');
+        });
+      }
+      // Close sidebar on overlay click
+      if (sidebarOverlay) {
+        sidebarOverlay.addEventListener('click', function() {
+          dashboardContainer.classList.remove('sidebar-active');
+        });
+      }
+      // Optional: close sidebar on ESC key
+      document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+          dashboardContainer.classList.remove('sidebar-active');
+        }
+      });
+      // On resize, remove sidebar-active if desktop
+      function handleResize() {
+        if (window.innerWidth >= 992) {
+          dashboardContainer.classList.remove('sidebar-active');
+        }
+      }
+      window.addEventListener('resize', handleResize);
+      handleResize();
+    });
     </script>
 </body>
 </html>
