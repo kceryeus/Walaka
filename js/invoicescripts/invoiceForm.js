@@ -1475,7 +1475,7 @@ const style = document.createElement('style');
 style.innerHTML = `#general-client-btn.highlighted { background: #e0f7fa; border: 2px solid #00bcd4; color: #00796b; }`;
 document.head.appendChild(style);
 
-/*
+
 document.addEventListener('DOMContentLoaded', function() {
     function getAISuggestionBtnText() {
         if (window.languageManager && typeof window.languageManager.getTranslation === 'function') {
@@ -1578,4 +1578,3 @@ async function getAISuggestionForInvoiceNote(context) {
         return '';
     }
 }
-*/
