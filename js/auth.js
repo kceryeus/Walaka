@@ -25,6 +25,15 @@ window.requireAuth = async function requireAuth() {
     }
 }
 
+export const requireAuth = async () => {
+    const session = await supabase.auth.getSession();
+    if (!session?.data?.session) {
+        window.location.href = '/login.html';
+        return false;
+    }
+    return true;
+}
+
 // Universal logout handler for all pages
 if (typeof window !== 'undefined') {
   document.addEventListener('DOMContentLoaded', function() {
@@ -47,4 +56,4 @@ if (typeof window !== 'undefined') {
       }
     });
   });
-} 
+}
