@@ -48,20 +48,29 @@ async function populateTemplate(templateContent, data) {
     html = html.replace(/{{clientAddress}}/g, data.client?.address || '');
     html = html.replace(/{{clientTaxId}}/g, data.client?.taxId || data.client?.nuit || '');
     
+    // Exchange rate info
+    const currency = data.currency || 'MZN';
+    const rate = data.currency_rate || 1;
+    let exchangeRateNote = '';
+    if (currency !== 'MZN') {
+        exchangeRateNote = `<div class="exchange-rate-info">Taxa de câmbio: 1 ${currency} = ${rate.toFixed(2)} MZN</div>`;
+    }
+    html = html.replace(/{{exchangeRateInfo}}/g, exchangeRateNote);
+
     // Items
     const itemsHtml = (data.items || []).map(item => `
         <tr>
             <td>${item.description || ''}</td>
             <td>${item.quantity || 0}</td>
-            <td>${formatCurrency(item.price)}</td>
-            <td>${formatCurrency(item.vat)}</td>
-            <td>${formatCurrency(item.total)}</td>
+            <td>${formatCurrency(item.price, currency, rate, true)}</td>
+            <td>${formatCurrency(item.vat, currency, rate, true)}</td>
+            <td>${formatCurrency(item.total, currency, rate, true)}</td>
         </tr>
     `).join('');
     html = html.replace(/{{items}}/g, itemsHtml);
     
     // Totals
-    html = html.replace(/{{subtotal}}/g, formatCurrency(data.subtotal));
+    html = html.replace(/{{subtotal}}/g, formatCurrency(data.subtotal, currency, rate, true));
     // Discount block logic
     let discountBlock = '';
     if (data.discountAmount && data.discountAmount > 0) {
@@ -69,12 +78,12 @@ async function populateTemplate(templateContent, data) {
         if (data.discountType === 'percent') {
             discountLabel = `Desconto (${data.discountValue}%)`;
         }
-        discountBlock = `<div class='total-row'><span>${discountLabel}:</span> <span>- ${formatCurrency(data.discountAmount)}</span></div>`;
-        discountBlock += `<div class='total-row'><span>Subtotal após Desconto:</span> <span>${formatCurrency(data.subtotalAfterDiscount)}</span></div>`;
+        discountBlock = `<div class='total-row'><span>${discountLabel}:</span> <span>- ${formatCurrency(data.discountAmount, currency, rate, true)}</span></div>`;
+        discountBlock += `<div class='total-row'><span>Subtotal após Desconto:</span> <span>${formatCurrency(data.subtotalAfterDiscount, currency, rate, true)}</span></div>`;
     }
     html = html.replace(/{{discountBlock}}/g, discountBlock);
-    html = html.replace(/{{totalVat}}/g, formatCurrency(data.totalVat));
-    html = html.replace(/{{total}}/g, formatCurrency(data.total));
+    html = html.replace(/{{totalVat}}/g, formatCurrency(data.totalVat, currency, rate, true));
+    html = html.replace(/{{total}}/g, formatCurrency(data.total, currency, rate, true));
     
     // Notes
     html = html.replace(/{{notes}}/g, data.notes || '');
@@ -94,11 +103,25 @@ function formatDate(dateString) {
     return `${day}-${monthCap}-${year}`;
 }
 
-function formatCurrency(amount) {
-    return new Intl.NumberFormat('pt-MZ', {
+function formatCurrency(amount, currency = 'MZN', rate = 1, showBoth = true) {
+    const mznAmount = amount || 0;
+    const foreignAmount = mznAmount / rate;
+
+    const mznFormatter = new Intl.NumberFormat('pt-MZ', {
         style: 'currency',
         currency: 'MZN'
-    }).format(amount || 0);
+    });
+
+    if (currency === 'MZN' || !showBoth) {
+        return mznFormatter.format(mznAmount);
+    }
+
+    const foreignFormatter = new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency: currency
+    });
+
+    return `${foreignFormatter.format(foreignAmount)} (${mznFormatter.format(mznAmount)})`;
 }
 
 // Add this helper for consistent number formatting

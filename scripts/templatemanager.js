@@ -96,11 +96,25 @@ function formatDate(dateString) {
     return `${day}-${monthCap}-${year}`;
 }
 
-function formatCurrency(amount, currency = 'MZN') {
-    return new Intl.NumberFormat('pt-MZ', {
+function formatCurrency(amount, currency = 'MZN', rate = 1, showBoth = true) {
+    const mznAmount = amount || 0;
+    const foreignAmount = mznAmount / rate;
+
+    const mznFormatter = new Intl.NumberFormat('pt-MZ', {
+        style: 'currency',
+        currency: 'MZN'
+    });
+
+    const foreignFormatter = new Intl.NumberFormat('en-US', {
         style: 'currency',
         currency: currency
-    }).format(amount || 0);
+    });
+
+    if (currency === 'MZN' || !showBoth) {
+        return mznFormatter.format(mznAmount);
+    }
+
+    return `${foreignFormatter.format(foreignAmount)} (${mznFormatter.format(mznAmount)})`;
 }
 
 function calculateSubtotal(items) {
@@ -227,6 +241,18 @@ const TEMPLATES = {
                 padding: 20px;
                 background: #f9f9f9;
                 border-radius: 5px;
+            }
+            .exchange-rate-info {
+                margin-top: 10px;
+                font-size: 0.85em;
+                color: #666;
+                padding: 5px 10px;
+                background: #f5f5f5;
+                border-radius: 4px;
+                display: none;
+            }
+            .foreign-currency .exchange-rate-info {
+                display: block;
             }
         `,
         layout: `
@@ -880,6 +906,11 @@ async function loadCompanyLogo() {
 async function populateTemplate(templateContent, invoiceData) {
     const parser = new DOMParser();
     const doc = parser.parseFromString(templateContent, 'text/html');
+    
+    // Initialize currency variables
+    const currency = invoiceData.currency || 'MZN';
+    const rate = invoiceData.currency_rate || 1;
+    const showBoth = currency !== 'MZN';
 
     // Business Profile Information 
     setDataField(doc, 'company-name', invoiceData.company?.name || '');
@@ -1091,11 +1122,11 @@ async function populateTemplate(templateContent, invoiceData) {
                                 <tr>
                                     <td>${description}</td>
                                     <td>${item.quantity || 1}</td>
-                                    <td>${formatCurrency(item.unit_price ?? item.price ?? 0, invoiceData.currency).replace('MTn','MT')}</td>
+                                    <td>${formatCurrency(item.unit_price ?? item.price ?? 0, currency, rate, showBoth).replace('MTn','MT')}</td>
                                     <td>${discountDisplay.replace('MTn','MT')}</td>
-                                    <td>${formatCurrency(item.discounted_subtotal !== undefined ? item.discounted_subtotal : (item.discountedSubtotal !== undefined ? item.discountedSubtotal : ((item.quantity || 1) * (item.unit_price ?? item.price ?? 0))), invoiceData.currency).replace('MTn','MT')}</td>
-                                    <td>${formatCurrency(vatValue, invoiceData.currency).replace('MTn','MT')}</td>
-                                    <td>${formatCurrency(item.total !== undefined ? item.total : (((item.discounted_subtotal !== undefined ? item.discounted_subtotal : (item.discountedSubtotal !== undefined ? item.discountedSubtotal : ((item.quantity || 1) * (item.unit_price ?? item.price ?? 0)))) + vatValue)), invoiceData.currency).replace('MTn','MT')}</td>
+                                    <td>${formatCurrency(item.discounted_subtotal !== undefined ? item.discounted_subtotal : (item.discountedSubtotal !== undefined ? item.discountedSubtotal : ((item.quantity || 1) * (item.unit_price ?? item.price ?? 0))), currency, rate, showBoth).replace('MTn','MT')}</td>
+                                    <td>${formatCurrency(vatValue, currency, rate, showBoth).replace('MTn','MT')}</td>
+                                    <td>${formatCurrency(item.total !== undefined ? item.total : (((item.discounted_subtotal !== undefined ? item.discounted_subtotal : (item.discountedSubtotal !== undefined ? item.discountedSubtotal : ((item.quantity || 1) * (item.unit_price ?? item.price ?? 0)))) + vatValue)), currency, rate, showBoth).replace('MTn','MT')}</td>
                                 </tr>
                             `;
                         }).join('')}
@@ -1117,7 +1148,7 @@ async function populateTemplate(templateContent, invoiceData) {
     // Totals section
     const totalsContainer = doc.querySelector('.invoice-totals');
     if (totalsContainer) {
-        let totalsHtml = `<div class='total-row'><span>Subtotal:</span> <span>${formatCurrency(subtotal, invoiceData.currency).replace('MTn','MT')}</span></div>`;
+        let totalsHtml = `<div class='total-row'><span>Subtotal:</span> <span>${formatCurrency(subtotal, currency, rate, showBoth).replace('MTn','MT')}</span></div>`;
         // Show discount block if any item has a discount
         if (anyItemHasDiscount) {
             let discountLabel = 'Desconto';
@@ -1127,14 +1158,14 @@ async function populateTemplate(templateContent, invoiceData) {
                 if (onlyType === 'percent') {
                     discountLabel = `Desconto (${onlyValue}%)`;
                 } else if (onlyType === 'fixed') {
-                    discountLabel = `Desconto (${formatCurrency(onlyValue, invoiceData.currency)})`;
+                    discountLabel = `Desconto (${formatCurrency(onlyValue, currency, rate, showBoth)})`;
                 }
             } // else just 'Desconto' for mixed
-            totalsHtml += `<div class='total-row' style='font-size:0.90em;'><span>${discountLabel}:</span> <span>- ${formatCurrency(totalDiscountAmount, invoiceData.currency)}</span></div>`;
-            totalsHtml += `<div class='total-row'><span>Subtotal após Desconto:</span> <span>${formatCurrency(subtotalAfterDiscount, invoiceData.currency).replace('MTn','MT')}</span></div>`;
+            totalsHtml += `<div class='total-row' style='font-size:0.90em;'><span>${discountLabel}:</span> <span>- ${formatCurrency(totalDiscountAmount, currency, rate, showBoth)}</span></div>`;
+            totalsHtml += `<div class='total-row'><span>Subtotal após Desconto:</span> <span>${formatCurrency(subtotalAfterDiscount, currency, rate, showBoth).replace('MTn','MT')}</span></div>`;
         }
-        totalsHtml += `<div class='total-row'><span>IVA:</span> <span>${formatCurrency(totalVat, invoiceData.currency).replace('MTn','MT')}</span></div>`;
-        totalsHtml += `<div class='grand-total'><span>Total:</span> <span>${formatCurrency(grandTotal, invoiceData.currency).replace('MTn','MT')}</span></div>`;
+        totalsHtml += `<div class='total-row'><span>IVA:</span> <span>${formatCurrency(totalVat, currency, rate, showBoth).replace('MTn','MT')}</span></div>`;
+        totalsHtml += `<div class='grand-total'><span>Total:</span> <span>${formatCurrency(grandTotal, currency, rate, showBoth).replace('MTn','MT')}</span></div>`;
         totalsContainer.innerHTML = totalsHtml;
         totalsContainer.style.display = 'block'; // Ensure visible
         totalsContainer.style.fontSize = '1.1em';

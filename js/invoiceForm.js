@@ -356,156 +356,36 @@ class InvoiceForm {
             if (!userId) {
                 throw new Error('User not authenticated. Please log in.');
             }
-            // Find client_id from the selected client name (must match clients.customer_id or id)
+            const clientInput = document.getElementById('client-list');
+            
+            // Handle General Client case
+            if ((clientInput && clientInput.dataset.generalClient === 'true') || 
+                (invoiceData.client && invoiceData.client.name === 'General Client')) {
+                // Skip client lookup for General Client
+                const formattedData = await this.prepareInvoiceData(invoiceData, null);
+                return await this.insertInvoice(formattedData);
+            }
+            
+            // Regular client lookup with proper URL encoding
             let clientId = null;
             if (window.clients && Array.isArray(window.clients)) {
-                // Try to match by id, customer_id, name, or email
-                const selectedClientName = invoiceData.client.name?.trim();
-                const selectedClientEmail = invoiceData.client.email?.trim();
-                // Debug: log available clients and selected value
-                console.log('[InvoiceForm] Looking for client:', selectedClientName, selectedClientEmail);
-                console.log('[InvoiceForm] Available clients:', window.clients);
-                const selectedClient = window.clients.find(c =>
-                    (c.customer_id && c.customer_id === selectedClientName) ||
-                    (c.id && c.id === selectedClientName) ||
-                    (c.customer_name && c.customer_name === selectedClientName) ||
-                    (c.email && c.email === selectedClientEmail)
-                );
-                if (selectedClient) {
-                    clientId = selectedClient.customer_id || selectedClient.id || null;
-                    console.log('[InvoiceForm] Matched client:', selectedClient);
-                } else {
-                    console.error('[InvoiceForm] No client match found for:', selectedClientName, selectedClientEmail);
-                    console.error('[InvoiceForm] Clients available for matching:', window.clients);
-                }
-            }
-            if (!clientId) {
-                showNotification('Client not found or missing client_id. Please select a valid client from the suggestions/autocomplete list.', 'error');
-                throw new Error('Client not found or missing client_id. Please select a valid client from the suggestions/autocomplete list.');
-            }
-            // Optionally, get environment_id if available
-            let environmentId = null;
-            if (window.environmentId) {
-                environmentId = window.environmentId;
-            }
-            // --- Map all relevant fields to DB schema ---
-            const formattedData = {
-                invoiceNumber: invoiceData.invoiceNumber,
-                serie: invoiceData.serie,
-                issue_date: invoiceData.issueDate,
-                due_date: invoiceData.dueDate,
-                status: invoiceData.status || 'pending',
-                currency: invoiceData.currency || 'MZN',
-                client_id: clientId,
-                client_name: invoiceData.client.name,
-                customer_name: invoiceData.client.name, // Add this for compatibility
-                subtotal: invoiceData.subtotal ?? null,
-                desconto: invoiceData.totalDiscount ?? null,
-                total_desconto: invoiceData.totalDiscount ?? null,
-                subtotal_sem_iva: invoiceData.subtotalAfterDiscount ?? null,
-                iva: invoiceData.totalVat ?? null,
-                vat_amount: invoiceData.totalVat ?? null,
-                valor_total_sem_imposto: invoiceData.subtotalAfterDiscount ?? null,
-                total_incluindo_imposto: invoiceData.total ?? null,
-                total_amount: invoiceData.total ?? null,
-                iva_percent: (() => {
-                    const uniqueRates = Array.from(new Set(invoiceData.items.map(i => i.vatRate)));
-                    if (uniqueRates.length === 1) return uniqueRates[0] * 100;
-                    return null;
-                })(),
-                valor_imposto: invoiceData.totalVat ?? null,
-                payment_terms: invoiceData.paymentTerms || 'net30',
-                notes: invoiceData.notes || '',
-                currency_rate: this.currentRate || 1,
-                user_id: userId,
-                environment_id: environmentId ?? null,
-                pdf_url: null, // Will be updated after PDF is generated
-                // Add any other fields you want to save
-            };
-            // Debug: Log the insert payload
-            console.log('Insert payload:', formattedData);
-            // Insert the invoice
-            const { data: invoice, error: invoiceError } = await window.supabase
-                .from('invoices')
-                .insert([formattedData])
-                .select()
-                .single();
-            if (invoiceError) throw invoiceError;
-            // Generate and upload PDF, get pdfUrl
-            let pdfUrl = null;
-            if (typeof window.generateAndUploadPDF === 'function') {
-                pdfUrl = await window.generateAndUploadPDF(invoiceData);
-            } else {
-                console.warn('generateAndUploadPDF function not implemented. PDF URL will not be saved.');
-            }
-            // Update invoice with pdf_url
-            if (pdfUrl) {
-                await window.supabase
-                    .from('invoices')
-                    .update({ pdf_url: pdfUrl })
-                    .eq('id', invoice.id);
-            }
-            // --- Trigger PDF download for the user ---
-            if (typeof window.generatePDF === 'function') {
-                const pdfBlob = await window.generatePDF(invoiceData);
-                const pdfFileName = `Invoice-${invoiceData.invoiceNumber}.pdf`;
-                const downloadUrl = URL.createObjectURL(pdfBlob);
-                const link = document.createElement('a');
-                link.href = downloadUrl;
-                link.download = pdfFileName;
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-                URL.revokeObjectURL(downloadUrl);
-            }
-            // For each item, first check if it exists in products table
-            for (const item of invoiceData.items) {
-                // Check if product exists
-                const { data: existingProduct } = await window.supabase
-                    .from('products')
-                    .select('id')
-                    .eq('description', item.description)
+                const selectedClientName = encodeURIComponent(invoiceData.client.name?.trim() || '');
+                const selectedClientEmail = encodeURIComponent(invoiceData.client.email?.trim() || '');
+                
+                const { data: matchedClient, error } = await window.supabase
+                    .from('clients')
+                    .select('*')
+                    .or(`customer_name.eq.${selectedClientName},email.eq.${selectedClientEmail}`)
                     .single();
-                if (!existingProduct) {
-                    // If product doesn't exist, create it
-                    let environment_id = null;
-                    if (window.getCurrentEnvironmentId) {
-                        try {
-                            environment_id = await window.getCurrentEnvironmentId();
-                        } catch (e) {
-                            console.error('Could not fetch environment_id:', e);
-                        }
-                    }
-                    const { error: productError } = await window.supabase
-                        .from('products')
-                        .insert([{
-                            description: item.description,
-                            price: item.price,
-                            tax_code: '101011',
-                            tax_rate: item.vatRate * 100, // Store as percent
-                            industry: 'General', // Default industry
-                            environment_id: environment_id
-                        }]);
-                    if (productError) throw productError;
+                    
+                if (matchedClient) {
+                    clientId = matchedClient.customer_id || matchedClient.id;
                 }
             }
-            // showNotification('Invoice saved successfully', 'success');
-            // Create invoice notification
-            // if (window.createNotification) {
-            //     await window.createNotification('invoice', 'Invoice Created Successfully', `Invoice ${invoice.invoiceNumber} has been created and is ready for sending to your client.`, 'invoices.html');
-            // }
-            // Update trial banner if ready, or wait for readiness
-            function updateTrialBannerIfReady() {
-                if (window.TrialBanner && typeof window.TrialBanner.updateTrialBanner === 'function') {
-                    window.TrialBanner.updateTrialBanner();
-                } else {
-                    window.addEventListener('trialBannerReady', () => {
-                        window.TrialBanner.updateTrialBanner();
-                    }, { once: true });
-                }
-            }
-            updateTrialBannerIfReady();
-            return invoice;
+            
+            // Continue with rest of save logic
+            const formattedData = await this.prepareInvoiceData(invoiceData, clientId);
+            return await this.insertInvoice(formattedData);
         } catch (error) {
             console.error('Error saving invoice:', error);
             showNotification('Error saving invoice: ' + error.message, 'error');
@@ -1446,132 +1326,39 @@ InvoiceForm.prototype.collectInvoiceData = function() {
     }
     return data;
 };
-// PATCH: In saveInvoice, skip client_id lookup for 'General Client'
-const ORIGINAL_saveInvoice = InvoiceForm.prototype.saveInvoice;
+// PATCH: In saveInvoice, modify client lookup for General Client
 InvoiceForm.prototype.saveInvoice = async function() {
     const invoiceData = this.collectInvoiceData();
     const clientInput = document.getElementById('client-list');
-    if ((clientInput && clientInput.dataset.generalClient === 'true') || (invoiceData.client && invoiceData.client.name === 'General Client')) {
-        // Bypass client_id lookup and save with just the provided info
-        let userId = null;
-        try {
-            const session = await window.supabase.auth.getSession();
-            userId = session.data?.session?.user?.id;
-        } catch (e) {
-            console.error('Could not fetch user session:', e);
-        }
-        if (!userId) {
-            throw new Error('User not authenticated. Please log in.');
-        }
-        let environmentId = null;
-        if (window.environmentId) {
-            environmentId = window.environmentId;
-        }
-        const formattedData = {
-            invoiceNumber: invoiceData.invoiceNumber,
-            serie: invoiceData.serie,
-            issue_date: invoiceData.issueDate,
-            due_date: invoiceData.dueDate,
-            status: invoiceData.status || 'pending',
-            currency: invoiceData.currency || 'MZN',
-            client_id: null,
-            client_name: invoiceData.client.name,
-            customer_name: invoiceData.client.name,
-            subtotal: invoiceData.subtotal ?? null,
-            desconto: invoiceData.totalDiscount ?? null,
-            total_desconto: invoiceData.totalDiscount ?? null,
-            subtotal_sem_iva: invoiceData.subtotalAfterDiscount ?? null,
-            iva: invoiceData.totalVat ?? null,
-            vat_amount: invoiceData.totalVat ?? null,
-            valor_total_sem_imposto: invoiceData.subtotalAfterDiscount ?? null,
-            total_incluindo_imposto: invoiceData.total ?? null,
-            total_amount: invoiceData.total ?? null,
-            iva_percent: (() => {
-                const uniqueRates = Array.from(new Set(invoiceData.items.map(i => i.vatRate)));
-                if (uniqueRates.length === 1) return uniqueRates[0] * 100;
-                return null;
-            })(),
-            valor_imposto: invoiceData.totalVat ?? null,
-            payment_terms: invoiceData.paymentTerms || 'net30',
-            notes: invoiceData.notes || '',
-            currency_rate: this.currentRate || 1,
-            user_id: userId,
-            environment_id: environmentId ?? null,
-            pdf_url: null,
-        };
-        // Insert the invoice
-        const { data: invoice, error: invoiceError } = await window.supabase
-            .from('invoices')
-            .insert([formattedData])
-            .select()
-            .single();
-        if (invoiceError) throw invoiceError;
-        // PDF and product logic (copied from original)
-        let pdfUrl = null;
-        if (typeof window.generateAndUploadPDF === 'function') {
-            pdfUrl = await window.generateAndUploadPDF(invoiceData);
-        }
-        if (pdfUrl) {
-            await window.supabase
-                .from('invoices')
-                .update({ pdf_url: pdfUrl })
-                .eq('id', invoice.id);
-        }
-        if (typeof window.generatePDF === 'function') {
-            const pdfBlob = await window.generatePDF(invoiceData);
-            const pdfFileName = `Invoice-${invoiceData.invoiceNumber}.pdf`;
-            const downloadUrl = URL.createObjectURL(pdfBlob);
-            const link = document.createElement('a');
-            link.href = downloadUrl;
-            link.download = pdfFileName;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            URL.revokeObjectURL(downloadUrl);
-        }
-        for (const item of invoiceData.items) {
-            const { data: existingProduct } = await window.supabase
-                .from('products')
-                .select('id')
-                .eq('description', item.description)
-                .single();
-            if (!existingProduct) {
-                let environment_id = null;
-                if (window.getCurrentEnvironmentId) {
-                    try {
-                        environment_id = await window.getCurrentEnvironmentId();
-                    } catch (e) {
-                        console.error('Could not fetch environment_id:', e);
-                    }
-                }
-                const { error: productError } = await window.supabase
-                    .from('products')
-                    .insert([{
-                        description: item.description,
-                        price: item.price,
-                        tax_code: '101011',
-                        tax_rate: item.vatRate * 100,
-                        industry: 'General',
-                        environment_id: environment_id
-                    }]);
-                if (productError) throw productError;
-            }
-        }
-        function updateTrialBannerIfReady() {
-            if (window.TrialBanner && typeof window.TrialBanner.updateTrialBanner === 'function') {
-                window.TrialBanner.updateTrialBanner();
-            } else {
-                window.addEventListener('trialBannerReady', () => {
-                    window.TrialBanner.updateTrialBanner();
-                }, { once: true });
-            }
-        }
-        updateTrialBannerIfReady();
-        return invoice;
-    } else {
-        // Default behavior for normal clients
-        return await ORIGINAL_saveInvoice.call(this);
+    
+    // Handle General Client case
+    if ((clientInput && clientInput.dataset.generalClient === 'true') || 
+        (invoiceData.client && invoiceData.client.name === 'General Client')) {
+        // Skip client lookup for General Client
+        const formattedData = await this.prepareInvoiceData(invoiceData, null);
+        return await this.insertInvoice(formattedData);
     }
+    
+    // Regular client lookup with proper URL encoding
+    let clientId = null;
+    if (window.clients && Array.isArray(window.clients)) {
+        const selectedClientName = encodeURIComponent(invoiceData.client.name?.trim() || '');
+        const selectedClientEmail = encodeURIComponent(invoiceData.client.email?.trim() || '');
+        
+        const { data: matchedClient, error } = await window.supabase
+            .from('clients')
+            .select('*')
+            .or(`customer_name.eq.${selectedClientName},email.eq.${selectedClientEmail}`)
+            .single();
+            
+        if (matchedClient) {
+            clientId = matchedClient.customer_id || matchedClient.id;
+        }
+    }
+    
+    // Continue with rest of save logic
+    const formattedData = await this.prepareInvoiceData(invoiceData, clientId);
+    return await this.insertInvoice(formattedData);
 };
 
 // Add highlight style for General Client button

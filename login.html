@@ -302,7 +302,8 @@
         <div id="forgotPasswordForm" class="form-container">
             <h2 data-en="Reset Password" data-pt="Redefinir Palavra-passe">Redefinir Palavra-passe</h2>
             <p class="form-description" data-en="Enter your email address and we'll send you a link to reset your password." data-pt="Insira o seu endereço de email e enviaremos um link para redefinir a sua palavra-passe.">Insira o seu endereço de email e enviaremos um link para redefinir a sua palavra-passe.</p>
-            <form id="forgotPasswordFormElement">
+            <!-- Change: Add onsubmit handler -->
+            <form id="forgotPasswordFormElement" onsubmit="return handlePasswordReset(event)">
                 <div class="form-group">
                     <label for="resetEmail" data-en="Email Address" data-pt="Endereço de Email">Endereço de Email</label>
                     <input type="email" id="resetEmail" required placeholder="Enter your email">
@@ -765,27 +766,45 @@
             event.preventDefault();
             const email = document.getElementById('resetEmail').value;
             const resetMessage = document.getElementById('reset-message');
-            const errorDiv = document.getElementById('error-message'); // Keep this for login errors
-            errorDiv.style.display = 'none';
             resetMessage.className = 'message-box';
             resetMessage.style.display = 'none';
 
             try {
-                const { error } = await window.supabase.auth.resetPasswordForEmail(email, {
-                    redirectTo: getSignupRedirectUrl() + '?type=password'
-                });
+                const { error } = await window.supabase.auth.resetPasswordForEmail(
+                    email,
+                    {
+                        redirectTo: getSignupRedirectUrl()
+                    }
+                );
 
                 if (error) throw error;
-                console.log('Password reset email sent:', email);
-                resetMessage.textContent = 'Password reset link sent to your email address.';
+
+                // Show success message
+                resetMessage.textContent = document.documentElement.lang === 'en' 
+                    ? 'Password reset link sent to your email address.'
+                    : 'Link de redefinição de senha enviado para o seu email.';
                 resetMessage.className = 'message-box success';
                 resetMessage.style.display = 'block';
             } catch (error) {
                 console.error('Error sending password reset email:', error.message);
-                errorDiv.textContent = error.message || 'Failed to send password reset link.';
-                errorDiv.style.display = 'block';
+                resetMessage.textContent = document.documentElement.lang === 'en'
+                    ? 'Failed to send password reset link: ' + error.message
+                    : 'Falha ao enviar link de redefinição: ' + error.message;
+                resetMessage.className = 'message-box error';
+                resetMessage.style.display = 'block';
             }
         }
+
+        // Add this line inside DOMContentLoaded event listener
+        document.addEventListener('DOMContentLoaded', function() {
+            // ...existing code...
+            
+            // Add form submit handler to password reset form
+            const forgotPasswordForm = document.getElementById('forgotPasswordFormElement');
+            if (forgotPasswordForm) {
+                forgotPasswordForm.addEventListener('submit', handlePasswordReset);
+            }
+        });
 
         // On page load, check if T&C was accepted before and pre-check the box
         document.addEventListener('DOMContentLoaded', function() {

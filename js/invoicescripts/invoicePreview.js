@@ -68,18 +68,86 @@ async function previewInvoice(invoiceData) {
                 };
             }
         }
+        // Get currency information first
+        const currency = invoiceData.currency || 'MZN';
+        const rate = (window.invoiceForm && window.invoiceForm.currentRate && !isNaN(window.invoiceForm.currentRate)) 
+            ? window.invoiceForm.currentRate 
+            : 1;
+        const showConversion = currency !== 'MZN' && rate !== 1;
+
+                // Initialize currency handling
+        const currencyConfig = {
+            sourceCurrency: invoiceData.currency || 'MZN',
+            targetCurrency: 'MZN',
+            exchangeRate: (window.invoiceForm?.currentRate && !isNaN(window.invoiceForm.currentRate)) 
+                ? window.invoiceForm.currentRate 
+                : 1
+        };
+        currencyConfig.showConversion = currencyConfig.sourceCurrency !== currencyConfig.targetCurrency 
+            && currencyConfig.exchangeRate !== 1;
+
+        // Format currency amounts
+        const formatAmount = (amount, currency) => {
+            return new Intl.NumberFormat('pt-MZ', {
+                style: 'currency',
+                currency: currency,
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            }).format(amount);
+        };
+
         // Support both {items: [{description, quantity, price, ...}]} and {items: [{unit_price, vat_amount, ...}]}
-        let items = (invoiceData.items || []).map(item => ({
-            description: item.description || '',
-            quantity: item.quantity || 0,
-            price: item.price !== undefined ? item.price : (item.unit_price !== undefined ? item.unit_price : 0),
-            vat: item.vat !== undefined ? item.vat : (item.vat_amount !== undefined ? item.vat_amount : 0),
-            total: item.total !== undefined ? item.total : 0
-        }));
-        // Recalculate totals
-        const subtotal = items.reduce((sum, item) => sum + (item.quantity * item.price), 0);
+        let items = (invoiceData.items || []).map(item => {
+            const price = item.price !== undefined ? item.price : (item.unit_price !== undefined ? item.unit_price : 0);
+            const quantity = item.quantity || 0;
+            const itemTotal = quantity * price;
+            const vat = item.vat !== undefined ? item.vat : (item.vat_amount !== undefined ? item.vat_amount : 0);
+            
+            return {
+                description: item.description || '',
+                quantity: quantity,
+                price: price,
+                price_formatted: formatAmount(price, currencyConfig.sourceCurrency),
+                price_converted: price * currencyConfig.exchangeRate,
+                price_converted_formatted: formatAmount(price * currencyConfig.exchangeRate, currencyConfig.targetCurrency),
+                vat: vat,
+                vat_formatted: formatAmount(vat, currencyConfig.sourceCurrency),
+                vat_converted: vat * currencyConfig.exchangeRate,
+                vat_converted_formatted: formatAmount(vat * currencyConfig.exchangeRate, currencyConfig.targetCurrency),
+                total: itemTotal,
+                total_formatted: formatAmount(itemTotal, currencyConfig.sourceCurrency),
+                total_converted: itemTotal * currencyConfig.exchangeRate,
+                total_converted_formatted: formatAmount(itemTotal * currencyConfig.exchangeRate, currencyConfig.targetCurrency)
+            };
+        });
+
+        // Calculate totals with currency conversion
+        const totals = {
+            subtotal: items.reduce((sum, item) => sum + item.total, 0),
+            subtotal_converted: items.reduce((sum, item) => sum + item.total_converted, 0),
+            vat: items.reduce((sum, item) => sum + item.vat, 0),
+            vat_converted: items.reduce((sum, item) => sum + item.vat_converted, 0)
+        };
+        totals.total = totals.subtotal + totals.vat;
+        totals.total_converted = totals.subtotal_converted + totals.vat_converted;
+
+        // Format all totals
+        totals.subtotal_formatted = formatAmount(totals.subtotal, currencyConfig.sourceCurrency);
+        totals.subtotal_converted_formatted = formatAmount(totals.subtotal_converted, currencyConfig.targetCurrency);
+        totals.vat_formatted = formatAmount(totals.vat, currencyConfig.sourceCurrency);
+        totals.vat_converted_formatted = formatAmount(totals.vat_converted, currencyConfig.targetCurrency);
+        totals.total_formatted = formatAmount(totals.total, currencyConfig.sourceCurrency);
+        totals.total_converted_formatted = formatAmount(totals.total_converted, currencyConfig.targetCurrency);
+
+        // Get business profile
+
+        // Calculate totals in both currencies
+        const subtotal = items.reduce((sum, item) => sum + item.total, 0);
+        const subtotal_mzn = items.reduce((sum, item) => sum + item.total_mzn, 0);
         const totalVat = items.reduce((sum, item) => sum + item.vat, 0);
+        const totalVat_mzn = items.reduce((sum, item) => sum + item.vat_mzn, 0);
         const total = subtotal + totalVat;
+        const total_mzn = subtotal_mzn + totalVat_mzn;
 
         // Get business profile
         const businessProfile = await getBusinessProfile();
@@ -116,12 +184,25 @@ async function previewInvoice(invoiceData) {
                 dueDate: invoiceData.dueDate || invoiceData.due_date || new Date(Date.now() + 30*24*60*60*1000).toISOString().split('T')[0],
                 status: invoiceData.status || 'draft',
                 projectName: invoiceData.projectName || '',
-                subtotal: subtotal,
-                vat: totalVat,
-                total: total,
+                subtotal: totals.subtotal,
+                subtotal_formatted: totals.subtotal_formatted,
+                subtotal_converted: totals.subtotal_converted,
+                subtotal_converted_formatted: totals.subtotal_converted_formatted,
+                vat: totals.vat,
+                vat_formatted: totals.vat_formatted,
+                vat_converted: totals.vat_converted,
+                vat_converted_formatted: totals.vat_converted_formatted,
+                total: totals.total,
+                total_formatted: totals.total_formatted,
+                total_converted: totals.total_converted,
+                total_converted_formatted: totals.total_converted_formatted,
                 discount: invoiceData.discount || 0,
                 notes: invoiceData.notes || '',
-                paymentTerms: invoiceData.paymentTerms || invoiceData.payment_terms || 'net30'
+                paymentTerms: invoiceData.paymentTerms || invoiceData.payment_terms || 'net30',
+                currency: currencyConfig.sourceCurrency,
+                targetCurrency: currencyConfig.targetCurrency,
+                exchangeRate: currencyConfig.exchangeRate,
+                showConversion: currencyConfig.showConversion
             },
             client: client,
             items: items,
@@ -254,8 +335,18 @@ async function previewInvoice(invoiceData) {
                         currentInvoiceData.invoice_number = currentInvoiceData.invoice?.displayNumber || currentInvoiceData.invoice?.number;
                         console.log('[Preview] Download PDF for displayInvoiceNumber:', currentInvoiceData.invoice.displayNumber, 'invoiceNumber:', currentInvoiceData.invoice.number);
                         showNotification('Generating PDF...', 'info');
-                        // Pass watermark for preview
-                        const pdfBlob = await window.generatePDF(currentInvoiceData, { watermark: 'DRAFT' });
+                        // Include currency conversion info in PDF generation
+                        const pdfOptions = { 
+                            watermark: 'DRAFT',
+                            currency: {
+                                original: currentInvoiceData.currency,
+                                target: 'MZN',
+                                rate: currentInvoiceData.invoice.convertedValues?.rate || 1,
+                                showConversion: currentInvoiceData.currency !== 'MZN' && currentInvoiceData.invoice.convertedValues?.rate
+                            }
+                        };
+                        
+                        const pdfBlob = await window.generatePDF(currentInvoiceData, pdfOptions);
                         const downloadLink = document.createElement('a');
                         downloadLink.href = URL.createObjectURL(pdfBlob);
                         downloadLink.download = `Invoice-${currentInvoiceData.invoice.number}.pdf`;
@@ -303,46 +394,60 @@ async function previewInvoice(invoiceData) {
             invoiceDetailsSection.innerHTML = detailsHtml;
         }
 
-        // Determine if conversion is needed
-        let showConversion = false;
-        let rate = 1;
-        let currency = formattedData.currency || 'MZN';
-        if (window.invoiceForm && currency !== 'MZN' && window.invoiceForm.currentRate && !isNaN(window.invoiceForm.currentRate)) {
-            showConversion = true;
-            rate = window.invoiceForm.currentRate;
-        }
         // Update the invoice totals in the preview
         const totalsSection = document.querySelector("#invoicePreviewContent .invoice-totals");
         if (totalsSection) {
-            let discount = formattedData.invoice.discount || 0;
-            let subtotal = formattedData.invoice.subtotal || 0;
-            let discountAmount = 0;
-            let subtotalAfterDiscount = subtotal;
-            if (discount > 0) {
-                discountAmount = discount;
-                subtotalAfterDiscount = subtotal - discountAmount;
-            }
+            const discount = formattedData.invoice.discount || 0;
+            const discountAmount = discount * currencyConfig.exchangeRate;
+            const subtotalAfterDiscount = totals.subtotal - discount;
+            const subtotalAfterDiscount_converted = totals.subtotal_converted - discountAmount;
+            
+            // Store converted values for PDF generation
+            formattedData.invoice.convertedValues = {
+                exchangeRate: currencyConfig.exchangeRate,
+                sourceCurrency: currencyConfig.sourceCurrency,
+                targetCurrency: currencyConfig.targetCurrency,
+                subtotal: totals.subtotal,
+                subtotal_converted: totals.subtotal_converted,
+                total: totals.total,
+                total_converted: totals.total_converted
+            };
+            
             let totalsHtml = `
                 <div class="totals-row">
                     <span>Subtotal:</span>
-                    <span>MZN ${formatNumber(subtotal)}</span>
-                </div>
-                <div class="totals-row">
-                    <span>Desconto:</span>
-                    <span>- MZN ${formatNumber(discountAmount)}</span>
-                </div>
-                <div class="totals-row">
-                    <span>Subtotal após Desconto:</span>
-                    <span>MZN ${formatNumber(subtotalAfterDiscount)}</span>
-                </div>
+                    <span>${totals.subtotal_formatted}${currencyConfig.showConversion ? ` (${totals.subtotal_converted_formatted})` : ''}</span>
+                </div>`;
+
+            if (discount > 0) {
+                totalsHtml += `
+                    <div class="totals-row">
+                        <span>Desconto:</span>
+                        <span>- ${formatAmount(discount, currencyConfig.sourceCurrency)}${
+                            currencyConfig.showConversion ? ` (${formatAmount(discountAmount, currencyConfig.targetCurrency)})` : ''
+                        }</span>
+                    </div>
+                    <div class="totals-row">
+                        <span>Subtotal após Desconto:</span>
+                        <span>${formatAmount(subtotalAfterDiscount, currencyConfig.sourceCurrency)}${
+                            currencyConfig.showConversion ? ` (${formatAmount(subtotalAfterDiscount_converted, currencyConfig.targetCurrency)})` : ''
+                        }</span>
+                    </div>`;
+            }
+
+            totalsHtml += `
                 <div class="totals-row">
                     <span>IVA (16%):</span>
-                    <span>MZN ${formatNumber(formattedData.invoice.vat)}</span>
+                    <span>${totals.vat_formatted}${currencyConfig.showConversion ? ` (${totals.vat_converted_formatted})` : ''}</span>
                 </div>
                 <div class="totals-row total">
                     <span>Total:</span>
-                    <span>MZN ${formatNumber(formattedData.invoice.total)}</span>
+                    <span>${totals.total_formatted}${currencyConfig.showConversion ? ` (${totals.total_converted_formatted})` : ''}</span>
                 </div>
+                ${currencyConfig.showConversion ? `
+                <div class="conversion-info">
+                    <small>Exchange Rate: 1 ${currencyConfig.sourceCurrency} = ${currencyConfig.exchangeRate} ${currencyConfig.targetCurrency}</small>
+                </div>` : ''}
             `;
             if (showConversion) {
                 const convertedSubtotal = window.invoiceForm.getConvertedAmount(subtotal);

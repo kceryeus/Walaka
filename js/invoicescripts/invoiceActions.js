@@ -314,44 +314,47 @@ class InvoiceActions {
         // No-op or implement your loading indicator hide logic
     }
 
-    // Update downloadPdf to use createSignedUrl for private bucket
+    // Updated downloadPdf to directly download without opening in new tab
     async downloadPdf(invoiceNumber) {
         try {
             this.showLoading && this.showLoading('Downloading PDF...');
-            // Ensure invoiceNumber is a string
             const invNum = typeof invoiceNumber === 'object' ? invoiceNumber.invoiceNumber : invoiceNumber;
-            // Fetch invoice to get the correct file name
-            const envId = await window.getCurrentEnvironmentId ? await window.getCurrentEnvironmentId() : null;
-            let query = this.supabase
-                .from('invoices')
-                .select('invoiceNumber')
-                .eq('invoiceNumber', invNum);
-            if (envId) {
-                query = query.eq('environment_id', envId);
+            const { data: signedUrlData } = await this.getSignedUrl(invNum);
+            
+            if (signedUrlData?.signedUrl) {
+                // Force download using a temporary link
+                const link = document.createElement('a');
+                link.href = signedUrlData.signedUrl;
+                link.setAttribute('download', `Invoice-${invNum}.pdf`);
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                
+                this.hideLoading && this.hideLoading();
+                this.showNotification && this.showNotification('PDF downloaded successfully', 'success');
+            } else {
+                throw new Error('Could not generate PDF URL');
             }
-            const { data: invoice, error } = await query.single();
-            if (error || !invoice) throw new Error('Invoice not found');
-            // Get user ID for file name
-            const userRes = await this.supabase.auth.getUser();
-            const userId = userRes?.data?.user?.id;
-            if (!userId) throw new Error('User not authenticated');
-            // Construct the file name (match upload logic)
-            const fileName = `${invoice.invoiceNumber}_${userId}.pdf`;
-            console.log('[Download PDF] Attempting to create signed URL for:', fileName);
-            // Get a signed URL
-            const { data: signedUrlData, error: signedUrlError } = await this.supabase
-                .storage
-                .from('invoice_pdfs')
-                .createSignedUrl(fileName, 60 * 60); // 1 hour expiry
-            if (!signedUrlError && signedUrlData && signedUrlData.signedUrl) {
+        } catch (error) {
+            this.hideLoading && this.hideLoading();
+            this.showNotification && this.showNotification('Failed to download PDF: ' + error.message, 'error');
+        }
+    }
+
+    // New method to view PDF in new tab (using old download behavior)
+    async viewPdf(invoiceNumber) {
+        try {
+            this.showLoading && this.showLoading('Opening PDF...');
+            const invNum = typeof invoiceNumber === 'object' ? invoiceNumber.invoiceNumber : invoiceNumber;
+            const { data: signedUrlData } = await this.getSignedUrl(invNum);
+            
+            if (signedUrlData?.signedUrl) {
+                // Open in new tab without downloading
                 window.open(signedUrlData.signedUrl, '_blank');
                 this.hideLoading && this.hideLoading();
                 this.showNotification && this.showNotification('PDF opened successfully', 'success');
-                console.log('[Download PDF] Signed URL opened:', signedUrlData.signedUrl);
             } else {
-                this.hideLoading && this.hideLoading();
-                this.showNotification && this.showNotification('Could not generate PDF download link.', 'error');
-                console.error('[Download PDF] Could not generate signed URL:', signedUrlError, signedUrlData);
+                throw new Error('Could not generate PDF URL');
             }
         } catch (error) {
             this.hideLoading && this.hideLoading();
@@ -359,49 +362,61 @@ class InvoiceActions {
         }
     }
 
-    async emailInvoice(invoiceNumber, emailAddress) {
+    // Helper method to get signed URL
+    async getSignedUrl(invoiceNumber) {
+        const envId = await window.getCurrentEnvironmentId?.() || null;
+        let query = this.supabase
+            .from('invoices')
+            .select('invoiceNumber')
+            .eq('invoiceNumber', invoiceNumber);
+            
+        if (envId) query = query.eq('environment_id', envId);
+        
+        const { data: invoice, error } = await query.single();
+        if (error || !invoice) throw new Error('Invoice not found');
+        
+        const { data: { user } } = await this.supabase.auth.getUser();
+        if (!user) throw new Error('User not authenticated');
+        
+        const fileName = `${invoice.invoiceNumber}_${user.id}.pdf`;
+        return await this.supabase.storage
+            .from('invoice_pdfs')
+            .createSignedUrl(fileName, 60 * 60);
+    }
+
+    async emailInvoice(invoiceNumber, emailAddress, subject, message) {
         try {
-            // Fetch invoice data from Supabase
-            const { data: invoice, error } = await this.supabase
-                .from('invoices')
-                .select('*, clients(*)')
-                .eq('invoiceNumber', invoiceNumber)
-                .single();
-
-            if (error) throw error;
-            if (!invoice) throw new Error('Invoice not found');
-
-            // Generate PDF
-            const pdfBlob = await window.generatePDF(invoice);
-
-            // Create form data for email
+            this.showLoading && this.showLoading('Sending email...');
+            
+            // Get the PDF URL
+            const { data: signedUrlData } = await this.getSignedUrl(invoiceNumber);
+            if (!signedUrlData?.signedUrl) throw new Error('Could not generate PDF URL');
+            
+            // Fetch PDF content
+            const response = await fetch(signedUrlData.signedUrl);
+            const pdfBlob = await response.blob();
+            
+            // Create form data
             const formData = new FormData();
             formData.append('to', emailAddress);
-            formData.append('subject', `Invoice ${invoiceNumber}`);
-            formData.append('attachment', pdfBlob, `${invoiceNumber}.pdf`);
+            formData.append('subject', subject);
+            formData.append('message', message);
+            formData.append('attachment', pdfBlob, `Invoice-${invoiceNumber}.pdf`);
 
-            // Get email template
-            const { data: template } = await this.supabase
-                .from('email_templates')
-                .select('content')
-                .eq('type', 'invoice')
-                .single();
-
-            formData.append('message', template?.content || 'Please find attached invoice.');
-
-            // Send email via Supabase Edge Function
-            const { data, error: emailError } = await this.supabase.functions.invoke('send-email', {
+            // Send email via Edge Function
+            const { error: emailError } = await this.supabase.functions.invoke('send-email', {
                 body: formData
             });
 
             if (emailError) throw emailError;
 
-            window.showNotification('Invoice sent successfully');
-            return data;
+            this.hideLoading && this.hideLoading();
+            this.showNotification && this.showNotification('Email sent successfully', 'success');
+            return true;
         } catch (error) {
-            console.error('Error sending invoice:', error);
-            window.showNotification('Error sending invoice: ' + error.message, 'error');
-            throw error;
+            this.hideLoading && this.hideLoading();
+            this.showNotification && this.showNotification('Failed to send email: ' + error.message, 'error');
+            return false;
         }
     }
 

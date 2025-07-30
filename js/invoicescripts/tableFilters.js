@@ -238,30 +238,109 @@ function setupActionButtons() {
     
     const rows = table.querySelectorAll('tbody tr');
     rows.forEach(row => {
-        // View button
+        // View button (now opens PDF in new tab)
         const viewBtn = row.querySelector('.view-btn');
         if (viewBtn) {
             viewBtn.onclick = function() {
                 const invoiceNumber = this.getAttribute('data-invoice');
-                if (window.viewInvoice) window.viewInvoice(invoiceNumber);
+                window.invoiceActions.viewPdf(invoiceNumber);
             };
         }
 
-        // Send button
-        const sendBtn = row.querySelector('.send-btn');
-        if (sendBtn) {
-            sendBtn.onclick = function() {
+        // Download button (now downloads PDF directly)
+        const downloadBtn = row.querySelector('.download-btn');
+        if (downloadBtn) {
+            downloadBtn.onclick = function() {
                 const invoiceNumber = row.querySelector('.view-btn').getAttribute('data-invoice');
-                if (window.sendInvoice) window.sendInvoice(invoiceNumber);
+                window.invoiceActions.downloadPdf(invoiceNumber);
             };
         }
 
-        // More button
+        // More button (dropdown)
         const moreBtn = row.querySelector('.more-btn');
         if (moreBtn) {
             moreBtn.onclick = function() {
                 const invoiceNumber = row.querySelector('.view-btn').getAttribute('data-invoice');
-                if (window.showMoreOptions) window.showMoreOptions(invoiceNumber);
+                const dropdown = document.createElement('div');
+                dropdown.className = 'dropdown-menu';
+                dropdown.innerHTML = `
+                    <button class="dropdown-item" data-action="view">
+                        <i class="fas fa-eye"></i>
+                        <span>View Invoice</span>
+                    </button>
+                    <button class="dropdown-item" data-action="download">
+                        <i class="fas fa-download"></i>
+                        <span>Download PDF</span>
+                    </button>
+                    <button class="dropdown-item" data-action="email">
+                        <i class="fas fa-envelope"></i>
+                        <span>Send Email</span>
+                    </button>
+                `;
+
+                // Handle dropdown item clicks
+                dropdown.addEventListener('click', async function(e) {
+                    const action = e.target.closest('.dropdown-item')?.dataset.action;
+                    if (!action) return;
+
+                    switch (action) {
+                        case 'view':
+                            // Open PDF in new window without downloading
+                            window.invoiceActions.viewPdf(invoiceNumber);
+                            break;
+                        case 'download':
+                            // Direct download without opening
+                            window.invoiceActions.downloadPdf(invoiceNumber);
+                            break;
+                        case 'email':
+                            // Get current PDF and attach to email
+                            try {
+                                const emailModal = document.getElementById('emailInvoiceModal');
+                                if (emailModal) {
+                                    // Fetch invoice data first
+                                    const { data: invoice } = await window.supabase
+                                        .from('invoices')
+                                        .select('*, clients(*)')
+                                        .eq('invoiceNumber', invoiceNumber)
+                                        .single();
+                                    
+                                    if (invoice && invoice.clients?.email) {
+                                        document.getElementById('emailTo').value = invoice.clients.email;
+                                        document.getElementById('emailSubject').value = `Invoice ${invoiceNumber}`;
+                                        document.getElementById('emailMessage').value = `Dear ${invoice.clients.customer_name},\n\nPlease find attached invoice ${invoiceNumber}.\n\nBest regards`;
+                                        
+                                        // Store invoice number for later use
+                                        emailModal.dataset.invoiceNumber = invoiceNumber;
+                                        
+                                        window.modalManager.openModal('emailInvoiceModal');
+                                    }
+                                }
+                            } catch (err) {
+                                console.error('Error preparing email:', err);
+                                showNotification('Error preparing email', 'error');
+                            }
+                            break;
+                    }
+                    
+                    // Close dropdown after action
+                    dropdown.remove();
+                });
+
+                // Position and show dropdown
+                document.body.appendChild(dropdown);
+                const rect = moreBtn.getBoundingClientRect();
+                dropdown.style.position = 'absolute';
+                dropdown.style.top = `${rect.bottom + window.scrollY}px`;
+                dropdown.style.left = `${rect.left}px`;
+
+                // Close dropdown when clicking outside
+                const closeDropdown = (e) => {
+                    if (!dropdown.contains(e.target) && !moreBtn.contains(e.target)) {
+                        dropdown.remove();
+                        document.removeEventListener('click', closeDropdown);
+                    }
+                };
+                setTimeout(() => document.addEventListener('click', closeDropdown), 0);
             };
         }
     });
